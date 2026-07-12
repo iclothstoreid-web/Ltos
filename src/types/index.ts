@@ -77,7 +77,7 @@ export interface ProductionStep {
   step_name: string
   status: ProductionStepStatus
   notes: string | null
-  completed_at: string | null
+  completed_at?: string | null
   created_at: string
 }
 
