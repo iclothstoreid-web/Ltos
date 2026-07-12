@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --surface: #FCFAF8;
+    --on-surface: #1B1B1C;
+    --primary: #005645;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--on-surface);
+  }
+
+  /* Calm scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #BEC9C4;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8FA49E;
+  }
+}
+
+@layer components {
+  /* Task row — the core interaction unit */
+  .task-row {
+    @apply flex items-start gap-4 px-6 py-5 border-b border-outline-variant
+           cursor-pointer transition-colors duration-150 hover:bg-surface-low
+           active:bg-surface-container;
+  }
+
+  /* Decision button — primary action */
+  .decision-primary {
+    @apply px-6 py-3 bg-primary text-white text-label font-medium
+           uppercase tracking-widest transition-all duration-200
+           hover:bg-primary-light active:scale-[0.98];
+  }
+
+  /* Decision button — secondary action */
+  .decision-secondary {
+    @apply px-6 py-3 border border-outline-variant text-secondary text-label
+           font-medium uppercase tracking-widest transition-all duration-200
+           hover:border-on-surface hover:text-on-surface active:scale-[0.98];
+  }
+
+  /* Workspace zone label */
+  .zone-label {
+    @apply text-label text-secondary uppercase tracking-widest mb-3;
+  }
+
+  /* Status dot */
+  .status-dot {
+    @apply w-2 h-2 rounded-full flex-shrink-0 mt-1.5;
+  }
+
+  .status-dot.critical { @apply bg-error animate-pulse-dot; }
+  .status-dot.high     { @apply bg-warm-gold; }
+  .status-dot.normal   { @apply bg-secondary; }
+  .status-dot.ready    { @apply bg-primary; }
+}
