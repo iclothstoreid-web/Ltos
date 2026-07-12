@@ -45,7 +45,16 @@ export default async function CommandCenterPage() {
   // Map to priority tasks
   const tasks: PriorityTask[] = (queueData || [])
     .filter(q => q.orders)
-    .map(q => mapQueueToPriorityTask(q as Parameters<typeof mapQueueToPriorityTask>[0]))
+    .map(q => {
+  const firstCustomer = Array.isArray(q.orders?.customers) ? q.orders.customers[0] : q.orders?.customers
+  return mapQueueToPriorityTask({
+    ...q,
+    orders: {
+      ...q.orders,
+      customers: firstCustomer
+    }
+  } as Parameters<typeof mapQueueToPriorityTask>[0])
+})
     .sort((a, b) => {
       const urgencyOrder = { critical: 0, high: 1, normal: 2, ready: 3 }
       return urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
