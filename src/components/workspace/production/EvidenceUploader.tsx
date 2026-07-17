@@ -1,0 +1,85 @@
+'use client'
+
+import { useRef, useState } from 'react'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { ProductionStage } from '@/lib/production/types'
+import { uploadEvidencePhoto } from '@/lib/production/client'
+
+interface EvidenceUploaderProps {
+  supabase: SupabaseClient
+  orderId: string
+  stage: ProductionStage
+  attempt: number
+  value: string | null
+  onChange: (url: string) => void
+}
+
+// Single-photo evidence, max 1 per stage per the brief ("Maksimal 1 Foto per
+// tahapan"). Same button/input/preview mechanic as measurement's
+// PhotoUploader, but this one actually persists to Supabase Storage.
+export function EvidenceUploader({
+  supabase,
+  orderId,
+  stage,
+  attempt,
+  value,
+  onChange,
+}: EvidenceUploaderProps) {
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState<string | null>(value)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  async function handleFile(file: File | undefined) {
+    if (!file) return
+    setPreview(URL.createObjectURL(file))
+    setUploading(true)
+    try {
+      const url = await uploadEvidencePhoto(supabase, { orderId, stage, attempt, file })
+      onChange(url)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div>
+      <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-2">
+        Evidence
+      </label>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="w-full aspect-video bg-[#efedf0] border-[0.5px] border-dashed border-[#c6c6cc]
+                   flex flex-col items-center justify-center gap-1 group cursor-pointer
+                   hover:bg-[#efedf0] transition-colors relative overflow-hidden disabled:opacity-60"
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={e => handleFile(e.target.files?.[0])}
+        />
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage URL / local blob preview
+          <img
+            src={preview}
+            alt="Evidence preview"
+            className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+          />
+        ) : (
+          <>
+            <span className="material-symbols-outlined text-[#c6c6cc] group-hover:text-[#755b00] transition-colors">
+              add_a_photo
+            </span>
+            <p className="text-[10px] text-[#46464c] uppercase tracking-widest">
+              {uploading ? 'Mengunggah...' : 'Ambil Foto'}
+            </p>
+          </>
+        )}
+      </button>
+    </div>
+  )
+}

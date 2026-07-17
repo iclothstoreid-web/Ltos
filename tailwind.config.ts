@@ -26,6 +26,15 @@ const config: Config = {
         serif: ['Georgia', 'Cambria', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Consolas', 'monospace'],
+        // Check-In workspace visual rebuild (LTOS Sprint 02) — additive only,
+        // does not replace the tokens above used by other pages. Values are
+        // CSS vars set by next/font/google in that route's layout.
+        fraunces: ['var(--font-fraunces)', 'serif'],
+        caslon: ['var(--font-caslon)', 'serif'],
+        // Production workspace visual rebuild (Persiapan Material Stitch
+        // export) — additive only, same reasoning as fraunces/caslon above.
+        hanken: ['var(--font-hanken)', 'sans-serif'],
+        jetbrains: ['var(--font-jetbrains)', 'monospace'],
       },
       fontSize: {
         'display': ['48px', { lineHeight: '1.1', letterSpacing: '-0.02em' }],

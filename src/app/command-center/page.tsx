@@ -1,16 +1,25 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { formatWaitingTime } from '@/lib/ltos'
-import { PriorityTaskRow } from '@/components/command-center/PriorityTaskRow'
-import { StatusStrip } from '@/components/command-center/StatusStrip'
-import { TopBar } from '@/components/command-center/TopBar'
-import { PriorityTask } from '@/types'
+import { OwnerCommandCenter } from '@/components/command-center/OwnerCommandCenter/OwnerCommandCenter'
+import { getUrgency } from '@/lib/ltos'
 
+// OwnerCommandCenter itself is untouched (design/layout unchanged) — this
+// file only replaces what data feeds it. It was previously never imported
+// anywhere; /command-center rendered a separate, older page built against
+// `queue_assignments` (0 rows), which is why every widget showed empty.
+//
+// The real Fitter workflow (Check-In -> ... -> Create Order) only ever
+// advances orders.current_state as far as 'order' — Assign Artisan isn't
+// wired yet, and no pricing engine exists — so those counts, plus qc/
+// revenue, are genuinely 0 right now, not a query bug. Production's cutting/
+// sewing kanban lanes ARE real, though: they read the internal 8-stage
+// production_stage_records table (/workspace/production/[orderId]),
+// separate from orders.current_state entirely.
 export default async function CommandCenterPage() {
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/owner/login')
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -18,60 +27,139 @@ export default async function CommandCenterPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: queueData } = await supabase
-    .from('queue_assignments')
-    .select('id, order_id, queue_type, status, assigned_to, created_at, completed_at')
-    .in('status', ['pending', 'in_progress'])
-    .order('created_at', { ascending: true })
+  const [
+    { data: ordersAwaiting },
+    { data: ordersInProduction },
+    { data: ordersInQc },
+    { data: ordersReady },
+    { data: consultationsInReview },
+    { data: artisans },
+  ] = await Promise.all([
+    supabase
+      .from('orders')
+      .select('id, order_number, created_at, customers(name)')
+      .eq('current_state', 'order')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('orders')
+      .select('id, order_number, created_at, customers(name)')
+      .eq('current_state', 'production'),
+    supabase
+      .from('orders')
+      .select('id, order_number, created_at, customers(name)')
+      .eq('current_state', 'qc'),
+    supabase
+      .from('orders')
+      .select('id, order_number, created_at, customers(name)')
+      .eq('current_state', 'delivery'),
+    supabase
+      .from('consultations')
+      .select('id, consultation_number, created_at, customers(name)')
+      .eq('status', 'review')
+      .order('created_at', { ascending: true }),
+    supabase.from('profiles').select('id, name, role').eq('role', 'artisan'),
+  ])
 
-  const tasks: PriorityTask[] = []
+  // Internal 8-stage production workflow now populates production_stage_records
+  // (readable here via the staff RLS policy) — cutting/sewing are no longer
+  // honestly empty, they reflect whichever orders are actively in that stage.
+  const { data: activeStageRecords } = await supabase
+    .from('production_stage_records')
+    .select('order_id, stage, orders(order_number, customers(name))')
+    .in('stage', ['cutting', 'sewing'])
+    .eq('status', 'in_progress')
 
-  if (queueData && queueData.length > 0) {
-    for (const q of queueData) {
-      const { data: order } = await supabase
-        .from('orders')
-        .select('order_number, current_state')
-        .eq('id', q.order_id)
-        .single()
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
 
-      if (!order) continue
+  const [{ count: consultationsToday }, { count: fittingsToday }] = await Promise.all([
+    supabase
+      .from('consultations')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', todayStart.toISOString()),
+    supabase
+      .from('business_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_type', 'measurement.completed')
+      .gte('created_at', todayStart.toISOString()),
+  ])
 
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('name')
-        .eq('id', q.order_id)
-        .single()
-
-      const customerName = customer?.name || 'Unknown'
-
-      const hoursWaiting = (Date.now() - new Date(q.created_at).getTime()) / (1000 * 60 * 60)
-      const urgency = hoursWaiting > 48 ? 'critical' : hoursWaiting > 24 ? 'high' : 'normal'
-
-      tasks.push({
-        id: q.id,
-        order_id: q.order_id,
-        order_number: order.order_number,
-        customer_name: customerName,
-        task_type: q.queue_type,
-        task_label: q.queue_type,
-        context: 'Task',
-        waiting_since: q.created_at,
-        urgency: urgency as 'critical' | 'high' | 'normal' | 'ready',
-        workspace_url: `/workspace/${q.queue_type}/${q.order_id}`,
-      })
-    }
+  // Without a generated Database type, the untyped client infers embedded
+  // to-one relations as an array here even though PostgREST returns a
+  // single object at runtime for this FK — handling both shapes.
+  type Named = {
+    customers: { name: string } | { name: string }[] | null
+    id: string
+    created_at: string
+  }
+  const customerName = (row: Named) => {
+    const c = Array.isArray(row.customers) ? row.customers[0] : row.customers
+    return c?.name || 'Unknown'
   }
 
-  const sorted = tasks.sort((a, b) => {
-    const urgencyOrder = { critical: 0, high: 1, normal: 2, ready: 3 }
-    return urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
+  // Same untyped-embed ambiguity as `Named` above, one level deeper:
+  // production_stage_records -> orders -> customers.
+  type StageRecordRow = {
+    order_id: string
+    stage: 'cutting' | 'sewing'
+    orders:
+      | { order_number: string; customers: { name: string } | { name: string }[] | null }
+      | { order_number: string; customers: { name: string } | { name: string }[] | null }[]
+      | null
+  }
+  const stageRecordCard = (row: StageRecordRow) => {
+    const order = Array.isArray(row.orders) ? row.orders[0] : row.orders
+    const customers = order?.customers
+    const c = Array.isArray(customers) ? customers[0] : customers
+    return { id: row.order_id, order: order?.order_number || '—', customer: c?.name || 'Unknown' }
+  }
+  const cuttingOrders = (activeStageRecords || [])
+    .filter(r => r.stage === 'cutting')
+    .map(stageRecordCard)
+  const sewingOrders = (activeStageRecords || [])
+    .filter(r => r.stage === 'sewing')
+    .map(stageRecordCard)
+
+  const decisionQueue = [
+    ...(ordersAwaiting || []).map(o => ({
+      id: o.id,
+      priority: getUrgency(o.created_at),
+      customer: customerName(o),
+      order: o.order_number,
+      reason: 'Order dikonfirmasi, menunggu penugasan artisan',
+      suggestedAction: 'Tugaskan Artisan',
+      workspaceUrl: `/workspace/order-created/${o.id}`,
+    })),
+    ...(consultationsInReview || []).map(c => ({
+      id: c.id,
+      priority: getUrgency(c.created_at),
+      customer: customerName(c),
+      order: c.consultation_number,
+      reason: 'Konsultasi direview, order belum dibuat',
+      suggestedAction: 'Review Konsultasi',
+      workspaceUrl: `/workspace/consultation-review/${c.id}`,
+    })),
+  ].sort((a, b) => {
+    const rank = { critical: 0, high: 1, normal: 2, ready: 3 }
+    return rank[a.priority] - rank[b.priority]
   })
 
-  const critical = sorted.filter(t => t.urgency === 'critical').length
-  const high = sorted.filter(t => t.urgency === 'high').length
-  const normal = sorted.filter(t => t.urgency === 'normal').length
+  const ordersWaitingCount = ordersAwaiting?.length || 0
+  const productionTodayCount = ordersInProduction?.length || 0
+  const qcRequiredCount = ordersInQc?.length || 0
 
-  const today = new Date().toLocaleDateString('id-ID', {
+  const executiveBrief =
+    ordersWaitingCount > 0
+      ? {
+          recommendationTitle: `${ordersWaitingCount} order menunggu penugasan artisan`,
+          recommendationBody: `Ada ${ordersWaitingCount} order yang sudah dikonfirmasi tetapi belum ditugaskan ke artisan. Assign artisan untuk melanjutkan ke tahap produksi.`,
+        }
+      : {
+          recommendationTitle: 'Semua order berjalan sesuai jadwal',
+          recommendationBody: 'Tidak ada order yang menunggu keputusan Anda saat ini.',
+        }
+
+  const todayLabel = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -79,42 +167,45 @@ export default async function CommandCenterPage() {
   })
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      <TopBar profile={profile} />
-
-      <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-10 animate-fade-in">
-        <p className="text-label text-secondary uppercase tracking-widest mb-1">
-          {today}
-        </p>
-
-        <StatusStrip critical={critical} high={high} normal={normal} />
-
-        <div className="border-t border-outline-variant my-8" />
-
-        <h2 className="text-label text-secondary uppercase tracking-widest mb-6">
-          Yang harus dikerjakan sekarang
-        </h2>
-
-        {sorted.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-title text-on-surface mb-2">Semua selesai.</p>
-            <p className="text-body text-secondary">
-              Tidak ada task yang perlu dikerjakan saat ini.
-            </p>
-          </div>
-        ) : (
-          <ol className="border-t border-outline-variant">
-            {sorted.map((task, index) => (
-              <PriorityTaskRow
-                key={task.id}
-                task={task}
-                index={index + 1}
-                waitingTime={formatWaitingTime(task.waiting_since)}
-              />
-            ))}
-          </ol>
-        )}
-      </main>
-    </div>
+    <OwnerCommandCenter
+      profileName={profile?.name || 'Pemilik'}
+      todayLabel={todayLabel}
+      summary={{
+        ordersWaiting: ordersWaitingCount,
+        productionToday: productionTodayCount,
+        qcRequired: qcRequiredCount,
+        // No pricing engine/quotations data exists yet (see Consultation
+        // Review / Order Created sprints) — 0 is the honest figure, not a
+        // placeholder bug.
+        revenueToday: 0,
+      }}
+      decisionQueue={decisionQueue}
+      executiveBrief={executiveBrief}
+      productionColumns={{
+        waiting: (ordersAwaiting || []).map(o => ({ id: o.id, order: o.order_number, customer: customerName(o) })),
+        cutting: cuttingOrders,
+        sewing: sewingOrders,
+        qc: (ordersInQc || []).map(o => ({ id: o.id, order: o.order_number, customer: customerName(o) })),
+        ready: (ordersReady || []).map(o => ({ id: o.id, order: o.order_number, customer: customerName(o) })),
+      }}
+      artisanCards={(artisans || []).map(a => ({
+        id: a.id,
+        name: a.name,
+        role: a.role,
+        workload: '—',
+        capacity: '—',
+        qualityScore: '—',
+      }))}
+      rightTimeline={{
+        // No appointment/booking or production-review/delivery-tracking
+        // features exist in this repo — 0 reflects that honestly rather
+        // than approximating them from unrelated events.
+        appointments: 0,
+        consultations: consultationsToday || 0,
+        fittings: fittingsToday || 0,
+        productionReview: 0,
+        delivery: 0,
+      }}
+    />
   )
 }

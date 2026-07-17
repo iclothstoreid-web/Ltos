@@ -25,7 +25,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/command-center')
+    router.push('/workspace/check-in')
     router.refresh()
   }
 

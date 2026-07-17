@@ -72,3 +72,21 @@
   .status-dot.normal   { @apply bg-secondary; }
   .status-dot.ready    { @apply bg-primary; }
 }
+
+/* Cetak QR (Order Created) — isolate #production-qr-print-area so only the
+   QR sticker prints, not the rest of the Order Created page. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #production-qr-print-area,
+  #production-qr-print-area * {
+    visibility: visible;
+  }
+  #production-qr-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}

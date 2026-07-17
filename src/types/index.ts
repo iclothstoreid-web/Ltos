@@ -62,7 +62,8 @@ export interface Order {
 
 export interface Measurement {
   id: string
-  order_id: string
+  order_id: string | null
+  consultation_id: string | null
   chest: number | null
   shoulder: number | null
   sleeve: number | null
@@ -93,7 +94,8 @@ export interface Quotation {
 
 export interface BusinessEvent {
   id: string
-  order_id: string
+  order_id: string | null
+  consultation_id: string | null
   event_type: string
   event_data: Record<string, unknown>
   created_by: string | null

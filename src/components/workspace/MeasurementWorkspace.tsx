@@ -3,79 +3,119 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Order, Measurement, BusinessEvent } from '@/types'
-import { WorkspaceHeader } from './WorkspaceHeader'
+import { Measurement, BusinessEvent } from '@/types'
+import type { Consultation } from '@/app/workspace/check-in/types'
 import { EventHistory } from './EventHistory'
-import { ArrowLeft, CheckCircle, RotateCcw } from 'lucide-react'
+import { MeasurementTopBar } from './measurement/MeasurementTopBar'
+import { MeasurementNavAside } from './measurement/MeasurementNavAside'
+import { MeasurementSidebar } from './measurement/MeasurementSidebar'
+import { DigitalMannequin } from './measurement/DigitalMannequin'
+import { BodyTagSelector } from './measurement/BodyTagSelector'
+import { ProgressCard } from './measurement/ProgressCard'
+import { SessionCard } from './measurement/SessionCard'
+import { ComparisonCard } from './measurement/ComparisonCard'
+import { PhotoUploader } from './measurement/PhotoUploader'
+import { WorkflowFooter } from './measurement/WorkflowFooter'
+import { encodeNotes, decodeNotes } from './measurement/notesCodec'
+import { EMPTY_FIELDS, FIELD_BODY_PARTS } from './measurement/types'
+import type { MeasurementFields, BodyPart } from './measurement/types'
 
 interface MeasurementWorkspaceProps {
-  order: Order & { customers: { name: string; phone: string | null } }
+  consultation: Consultation & { customers: { name: string; phone: string | null } }
   existingMeasurement: Measurement | null
   events: BusinessEvent[]
   userId: string
+  fitterName: string
 }
 
 export function MeasurementWorkspace({
-  order,
+  consultation,
   existingMeasurement,
   events,
   userId,
+  fitterName,
 }: MeasurementWorkspaceProps) {
   const router = useRouter()
   const supabase = createClient()
 
-  const [chest, setChest] = useState(existingMeasurement?.chest?.toString() || '')
-  const [shoulder, setShoulder] = useState(existingMeasurement?.shoulder?.toString() || '')
-  const [sleeve, setSleeve] = useState(existingMeasurement?.sleeve?.toString() || '')
-  const [length, setLength] = useState(existingMeasurement?.length?.toString() || '')
-  const [notes, setNotes] = useState(existingMeasurement?.notes || '')
+  const [decoded] = useState(() => decodeNotes(existingMeasurement?.notes ?? null))
+
+  const [fields, setFields] = useState<MeasurementFields>({
+    ...EMPTY_FIELDS,
+    chest: existingMeasurement?.chest?.toString() || '',
+    shoulder: existingMeasurement?.shoulder?.toString() || '',
+    sleeve: existingMeasurement?.sleeve?.toString() || '',
+    length: existingMeasurement?.length?.toString() || '',
+    ...decoded.extras,
+  })
+  const [humanNotes, setHumanNotes] = useState(decoded.humanNotes)
+  const [tags, setTags] = useState<string[]>(decoded.tags)
+  const [focusedField, setFocusedField] = useState<keyof MeasurementFields | null>(null)
   const [loading, setLoading] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+
+  const totalFields = Object.keys(EMPTY_FIELDS).length
+  const filledCount = Object.values(fields).filter(Boolean).length
+  const isFormValid = Boolean(fields.chest && fields.shoulder && fields.sleeve && fields.length)
+
+  const activeParts: BodyPart[] = focusedField ? FIELD_BODY_PARTS[focusedField] : []
+
+  const handleFieldChange = (key: keyof MeasurementFields, value: string) => {
+    setFields(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleToggleTag = (tag: string) => {
+    setTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]))
+  }
 
   async function handleDecision(decision: 'valid' | 'remeasure') {
     setLoading(true)
     try {
-      // Save measurement
+      // Only chest/shoulder/sleeve/length are real columns on `measurements`
+      // — the other 8 fields + body tags ride along inside `notes` (see
+      // notesCodec.ts) since no schema change was authorized this sprint.
+      const notes = encodeNotes(humanNotes, fields, tags)
+
       await supabase.from('measurements').insert({
-        order_id: order.id,
-        chest: parseFloat(chest) || null,
-        shoulder: parseFloat(shoulder) || null,
-        sleeve: parseFloat(sleeve) || null,
-        length: parseFloat(length) || null,
+        consultation_id: consultation.id,
+        chest: parseFloat(fields.chest) || null,
+        shoulder: parseFloat(fields.shoulder) || null,
+        sleeve: parseFloat(fields.sleeve) || null,
+        length: parseFloat(fields.length) || null,
         notes,
       })
 
       if (decision === 'valid') {
-        // Emit event via database function
-        await supabase.rpc('emit_event', {
-          p_order_id: order.id,
-          p_event_type: 'measurement.completed',
-          p_event_data: { chest, shoulder, sleeve, length, notes },
-          p_user_id: userId,
+        // emit_event() RPC only accepts p_order_id, so consultation-linked
+        // events are inserted directly
+        await supabase.from('business_events').insert({
+          consultation_id: consultation.id,
+          event_type: 'measurement.completed',
+          event_data: { ...fields, tags, notes: humanNotes },
+          created_by: userId,
         })
 
-        // Create quotation queue task
-        await supabase.rpc('create_queue_task', {
-          p_order_id: order.id,
-          p_queue_type: 'quotation',
-        })
-
-        // Mark measurement task as completed
+        // Hand off to Design Studio
         await supabase
-          .from('queue_assignments')
-          .update({ status: 'completed', completed_at: new Date().toISOString() })
-          .eq('order_id', order.id)
-          .eq('queue_type', 'measurement')
+          .from('consultations')
+          .update({ status: 'design' })
+          .eq('id', consultation.id)
 
-        router.push('/command-center')
+        router.push(`/workspace/design-studio/${consultation.id}`)
       } else {
         // Re-measure: emit event and stay
-        await supabase.rpc('emit_event', {
-          p_order_id: order.id,
-          p_event_type: 'measurement.rejected',
-          p_event_data: { reason: 'Ukuran perlu diulang', notes },
-          p_user_id: userId,
+        await supabase.from('business_events').insert({
+          consultation_id: consultation.id,
+          event_type: 'measurement.rejected',
+          event_data: { reason: 'Ukuran perlu diulang', notes: humanNotes },
+          created_by: userId,
         })
+
+        await supabase
+          .from('consultations')
+          .update({ status: 'measurement' })
+          .eq('id', consultation.id)
+
         router.refresh()
       }
     } catch (err) {
@@ -85,144 +125,93 @@ export function MeasurementWorkspace({
     }
   }
 
-  const isFormValid = chest && shoulder && sleeve && length
-
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-[#f9f9ff] font-sans text-[#151c27]">
+      <MeasurementTopBar />
+      <MeasurementNavAside />
 
-      {/* Top Navigation */}
-      <div className="border-b border-outline-variant">
-        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="text-secondary hover:text-on-surface transition-colors"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <span className="text-label text-secondary uppercase tracking-widest">
-            Workspace · Measurement
-          </span>
-        </div>
-      </div>
+      <main className="md:ml-64 pt-20 pb-32 min-h-screen">
+        <div className="max-w-[1440px] mx-auto px-16 py-8 flex flex-col lg:flex-row gap-8">
+          <MeasurementSidebar
+            fields={fields}
+            onFieldChange={handleFieldChange}
+            onFocusField={setFocusedField}
+          />
 
-      <div className="max-w-2xl mx-auto px-6 py-10 animate-slide-up">
+          <section className="w-full lg:w-[45%] flex flex-col items-center">
+            <DigitalMannequin
+              activeParts={activeParts}
+              shoulder={fields.shoulder}
+              chest={fields.chest}
+              waist={fields.waist}
+              hip={fields.hip}
+              sleeve={fields.sleeve}
+            />
 
-        {/* ZONE 1: HEADER */}
-        <WorkspaceHeader
-          customerName={order.customers.name}
-          orderNumber={order.order_number}
-          currentState="measurement"
-          stateLabel="Step 4 dari 11"
-        />
+            <div className="w-full px-4 mt-4">
+              <BodyTagSelector selected={tags} onToggle={handleToggleTag} />
 
-        {/* ZONE 2: CONTEXT */}
-        {existingMeasurement && (
-          <div className="mt-8 pl-4 border-l-2 border-outline-variant">
-            <p className="zone-label">Ukuran Sebelumnya</p>
-            <div className="grid grid-cols-2 gap-3 text-body text-secondary">
-              <span>Dada: {existingMeasurement.chest} cm</span>
-              <span>Bahu: {existingMeasurement.shoulder} cm</span>
-              <span>Lengan: {existingMeasurement.sleeve} cm</span>
-              <span>Panjang: {existingMeasurement.length} cm</span>
-            </div>
-            {existingMeasurement.notes && (
-              <p className="text-body text-secondary mt-2 italic">
-                {existingMeasurement.notes}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* ZONE 3: TASK */}
-        <div className="mt-10">
-          <p className="zone-label">Ukuran</p>
-
-          <div className="grid grid-cols-2 gap-8">
-            {[
-              { label: 'Dada', value: chest, set: setChest, placeholder: '42' },
-              { label: 'Bahu', value: shoulder, set: setShoulder, placeholder: '46' },
-              { label: 'Lengan', value: sleeve, set: setSleeve, placeholder: '62' },
-              { label: 'Panjang', value: length, set: setLength, placeholder: '145' },
-            ].map(field => (
-              <div key={field.label}>
-                <label className="zone-label block mb-2">{field.label} (cm)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={field.value}
-                  onChange={e => field.set(e.target.value)}
-                  placeholder={field.placeholder}
-                  className="w-full border-b border-outline-variant bg-transparent py-3
-                             text-headline font-light text-on-surface outline-none
-                             focus:border-primary transition-colors duration-200
-                             placeholder:text-secondary/30"
+              <div className="mt-8">
+                <label className="font-sans text-xs uppercase tracking-widest text-[#444748] block mb-2">
+                  Catatan Fitter
+                </label>
+                <textarea
+                  value={humanNotes}
+                  onChange={e => setHumanNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Preferensi fit, bentuk tubuh khusus, permintaan customer..."
+                  className="w-full border-[0.5px] border-[#c4c7c7] bg-white/50 p-4 font-sans text-sm
+                             text-[#151c27] outline-none focus:border-[#775a19] transition-colors resize-none"
                 />
               </div>
-            ))}
-          </div>
 
-          <div className="mt-8">
-            <label className="zone-label block mb-2">Catatan</label>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              rows={3}
-              placeholder="Preferensi fit, bentuk tubuh khusus, permintaan customer..."
-              className="w-full border-b border-outline-variant bg-transparent py-3
-                         text-body text-on-surface outline-none resize-none
-                         focus:border-primary transition-colors duration-200
-                         placeholder:text-secondary/30"
-            />
-          </div>
+              {(tags.length > 0 || humanNotes) && (
+                <div className="text-center p-6 border-[0.5px] border-[#c4c7c7] bg-white/50 mt-8">
+                  <p className="font-sans text-xs uppercase tracking-widest text-[#444748] mb-2">
+                    Profile Summary
+                  </p>
+                  <p className="font-caslon italic text-[#151c27]">
+                    &ldquo;{tags.join(', ') || humanNotes}&rdquo;
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="w-full lg:w-[25%] flex flex-col gap-8">
+            <ProgressCard filled={filledCount} total={totalFields} />
+            <SessionCard sessionId={consultation.consultation_number} fitterName={fitterName} />
+            {existingMeasurement?.chest != null && (
+              <ComparisonCard label="Chest" current={fields.chest} previous={existingMeasurement.chest} />
+            )}
+            <PhotoUploader />
+
+            <div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="font-sans text-xs text-[#444748] uppercase tracking-widest
+                           flex items-center gap-2 hover:text-[#151c27] transition-colors"
+              >
+                Riwayat · {events.length} event
+                <span className="text-xs">{showHistory ? '▲' : '▼'}</span>
+              </button>
+              {showHistory && <EventHistory events={events} />}
+            </div>
+          </section>
         </div>
+      </main>
 
-        {/* ZONE 4: DECISION */}
-        <div className="mt-12 pt-8 border-t border-outline-variant">
-          <p className="zone-label mb-6">Keputusan</p>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => handleDecision('valid')}
-              disabled={!isFormValid || loading}
-              className="decision-primary flex items-center justify-center gap-2
-                         disabled:opacity-40 disabled:cursor-not-allowed flex-1"
-            >
-              <CheckCircle size={16} />
-              Ukuran Valid — Lanjut ke Quotation
-            </button>
-
-            <button
-              onClick={() => handleDecision('remeasure')}
-              disabled={loading}
-              className="decision-secondary flex items-center justify-center gap-2
-                         disabled:opacity-40 flex-1"
-            >
-              <RotateCcw size={16} />
-              Perlu Diukur Ulang
-            </button>
-          </div>
-
-          <p className="text-label text-secondary mt-4">
-            Klik keputusan di atas untuk mencatat hasil dan lanjutkan workflow.
-          </p>
-        </div>
-
-        {/* ZONE 5: HISTORY */}
-        <div className="mt-12">
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="text-label text-secondary uppercase tracking-widest
-                       flex items-center gap-2 hover:text-on-surface transition-colors"
-          >
-            Riwayat · {events.length} event
-            <span className="text-xs">{showHistory ? '▲' : '▼'}</span>
-          </button>
-
-          {showHistory && (
-            <EventHistory events={events} />
-          )}
-        </div>
-      </div>
+      <WorkflowFooter
+        customerName={consultation.customers.name}
+        sessionId={consultation.consultation_number}
+        filled={filledCount}
+        total={totalFields}
+        statusLabel={filledCount === totalFields ? 'Ready for Design' : 'In Progress'}
+        primaryDisabled={!isFormValid}
+        loading={loading}
+        onContinue={() => handleDecision('valid')}
+        onRemeasure={() => handleDecision('remeasure')}
+      />
     </div>
   )
 }

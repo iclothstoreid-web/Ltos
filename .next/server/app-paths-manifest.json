@@ -1,0 +1,19 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/fitter/login/page": "app/fitter/login/page.js",
+  "/login/page": "app/login/page.js",
+  "/owner/communications/page": "app/owner/communications/page.js",
+  "/owner/login/page": "app/owner/login/page.js",
+  "/page": "app/page.js",
+  "/portal/[orderId]/page": "app/portal/[orderId]/page.js",
+  "/owner/master-data/page": "app/owner/master-data/page.js",
+  "/workspace/qc/[orderId]/page": "app/workspace/qc/[orderId]/page.js",
+  "/command-center/page": "app/command-center/page.js",
+  "/workspace/design-studio/[consultationId]/page": "app/workspace/design-studio/[consultationId]/page.js",
+  "/workspace/order-created/[orderId]/page": "app/workspace/order-created/[orderId]/page.js",
+  "/workspace/check-in/page": "app/workspace/check-in/page.js",
+  "/workspace/production/[orderId]/page": "app/workspace/production/[orderId]/page.js",
+  "/workspace/measurement/[orderId]/page": "app/workspace/measurement/[orderId]/page.js",
+  "/workspace/production/page": "app/workspace/production/page.js",
+  "/workspace/consultation-review/[consultationId]/page": "app/workspace/consultation-review/[consultationId]/page.js"
+}

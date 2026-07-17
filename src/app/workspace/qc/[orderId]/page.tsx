@@ -10,7 +10,7 @@ export default async function QCPage({ params }: Props) {
   const supabase = createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/fitter/login')
 
   const { data: order } = await supabase
     .from('orders')
