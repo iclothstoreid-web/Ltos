@@ -19,12 +19,50 @@ interface MeasurementHighlightOverlayProps {
 // Glow dots stay mounted at all times and merely toggle opacity/scale, so
 // "highlight follows focus" falls out of independent per-part transitions
 // rather than animating any single element's position.
+// A field like 'sleeve' activates 4 node pairs (shoulder/arm/elbow/wrist)
+// so the whole arm reads as one continuous span, not 4 separate dots that
+// can look, at a glance, like just another single-point highlight (e.g.
+// indistinguishable from 'biceps' since both include the same arm node).
+// Builds an ordered left- and right-side polyline through activeParts,
+// carrying along any side-less/central node (e.g. 'hip') as a shared
+// vertex — only rendered when a side actually has 3+ points, so
+// circumference fields (which activate at most a central + one lateral
+// pair) never sprout a line, only genuine multi-point length fields do.
+function buildChain(ids: BodyPartId[], side: 'left' | 'right') {
+  return ids
+    .filter(id => id.startsWith(side) || !(id.startsWith('left') || id.startsWith('right')))
+    .map(id => BODY_MAP[id].coords)
+}
+
 export function MeasurementHighlightOverlay({ activeParts, activeLabel }: MeasurementHighlightOverlayProps) {
   const activeSet = new Set(activeParts)
   const anchor = activeParts[0] ? BODY_MAP[activeParts[0]] : null
+  const chains = [buildChain(activeParts, 'left'), buildChain(activeParts, 'right')].filter(
+    chain => chain.length >= 3
+  )
 
   return (
     <div className="absolute inset-0 pointer-events-none">
+      {chains.length > 0 && (
+        <svg
+          className="absolute inset-0 w-full h-full animate-fade-in"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+        >
+          {chains.map((chain, i) => (
+            <polyline
+              key={i}
+              points={chain.map(c => `${c.xPct},${c.yPct}`).join(' ')}
+              fill="none"
+              stroke="rgba(119,90,25,0.45)"
+              strokeWidth={0.6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </svg>
+      )}
+
       {(Object.keys(BODY_MAP) as BodyPartId[]).map(id => {
         const { coords } = BODY_MAP[id]
         const active = activeSet.has(id)
