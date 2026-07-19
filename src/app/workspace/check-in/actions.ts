@@ -122,7 +122,7 @@ export async function createNewCustomer(
   const user = await supabase.auth.getUser()
 
   if (!user.data.user?.id) {
-    return { success: false, error: 'Not authenticated', customer: null }
+    return { success: false, error: 'Belum terautentikasi. Silakan login kembali.', customer: null }
   }
 
   const { data, error } = await supabase
@@ -157,7 +157,7 @@ export async function createConsultationSession(
   if (!user.data.user?.id) {
     return {
       success: false,
-      error: 'Not authenticated',
+      error: 'Belum terautentikasi. Silakan login kembali.',
       consultationId: null,
       consultationNumber: null,
     }

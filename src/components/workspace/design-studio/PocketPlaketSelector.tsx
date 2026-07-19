@@ -10,6 +10,7 @@ interface PocketPlaketSelectorProps {
   plaket: string
   onSelectPocket: (value: string) => void
   onSelectPlaket: (value: string) => void
+  onViewSpec: (option: MasterDataOption) => void
 }
 
 // Same shape as CollarCuffSelector — Saku (pocket) and Plaket are two
@@ -21,11 +22,12 @@ export function PocketPlaketSelector({
   plaket,
   onSelectPocket,
   onSelectPlaket,
+  onViewSpec,
 }: PocketPlaketSelectorProps) {
   return (
     <div className="space-y-5">
-      <OptionGroup label="Saku" options={pocketOptions} selected={pocket} onSelect={onSelectPocket} />
-      <OptionGroup label="Plaket" options={plaketOptions} selected={plaket} onSelect={onSelectPlaket} />
+      <OptionGroup label="Saku" options={pocketOptions} selected={pocket} onSelect={onSelectPocket} onViewSpec={onViewSpec} />
+      <OptionGroup label="Plaket" options={plaketOptions} selected={plaket} onSelect={onSelectPlaket} onViewSpec={onViewSpec} />
     </div>
   )
 }

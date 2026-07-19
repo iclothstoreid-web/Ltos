@@ -16,7 +16,7 @@ export default function ProductionScanEntryPage() {
   return (
     <div className="min-h-screen bg-[#FDFCF7] flex items-center justify-center p-6">
       <QrScanModal
-        title="Scan QR Production"
+        title="Scan QR Produksi"
         description="Scan QR yang ditempel Fitter pada order fisik untuk membuka Production Packet-nya."
         validate={value => parseProductionQrPayload(value) !== null}
         dismissible={false}

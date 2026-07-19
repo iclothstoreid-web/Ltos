@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { ConsultationReviewWorkspace } from '@/components/workspace/consultation-review/ConsultationReviewWorkspace'
 import { OrderCreatedLockNotice } from '@/components/workspace/OrderCreatedLockNotice'
 import { findOrderIdForConsultation } from '@/lib/order/lookup'
+import { fetchActiveMasterOptions } from '@/lib/design/masterData'
 
 interface Props {
   params: { consultationId: string }
@@ -36,7 +37,7 @@ export default async function ConsultationReviewPage({ params }: Props) {
       <OrderCreatedLockNotice
         consultationNumber={consultation.consultation_number}
         orderId={orderId}
-        stageLabel="Consultation Review"
+        stageLabel="Tinjauan Konsultasi"
       />
     )
   }
@@ -49,10 +50,16 @@ export default async function ConsultationReviewPage({ params }: Props) {
     .limit(1)
     .single()
 
+  // Same catalog Design Studio reads from — needed here to resolve the
+  // Design Specification's price/ID snapshot when Estimasi Pengerjaan
+  // updates (see ConsultationReviewWorkspace's persistEnhancements).
+  const masterOptions = await fetchActiveMasterOptions(supabase)
+
   return (
     <ConsultationReviewWorkspace
       consultation={consultation}
       latestMeasurement={latestMeasurement}
+      masterOptions={masterOptions}
       fitterName={profile?.name || 'Fitter'}
       userId={user.id}
     />

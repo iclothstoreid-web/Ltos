@@ -11,6 +11,7 @@ import {
   getCurrentStageRecord,
 } from '@/lib/production/stageConfig'
 import { completeStage, getProductionPacket, startStage } from '@/lib/production/client'
+import { releaseMaterialReservation } from '@/lib/inventory/stock'
 import { buildProductionQrPayload } from '@/lib/order/qr'
 import type { CommunicationMessage } from '@/lib/communication/types'
 import { HeroCard } from './HeroCard'
@@ -147,6 +148,20 @@ export function ProductionPacketWorkspace({
           currentRecord.stage === 'qc' && finalDecision === 'alter' ? alterCategory : null,
         completedAt: completedAtCaptured,
       })
+
+      // Cross Application Integration (LOCKED): "Persiapan Material" is
+      // LTOS's actual first production stage (the brief's "Persiapan
+      // Barang") — its completion is what releases the Material
+      // Reservation made at order creation. Kiosk has no login session,
+      // same reasoning as completeStage itself being callable without one.
+      if (currentRecord.stage === 'material_prep') {
+        try {
+          await releaseMaterialReservation(supabase, orderId)
+        } catch (err) {
+          console.error('[inventory] release reservation failed', err)
+        }
+      }
+
       await refetch()
     } finally {
       setSubmitting(false)
@@ -412,7 +427,7 @@ export function ProductionPacketWorkspace({
                     <div className="text-center py-6">
                       <p className="font-hanken text-sm text-[#46464c] mb-4">
                         Operator selesai bekerja? Scan QR Penyelesaian untuk mencatat jam selesai
-                        dan membuka Evidence &amp; Checklist Akhir.
+                        dan membuka Bukti Foto &amp; Checklist Akhir.
                       </p>
                       <button
                         type="button"

@@ -16,18 +16,19 @@ import {
 
 // Owner OS is monitoring/decision-making only — every operational workspace
 // (Check-In, Pengukuran, Design Studio, Review Konsultasi, Order Created,
-// Produksi, QC, Persediaan) lives in its own app now, not here. Command
-// Center is a single page today, so every item below points at it; items
-// with no built data source yet (Inventory App, Customer Journey, Analitik,
-// Pengaturan) are placeholders until those apps exist. Komunikasi is the one
-// exception — it's a real Owner OS page (/owner/communications).
+// Produksi, QC, Persediaan) lives in its own app now, not here. The
+// dashboard is a single page today, so every item below points at it; items
+// with no built data source yet (Customer Journey, Analitik, Pengaturan)
+// are placeholders until those apps exist. Komunikasi and Monitoring
+// Persediaan are the exceptions — real Owner OS pages
+// (/owner/communications, /inventory).
 const navItems = [
   { label: 'Dashboard', href: '/command-center', icon: LayoutDashboard },
   { label: 'Hari Ini', href: '/command-center', icon: Calendar },
   { label: 'Antrian Keputusan', href: '/command-center', icon: ClipboardList },
   { label: 'Komunikasi', href: '/owner/communications', icon: MessageSquare },
   { label: 'Monitoring Produksi', href: '/command-center', icon: Factory },
-  { label: 'Monitoring Persediaan', href: '/command-center', icon: Boxes },
+  { label: 'Monitoring Persediaan', href: '/inventory', icon: Boxes },
   { label: 'Monitoring Perjalanan Pelanggan', href: '/command-center', icon: Users },
   { label: 'Aktivitas Sistem', href: '/command-center', icon: Activity },
   { label: 'Analitik', href: '/command-center', icon: BarChart3 },

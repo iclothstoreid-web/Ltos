@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { fetchAllMasterOptions } from '@/lib/design/masterData'
+import { fetchAllMasterOptions, canManageMasterData } from '@/lib/design/masterData'
 import { MasterDataManager } from '@/components/master-data/MasterDataManager'
 
-// Hanya dapat diakses oleh Admin/Owner — same auth pool as Owner/Fitter
-// login, gated here on profiles.role rather than a separate login screen.
+// Shared by Owner OS and Fitter — both reach this exact page/component, no
+// separate implementation. Gated on profiles.role (admin/owner/artisan) via
+// the single canManageMasterData() source of truth.
 export default async function MasterDataPage() {
   const supabase = createClient()
 
@@ -17,7 +18,7 @@ export default async function MasterDataPage() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin' && profile?.role !== 'owner') {
+  if (!canManageMasterData(profile?.role)) {
     redirect('/command-center')
   }
 

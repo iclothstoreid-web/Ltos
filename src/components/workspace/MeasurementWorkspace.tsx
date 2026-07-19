@@ -9,7 +9,7 @@ import { EventHistory } from './EventHistory'
 import { MeasurementTopBar } from './measurement/MeasurementTopBar'
 import { MeasurementNavAside } from './measurement/MeasurementNavAside'
 import { MeasurementSidebar } from './measurement/MeasurementSidebar'
-import { DigitalMannequin } from './measurement/DigitalMannequin'
+import { MeasurementPanel } from './measurement/MeasurementPanel'
 import { BodyTagSelector } from './measurement/BodyTagSelector'
 import { ProgressCard } from './measurement/ProgressCard'
 import { SessionCard } from './measurement/SessionCard'
@@ -17,8 +17,11 @@ import { ComparisonCard } from './measurement/ComparisonCard'
 import { PhotoUploader } from './measurement/PhotoUploader'
 import { WorkflowFooter } from './measurement/WorkflowFooter'
 import { encodeNotes, decodeNotes } from './measurement/notesCodec'
-import { EMPTY_FIELDS, FIELD_BODY_PARTS } from './measurement/types'
-import type { MeasurementFields, BodyPart } from './measurement/types'
+import { EMPTY_FIELDS, FIELD_LABELS } from './measurement/types'
+import type { MeasurementFields } from './measurement/types'
+import { MEASUREMENT_BODY_MAP } from '@/lib/measurement/bodyMap'
+import { buildCustomerDigitalProfile } from '@/lib/customerProfile/buildProfile'
+import { decodeCustomerDigitalProfile, encodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
 
 interface MeasurementWorkspaceProps {
   consultation: Consultation & { customers: { name: string; phone: string | null } }
@@ -58,7 +61,12 @@ export function MeasurementWorkspace({
   const filledCount = Object.values(fields).filter(Boolean).length
   const isFormValid = Boolean(fields.chest && fields.shoulder && fields.sleeve && fields.length)
 
-  const activeParts: BodyPart[] = focusedField ? FIELD_BODY_PARTS[focusedField] : []
+  // Body Map is the source of truth for which part(s) glow — see
+  // src/lib/measurement/bodyMap.ts
+  const activeParts = focusedField ? MEASUREMENT_BODY_MAP[focusedField] : []
+  const activeLabel = focusedField
+    ? { title: FIELD_LABELS[focusedField], value: fields[focusedField] ? `${fields[focusedField]} cm` : '' }
+    : null
 
   const handleFieldChange = (key: keyof MeasurementFields, value: string) => {
     setFields(prev => ({ ...prev, [key]: value }))
@@ -95,10 +103,24 @@ export function MeasurementWorkspace({
           created_by: userId,
         })
 
+        // Foundation for the future AI Render Engine (Sprint 3): derive the
+        // permanent Customer Digital Profile from this measurement session
+        // and persist it into the active consultation's notes alongside the
+        // status handoff — no new table/column, same marker-block technique
+        // as the other consultations.notes codecs.
+        const profile = buildCustomerDigitalProfile({
+          consultationId: consultation.id,
+          fields,
+          bodyTags: tags,
+          measuredAt: new Date().toISOString(),
+          existingProfile: decodeCustomerDigitalProfile(consultation.notes),
+        })
+        const nextConsultationNotes = encodeCustomerDigitalProfile(consultation.notes, profile)
+
         // Hand off to Design Studio
         await supabase
           .from('consultations')
-          .update({ status: 'design' })
+          .update({ status: 'design', notes: nextConsultationNotes })
           .eq('id', consultation.id)
 
         router.push(`/workspace/design-studio/${consultation.id}`)
@@ -139,14 +161,7 @@ export function MeasurementWorkspace({
           />
 
           <section className="w-full lg:w-[45%] flex flex-col items-center">
-            <DigitalMannequin
-              activeParts={activeParts}
-              shoulder={fields.shoulder}
-              chest={fields.chest}
-              waist={fields.waist}
-              hip={fields.hip}
-              sleeve={fields.sleeve}
-            />
+            <MeasurementPanel activeParts={activeParts} activeLabel={activeLabel} />
 
             <div className="w-full px-4 mt-4">
               <BodyTagSelector selected={tags} onToggle={handleToggleTag} />
@@ -159,7 +174,7 @@ export function MeasurementWorkspace({
                   value={humanNotes}
                   onChange={e => setHumanNotes(e.target.value)}
                   rows={3}
-                  placeholder="Preferensi fit, bentuk tubuh khusus, permintaan customer..."
+                  placeholder="Preferensi fit, bentuk tubuh khusus, permintaan pelanggan..."
                   className="w-full border-[0.5px] border-[#c4c7c7] bg-white/50 p-4 font-sans text-sm
                              text-[#151c27] outline-none focus:border-[#775a19] transition-colors resize-none"
                 />
@@ -168,7 +183,7 @@ export function MeasurementWorkspace({
               {(tags.length > 0 || humanNotes) && (
                 <div className="text-center p-6 border-[0.5px] border-[#c4c7c7] bg-white/50 mt-8">
                   <p className="font-sans text-xs uppercase tracking-widest text-[#444748] mb-2">
-                    Profile Summary
+                    Ringkasan Profil
                   </p>
                   <p className="font-caslon italic text-[#151c27]">
                     &ldquo;{tags.join(', ') || humanNotes}&rdquo;
@@ -182,7 +197,7 @@ export function MeasurementWorkspace({
             <ProgressCard filled={filledCount} total={totalFields} />
             <SessionCard sessionId={consultation.consultation_number} fitterName={fitterName} />
             {existingMeasurement?.chest != null && (
-              <ComparisonCard label="Chest" current={fields.chest} previous={existingMeasurement.chest} />
+              <ComparisonCard label="Lingkar Dada" current={fields.chest} previous={existingMeasurement.chest} />
             )}
             <PhotoUploader />
 
@@ -192,7 +207,7 @@ export function MeasurementWorkspace({
                 className="font-sans text-xs text-[#444748] uppercase tracking-widest
                            flex items-center gap-2 hover:text-[#151c27] transition-colors"
               >
-                Riwayat · {events.length} event
+                Riwayat · {events.length} aktivitas
                 <span className="text-xs">{showHistory ? '▲' : '▼'}</span>
               </button>
               {showHistory && <EventHistory events={events} />}
@@ -206,7 +221,7 @@ export function MeasurementWorkspace({
         sessionId={consultation.consultation_number}
         filled={filledCount}
         total={totalFields}
-        statusLabel={filledCount === totalFields ? 'Ready for Design' : 'In Progress'}
+        statusLabel={filledCount === totalFields ? 'Siap untuk Desain' : 'Sedang Berlangsung'}
         primaryDisabled={!isFormValid}
         loading={loading}
         onContinue={() => handleDecision('valid')}

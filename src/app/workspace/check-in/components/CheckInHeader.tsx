@@ -9,20 +9,20 @@ interface CheckInHeaderProps {
 // aren't appropriate to embed in a real production repo.
 export function CheckInHeader({ userInitial = '?' }: CheckInHeaderProps) {
   return (
-    <header className="h-20 flex justify-between items-center px-16 w-full border-b-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] shrink-0">
+    <header className="h-20 flex justify-between items-center px-4 lg:px-16 w-full border-b-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] shrink-0">
       <div className="flex items-center gap-4">
-        <span className="font-sans text-xs uppercase tracking-widest text-[#444748]">Workspace</span>
-        <span className="text-[#747878]">/</span>
-        <span className="font-sans text-sm font-semibold text-[#151c27]">Client Intake</span>
+        <span className="hidden sm:inline font-sans text-xs uppercase tracking-widest text-[#444748]">Ruang Kerja</span>
+        <span className="hidden sm:inline text-[#747878]">/</span>
+        <span className="font-sans text-sm font-semibold text-[#151c27]">Penerimaan Pelanggan</span>
       </div>
-      <div className="flex items-center gap-6">
-        <span className="material-symbols-outlined text-[#444748] cursor-pointer hover:text-[#151c27] transition-colors">
+      <div className="flex items-center gap-2 lg:gap-6">
+        <span className="material-symbols-outlined text-[#444748] cursor-pointer hover:text-[#151c27] transition-colors p-2 -m-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
           notifications
         </span>
-        <span className="material-symbols-outlined text-[#444748] cursor-pointer hover:text-[#151c27] transition-colors">
+        <span className="material-symbols-outlined text-[#444748] cursor-pointer hover:text-[#151c27] transition-colors p-2 -m-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
           settings
         </span>
-        <div className="w-10 h-10 rounded-full bg-[#e2e8f8] border border-[#c4c7c7] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-[#e2e8f8] border border-[#c4c7c7] flex items-center justify-center shrink-0">
           <span className="font-fraunces text-sm text-[#151c27]">{userInitial}</span>
         </div>
       </div>

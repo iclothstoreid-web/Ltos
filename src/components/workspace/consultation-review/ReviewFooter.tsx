@@ -16,13 +16,13 @@ export function ReviewFooter({ customerName, loading, onContinue }: ReviewFooter
       <div className="max-w-[1440px] mx-auto px-16 py-4 flex items-center justify-between gap-6 flex-wrap">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
-            <span className="font-sans text-[10px] text-[#c8c6c5] uppercase opacity-70">Client</span>
+            <span className="font-sans text-[10px] text-[#c8c6c5] uppercase opacity-70">Pelanggan</span>
             <span className="font-sans text-sm font-bold">{customerName}</span>
           </div>
           <div className="w-px h-8 bg-white/20" />
           <div className="flex flex-col">
             <span className="font-sans text-[10px] text-[#c8c6c5] uppercase opacity-70">
-              Investment
+              Investasi
             </span>
             <span className="font-sans text-sm font-bold text-[#e9c176]">Belum dihitung</span>
           </div>
@@ -31,7 +31,7 @@ export function ReviewFooter({ customerName, loading, onContinue }: ReviewFooter
             <span className="font-sans text-[10px] text-[#c8c6c5] uppercase opacity-70">Status</span>
             <span className="font-sans text-sm flex items-center gap-1">
               <span className="w-2 h-2 bg-[#775a19] rounded-full animate-pulse" />
-              Draft Review
+              Tinjauan Draf
             </span>
           </div>
         </div>
@@ -42,7 +42,7 @@ export function ReviewFooter({ customerName, loading, onContinue }: ReviewFooter
           className="bg-white text-[#151c27] px-8 py-2 font-sans text-sm uppercase tracking-widest
                      hover:bg-[#e5e2e1] transition-colors disabled:opacity-40"
         >
-          {loading ? 'Memproses...' : 'Continue'}
+          {loading ? 'Memproses...' : 'Lanjutkan'}
         </button>
       </div>
     </footer>

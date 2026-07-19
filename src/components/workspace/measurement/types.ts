@@ -64,14 +64,33 @@ export const FIELD_BODY_PARTS: Record<keyof MeasurementFields, BodyPart[]> = {
   hemWidth: ['legs'],
 }
 
+// Short display names for the highlight overlay label — a separate,
+// intentionally terser set than MeasurementSidebar's own field labels
+// (e.g. "Shoulder Width"), since the overlay label sits next to the body
+// part itself and doesn't need the sidebar's fuller wording.
+export const FIELD_LABELS: Record<keyof MeasurementFields, string> = {
+  neck: 'Leher',
+  shoulder: 'Bahu',
+  chest: 'Dada',
+  waist: 'Pinggang',
+  hip: 'Pinggul',
+  armhole: 'Kerung Lengan',
+  sleeve: 'Lengan',
+  biceps: 'Lengan Atas',
+  elbow: 'Siku',
+  wrist: 'Pergelangan Tangan',
+  length: 'Panjang',
+  hemWidth: 'Lebar Bawah',
+}
+
 export const BODY_TAGS = [
-  'Athletic',
-  'Straight Shoulder',
-  'Round Shoulder',
-  'Forward Neck',
-  'Large Belly',
-  'Slim',
-  'Stooped',
+  'Atletis',
+  'Bahu Lurus',
+  'Bahu Membulat',
+  'Leher Maju',
+  'Perut Besar',
+  'Ramping',
+  'Badan Membungkuk',
 ] as const
 
 export type BodyTag = (typeof BODY_TAGS)[number]

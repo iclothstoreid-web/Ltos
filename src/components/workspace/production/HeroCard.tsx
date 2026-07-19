@@ -39,7 +39,7 @@ export function HeroCard({ packet, currentStatus = 'pending' }: HeroCardProps) {
             </span>
           </div>
           <h2 className="font-caslon text-2xl text-[#161b29] truncate">
-            {packet.customer_name || 'Customer'}
+            {packet.customer_name || 'Pelanggan'}
           </h2>
           {packet.design && (
             <p className="font-hanken text-sm text-[#46464c] truncate">

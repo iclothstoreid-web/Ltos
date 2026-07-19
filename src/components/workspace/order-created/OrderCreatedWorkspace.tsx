@@ -7,7 +7,7 @@ import { TopNavBar } from './TopNavBar'
 import { CustomerOrderCard } from './CustomerOrderCard'
 import { PaymentSummaryCard } from './PaymentSummaryCard'
 import { OrderSuccessHero } from './OrderSuccessHero'
-import { CustomerTrackingActions } from './CustomerTrackingActions'
+import { CustomerJourneyShareActions } from './CustomerJourneyShareActions'
 import { TechnicalDetailsCard } from './TechnicalDetailsCard'
 import { ProductionJourneyTimeline } from './ProductionJourneyTimeline'
 import { SystemLogisticsCard } from './SystemLogisticsCard'
@@ -49,7 +49,12 @@ export function OrderCreatedWorkspace({
 
         <div className="col-span-5 flex flex-col gap-8">
           <OrderSuccessHero orderNumber={order.order_number} snapshot={snapshot} />
-          <CustomerTrackingActions trackingUrl={snapshot.qrPayload} />
+          <CustomerJourneyShareActions
+            customerToken={order.customer_token}
+            customerName={snapshot.customer.name}
+            customerPhone={snapshot.customer.phone}
+            orderNumber={order.order_number}
+          />
         </div>
 
         <aside className="col-span-4 flex flex-col gap-8">

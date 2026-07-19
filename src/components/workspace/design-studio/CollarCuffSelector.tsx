@@ -10,6 +10,7 @@ interface CollarCuffSelectorProps {
   cuff: string
   onSelectCollar: (value: string) => void
   onSelectCuff: (value: string) => void
+  onViewSpec: (option: MasterDataOption) => void
 }
 
 export function CollarCuffSelector({
@@ -19,11 +20,12 @@ export function CollarCuffSelector({
   cuff,
   onSelectCollar,
   onSelectCuff,
+  onViewSpec,
 }: CollarCuffSelectorProps) {
   return (
     <div className="space-y-5">
-      <OptionGroup label="Kerah" options={collarOptions} selected={collar} onSelect={onSelectCollar} />
-      <OptionGroup label="Manset" options={cuffOptions} selected={cuff} onSelect={onSelectCuff} />
+      <OptionGroup label="Kerah" options={collarOptions} selected={collar} onSelect={onSelectCollar} onViewSpec={onViewSpec} />
+      <OptionGroup label="Manset" options={cuffOptions} selected={cuff} onSelect={onSelectCuff} onViewSpec={onViewSpec} />
     </div>
   )
 }

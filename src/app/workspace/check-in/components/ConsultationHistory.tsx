@@ -32,7 +32,7 @@ export function ConsultationHistory({ customerId }: ConsultationHistoryProps) {
   return (
     <div className="space-y-6">
       <h4 className="font-sans text-xs uppercase tracking-widest text-[#444748] border-b border-[#c4c7c7] pb-4">
-        Consultation History
+        Riwayat Konsultasi
       </h4>
 
       {error && <p className="font-sans text-sm text-[#ba1a1a] mt-2">{error}</p>}

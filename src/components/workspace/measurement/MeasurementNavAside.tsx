@@ -4,7 +4,7 @@ const NAV_ITEMS = [
   { label: 'Check-In', icon: 'person_add', active: false },
   { label: 'Studio', icon: 'architecture', active: true },
   { label: 'Persediaan', icon: 'straighten', active: false },
-  { label: 'Order', icon: 'description', active: false },
+  { label: 'Pesanan', icon: 'description', active: false },
   { label: 'Analitik', icon: 'analytics', active: false },
 ]
 

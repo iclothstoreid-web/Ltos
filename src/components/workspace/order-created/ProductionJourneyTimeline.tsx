@@ -10,11 +10,11 @@ interface ProductionJourneyTimelineProps {
 }
 
 const EVENT_LABELS: Record<string, string> = {
-  'measurement.completed': 'Measurement Recorded',
-  'design.completed': 'Design Finalized',
-  'consultation.approved': 'Consultation Approved',
-  'consultation.completed': 'Consultation Completed',
-  'order.created': 'Order Created',
+  'measurement.completed': 'Pengukuran Tercatat',
+  'design.completed': 'Desain Difinalisasi',
+  'consultation.approved': 'Konsultasi Disetujui',
+  'consultation.completed': 'Konsultasi Selesai',
+  'order.created': 'Pesanan Berhasil Dibuat',
 }
 
 // Real events from business_events, not Stitch's fixed three-step list —
@@ -27,7 +27,7 @@ export function ProductionJourneyTimeline({ events }: ProductionJourneyTimelineP
   return (
     <section className="bg-white/70 backdrop-blur-sm border-[0.5px] border-[#c4c7c7]/40 shadow-sm p-4">
       <h3 className="font-sans text-xs text-[#444748] uppercase tracking-widest mb-6 border-b border-[#c4c7c7] pb-2">
-        Production Journey
+        Perjalanan Produksi
       </h3>
       <div className="relative pl-8 space-y-6">
         <div className="absolute left-[11px] top-2 bottom-2 w-[1px] bg-[#c4c7c7]" />
@@ -54,11 +54,11 @@ export function ProductionJourneyTimeline({ events }: ProductionJourneyTimelineP
           <div className="absolute -left-8 w-6 h-6 bg-white border-2 border-[#151c27] rounded-full flex items-center justify-center ring-4 ring-white">
             <div className="w-2 h-2 bg-[#151c27] rounded-full animate-pulse" />
           </div>
-          <p className="font-sans text-xs font-bold text-[#151c27]">Ready for Cutting</p>
-          <p className="text-[10px] text-[#775a19] italic">Awaiting atelier assignment</p>
+          <p className="font-sans text-xs font-bold text-[#151c27]">Siap untuk Dipotong</p>
+          <p className="text-[10px] text-[#775a19] italic">Menunggu penugasan atelier</p>
         </div>
 
-        {['Sewing & Assembly', 'Quality Control'].map(step => (
+        {['Menjahit & Perakitan', 'Kontrol Kualitas'].map(step => (
           <div className="relative opacity-40" key={step}>
             <div className="absolute -left-8 w-6 h-6 bg-[#dce2f3] border-2 border-[#c4c7c7] rounded-full ring-4 ring-white" />
             <p className="font-sans text-xs text-[#444748]">{step}</p>

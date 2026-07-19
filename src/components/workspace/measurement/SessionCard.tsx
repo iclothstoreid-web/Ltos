@@ -24,22 +24,22 @@ export function SessionCard({ sessionId, fitterName }: SessionCardProps) {
   return (
     <div className="p-6 border-[0.5px] border-[#c4c7c7] space-y-3">
       <div className="flex justify-between">
-        <span className="text-xs text-[#444748]">Session ID</span>
+        <span className="text-xs text-[#444748]">ID Sesi</span>
         <span className="text-xs font-bold text-[#151c27]">{sessionId}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-xs text-[#444748]">Measured By</span>
+        <span className="text-xs text-[#444748]">Diukur Oleh</span>
         <span className="text-xs text-[#151c27]">{fitterName}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-xs text-[#444748]">Started At</span>
+        <span className="text-xs text-[#444748]">Waktu Mulai</span>
         <span className="text-xs text-[#151c27]">
           {startedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
       <div className="flex justify-between">
-        <span className="text-xs text-[#444748]">Duration</span>
-        <span className="text-xs text-[#151c27]">{durationMin} mins</span>
+        <span className="text-xs text-[#444748]">Durasi</span>
+        <span className="text-xs text-[#151c27]">{durationMin} menit</span>
       </div>
     </div>
   )

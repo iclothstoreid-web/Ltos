@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { searchCustomers, getRecentConsultations } from '../actions'
+import { searchCustomers, getRecentConsultations, getCustomerById } from '../actions'
 import type { Customer, RecentConsultation } from '../types'
 import { CustomerCard } from './CustomerCard'
 
@@ -69,8 +69,18 @@ export function CustomerSearch({
     setShowResults(false)
   }
 
+  // "Konsultasi Terakhir" rows only carry a partial customer join
+  // ({id, name, phone}) — fetch the full record via the same
+  // getCustomerById action NewCustomerForm/ConsultationHistory already use,
+  // then reuse handleSelectCustomer's existing selection path.
+  const handleSelectRecent = async (consultation: RecentConsultation) => {
+    if (!consultation.customers) return
+    const { customer } = await getCustomerById(consultation.customers.id)
+    if (customer) handleSelectCustomer(customer)
+  }
+
   return (
-    <section className="w-[30%] border-r-[0.5px] border-[#c4c7c7] flex flex-col bg-white/40 h-full">
+    <section className="w-full lg:w-[30%] border-b lg:border-b-0 lg:border-r-[0.5px] border-[#c4c7c7] flex flex-col bg-white/40 lg:h-full">
       <div className="p-8 pb-4">
         <div className="relative group">
           <span className="absolute left-0 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#747878] transition-colors group-focus-within:text-[#775a19]">
@@ -114,13 +124,13 @@ export function CustomerSearch({
         {showResults && query.length >= 2 && results.length === 0 && !loading && (
           <div className="p-6 text-center rounded-xl bg-white border border-[#c4c7c7]/40">
             <p className="font-sans text-sm text-[#444748] mb-4">
-              Customer tidak ditemukan
+              Pelanggan tidak ditemukan
             </p>
             <button
               onClick={onNewCustomer}
               className="font-sans text-xs font-semibold text-[#775a19] hover:underline uppercase tracking-widest"
             >
-              Buat customer baru
+              Buat pelanggan baru
             </button>
           </div>
         )}
@@ -137,9 +147,14 @@ export function CustomerSearch({
                 </h3>
                 <div className="space-y-2">
                   {recentConsultations.map(consultation => (
-                    <div
+                    <button
                       key={consultation.id}
-                      className="p-4 rounded-lg bg-white border border-[#c4c7c7]/30"
+                      type="button"
+                      onClick={() => handleSelectRecent(consultation)}
+                      disabled={!consultation.customers}
+                      className="w-full text-left p-4 rounded-lg bg-white border border-[#c4c7c7]/30
+                                 transition-all duration-300 hover:bg-white/60 hover:border-[#c4c7c7]
+                                 disabled:cursor-default disabled:hover:bg-white disabled:hover:border-[#c4c7c7]/30"
                     >
                       <div className="flex items-start justify-between">
                         <div>
@@ -160,7 +175,7 @@ export function CustomerSearch({
                           {STATUS_LABELS[consultation.status] || consultation.status}
                         </span>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -175,7 +190,7 @@ export function CustomerSearch({
                 className="w-full bg-[#151c27] text-white px-6 py-3 rounded-lg font-sans text-sm
                            font-semibold hover:bg-[#775a19] transition-all duration-300"
               >
-                + Customer Baru
+                + Pelanggan Baru
               </button>
             </div>
           </div>

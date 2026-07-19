@@ -19,7 +19,7 @@ export function DecisionPanel({ loading, onCreateOrder, onApprove }: DecisionPan
         className="w-full py-3 bg-[#151c27] text-white font-sans text-sm uppercase tracking-widest
                    hover:bg-[#775a19] transition-all duration-300 disabled:opacity-40"
       >
-        {loading ? 'Memproses...' : 'Create Order'}
+        {loading ? 'Memproses...' : 'Buat Pesanan'}
       </button>
       <button
         type="button"
@@ -28,7 +28,7 @@ export function DecisionPanel({ loading, onCreateOrder, onApprove }: DecisionPan
         className="w-full py-3 border-[0.5px] border-[#151c27] text-[#151c27] font-sans text-sm
                    uppercase tracking-widest hover:bg-[#f0f3ff] transition-all duration-300 disabled:opacity-40"
       >
-        Save Consultation
+        Simpan Konsultasi
       </button>
       <div className="bg-[#f0f3ff]/50 p-3 border-l-2 border-[#775a19]">
         {/* Stitch's original copy claims inventory reservation and payment
@@ -36,7 +36,7 @@ export function DecisionPanel({ loading, onCreateOrder, onApprove }: DecisionPan
             describes what Create Order actually does instead of promising
             unbuilt capability. */}
         <p className="font-sans text-xs italic text-[#444748] leading-tight">
-          &quot;Create Order akan membuat order resmi dari konsultasi ini dan melanjutkan workflow
+          &quot;Buat Pesanan akan membuat order resmi dari konsultasi ini dan melanjutkan workflow
           ke tahap produksi (belum diimplementasikan). Reservasi inventory dan QR pembayaran belum
           tersedia.&quot;
         </p>

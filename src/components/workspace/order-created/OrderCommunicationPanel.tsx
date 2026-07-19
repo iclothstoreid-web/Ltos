@@ -56,7 +56,7 @@ export function OrderCommunicationPanel({ orderId, profileId, profileName, initi
 
   return (
     <div className="bg-white border-[0.5px] border-[#c4c7c7]/40 p-6">
-      <p className="text-xs uppercase tracking-widest text-[#444748] mb-4">Komunikasi Order</p>
+      <p className="text-xs uppercase tracking-widest text-[#444748] mb-4">Komunikasi Pesanan</p>
 
       <div className="max-h-72 overflow-y-auto space-y-3 mb-4 pr-1">
         {messages.length === 0 && (

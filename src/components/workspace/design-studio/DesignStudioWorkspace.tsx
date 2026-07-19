@@ -1,26 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Consultation } from '@/app/workspace/check-in/types'
 import type { Measurement } from '@/types'
-import { decodeNotes as decodeMeasurementNotes } from '@/components/workspace/measurement/notesCodec'
 import { DesignStudioTopBar } from './DesignStudioTopBar'
 import { GarmentBlueprintPanel } from './GarmentBlueprintPanel'
-import { GarmentPreviewCanvas } from './GarmentPreviewCanvas'
-import { OrderSummaryPanel } from './OrderSummaryPanel'
+import { AIPreviewPanel } from './AIPreviewPanel'
+import { DesignSummaryPanel } from './DesignSummaryPanel'
 import { DesignStudioFooter } from './DesignStudioFooter'
 import { DEFAULT_SELECTIONS, CATEGORY_BY_FIELD } from './types'
 import type { DesignSelections } from './types'
 import { encodeDesignNotes, decodeDesignNotes } from './notesCodec'
 import { firstActiveOptionName } from '@/lib/design/masterData'
 import type { MasterOptionsByCategory } from '@/lib/design/masterData'
+import { buildDesignSpecification } from '@/lib/designSpecification/buildSpecification'
+import { encodeDesignSpecification, decodeDesignSpecification } from '@/lib/designSpecification/codec'
+import { decodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
+import type { RenderContext } from '@/lib/customerProfile/renderContext'
+
+interface MaterialStockInfo {
+  available_stock: number
+  min_stock: number
+  unit: string
+}
 
 interface DesignStudioWorkspaceProps {
   consultation: Consultation & { customers: { name: string; phone: string | null } }
   latestMeasurement: Measurement | null
   masterOptions: MasterOptionsByCategory
+  materialStock: Record<string, MaterialStockInfo>
   canManageMasterData: boolean
   userId: string
 }
@@ -42,8 +52,8 @@ function buildInitialSelections(
 
 export function DesignStudioWorkspace({
   consultation,
-  latestMeasurement,
   masterOptions,
+  materialStock,
   canManageMasterData,
   userId,
 }: DesignStudioWorkspaceProps) {
@@ -53,15 +63,44 @@ export function DesignStudioWorkspace({
   const [selections, setSelections] = useState<DesignSelections>(() =>
     buildInitialSelections(consultation.notes, masterOptions)
   )
+  const [notes, setNotes] = useState<string>(() => decodeDesignSpecification(consultation.notes)?.notes ?? '')
   const [loading, setLoading] = useState(false)
+  // Last RenderContext built by "Generate Final Preview" — kept here (not
+  // persisted) so a future AI Render sprint can diff
+  // `renderContext.designSpecification.lastUpdated` against the live
+  // specification below to flag "Preview Outdated" without any new state.
+  const [renderContext, setRenderContext] = useState<RenderContext | null>(null)
 
-  // `waist` isn't a real column on `measurements` — Measurement encodes it
-  // into its own notes field (see measurement/notesCodec.ts). Reusing that
-  // decoder (read-only import, no edits to Measurement) so the
-  // chest-to-waist ratio below reflects a real saved value when present.
-  const waistFromMeasurement = latestMeasurement?.notes
-    ? parseFloat(decodeMeasurementNotes(latestMeasurement.notes).extras.waist || '')
-    : NaN
+  // Read-only decode of the profile Measurement already built — Design
+  // Studio never writes to it, only reads it for the Generate Final Preview
+  // validation/RenderContext (see AIPreviewPanel).
+  const customerDigitalProfile = useMemo(
+    () => decodeCustomerDigitalProfile(consultation.notes),
+    [consultation.notes]
+  )
+
+  // Existing (DB-persisted) specification, kept only to carry forward
+  // `estimatedProductionSpeed` — that field is set in Consultation Review,
+  // not here, so a fresh Design Studio session must not blank it out.
+  const existingSpecification = useMemo(
+    () => decodeDesignSpecification(consultation.notes),
+    [consultation.notes]
+  )
+
+  // Live Design Specification — the single object both the Design Summary
+  // Panel and Generate Final Preview read from, so they can never drift out
+  // of sync with each other or with what persist() saves below.
+  const liveSpecification = useMemo(
+    () =>
+      buildDesignSpecification({
+        consultationId: consultation.id,
+        selections,
+        masterOptions,
+        notes,
+        existingSpecification,
+      }),
+    [consultation.id, selections, masterOptions, notes, existingSpecification]
+  )
 
   const handleChange = (key: keyof DesignSelections, value: string) => {
     setSelections(prev => ({ ...prev, [key]: value }))
@@ -70,11 +109,18 @@ export function DesignStudioWorkspace({
   async function persist(nextStatus?: 'review') {
     setLoading(true)
     try {
-      const notes = encodeDesignNotes(consultation.notes || '', selections)
+      let notesToSave = encodeDesignNotes(consultation.notes || '', selections)
+
+      // Design Specification Builder — every Save/Continue keeps this
+      // permanent, ID-backed object up to date; it never waits for Create
+      // Order. Reuses the same live object the Design Summary Panel already
+      // shows, so what's on screen and what gets saved are guaranteed
+      // identical.
+      notesToSave = encodeDesignSpecification(notesToSave, liveSpecification)
 
       await supabase
         .from('consultations')
-        .update(nextStatus ? { notes, status: nextStatus } : { notes })
+        .update(nextStatus ? { notes: notesToSave, status: nextStatus } : { notes: notesToSave })
         .eq('id', consultation.id)
 
       // emit_event() RPC only accepts p_order_id — consultation-linked
@@ -104,17 +150,21 @@ export function DesignStudioWorkspace({
       />
 
       <main className="pt-20 pb-32 h-screen w-full flex overflow-hidden">
-        <GarmentBlueprintPanel selections={selections} masterOptions={masterOptions} onChange={handleChange} />
-        <GarmentPreviewCanvas
+        <GarmentBlueprintPanel
           selections={selections}
-          shoulder={latestMeasurement?.shoulder ?? null}
-          sleeve={latestMeasurement?.sleeve ?? null}
+          masterOptions={masterOptions}
+          materialStock={materialStock}
+          onChange={handleChange}
+          notes={notes}
+          onNotesChange={setNotes}
         />
-        <OrderSummaryPanel
-          selections={selections}
-          chest={latestMeasurement?.chest ?? null}
-          waist={Number.isNaN(waistFromMeasurement) ? null : waistFromMeasurement}
+        <AIPreviewPanel
+          customerDigitalProfile={customerDigitalProfile}
+          designSpecification={liveSpecification}
+          renderContext={renderContext}
+          onGenerate={setRenderContext}
         />
+        <DesignSummaryPanel specification={liveSpecification} />
       </main>
 
       <DesignStudioFooter

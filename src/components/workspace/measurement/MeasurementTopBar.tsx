@@ -14,7 +14,7 @@ export function MeasurementTopBar() {
           <span className="font-sans text-sm text-[#151c27] border-b-2 border-[#775a19] pb-1">
             Atelier
           </span>
-          <span className="font-sans text-sm text-[#444748]">Inventory</span>
+          <span className="font-sans text-sm text-[#444748]">Persediaan</span>
         </nav>
       </div>
       <div className="flex items-center gap-4">

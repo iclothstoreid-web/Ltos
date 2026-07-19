@@ -15,7 +15,7 @@ export function TopNavBar({ fitterInitial }: TopNavBarProps) {
           <span className="text-[#151c27] border-b border-[#151c27] pb-1 font-sans text-sm">
             Workspace
           </span>
-          <span className="text-[#444748] font-sans text-sm">Activity</span>
+          <span className="text-[#444748] font-sans text-sm">Aktivitas</span>
         </nav>
       </div>
       <div className="flex items-center gap-6">

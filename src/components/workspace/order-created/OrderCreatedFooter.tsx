@@ -15,7 +15,7 @@ export function OrderCreatedFooter({ orderNumber }: OrderCreatedFooterProps) {
         <div className="flex items-center gap-4 text-[#444748]">
           <span className="material-symbols-outlined">info</span>
           <p className="font-sans text-xs uppercase tracking-widest">
-            Order {orderNumber} is locked and finalized for production.
+            Pesanan {orderNumber} telah dikunci dan difinalisasi untuk produksi.
           </p>
         </div>
         <div className="flex gap-4">
@@ -25,7 +25,7 @@ export function OrderCreatedFooter({ orderNumber }: OrderCreatedFooterProps) {
             className="px-8 py-3 border border-[#c4c7c7] hover:bg-[#e7eefe] transition-all font-sans
                        text-sm uppercase tracking-widest font-bold text-[#151c27]"
           >
-            Back to Dashboard
+            Kembali ke Dashboard
           </button>
           <button
             type="button"
@@ -33,7 +33,7 @@ export function OrderCreatedFooter({ orderNumber }: OrderCreatedFooterProps) {
             className="px-8 py-3 bg-[#151c27] text-white hover:bg-[#775a19] transition-all font-sans
                        text-sm uppercase tracking-widest font-bold"
           >
-            Start New Consultation
+            Mulai Konsultasi Baru
           </button>
         </div>
       </div>

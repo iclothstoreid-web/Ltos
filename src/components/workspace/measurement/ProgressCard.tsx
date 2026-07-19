@@ -41,10 +41,10 @@ export function ProgressCard({ filled, total }: ProgressCardProps) {
         </div>
       </div>
       <p className="font-sans text-sm text-[#151c27]">
-        {pct === 100 ? 'Measurement Complete' : `${filled} dari ${total} Terisi`}
+        {pct === 100 ? 'Pengukuran Selesai' : `${filled} dari ${total} Terisi`}
       </p>
       <p className="text-[10px] uppercase text-[#444748] mt-1">
-        {pct === 100 ? 'Ready for pattern drafting' : 'Sedang berlangsung'}
+        {pct === 100 ? 'Siap untuk pembuatan pola' : 'Sedang berlangsung'}
       </p>
     </div>
   )

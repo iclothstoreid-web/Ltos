@@ -21,10 +21,10 @@ export function MeasurementSummaryCard({
     <section className="bg-white shadow-sm p-4 border-[0.5px] border-[#c4c7c7]">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-sans text-xs text-[#151c27] font-bold uppercase tracking-widest">
-          Measurements
+          Pengukuran
         </h3>
         <span className="text-[#775a19] font-sans text-xs">
-          {filledCount}/{totalCount} COMPLETE
+          {filledCount}/{totalCount} LENGKAP
         </span>
       </div>
       <div className="flex gap-2 mb-4">
@@ -42,7 +42,7 @@ export function MeasurementSummaryCard({
       {bodyTags.length > 0 && (
         <div className="mb-4">
           <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
-            Body Tags
+            Karakter Bentuk Tubuh
           </p>
           <div className="flex flex-wrap gap-1.5">
             {bodyTags.map(tag => (
@@ -63,15 +63,15 @@ export function MeasurementSummaryCard({
           onClick={() => router.push(`/workspace/measurement/${consultationId}`)}
           className="w-full py-3 border-[0.5px] border-[#747878] hover:bg-[#f0f3ff] transition-all duration-300 font-sans text-xs text-[#151c27]"
         >
-          View / Edit Measurements
+          Lihat / Edit Pengukuran
         </button>
         <button
           type="button"
           disabled
-          title="Photo documentation isn't persisted yet (local preview only in Measurement)"
+          title="Dokumentasi foto belum tersimpan permanen (hanya pratinjau lokal di tahap Pengukuran)"
           className="w-full py-3 border-[0.5px] border-[#c4c7c7] font-sans text-xs text-[#444748] opacity-50 cursor-not-allowed"
         >
-          View Photos
+          Lihat Foto
         </button>
       </div>
     </section>

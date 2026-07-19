@@ -36,17 +36,17 @@ export function WorkflowFooter({
               <span className="font-fraunces text-lg">{customerName.charAt(0).toUpperCase()}</span>
             </div>
             <div>
-              <p className="font-sans text-[10px] uppercase text-[#444748]">Customer</p>
+              <p className="font-sans text-[10px] uppercase text-[#444748]">Pelanggan</p>
               <p className="font-sans text-sm font-bold text-[#151c27]">
-                {customerName}, Session: {sessionId}
+                {customerName}, Sesi: {sessionId}
               </p>
             </div>
           </div>
           <div className="hidden lg:flex items-center gap-4 border-l border-[#c4c7c7] pl-16">
             <div>
-              <p className="font-sans text-[10px] uppercase text-[#444748]">Progress</p>
+              <p className="font-sans text-[10px] uppercase text-[#444748]">Progres</p>
               <p className="font-sans text-sm font-bold text-[#151c27]">
-                {filled} / {total} Measures
+                {filled} / {total} Ukuran
               </p>
             </div>
           </div>
@@ -79,7 +79,7 @@ export function WorkflowFooter({
                        font-bold tracking-wider hover:bg-[#775a19] transition-all duration-300 group
                        disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {loading ? 'MENYIMPAN...' : 'CONTINUE TO DESIGN STUDIO'}
+            {loading ? 'MENYIMPAN...' : 'LANJUT KE DESIGN STUDIO'}
             <span className="material-symbols-outlined transition-transform duration-300 group-hover:translate-x-2">
               arrow_right_alt
             </span>

@@ -25,7 +25,7 @@ export function CustomerSummaryCard({
           <h2 className="font-fraunces text-xl text-[#151c27] truncate">{customerName}</h2>
           {isPreferred && (
             <span className="bg-[#fed488]/30 text-[#785a1a] px-2 py-0.5 font-sans text-[10px] uppercase tracking-tighter shrink-0">
-              Preferred
+              Prioritas
             </span>
           )}
         </div>
@@ -33,7 +33,7 @@ export function CustomerSummaryCard({
       </div>
       <div className="mt-4 pt-4 border-t border-[#c4c7c7]/30 space-y-2">
         <div className="flex justify-between font-sans text-xs">
-          <span className="text-[#444748]">Session</span>
+          <span className="text-[#444748]">Sesi</span>
           <span className="text-[#151c27]">{sessionNumber}</span>
         </div>
         <div className="flex justify-between font-sans text-xs">

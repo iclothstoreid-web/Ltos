@@ -34,14 +34,14 @@ export function GarmentPreviewSection({ consultationId, selections }: GarmentPre
           className="text-[#444748] hover:text-[#151c27] transition-all duration-300 flex items-center gap-1 font-sans text-xs uppercase tracking-widest"
         >
           <span className="material-symbols-outlined text-[18px]">edit</span>
-          Edit Design
+          Edit Desain
         </button>
       </div>
 
       <div className="w-full flex-1 flex items-center justify-center py-8">
         <div className="w-full max-w-xs aspect-[3/4] bg-[#e2e8f8]/60 border border-[#c4c7c7] flex flex-col items-center justify-center gap-3">
           <span className="material-symbols-outlined text-6xl text-[#775a19]/30">checkroom</span>
-          <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">Preview Garmen</p>
+          <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">Pratinjau Garmen</p>
         </div>
       </div>
 

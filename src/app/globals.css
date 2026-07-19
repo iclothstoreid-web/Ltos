@@ -71,19 +71,55 @@
   .status-dot.high     { @apply bg-warm-gold; }
   .status-dot.normal   { @apply bg-secondary; }
   .status-dot.ready    { @apply bg-primary; }
+
+  /* Bottleneck Panel severity dot — 4 levels (Kritis/Tinggi/Sedang/Rendah),
+     distinct from .status-dot above since "normal/ready" don't map cleanly
+     onto the amber "Sedang" tier the owner brief asks for. */
+  .severity-dot.kritis { @apply bg-error animate-pulse-dot; }
+  .severity-dot.tinggi { @apply bg-warm-gold; }
+  .severity-dot.sedang { @apply bg-amber-mid; }
+  .severity-dot.rendah { @apply bg-primary; }
+
+  /* Elevation — soft paper-like shadows used across the Owner OS
+     card grid (KPI tiles, kanban cards, executive briefing). */
+  .elev-1 {
+    box-shadow: 0 1px 2px rgba(27, 27, 28, 0.04), 0 6px 20px rgba(27, 27, 28, 0.05);
+  }
+  .elev-2 {
+    box-shadow: 0 2px 4px rgba(27, 27, 28, 0.05), 0 16px 40px rgba(27, 27, 28, 0.08);
+  }
+
+  /* Owner OS shell background texture (Owner OS + Komunikasi) — a
+     faint architectural grid, consistent with the diagonal-stripe overlays
+     already used on individual cards. */
+  .atelier-bg {
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0, 86, 69, 0.025) 0px, rgba(0, 86, 69, 0.025) 1px, transparent 1px, transparent 64px),
+      repeating-linear-gradient(90deg, rgba(0, 86, 69, 0.025) 0px, rgba(0, 86, 69, 0.025) 1px, transparent 1px, transparent 64px);
+  }
 }
 
-/* Cetak QR (Order Created) — isolate #production-qr-print-area so only the
-   QR sticker prints, not the rest of the Order Created page. */
+/* Cetak QR (Order Created) / Estimasi Biaya (Material Workspace) — isolate
+   whichever print area is present so only that content prints.
+   #production-qr-print-area / #customer-journey-qr-print-area and
+   #material-estimate-print-area are unrelated panels; only one is ever
+   printed at a time. The estimate area lives off-screen (-9999px) for
+   html2canvas capture the rest of the time — print pulls it on-screen. */
 @media print {
   body * {
     visibility: hidden;
   }
   #production-qr-print-area,
-  #production-qr-print-area * {
+  #production-qr-print-area *,
+  #customer-journey-qr-print-area,
+  #customer-journey-qr-print-area *,
+  #material-estimate-print-area,
+  #material-estimate-print-area * {
     visibility: visible;
   }
-  #production-qr-print-area {
+  #production-qr-print-area,
+  #customer-journey-qr-print-area,
+  #material-estimate-print-area {
     position: absolute;
     top: 0;
     left: 0;

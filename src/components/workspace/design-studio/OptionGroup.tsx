@@ -7,12 +7,13 @@ interface OptionGroupProps {
   options: MasterDataOption[]
   selected: string
   onSelect: (value: string) => void
+  onViewSpec?: (option: MasterDataOption) => void
 }
 
 // Shared pill-button group, extracted so any accordion that shows two
 // side-by-side pilihan (Kerah & Manset, Saku & Plaket, ...) can reuse the
 // same markup instead of duplicating it per pair.
-export function OptionGroup({ label, options, selected, onSelect }: OptionGroupProps) {
+export function OptionGroup({ label, options, selected, onSelect, onViewSpec }: OptionGroupProps) {
   return (
     <div>
       <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">{label}</p>
@@ -20,18 +21,32 @@ export function OptionGroup({ label, options, selected, onSelect }: OptionGroupP
         {options.map(option => {
           const active = selected === option.name
           return (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => onSelect(option.name)}
-              className={`px-3 py-2 font-sans text-sm text-left border transition-all ${
-                active
-                  ? 'border-[#775a19] bg-[#775a19]/5 text-[#151c27]'
-                  : 'border-[#c4c7c7]/60 text-[#444748] hover:border-[#775a19]/40'
-              }`}
-            >
-              {option.name}
-            </button>
+            <div key={option.id} className="relative">
+              <button
+                type="button"
+                onClick={() => onSelect(option.name)}
+                className={`px-3 py-2 font-sans text-sm text-left border transition-all ${
+                  active
+                    ? 'border-[#775a19] bg-[#775a19]/5 text-[#151c27]'
+                    : 'border-[#c4c7c7]/60 text-[#444748] hover:border-[#775a19]/40'
+                } ${onViewSpec ? 'pr-7' : ''}`}
+              >
+                {option.name}
+              </button>
+              {onViewSpec && (
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation()
+                    onViewSpec(option)
+                  }}
+                  aria-label={`Lihat Spesifikasi ${option.name}`}
+                  className="material-symbols-outlined absolute right-1 top-1/2 -translate-y-1/2 text-[14px] text-[#775a19]/60 hover:text-[#775a19]"
+                >
+                  info
+                </button>
+              )}
+            </div>
           )
         })}
       </div>

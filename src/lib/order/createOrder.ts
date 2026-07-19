@@ -2,8 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Consultation } from '@/app/workspace/check-in/types'
 import type { MeasurementFields } from '@/components/workspace/measurement/types'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
+import type { DesignSpecification } from '@/lib/designSpecification/types'
 import type { OrderSnapshot } from './types'
-import { buildQrPayload } from './qr'
+import { buildQrPayload, generateCustomerToken, buildCustomerJourneyUrl } from './qr'
 import { reserveInventory } from './inventory'
 import { notifyOrderCreated } from './notifications'
 
@@ -22,6 +23,7 @@ interface CreateOrderParams {
   bodyTags: string[]
   humanNotes: string
   selections: DesignSelections
+  designSpecification?: DesignSpecification | null
   userId: string
 }
 
@@ -29,6 +31,8 @@ interface CreateOrderResult {
   orderId: string
   orderNumber: string
   qrPayload: string
+  customerToken: string
+  customerJourneyUrl: string
 }
 
 // Thrown for pre-insert validation failures (as opposed to Supabase/DB
@@ -61,6 +65,7 @@ export async function createOrderFromConsultation({
   bodyTags,
   humanNotes,
   selections,
+  designSpecification = null,
   userId,
 }: CreateOrderParams): Promise<CreateOrderResult> {
   // Root cause of "Create Order gagal tanpa alasan": order_number is
@@ -86,6 +91,11 @@ export async function createOrderFromConsultation({
   // can never collide.
   const orderNumber = consultation.consultation_number.replace('LT-CS-', 'LT-ORD-')
 
+  // Customer Journey's public identity — generated once, here, and never
+  // touched again. Kept entirely separate from order_number/order id, which
+  // stay internal to Fitter/Production/Owner.
+  const customerToken = generateCustomerToken()
+
   // 1. Create the order. current_state check constraint has no 'confirmed'
   // value — 'order' is the closest existing one and is already labeled
   // "Order Confirmed" in this app's own STATE_LABELS (src/lib/ltos.ts).
@@ -95,6 +105,7 @@ export async function createOrderFromConsultation({
       customer_id: consultation.customers.id,
       order_number: orderNumber,
       current_state: 'order',
+      customer_token: customerToken,
     })
     .select('id')
     .single()
@@ -105,6 +116,7 @@ export async function createOrderFromConsultation({
 
   // 7. QR payload based on Order ID (never Customer ID)
   const qrPayload = buildQrPayload(order.id)
+  const customerJourneyUrl = buildCustomerJourneyUrl(customerToken)
 
   // 9/10. Full snapshot — customer, measurement, body tags, design, notes —
   // captured now so it never drifts if the source records change later.
@@ -119,6 +131,7 @@ export async function createOrderFromConsultation({
     measurement: measurementFields,
     bodyTags,
     design: selections,
+    designSpecification,
     consultationNotes: humanNotes,
     qrPayload,
     consultationId: consultation.id,
@@ -156,8 +169,12 @@ export async function createOrderFromConsultation({
     created_by: userId,
   })
 
-  // Prepared integration points — both intentionally no-ops this sprint.
-  reserveInventory({
+  // Reservation is wired to the Inventory schema (see reserveInventory) but
+  // quantityMeters stays null — no fabric-usage calculator exists yet (same
+  // gap noted on InventoryReservationRequest), so it no-ops until one does.
+  // notifyOrderCreated is still an intentional no-op — no WhatsApp/messaging
+  // integration exists in this repo.
+  await reserveInventory(supabase, {
     orderId: order.id,
     fabricName: selections.fabric,
     colorName: selections.color,
@@ -171,5 +188,5 @@ export async function createOrderFromConsultation({
     trackingUrl: qrPayload,
   })
 
-  return { orderId: order.id, orderNumber, qrPayload }
+  return { orderId: order.id, orderNumber, qrPayload, customerToken, customerJourneyUrl }
 }

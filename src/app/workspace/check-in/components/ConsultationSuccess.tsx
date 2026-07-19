@@ -20,7 +20,7 @@ export function ConsultationSuccess({
   onBackToSearch,
 }: ConsultationSuccessProps) {
   return (
-    <div className="p-16 max-w-lg mx-auto space-y-8 animate-fade-in">
+    <div className="p-6 lg:p-16 max-w-lg mx-auto space-y-8 animate-fade-in">
       <div className="space-y-3">
         <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">
           Sukses
@@ -43,7 +43,7 @@ export function ConsultationSuccess({
         onClick={onBackToSearch}
         className="font-sans text-xs font-semibold text-[#444748] hover:text-[#151c27] uppercase tracking-widest transition-colors"
       >
-        ← Kembali ke Cari Customer
+        ← Kembali ke Cari Pelanggan
       </button>
     </div>
   )

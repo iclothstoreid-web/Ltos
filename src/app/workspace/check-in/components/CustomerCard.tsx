@@ -33,7 +33,7 @@ export function CustomerCard({
         <h4 className="font-fraunces text-2xl text-[#151c27]">{name}</h4>
         {badge === 'PREFERRED' && (
           <span className="bg-[#fed488] text-[#785a1a] font-sans text-[10px] font-semibold px-2 py-0.5 rounded-full tracking-widest uppercase">
-            Preferred
+            Prioritas
           </span>
         )}
       </div>

@@ -78,7 +78,7 @@ export function DigitalHandoverCard({ record }: DigitalHandoverCardProps) {
         // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
         <img
           src={record.evidence_url}
-          alt={`Evidence ${STAGE_LABELS[record.stage]}`}
+          alt={`Bukti ${STAGE_LABELS[record.stage]}`}
           className="w-full max-h-40 object-cover mb-3"
         />
       )}

@@ -29,7 +29,7 @@ export function DesignStudioFooter({
         </div>
         <div className="w-px h-8 bg-white/20" />
         <div className="flex flex-col">
-          <span className="text-[10px] uppercase text-[#858383] tracking-widest">Fabric & Color</span>
+          <span className="text-[10px] uppercase text-[#858383] tracking-widest">Bahan & Warna</span>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colorHex }} />
             <span className="font-sans text-sm">
@@ -39,7 +39,7 @@ export function DesignStudioFooter({
         </div>
         <div className="w-px h-8 bg-white/20" />
         <div className="flex flex-col">
-          <span className="text-[10px] uppercase text-[#858383] tracking-widest">Est. Investment</span>
+          <span className="text-[10px] uppercase text-[#858383] tracking-widest">Estimasi Biaya</span>
           {/* No pricing/quotation calculator exists — an honest placeholder
               instead of Stitch's fixed "SAR 3,450.00" figure. */}
           <span className="font-sans text-sm text-[#e9c176]">Estimasi belum tersedia</span>
@@ -54,7 +54,7 @@ export function DesignStudioFooter({
           className="px-8 py-4 bg-[#1c1b1b] border border-white/20 text-white font-sans text-sm
                      uppercase tracking-widest hover:bg-white/10 transition-colors disabled:opacity-40"
         >
-          Save Blueprint
+          Simpan Cetak Biru
         </button>
         <button
           type="button"
@@ -63,7 +63,7 @@ export function DesignStudioFooter({
           className="px-10 py-4 bg-[#ffdea5] text-[#261900] font-sans text-sm uppercase tracking-widest
                      flex items-center gap-3 hover:bg-[#e9c176] transition-colors group disabled:opacity-40"
         >
-          {loading ? 'Menyimpan...' : 'Continue to Consultation Review'}
+          {loading ? 'Menyimpan...' : 'Lanjutkan ke Tinjauan Konsultasi'}
           <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
             arrow_right_alt
           </span>

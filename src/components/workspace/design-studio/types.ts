@@ -14,6 +14,12 @@ export interface DesignSelections {
   plaket: string
   pocket: string
   button: string
+  // Design Specification Foundation sprint additions — 'bordir' and
+  // 'handmade_zigzag' master data categories already existed as standalone
+  // catalogs; these two fields are what finally give them a DesignSelections
+  // home so they can be chosen and translated into the Design Specification.
+  embroidery: string
+  handmadeZigzag: string
 }
 
 // Maps each Design Studio field to the master data category it's sourced
@@ -28,6 +34,8 @@ export const CATEGORY_BY_FIELD: Record<keyof DesignSelections, MasterDataCategor
   plaket: 'plaket',
   pocket: 'saku',
   button: 'aksesori',
+  embroidery: 'bordir',
+  handmadeZigzag: 'handmade_zigzag',
 }
 
 // Plain empty fallback shape — real values always come from either a saved
@@ -43,4 +51,6 @@ export const DEFAULT_SELECTIONS: DesignSelections = {
   plaket: '',
   pocket: '',
   button: '',
+  embroidery: '',
+  handmadeZigzag: '',
 }

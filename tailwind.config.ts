@@ -19,8 +19,15 @@ const config: Config = {
         'on-surface': '#1B1B1C',
         secondary: '#5E5E5E',
         'outline-variant': '#BEC9C4',
+        'border-subtle': '#BEC9C4',
         error: '#BA1A1A',
         'warm-gold': '#C89B3C',
+        'amber-mid': '#B98900',
+        // Aliases used by the Owner OS shell (Command Center + Komunikasi) —
+        // same values as surface/on-surface above, kept as separate tokens
+        // since the shell markup references them by these names.
+        'surface-01': '#FCFAF8',
+        'text-primary': '#1B1B1C',
       },
       fontFamily: {
         serif: ['Georgia', 'Cambria', 'serif'],
@@ -43,6 +50,10 @@ const config: Config = {
         'body': ['15px', { lineHeight: '1.6' }],
         'label': ['12px', { lineHeight: '1', letterSpacing: '0.06em' }],
         'mono': ['13px', { lineHeight: '1.5' }],
+        // Owner OS shell greeting header — sits between headline (28px) and
+        // display (48px), and body-md is its supporting paragraph size.
+        'heading-md': ['34px', { lineHeight: '1.2', letterSpacing: '-0.01em' }],
+        'body-md': ['16px', { lineHeight: '1.6' }],
       },
       spacing: {
         'xs': '4px',
@@ -56,6 +67,12 @@ const config: Config = {
         'fade-in': 'fadeIn 200ms ease-out',
         'slide-up': 'slideUp 250ms cubic-bezier(0.16, 1, 0.3, 1)',
         'pulse-dot': 'pulseDot 2s ease-in-out infinite',
+        // Measurement Workspace's highlight glow — a one-shot "arrival"
+        // pulse (scale 1 -> 1.08 -> 1, opacity rising) that settles and
+        // holds via `forwards`, unlike pulse-dot's infinite blink. Kept
+        // separate from pulse-dot since that one is shared with Owner
+        // Workspace's critical-alert dots and must not change shape.
+        'focus-pulse': 'focusPulse 550ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
       keyframes: {
         fadeIn: {
@@ -69,6 +86,11 @@ const config: Config = {
         pulseDot: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.4' },
+        },
+        focusPulse: {
+          '0%': { transform: 'translate(-50%, -50%) scale(1)', opacity: '0' },
+          '40%': { transform: 'translate(-50%, -50%) scale(1.08)', opacity: '1' },
+          '100%': { transform: 'translate(-50%, -50%) scale(1)', opacity: '0.75' },
         },
       },
     },

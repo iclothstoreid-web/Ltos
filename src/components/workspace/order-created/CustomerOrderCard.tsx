@@ -20,14 +20,14 @@ export function CustomerOrderCard({ customerName, customerId, isPreferred, order
       <div className="w-full h-[0.5px] bg-[#c4c7c7] my-4" />
       <div className="w-full text-left space-y-3">
         <div className="flex justify-between">
-          <span className="font-sans text-[10px] text-[#444748] uppercase">Order No.</span>
+          <span className="font-sans text-[10px] text-[#444748] uppercase">No. Pesanan</span>
           <span className="font-sans text-xs font-bold text-[#151c27]">{orderNumber}</span>
         </div>
         {isPreferred && (
           <div className="flex justify-between items-center">
             <span className="font-sans text-[10px] text-[#444748] uppercase">Status</span>
             <span className="px-2 py-1 bg-[#ffdea5] text-[#261900] text-[10px] font-bold uppercase tracking-widest">
-              Preferred Client
+              Pelanggan Prioritas
             </span>
           </div>
         )}

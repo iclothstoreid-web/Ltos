@@ -81,7 +81,7 @@ export default function CheckInPage() {
 
   return (
     <div
-      className="flex h-screen w-full overflow-hidden bg-[#FDFCF8] text-[#151c27] antialiased"
+      className="flex flex-col lg:flex-row min-h-screen lg:h-screen w-full overflow-x-hidden lg:overflow-hidden bg-[#FDFCF8] text-[#151c27] antialiased"
       style={{
         backgroundImage:
           "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l5 15 15 5-15 5-5 15-5-15-15-5 15-5z' fill='%23775a19' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E\")",
@@ -89,23 +89,27 @@ export default function CheckInPage() {
     >
       <CheckInSidebar />
 
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+      <main
+        className={`flex-1 flex flex-col lg:overflow-hidden relative ${
+          view === 'profile' || view === 'success' ? 'pb-40 lg:pb-0' : ''
+        }`}
+      >
         <CheckInHeader />
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden">
           <CustomerSearch
             onSelectCustomer={handleSelectCustomer}
             onNewCustomer={handleNewCustomer}
           />
 
-          <section className="w-[45%] overflow-y-auto bg-[#FDFCF8]/50">
+          <section className="w-full lg:w-[45%] overflow-visible lg:overflow-y-auto bg-[#FDFCF8]/50">
             {view === 'search' && (
-              <div className="h-full flex flex-col items-center justify-center p-16 text-center">
+              <div className="min-h-[50vh] lg:h-full flex flex-col items-center justify-center p-8 lg:p-16 text-center">
                 <span className="material-symbols-outlined text-6xl text-[#775a19]/20 mb-6">
                   content_cut
                 </span>
                 <h2 className="font-fraunces text-3xl text-[#151c27] mb-2">
-                  Pilih atau Cari Customer
+                  Pilih atau Cari Pelanggan
                 </h2>
                 <p className="font-sans text-sm text-[#444748] max-w-xs">
                   Gunakan pencarian di panel kiri untuk memulai konsultasi.
@@ -114,7 +118,7 @@ export default function CheckInPage() {
             )}
 
             {error && (
-              <div className="mx-16 mt-8 p-4 rounded-lg bg-[#ffdad6] border border-[#ba1a1a]/30">
+              <div className="mx-4 lg:mx-16 mt-8 p-4 rounded-lg bg-[#ffdad6] border border-[#ba1a1a]/30">
                 <p className="font-sans text-sm text-[#ba1a1a]">{error}</p>
                 <button
                   onClick={() => setError(null)}
@@ -164,8 +168,8 @@ export default function CheckInPage() {
           <SessionBar
             customerName={successData.customerName}
             sessionLabel={successData.consultationNumber}
-            statusLabel="Ready"
-            primaryLabel="Continue to Measurement"
+            statusLabel="Siap"
+            primaryLabel="Lanjutkan ke Pengukuran"
             onPrimaryAction={handleContinueToMeasurement}
           />
         )}

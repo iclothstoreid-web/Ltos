@@ -16,15 +16,15 @@ interface SystemLogisticsCardProps {
 export function SystemLogisticsCard({ orderId, orderNumber }: SystemLogisticsCardProps) {
   const productionQrPayload = buildProductionQrPayload(orderId)
   const items = [
-    { label: 'QR Tracking Payload Generated', done: true },
-    { label: 'Inventory Reservation', done: false },
-    { label: 'Automated Invoice', done: false },
+    { label: 'Payload Pelacakan QR Dibuat', done: true },
+    { label: 'Reservasi Inventaris', done: false },
+    { label: 'Faktur Otomatis', done: false },
   ]
 
   return (
     <section className="bg-white/50 backdrop-blur-sm border-[0.5px] border-[#c4c7c7]/40 shadow-sm p-4">
       <h3 className="font-sans text-xs text-[#444748] uppercase tracking-widest mb-4">
-        System Logistics
+        Logistik Sistem
       </h3>
       <div className="space-y-2 mb-4">
         {items.map(item => (

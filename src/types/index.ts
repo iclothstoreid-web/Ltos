@@ -56,6 +56,9 @@ export interface Order {
   current_state: WorkflowState
   created_at: string
   updated_at: string
+  // Public Customer Journey identity — separate from order_number/id, never
+  // exposed to Production/Owner surfaces as an identifier.
+  customer_token: string
   // Joined
   customers?: Customer
 }
@@ -116,7 +119,7 @@ export interface QueueAssignment {
   orders?: Order
 }
 
-// Command Center task (for priority inbox)
+// Owner OS task (for priority inbox)
 export interface PriorityTask {
   id: string
   order_id: string

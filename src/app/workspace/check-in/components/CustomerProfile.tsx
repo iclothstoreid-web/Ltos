@@ -21,9 +21,9 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
   const firstName = customer.name.split(' ')[0]
 
   return (
-    <div className="p-16 max-w-2xl mx-auto space-y-12 animate-fade-in">
+    <div className="p-6 lg:p-16 max-w-2xl mx-auto space-y-8 lg:space-y-12 animate-fade-in">
       <div className="space-y-2">
-        <h2 className="font-fraunces text-5xl text-[#151c27]">Welcome Back, {firstName}.</h2>
+        <h2 className="font-fraunces text-5xl text-[#151c27]">Selamat Datang Kembali, {firstName}.</h2>
         <p className="font-sans text-lg text-[#444748] font-light">
           Senang bertemu Anda kembali di atelier hari ini.
         </p>
@@ -41,7 +41,7 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
           <div className="flex items-center gap-3 flex-wrap">
             {customer.is_preferred_client && (
               <span className="bg-[#775a19] text-white font-sans text-[10px] px-3 py-1 rounded-full tracking-widest uppercase">
-                Preferred Client
+                Pelanggan Prioritas
               </span>
             )}
             <span className="text-[#444748] font-sans text-xs">
@@ -56,7 +56,7 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="p-6 bg-white rounded-xl border border-[#c4c7c7]/20">
           <span className="font-sans text-xs text-[#444748] uppercase tracking-widest block mb-4">
             Preferensi
@@ -64,7 +64,7 @@ export function CustomerProfile({ customer }: CustomerProfileProps) {
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-[#775a19]">star</span>
             <span className="font-fraunces text-xl text-[#151c27]">
-              {customer.is_preferred_client ? 'VIP' : 'Standard'}
+              {customer.is_preferred_client ? 'VIP' : 'Reguler'}
             </span>
           </div>
         </div>

@@ -1,32 +1,33 @@
-import { ReactNode } from 'react'
 import { LeftSidebar } from './LeftSidebar'
 import { OwnerTopBar } from './OwnerTopBar'
 import { SummaryCards } from './SummaryCards'
-import { DecisionQueue } from './DecisionQueue'
+import { CrmSnapshot } from './CrmSnapshot'
+import { BottleneckPanel, BottleneckItem } from './BottleneckPanel'
 import { ExecutiveBriefing } from './ExecutiveBriefing'
 import { ProductionLiveKanban } from './ProductionLiveKanban'
 import { ArtisanPerformanceGrid } from './ArtisanPerformanceGrid'
-import { RightTimelinePanel } from './RightTimelinePanel'
-import { BottomStatusBar } from './BottomStatusBar'
+import { AgendaPanel, AgendaItem } from './AgendaPanel'
+import { ClockCalendar } from './widgets/ClockCalendar'
 
 export type OwnerCommandCenterProps = {
   profileName: string
   todayLabel: string
   summary: {
-    ordersWaiting: number
-    productionToday: number
-    qcRequired: number
     revenueToday: number
+    revenueThisMonth: number
+    activeOrders: number
+    productionToday: number
+    qcToday: number
   }
-  decisionQueue: Array<{
-    id: string
-    priority: 'critical' | 'high' | 'normal' | 'ready'
-    customer: string
-    order: string
-    reason: string
-    suggestedAction: string
-    workspaceUrl: string
-  }>
+  crmSnapshot: {
+    newLeads: number
+    consultationsToday: number
+    waitingQuotation: number
+    waitingDp: number
+    followUpToday: number
+    vipCustomers: number
+  }
+  bottleneckItems: BottleneckItem[]
   executiveBrief: {
     recommendationTitle: string
     recommendationBody: string
@@ -46,24 +47,19 @@ export type OwnerCommandCenterProps = {
     capacity: string
     qualityScore: string
   }>
-  rightTimeline: {
-    appointments: number
-    consultations: number
-    fittings: number
-    productionReview: number
-    delivery: number
-  }
+  agendaItems: AgendaItem[]
 }
 
 export function OwnerCommandCenter({
   profileName,
   todayLabel,
   summary,
-  decisionQueue,
+  crmSnapshot,
+  bottleneckItems,
   executiveBrief,
   productionColumns,
   artisanCards,
-  rightTimeline,
+  agendaItems,
 }: OwnerCommandCenterProps) {
   return (
       <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
@@ -79,7 +75,7 @@ export function OwnerCommandCenter({
               {todayLabel}
             </p>
             <div className="mt-8">
-              <h1 className="font-Display text-heading-md text-text-primary leading-[1.2] font-normal">
+              <h1 className="font-serif text-heading-md text-text-primary leading-[1.2] font-normal">
                 Selamat Pagi,
               </h1>
               <p className="text-body-md text-secondary mt-3 leading-relaxed max-w-[52ch]">
@@ -93,9 +89,13 @@ export function OwnerCommandCenter({
             <SummaryCards {...summary} />
           </section>
 
+          <section className="mb-10">
+            <CrmSnapshot {...crmSnapshot} />
+          </section>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <section className="lg:col-span-7 space-y-10">
-              <DecisionQueue items={decisionQueue} />
+              <BottleneckPanel items={bottleneckItems} />
 
               <ExecutiveBriefing title={executiveBrief.recommendationTitle} body={executiveBrief.recommendationBody} />
 
@@ -105,12 +105,13 @@ export function OwnerCommandCenter({
             </section>
 
             <aside className="lg:col-span-5">
-              <RightTimelinePanel timeline={rightTimeline} />
+              <div className="sticky top-[84px] space-y-6">
+                <ClockCalendar />
+                <AgendaPanel items={agendaItems} />
+              </div>
             </aside>
           </div>
         </main>
-
-        <BottomStatusBar />
       </div>
     </div>
   )

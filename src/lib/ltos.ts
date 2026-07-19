@@ -68,6 +68,26 @@ export function getUrgency(
   return 'normal'
 }
 
+// 4-level severity used by the Owner OS's Bottleneck Panel —
+// separate scale from getUrgency() above (which only has 3 tiers + "ready")
+// because the panel needs a distinct "Sedang" (amber) tier between
+// high/normal.
+export type BottleneckSeverity = 'kritis' | 'tinggi' | 'sedang' | 'rendah'
+
+export const BOTTLENECK_SEVERITY_LABEL: Record<BottleneckSeverity, string> = {
+  kritis: '🔴 Kritis',
+  tinggi: '🟠 Tinggi',
+  sedang: '🟡 Sedang',
+  rendah: '🟢 Rendah',
+}
+
+export function getBottleneckSeverityByHours(hoursWaiting: number): BottleneckSeverity {
+  if (hoursWaiting > 72) return 'kritis'
+  if (hoursWaiting > 48) return 'tinggi'
+  if (hoursWaiting > 24) return 'sedang'
+  return 'rendah'
+}
+
 export function formatWaitingTime(createdAt: string): string {
   const ms = Date.now() - new Date(createdAt).getTime()
   const hours = Math.floor(ms / (1000 * 60 * 60))

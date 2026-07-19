@@ -41,10 +41,10 @@ export function ReadinessGauge({ measurementComplete, designComplete }: Readines
         </div>
       </div>
       <h4 className="font-sans text-xs font-bold uppercase tracking-widest text-[#151c27]">
-        {pct === 100 ? 'Ready to Convert' : 'Belum Lengkap'}
+        {pct === 100 ? 'Siap Dikonversi' : 'Belum Lengkap'}
       </h4>
       <p className="font-sans text-xs text-[#444748] mt-1">
-        {pct === 100 ? 'Profile data and styles verified' : 'Beberapa data belum lengkap'}
+        {pct === 100 ? 'Data profil dan gaya telah terverifikasi' : 'Beberapa data belum lengkap'}
       </p>
     </section>
   )

@@ -44,7 +44,7 @@ export function EvidenceUploader({
   return (
     <div>
       <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-2">
-        Evidence
+        Bukti Foto
       </label>
       <button
         type="button"
@@ -66,7 +66,7 @@ export function EvidenceUploader({
           // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage URL / local blob preview
           <img
             src={preview}
-            alt="Evidence preview"
+            alt="Pratinjau bukti foto"
             className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
           />
         ) : (

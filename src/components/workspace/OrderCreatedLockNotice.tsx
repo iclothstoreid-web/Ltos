@@ -14,10 +14,10 @@ export function OrderCreatedLockNotice({ consultationNumber, orderId, stageLabel
     <div className="min-h-screen bg-[#FDFCF8] font-sans flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white border-[0.5px] border-[#c4c7c7] shadow-sm p-8 text-center">
         <span className="material-symbols-outlined text-4xl text-[#775a19] mb-4 inline-block">lock</span>
-        <h1 className="font-fraunces text-2xl text-[#151c27] mb-3">Order Sudah Dibuat</h1>
+        <h1 className="font-fraunces text-2xl text-[#151c27] mb-3">Pesanan Sudah Dibuat</h1>
         <p className="text-sm text-[#444748] leading-relaxed mb-2">
           Konsultasi <span className="font-bold text-[#151c27]">{consultationNumber}</span> sudah menghasilkan
-          Order resmi.
+          Pesanan resmi.
         </p>
         <p className="text-sm text-[#444748] leading-relaxed mb-6">
           {stageLabel} untuk konsultasi ini tidak dapat diedit lagi. Perubahan data harus dilakukan melalui proses
@@ -29,7 +29,7 @@ export function OrderCreatedLockNotice({ consultationNumber, orderId, stageLabel
             className="inline-block px-6 py-3 bg-[#151c27] text-white text-sm uppercase tracking-widest
                        hover:bg-[#775a19] transition-colors"
           >
-            Lihat Order
+            Lihat Pesanan
           </a>
         )}
       </div>

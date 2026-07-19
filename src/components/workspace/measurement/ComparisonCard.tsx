@@ -19,20 +19,20 @@ export function ComparisonCard({ label, current, previous }: ComparisonCardProps
   return (
     <div className="p-6 bg-[#775a19]/5 border-[0.5px] border-[#775a19]/20">
       <p className="font-sans text-xs uppercase tracking-widest text-[#775a19] mb-3">
-        Previous Comparison
+        Perbandingan Sebelumnya
       </p>
       <div className="space-y-2">
         <p className="font-sans text-sm text-[#151c27]">
           <span className="font-bold">{label}:</span> {hasCurrent ? `${currentNum}cm` : '—'}
         </p>
         <div className="flex items-center gap-2 text-xs text-[#444748]">
-          <span>Prev: {previous}cm</span>
+          <span>Sebelumnya: {previous}cm</span>
           {diff !== null && (
             <>
               <span className="h-1 w-1 bg-[#c4c7c7] rounded-full" />
               <span className="text-[#775a19] font-bold">
                 {diff > 0 ? '+' : ''}
-                {diff}cm Diff
+                {diff}cm Selisih
               </span>
             </>
           )}

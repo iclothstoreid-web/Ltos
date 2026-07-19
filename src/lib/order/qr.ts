@@ -31,3 +31,18 @@ export function parseProductionQrPayload(value: string): string | null {
   const orderId = trimmed.slice(PRODUCTION_QR_PREFIX.length)
   return orderId.length > 0 ? orderId : null
 }
+
+// Customer Journey's public identity — deliberately separate from the
+// Production QR above. A customer_token must never resolve inside
+// /workspace/production, and a production order id must never resolve
+// inside /journey. Generated once at Create Order time (orders.customer_token
+// is NOT NULL + UNIQUE) and never regenerated afterward.
+export function generateCustomerToken(): string {
+  return globalThis.crypto.randomUUID().replace(/-/g, '')
+}
+
+const CUSTOMER_JOURNEY_PREFIX = 'https://ltos.id/journey/'
+
+export function buildCustomerJourneyUrl(customerToken: string): string {
+  return `${CUSTOMER_JOURNEY_PREFIX}${customerToken}`
+}

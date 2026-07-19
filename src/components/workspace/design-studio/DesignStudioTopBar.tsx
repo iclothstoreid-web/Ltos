@@ -18,17 +18,17 @@ export function DesignStudioTopBar({ sessionLabel, canManageMasterData }: Design
         <div className="h-6 w-[0.5px] bg-[#c4c7c7]" />
         <div className="flex flex-col">
           <span className="font-sans text-[10px] text-[#444748] uppercase tracking-widest">
-            Consultation Context
+            Konteks Konsultasi
           </span>
           <span className="font-sans text-sm text-[#151c27]">{sessionLabel}</span>
         </div>
       </div>
       <nav className="hidden md:flex items-center gap-8">
-        <span className="font-sans text-sm text-[#444748]">Workspace</span>
+        <span className="font-sans text-sm text-[#444748]">Ruang Kerja</span>
         <span className="font-sans text-sm text-[#151c27] border-b-2 border-[#775a19] pb-1">
           Bespoke Studio
         </span>
-        <span className="font-sans text-sm text-[#444748]">History</span>
+        <span className="font-sans text-sm text-[#444748]">Riwayat</span>
       </nav>
       <div className="flex items-center gap-2">
         {canManageMasterData && (

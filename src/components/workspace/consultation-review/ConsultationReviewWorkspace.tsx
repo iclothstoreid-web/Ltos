@@ -19,6 +19,19 @@ import { PriceSummaryCard } from './PriceSummaryCard'
 import { ReadinessGauge } from './ReadinessGauge'
 import { DecisionPanel } from './DecisionPanel'
 import { ReviewFooter } from './ReviewFooter'
+import { EstimationCard } from './EstimationCard'
+import { CustomerPhotoCapture } from './CustomerPhotoCapture'
+import { DocumentUploader } from './DocumentUploader'
+import {
+  decodeFitterEnhancements,
+  encodeFitterEnhancements,
+  type FitterEnhancements,
+} from './fitterEnhancementsCodec'
+import { buildCustomerDigitalProfile } from '@/lib/customerProfile/buildProfile'
+import { decodeCustomerDigitalProfile, encodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
+import { buildDesignSpecification } from '@/lib/designSpecification/buildSpecification'
+import { decodeDesignSpecification, encodeDesignSpecification } from '@/lib/designSpecification/codec'
+import type { MasterOptionsByCategory } from '@/lib/design/masterData'
 
 // Distinguishes validation failures (OrderValidationError, thrown before
 // any Supabase call — e.g. duplicate Create Order) from real Supabase/DB
@@ -26,7 +39,7 @@ import { ReviewFooter } from './ReviewFooter'
 // user sees the actual cause instead of a silent no-op.
 function describeOrderError(err: unknown): string {
   if (err instanceof OrderValidationError) {
-    return err.field ? `${err.message} (Field: ${err.field})` : err.message
+    return err.field ? `${err.message} (Bidang: ${err.field})` : err.message
   }
   if (err && typeof err === 'object' && 'message' in err) {
     const message = String((err as { message: unknown }).message)
@@ -47,6 +60,7 @@ interface ConsultationReviewWorkspaceProps {
     }
   }
   latestMeasurement: Measurement | null
+  masterOptions: MasterOptionsByCategory
   fitterName: string
   userId: string
 }
@@ -54,6 +68,7 @@ interface ConsultationReviewWorkspaceProps {
 export function ConsultationReviewWorkspace({
   consultation,
   latestMeasurement,
+  masterOptions,
   fitterName,
   userId,
 }: ConsultationReviewWorkspaceProps) {
@@ -63,6 +78,68 @@ export function ConsultationReviewWorkspace({
   const [loading, setLoading] = useState(false)
   const [approved, setApproved] = useState(false)
   const [orderError, setOrderError] = useState<string | null>(null)
+
+  // Fitter App sprint additions (Estimasi Pengerjaan / Foto Customer / Upload
+  // Dokumen) — no new columns, encoded into consultations.notes via their own
+  // marker block, same technique as Design Studio's blueprint block.
+  const [rawNotes, setRawNotes] = useState(consultation.notes ?? '')
+  const [enhancements, setEnhancements] = useState<FitterEnhancements>(() =>
+    decodeFitterEnhancements(consultation.notes)
+  )
+  const [savingEnhancements, setSavingEnhancements] = useState(false)
+
+  async function persistEnhancements(patch: Partial<FitterEnhancements>) {
+    const next = { ...enhancements, ...patch }
+    setSavingEnhancements(true)
+    try {
+      let nextNotes = encodeFitterEnhancements(rawNotes, next)
+
+      // A photo just landed on the active consultation — refresh the
+      // Customer Digital Profile (built during Measurement) so it picks it
+      // up too, in the same notes write. LOCKED (Sprint 4): the profile
+      // only ever keeps the front-view angle, even though the existing
+      // capture UI still offers front/side/back slots.
+      if (patch.customerPhotos) {
+        const profile = buildCustomerDigitalProfile({
+          consultationId: consultation.id,
+          fields: measurementFields,
+          bodyTags: decodedMeasurement.tags,
+          customerPhotoUrl: next.customerPhotos.front,
+          existingProfile: decodeCustomerDigitalProfile(rawNotes),
+        })
+        nextNotes = encodeCustomerDigitalProfile(nextNotes, profile)
+      }
+
+      // Estimasi Pengerjaan just changed — refresh the Design Specification
+      // (built during Design Studio) so its estimatedProductionSpeed field
+      // picks it up too, same single-write pattern as the photo refresh
+      // above. Pilihan/price snapshot are re-resolved from the current
+      // `selections`/masterOptions, unchanged since Design Studio.
+      if (patch.estimasiPengerjaan !== undefined) {
+        const existingSpecification = decodeDesignSpecification(rawNotes)
+        const specification = buildDesignSpecification({
+          consultationId: consultation.id,
+          selections,
+          masterOptions,
+          estimatedProductionSpeed: patch.estimasiPengerjaan,
+          existingSpecification,
+        })
+        nextNotes = encodeDesignSpecification(nextNotes, specification)
+      }
+
+      const { error } = await supabase
+        .from('consultations')
+        .update({ notes: nextNotes })
+        .eq('id', consultation.id)
+      if (error) throw error
+      setRawNotes(nextNotes)
+      setEnhancements(next)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSavingEnhancements(false)
+    }
+  }
 
   // Reusing Measurement's own decoder (read-only import, no edits to
   // Measurement) to recover the 8 extra fields + body tags + fitter notes
@@ -118,6 +195,10 @@ export function ConsultationReviewWorkspace({
         bodyTags: decodedMeasurement.tags,
         humanNotes: decodedMeasurement.humanNotes,
         selections,
+        // Frozen at Design Studio time (refreshed here whenever Estimasi
+        // Pengerjaan changes) — carried into the Order snapshot as-is so a
+        // future catalog price change can never alter this Order's total.
+        designSpecification: decodeDesignSpecification(rawNotes),
         userId,
       })
 
@@ -158,6 +239,11 @@ export function ConsultationReviewWorkspace({
 
         <aside className="w-full md:w-[30%] flex flex-col gap-8">
           <PriceSummaryCard />
+          <EstimationCard
+            value={enhancements.estimasiPengerjaan}
+            saving={savingEnhancements}
+            onChange={estimasiPengerjaan => persistEnhancements({ estimasiPengerjaan })}
+          />
           <ReadinessGauge
             measurementComplete={readiness.measurementComplete}
             designComplete={readiness.designComplete}
@@ -166,7 +252,7 @@ export function ConsultationReviewWorkspace({
           {orderError && (
             <div className="bg-[#fdecea] border-[0.5px] border-[#c0392b] p-3">
               <p className="font-sans text-xs font-bold text-[#c0392b] uppercase tracking-widest mb-1">
-                Create Order Gagal
+                Gagal Membuat Pesanan
               </p>
               <p className="font-sans text-xs text-[#c0392b] leading-relaxed">{orderError}</p>
             </div>
@@ -178,6 +264,19 @@ export function ConsultationReviewWorkspace({
           )}
         </aside>
       </main>
+
+      <section className="max-w-[1440px] mx-auto px-16 pb-16 flex flex-col gap-8">
+        <CustomerPhotoCapture
+          consultationId={consultation.id}
+          photos={enhancements.customerPhotos}
+          onChange={customerPhotos => persistEnhancements({ customerPhotos })}
+        />
+        <DocumentUploader
+          consultationId={consultation.id}
+          documents={enhancements.documents}
+          onChange={documents => persistEnhancements({ documents })}
+        />
+      </section>
 
       <ReviewFooter
         customerName={consultation.customers.name}

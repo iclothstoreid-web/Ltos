@@ -1,5 +1,6 @@
 import type { MeasurementFields } from '@/components/workspace/measurement/types'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
+import type { DesignSpecification } from '@/lib/designSpecification/types'
 
 // Full order snapshot, captured once at Create Order time. `orders` has no
 // flexible/JSONB column (id, customer_id, order_number, current_state,
@@ -21,6 +22,11 @@ export interface OrderSnapshot {
   measurement: MeasurementFields
   bodyTags: string[]
   design: DesignSelections
+  // Frozen ID/price snapshot of the same choices `design` describes by name
+  // — optional so older orders created before this sprint (which have no
+  // such event key) still decode fine. Null if Design Studio was never
+  // saved for this consultation.
+  designSpecification?: DesignSpecification | null
   consultationNotes: string
   qrPayload: string
   consultationId: string

@@ -28,7 +28,7 @@ export function NewCustomerForm({ onSuccess, onCancel }: NewCustomerFormProps) {
     )
 
     if (!success || !customer) {
-      setError(error || 'Gagal membuat customer')
+      setError(error || 'Gagal membuat pelanggan')
       setLoading(false)
       return
     }
@@ -38,13 +38,13 @@ export function NewCustomerForm({ onSuccess, onCancel }: NewCustomerFormProps) {
   }
 
   return (
-    <div className="p-16 max-w-lg mx-auto animate-fade-in">
+    <div className="p-6 lg:p-16 max-w-lg mx-auto animate-fade-in">
       <div className="flex flex-col items-center text-center mb-10">
         <span className="material-symbols-outlined text-6xl text-[#775a19]/30 mb-6">
           person_add
         </span>
         <p className="font-sans text-xs uppercase tracking-widest text-[#444748] mb-2">
-          Customer Baru
+          Pelanggan Baru
         </p>
         <h2 className="font-fraunces text-4xl text-[#151c27]">Buat Profil Bespoke</h2>
       </div>

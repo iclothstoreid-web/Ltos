@@ -11,7 +11,7 @@ export function TopNavBar({ fitterInitial }: TopNavBarProps) {
         <h1 className="font-fraunces text-xl text-[#151c27] tracking-tight">LTOS</h1>
         <span className="h-4 w-[1px] bg-[#c4c7c7]" />
         <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">
-          Order Confirmation
+          Konfirmasi Pesanan
         </p>
       </div>
       <div className="flex items-center gap-6">

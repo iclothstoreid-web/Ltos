@@ -36,7 +36,7 @@ export default async function MeasurementPage({ params }: Props) {
       <OrderCreatedLockNotice
         consultationNumber={consultation.consultation_number}
         orderId={orderId}
-        stageLabel="Measurement"
+        stageLabel="Pengukuran"
       />
     )
   }

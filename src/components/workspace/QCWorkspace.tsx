@@ -93,7 +93,7 @@ export function QCWorkspace({
             <ArrowLeft size={18} />
           </button>
           <span className="text-label text-secondary uppercase tracking-widest">
-            Workspace · Quality Check
+            Workspace · Pemeriksaan Kualitas
           </span>
         </div>
       </div>
