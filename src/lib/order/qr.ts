@@ -1,3 +1,5 @@
+import { APP_URLS } from '@/lib/config/app-urls'
+
 // Per your decision: payload only, no rendered QR image. No QR-encoding
 // library exists in this repo, and hand-rolling QR encoding (Reed-Solomon
 // error correction, module placement) risks producing something that looks
@@ -8,7 +10,7 @@
 // Production QR App / Customer QR Portal / Owner OS once they exist — they
 // just need to resolve this URL/id, not a specific image format.
 export function buildQrPayload(orderId: string): string {
-  return `https://track.ltos.id/o/${orderId}`
+  return `${APP_URLS.tracking}/o/${orderId}`
 }
 
 // Separate QR for the shop floor's internal Production Packet — distinct
@@ -16,7 +18,7 @@ export function buildQrPayload(orderId: string): string {
 // land on the internal workflow page. Same "payload only" reasoning: this
 // is the URL a printed sticker would encode, opened by scanning with a
 // phone camera, not rendered/scanned in-app.
-const PRODUCTION_QR_PREFIX = 'https://ops.ltos.id/workspace/production/'
+const PRODUCTION_QR_PREFIX = `${APP_URLS.production}/workspace/production/`
 
 export function buildProductionQrPayload(orderId: string): string {
   return `${PRODUCTION_QR_PREFIX}${orderId}`
@@ -41,7 +43,7 @@ export function generateCustomerToken(): string {
   return globalThis.crypto.randomUUID().replace(/-/g, '')
 }
 
-const CUSTOMER_JOURNEY_PREFIX = 'https://ltos.id/journey/'
+const CUSTOMER_JOURNEY_PREFIX = `${APP_URLS.journey}/journey/`
 
 export function buildCustomerJourneyUrl(customerToken: string): string {
   return `${CUSTOMER_JOURNEY_PREFIX}${customerToken}`

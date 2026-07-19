@@ -109,17 +109,20 @@ export async function savePatternFormulation(
 
 // Evidence photo upload — the bucket is public and its INSERT policy is
 // scoped to anon/authenticated (no auth required), so this works from the
-// kiosk exactly like the RPCs above.
+// kiosk exactly like the RPCs above. upsert must stay false: the bucket's
+// RLS only grants INSERT, and upsert:true compiles to an UPSERT (which
+// Postgres requires UPDATE privilege for even on a first insert), so it was
+// silently failing every single upload.
 export async function uploadEvidencePhoto(
   supabase: SupabaseClient,
   params: { orderId: string; stage: ProductionStage; attempt: number; file: File }
 ): Promise<string> {
   const ext = params.file.name.split('.').pop() || 'jpg'
-  const path = `${params.orderId}/${params.stage}/${params.attempt}.${ext}`
+  const path = `${params.orderId}/${params.stage}/${params.attempt}-${Date.now()}.${ext}`
 
   const { error } = await supabase.storage
     .from('production-evidence')
-    .upload(path, params.file, { upsert: true })
+    .upload(path, params.file, { upsert: false })
   if (error) throw error
 
   const { data } = supabase.storage.from('production-evidence').getPublicUrl(path)

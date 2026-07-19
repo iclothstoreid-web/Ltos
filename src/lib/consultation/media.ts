@@ -1,18 +1,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Same deterministic-path + upsert + public URL shape as
-// uploadMasterDataPhoto/uploadEvidencePhoto — one slot per customer photo
-// angle, re-uploading a slot simply overwrites it.
+// One slot per customer photo angle, re-uploading a slot overwrites which
+// URL onChange stores — but the bucket's RLS only grants INSERT (same as
+// production-evidence), so upsert must stay false and the path must be
+// unique per attempt, or every upload/re-upload silently fails.
 export async function uploadConsultationPhoto(
   supabase: SupabaseClient,
   params: { consultationId: string; slot: 'front' | 'side' | 'back'; file: File }
 ): Promise<string> {
   const ext = params.file.name.split('.').pop() || 'jpg'
-  const path = `${params.consultationId}/${params.slot}.${ext}`
+  const path = `${params.consultationId}/${params.slot}-${Date.now()}.${ext}`
 
   const { error } = await supabase.storage
     .from('consultation-photos')
-    .upload(path, params.file, { upsert: true })
+    .upload(path, params.file, { upsert: false })
   if (error) throw error
 
   const { data } = supabase.storage.from('consultation-photos').getPublicUrl(path)

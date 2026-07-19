@@ -27,15 +27,21 @@ export function EvidenceUploader({
 }: EvidenceUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(value)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   async function handleFile(file: File | undefined) {
     if (!file) return
+    setError(null)
     setPreview(URL.createObjectURL(file))
     setUploading(true)
     try {
       const url = await uploadEvidencePhoto(supabase, { orderId, stage, attempt, file })
       onChange(url)
+    } catch (err) {
+      console.error('[production] evidence upload failed', err)
+      setPreview(value)
+      setError('Gagal mengunggah foto. Coba lagi.')
     } finally {
       setUploading(false)
     }
@@ -80,6 +86,9 @@ export function EvidenceUploader({
           </>
         )}
       </button>
+      {error && (
+        <p className="font-hanken text-[10px] text-red-600 mt-1">{error}</p>
+      )}
     </div>
   )
 }

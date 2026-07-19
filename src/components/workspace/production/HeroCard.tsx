@@ -5,6 +5,7 @@ import type { ProductionPacket, StageStatus } from '@/lib/production/types'
 interface HeroCardProps {
   packet: ProductionPacket
   currentStatus?: StageStatus
+  customerPhotoUrl?: string | null
 }
 
 const STATUS_LABELS: Record<StageStatus, string> = {
@@ -16,10 +17,11 @@ const STATUS_LABELS: Record<StageStatus, string> = {
 // Reusable across every internal production stage page, per the master
 // prompt's "Hero Card WAJIB sama di seluruh halaman produksi" rule. Visual
 // rebuilt against the Persiapan Material Stitch export (rounded-2xl white
-// card, status badge, photo slot). No customer/reference photo field exists
-// anywhere in the app yet (confirmed with the user) — letter-avatar is the
-// deliberate fallback, not a placeholder oversight.
-export function HeroCard({ packet, currentStatus = 'pending' }: HeroCardProps) {
+// card, status badge, photo slot). customerPhotoUrl comes from Consultation
+// Review via lib/production/customerPhoto.ts — not every order has one
+// (photo capture is optional there), so letter-avatar stays the honest
+// fallback rather than a placeholder image.
+export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }: HeroCardProps) {
   const initial = (packet.customer_name || '?').charAt(0).toUpperCase()
   const progressPct = Math.round((packet.progress || 0) * 100)
 
@@ -27,7 +29,16 @@ export function HeroCard({ packet, currentStatus = 'pending' }: HeroCardProps) {
     <div className="bg-[#fbf9fc] rounded-2xl p-5 shadow-[0px_4px_20px_rgba(14,19,32,0.04)] border border-[#c6c6cc]/30 space-y-4">
       <div className="flex items-start gap-4">
         <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#161b29] text-white flex items-center justify-center font-caslon text-2xl">
-          {initial}
+          {customerPhotoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
+            <img
+              src={customerPhotoUrl}
+              alt={packet.customer_name || 'Foto Pelanggan'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            initial
+          )}
         </div>
         <div className="flex-1 space-y-1 min-w-0">
           <div className="flex justify-between items-center">

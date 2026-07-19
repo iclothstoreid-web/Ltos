@@ -39,12 +39,14 @@ interface ProductionPacketWorkspaceProps {
   initialPacket: ProductionPacket
   orderId: string
   initialMessages: CommunicationMessage[]
+  customerPhotoUrl: string | null
 }
 
 export function ProductionPacketWorkspace({
   initialPacket,
   orderId,
   initialMessages,
+  customerPhotoUrl,
 }: ProductionPacketWorkspaceProps) {
   const [supabase] = useState(() => createClient())
   const [packet, setPacket] = useState(initialPacket)
@@ -80,6 +82,7 @@ export function ProductionPacketWorkspace({
   const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [alterCategory, setAlterCategory] = useState('')
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   // Gates Evidence/Checklist/Setujui/Kembalikan behind a successful "Scan QR
   // Penyelesaian" — completedAtCaptured is the scan moment, used as Jam
@@ -134,6 +137,7 @@ export function ProductionPacketWorkspace({
   async function handleComplete(explicitDecision?: 'approved' | 'alter') {
     if (!currentRecord) return
     setSubmitting(true)
+    setSubmitError(null)
     try {
       const requiresEvidence = STAGES_WITH_EVIDENCE.includes(currentRecord.stage)
       const finalDecision = explicitDecision ?? null
@@ -163,6 +167,9 @@ export function ProductionPacketWorkspace({
       }
 
       await refetch()
+    } catch (err) {
+      console.error('[production] complete stage failed', err)
+      setSubmitError('Gagal menyimpan. Coba lagi.')
     } finally {
       setSubmitting(false)
     }
@@ -201,7 +208,7 @@ export function ProductionPacketWorkspace({
   return (
     <div className="min-h-screen bg-[#FDFCF7]">
       <div className="max-w-md mx-auto px-4 py-8 space-y-6">
-        <HeroCard packet={packet} currentStatus={currentRecord?.status} />
+        <HeroCard packet={packet} currentStatus={currentRecord?.status} customerPhotoUrl={customerPhotoUrl} />
 
         <ProductionCommunicationPanel supabase={supabase} orderId={orderId} initialMessages={initialMessages} />
 
@@ -491,6 +498,10 @@ export function ProductionPacketWorkspace({
                         alterCategory={alterCategory}
                         onAlterCategoryChange={setAlterCategory}
                       />
+                    )}
+
+                    {submitError && (
+                      <p className="font-hanken text-xs text-red-600">{submitError}</p>
                     )}
 
                     {isMaterialPrep ||

@@ -32,7 +32,7 @@ export function DesignSummaryPanel({ specification }: DesignSummaryPanelProps) {
       <div className="p-8 border-b-[0.5px] border-[#c4c7c7]">
         <h3 className="font-sans text-sm text-[#151c27] uppercase tracking-[0.2em]">Ringkasan Desain</h3>
       </div>
-      <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+      <div className="flex-1 min-h-0 p-6 space-y-4 overflow-y-auto">
         {OPTION_ROWS.map(row => {
           const ref = specification[row.key] as DesignSpecOptionRef | null
           return (
