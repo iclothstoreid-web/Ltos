@@ -102,7 +102,12 @@ export const MEASUREMENT_BODY_MAP: Record<keyof MeasurementFields, BodyPartId[]>
   // crotch nodes below it (see the hip/leftHip/rightHip coords above).
   hip: ['hip', 'leftHip', 'rightHip'],
   armhole: ['leftShoulder', 'rightShoulder', 'chest'],
-  sleeve: ['leftArm', 'rightArm'],
+  // Panjang Lengan is a *length* measurement (shoulder all the way to
+  // wrist), so — like the 'length' field below — it lights up the whole
+  // span rather than a single point. Previously reused the same
+  // leftArm/rightArm key as 'biceps', which made Panjang Lengan and
+  // Lingkar Lengan Atas activate the identical highlight.
+  sleeve: ['leftShoulder', 'rightShoulder', 'leftArm', 'rightArm', 'leftElbow', 'rightElbow', 'leftWrist', 'rightWrist'],
   biceps: ['leftArm', 'rightArm'],
   elbow: ['leftElbow', 'rightElbow'],
   wrist: ['leftWrist', 'rightWrist'],
