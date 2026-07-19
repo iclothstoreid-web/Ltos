@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { Fraunces, Hanken_Grotesk, JetBrains_Mono, Libre_Caslon_Text } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'Production Flow — LTOS',
+  description: 'Local Tailor Operating System',
+}
 
 // Same font-scoping convention as every other workspace slice's layout
 // (Measurement, Design Studio, etc.) — independent, nothing here imports

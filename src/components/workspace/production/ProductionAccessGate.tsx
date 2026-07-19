@@ -14,7 +14,7 @@ interface ProductionAccessGateProps {
 }
 
 // Enforces that a Production Packet was reached via the Scan QR entry point
-// at /workspace/production, not a bookmarked/typed URL.
+// at /production, not a bookmarked/typed URL.
 //
 // Two ways in:
 // 1. isInProgress (DB says the current stage is "Sedang Dikerjakan") — always
@@ -41,7 +41,7 @@ export function ProductionAccessGate({ orderId, isInProgress, children }: Produc
     sessionStorage.removeItem(key)
 
     if (!justScanned) {
-      router.replace('/workspace/production')
+      router.replace('/production')
       return
     }
     setAllowed(true)

@@ -37,7 +37,7 @@ export const QUEUE_WORKSPACE_URL: Record<QueueType, string> = {
   measurement: '/workspace/measurement',
   quotation: '/workspace/quotation',
   assign: '/workspace/assign',
-  production: '/workspace/production',
+  production: '/production',
   qc: '/workspace/qc',
   delivery: '/workspace/delivery',
   follow_up: '/workspace/follow-up',
