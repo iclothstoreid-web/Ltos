@@ -1,4 +1,11 @@
+import type { Metadata } from 'next'
 import { Fraunces, Libre_Caslon_Text } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'Fitter App | Local Tailor',
+  applicationName: 'Fitter App',
+  description: 'Professional measurement and customer fitting workspace.',
+}
 
 // Fonts scoped to the Check-In workspace only — the root layout and its
 // `font-sans`/`font-serif` tokens used by every other page are untouched.

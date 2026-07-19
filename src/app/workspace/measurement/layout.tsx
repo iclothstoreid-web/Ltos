@@ -1,4 +1,11 @@
+import type { Metadata } from 'next'
 import { Fraunces, Libre_Caslon_Text } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'Fitter App | Local Tailor',
+  applicationName: 'Fitter App',
+  description: 'Professional measurement and customer fitting workspace.',
+}
 
 // Fonts scoped to the Measurement workspace only — independent of Check-In's
 // own layout (Check-In is frozen this sprint; nothing here imports from or

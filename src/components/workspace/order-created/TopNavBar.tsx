@@ -8,7 +8,7 @@ export function TopNavBar({ fitterInitial }: TopNavBarProps) {
   return (
     <header className="w-full sticky top-0 z-50 bg-[#f9f9ff]/80 backdrop-blur-md border-b-[0.5px] border-[#c4c7c7] px-16 py-4 flex justify-between items-center">
       <div className="flex items-center gap-4">
-        <h1 className="font-fraunces text-xl text-[#151c27] tracking-tight">LTOS</h1>
+        <h1 className="font-fraunces text-xl text-[#151c27] tracking-tight">Fitter App</h1>
         <span className="h-4 w-[1px] bg-[#c4c7c7]" />
         <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">
           Konfirmasi Pesanan

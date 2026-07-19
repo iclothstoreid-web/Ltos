@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { canAccessFitterApp, normalizeRole } from '@/lib/rbac/roles'
+import { PasswordUpdatedToast } from '@/components/auth/PasswordUpdatedToast'
+import { APP_BRANDING } from '@/lib/auth/branding'
+
+const branding = APP_BRANDING.fitter
 
 export default function FitterLoginPage() {
   const [email, setEmail] = useState('')
@@ -17,10 +23,23 @@ export default function FitterLoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError('Email atau password salah.')
+      setLoading(false)
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    if (!canAccessFitterApp(normalizeRole(profile?.role))) {
+      await supabase.auth.signOut()
+      setError('Akun Anda tidak memiliki akses ke Fitter App.')
       setLoading(false)
       return
     }
@@ -39,10 +58,13 @@ export default function FitterLoginPage() {
             Login Fitter
           </p>
           <h1 className="font-serif text-headline text-on-surface">
-            LTOS
+            Fitter App
           </h1>
           <p className="text-body text-secondary mt-2">
             Local Tailor Operating System
+          </p>
+          <p className="text-label text-secondary mt-1">
+            Professional measurement and customer fitting workspace.
           </p>
         </div>
 
@@ -87,6 +109,15 @@ export default function FitterLoginPage() {
           >
             {loading ? 'Masuk...' : 'Masuk'}
           </button>
+
+          <div className="text-center">
+            <Link
+              href={branding.forgotPasswordPath}
+              className="text-label text-secondary hover:text-on-surface uppercase tracking-widest transition-colors"
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </form>
 
         {/* Footer */}
@@ -94,6 +125,8 @@ export default function FitterLoginPage() {
           v1.0 · Local Tailor, Bandung
         </p>
       </div>
+
+      <PasswordUpdatedToast loginPath={branding.loginPath} />
     </div>
   )
 }

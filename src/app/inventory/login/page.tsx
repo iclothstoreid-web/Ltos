@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { canAccessInventoryHub, normalizeRole } from '@/lib/rbac/roles'
+import { PasswordUpdatedToast } from '@/components/auth/PasswordUpdatedToast'
+import { APP_BRANDING } from '@/lib/auth/branding'
+
+const branding = APP_BRANDING.inventory
 
 // Same shape as src/app/owner/login/page.tsx — reuses LTOS Authentication
 // as-is (signInWithPassword), just a different redirect target. Inventory
@@ -21,10 +27,23 @@ export default function InventoryLoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError('Email atau password salah.')
+      setLoading(false)
+      return
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    if (!canAccessInventoryHub(normalizeRole(profile?.role))) {
+      await supabase.auth.signOut()
+      setError('Akun Anda tidak memiliki akses ke Inventory Hub.')
       setLoading(false)
       return
     }
@@ -39,13 +58,16 @@ export default function InventoryLoginPage() {
 
         <div className="mb-12">
           <p className="text-label text-secondary uppercase tracking-widest mb-3">
-            Login Inventory
+            Login Inventory Hub
           </p>
           <h1 className="font-serif text-headline text-on-surface">
-            LTOS Inventory
+            Inventory Hub
           </h1>
           <p className="text-body text-secondary mt-2">
-            Material Management
+            Local Tailor Operating System
+          </p>
+          <p className="text-label text-secondary/80 mt-3">
+            Material, inventory, stock, and estimation management.
           </p>
         </div>
 
@@ -89,12 +111,23 @@ export default function InventoryLoginPage() {
           >
             {loading ? 'Masuk...' : 'Masuk'}
           </button>
+
+          <div className="text-center">
+            <Link
+              href={branding.forgotPasswordPath}
+              className="text-label text-secondary hover:text-on-surface uppercase tracking-widest transition-colors"
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </form>
 
         <p className="text-label text-secondary mt-12 text-center">
           v1.0 · Local Tailor, Bandung
         </p>
       </div>
+
+      <PasswordUpdatedToast loginPath={branding.loginPath} />
     </div>
   )
 }

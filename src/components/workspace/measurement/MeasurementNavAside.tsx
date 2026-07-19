@@ -15,7 +15,7 @@ export function MeasurementNavAside() {
   return (
     <aside className="fixed left-0 top-20 bottom-0 w-64 border-r-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] hidden md:flex flex-col py-8">
       <div className="px-8 mb-16">
-        <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">LTOS</p>
+        <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">Fitter App</p>
         <p className="font-sans text-sm font-bold text-[#151c27] mt-1">Local Tailor Operating System</p>
       </div>
       <div className="flex-1 space-y-2">

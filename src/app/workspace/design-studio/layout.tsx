@@ -1,4 +1,11 @@
+import type { Metadata } from 'next'
 import { Libre_Caslon_Text } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'Fitter App | Local Tailor',
+  applicationName: 'Fitter App',
+  description: 'Professional measurement and customer fitting workspace.',
+}
 
 // The Stitch reference for Design Studio only loads Libre Caslon Text +
 // Inter + Material Symbols (no Fraunces this time) — Inter is already the

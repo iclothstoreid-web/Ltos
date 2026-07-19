@@ -16,7 +16,7 @@ export function ExecutiveBriefing({ title, body }: { title: string; body: string
             <p className="font-serif text-on-surface text-[26px] leading-[1.2] mt-2 tracking-[-0.02em]">{title}</p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-label text-secondary uppercase tracking-[0.22em]">LTOS</p>
+            <p className="text-label text-secondary uppercase tracking-[0.22em]">Owner OS</p>
             <p className="text-body text-secondary mt-1">Siap untuk pemilik</p>
           </div>
         </div>

@@ -54,7 +54,7 @@ export function CheckInSidebar() {
   return (
     <aside className="hidden lg:flex flex-col h-full py-8 bg-[#f9f9ff] border-r-[0.5px] border-[#c4c7c7] w-64 shrink-0">
       <div className="px-6 mb-10">
-        <h1 className="font-fraunces text-2xl text-[#151c27] tracking-tight">LTOS</h1>
+        <h1 className="font-fraunces text-2xl text-[#151c27] tracking-tight">Fitter App</h1>
         <p className="text-[#444748] font-sans text-xs opacity-60 mt-1">Local Tailor Operating System</p>
       </div>
       <nav className="flex-1 space-y-1">

@@ -1,4 +1,11 @@
+import type { Metadata } from 'next'
 import { Fraunces } from 'next/font/google'
+
+export const metadata: Metadata = {
+  title: 'Fitter App | Local Tailor',
+  applicationName: 'Fitter App',
+  description: 'Professional measurement and customer fitting workspace.',
+}
 
 // Fonts scoped to Consultation Review only — independent from Check-In/
 // Measurement/Design Studio's own layouts (all frozen this sprint). Inter is

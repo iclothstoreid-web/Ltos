@@ -2,8 +2,15 @@ import type { Metadata } from 'next'
 import { Fraunces, Hanken_Grotesk, JetBrains_Mono, Libre_Caslon_Text } from 'next/font/google'
 
 export const metadata: Metadata = {
-  title: 'Production Flow — LTOS',
-  description: 'Local Tailor Operating System',
+  title: 'Production Flow | Local Tailor',
+  description: 'Manage and monitor bespoke garment production workflow.',
+  applicationName: 'Production Flow',
+  openGraph: {
+    title: 'Production Flow',
+    description: 'Manage and monitor bespoke garment production workflow.',
+    siteName: 'Local Tailor Operating System',
+    type: 'website',
+  },
 }
 
 // Same font-scoping convention as every other workspace slice's layout

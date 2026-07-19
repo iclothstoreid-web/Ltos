@@ -10,7 +10,7 @@ export function TopNavBar({ fitterInitial }: TopNavBarProps) {
   return (
     <header className="flex justify-between items-center w-full px-16 py-4 bg-[#FDFCF8]/80 backdrop-blur-md sticky top-0 z-50 border-b-[0.5px] border-[#c4c7c7]">
       <div className="flex items-center gap-8">
-        <span className="font-fraunces text-2xl font-bold text-[#151c27]">LTOS</span>
+        <span className="font-fraunces text-2xl font-bold text-[#151c27]">Fitter App</span>
         <nav className="hidden md:flex gap-8">
           <span className="text-[#151c27] border-b border-[#151c27] pb-1 font-sans text-sm">
             Workspace

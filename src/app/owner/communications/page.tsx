@@ -1,9 +1,20 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { fetchAllMessages } from '@/lib/communication/messages'
 import { STAGE_ORDER } from '@/lib/production/stageConfig'
 import type { ProductionStage } from '@/lib/production/types'
 import { CommunicationsCenter } from '@/components/owner/communications/CommunicationsCenter'
+
+export const metadata: Metadata = {
+  title: 'Komunikasi | Owner OS',
+  description: 'Owner OS — Local Tailor Operating System',
+  applicationName: 'Owner OS',
+  openGraph: {
+    title: 'Owner OS',
+    description: 'Local Tailor Operating System',
+  },
+}
 
 // Owner OS only (per the locked architecture brief) — Fitter/Production/QC
 // workflows and Master Data are untouched. Same auth gate as /command-center:

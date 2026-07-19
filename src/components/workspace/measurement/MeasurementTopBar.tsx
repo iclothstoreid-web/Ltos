@@ -7,7 +7,7 @@ export function MeasurementTopBar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#FDFCF8] border-b-[0.5px] border-[#c4c7c7] h-20 flex justify-between items-center px-16">
       <div className="flex items-center gap-8">
-        <span className="font-caslon text-2xl tracking-tighter text-[#151c27]">LTOS</span>
+        <span className="font-caslon text-2xl tracking-tighter text-[#151c27]">Fitter App</span>
         <div className="h-6 w-[0.5px] bg-[#c4c7c7]" />
         <nav className="hidden md:flex gap-8">
           <span className="font-sans text-sm text-[#444748]">Check-In</span>

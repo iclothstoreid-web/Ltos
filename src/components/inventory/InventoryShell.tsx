@@ -25,8 +25,8 @@ export function InventoryShell({ profileName, children }: { profileName: string;
         <div className="absolute inset-0 pointer-events-none bg-[repeating-linear-gradient(90deg,rgba(0,86,69,0.035)_0px,rgba(0,86,69,0.035)_1px,transparent_1px,transparent_56px)] opacity-[0.18]" />
 
         <div className="relative px-6 py-6 flex flex-col gap-1 border-b border-outline-variant/80">
-          <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">LTOS Inventory</span>
-          <span className="text-label text-secondary uppercase tracking-widest">Material Management</span>
+          <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Inventory Hub</span>
+          <span className="text-label text-secondary uppercase tracking-widest">Local Tailor Operating System</span>
         </div>
 
         <div className="relative flex-1 overflow-auto">
