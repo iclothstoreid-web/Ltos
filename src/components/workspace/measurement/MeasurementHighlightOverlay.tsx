@@ -31,27 +31,27 @@ export function MeasurementHighlightOverlay({ activeParts, activeLabel }: Measur
         return (
           <div
             key={id}
-            className={`absolute rounded-full ${active ? 'animate-focus-pulse' : ''}`}
+            className={`absolute rounded-full ${active ? 'animate-highlight-breathe' : ''}`}
             style={{
               left: `${coords.xPct}%`,
               top: `${coords.yPct}%`,
               width: `${coords.rPct * 2}%`,
               height: `${coords.rPct * 2}%`,
               transform: `translate(-50%, -50%) scale(${active ? 1 : 0.9})`,
-              opacity: active ? 0.75 : 0,
+              opacity: active ? 0.7 : 0,
               background:
                 'radial-gradient(circle, rgba(119,90,25,0.55) 0%, rgba(119,90,25,0.22) 45%, rgba(119,90,25,0) 72%)',
               filter: 'blur(2px)',
-              // On activation, animate-focus-pulse (a one-shot @keyframes in
-              // tailwind.config.ts, NOT the infinite animate-pulse-dot Owner
-              // Workspace's alert dots use) plays scale 1->1.08->1 with
-              // rising opacity, then holds its last frame (opacity 0.75) via
-              // `forwards` — a soft steady glow, never a blinking loop. CSS
-              // Animations take priority over Transitions on the same
-              // property while playing, so this plain transition only ever
-              // takes effect on deactivation (class removed), fading the dot
-              // back down to its resting opacity 0 / scale 0.9 instead of
-              // snapping off instantly.
+              // On activation, animate-highlight-breathe (an infinite
+              // @keyframes loop in tailwind.config.ts, NOT the same as Owner
+              // Workspace's animate-pulse-dot alert blink) cycles scale
+              // 1->1.04->1 with opacity 0.55->0.85->0.55 over 2.75s
+              // ease-in-out — a slow, continuous breathing glow rather than
+              // a blink. CSS Animations take priority over Transitions on
+              // the same property while playing, so this plain transition
+              // only ever takes effect on deactivation (class removed),
+              // fading the dot back down to its resting opacity 0 / scale
+              // 0.9 instead of snapping off instantly.
               transition: 'opacity 300ms ease-out, transform 300ms ease-out',
             }}
           />

@@ -24,8 +24,12 @@ export type BodyPartId =
   | 'chest'
   | 'waist'
   | 'hip'
+  | 'leftHip'
+  | 'rightHip'
   | 'leftArm'
   | 'rightArm'
+  | 'leftElbow'
+  | 'rightElbow'
   | 'leftWrist'
   | 'rightWrist'
   | 'leftThigh'
@@ -56,9 +60,27 @@ export const BODY_MAP: Record<BodyPartId, BodyMapEntry> = {
   rightShoulder: { id: 'rightShoulder', label: 'Right Shoulder', coords: { xPct: 61.6, yPct: 28.4, rPct: 5.8 } },
   chest: { id: 'chest', label: 'Chest', coords: { xPct: 50, yPct: 35.4, rPct: 7.9 } },
   waist: { id: 'waist', label: 'Waist', coords: { xPct: 50, yPct: 39.7, rPct: 6.8 } },
-  hip: { id: 'hip', label: 'Hip', coords: { xPct: 50, yPct: 50.4, rPct: 8.5 } },
-  leftArm: { id: 'leftArm', label: 'Left Arm', coords: { xPct: 38.4, yPct: 40, rPct: 3 } },
-  rightArm: { id: 'rightArm', label: 'Right Arm', coords: { xPct: 61.6, yPct: 40, rPct: 3 } },
+  // Raised further above the thigh line (yPct 52.1) than the first pass —
+  // against the real mannequin.png the earlier yPct 46.5 still read as
+  // reaching toward the groin. Kept centered for use as the 'length'
+  // field's hip waypoint.
+  hip: { id: 'hip', label: 'Hip', coords: { xPct: 50, yPct: 43, rPct: 4 } },
+  // Lateral hip points for the 'Pinggul' measurement field, so its glow
+  // reads as the hip bones rather than a single central dot bleeding down
+  // toward the groin.
+  leftHip: { id: 'leftHip', label: 'Left Hip', coords: { xPct: 41, yPct: 43.5, rPct: 3.8 } },
+  rightHip: { id: 'rightHip', label: 'Right Hip', coords: { xPct: 59, yPct: 43.5, rPct: 3.8 } },
+  // Raised from yPct 40 (which, against the real mannequin.png, sat right
+  // at the elbow) to roughly a third of the way down the upper arm segment
+  // (shoulder yPct 28.4 -> elbow yPct 40).
+  leftArm: { id: 'leftArm', label: 'Left Arm', coords: { xPct: 38.4, yPct: 32.3, rPct: 3 } },
+  rightArm: { id: 'rightArm', label: 'Right Arm', coords: { xPct: 61.6, yPct: 32.3, rPct: 3 } },
+  // Dedicated elbow joint, distinct from the leftArm/rightArm (bicep) node
+  // above so 'Siku' no longer highlights the same spot as 'Lengan Atas'.
+  // yPct 40 matches where the bicep node used to sit — that's where the
+  // elbow joint actually is on the real mannequin.png.
+  leftElbow: { id: 'leftElbow', label: 'Left Elbow', coords: { xPct: 38.4, yPct: 40, rPct: 2.5 } },
+  rightElbow: { id: 'rightElbow', label: 'Right Elbow', coords: { xPct: 61.6, yPct: 40, rPct: 2.5 } },
   leftWrist: { id: 'leftWrist', label: 'Left Wrist', coords: { xPct: 36.7, yPct: 51.6, rPct: 3 } },
   rightWrist: { id: 'rightWrist', label: 'Right Wrist', coords: { xPct: 63.3, yPct: 51.6, rPct: 3 } },
   leftThigh: { id: 'leftThigh', label: 'Left Thigh', coords: { xPct: 45.6, yPct: 56, rPct: 3.9 } },
@@ -76,12 +98,13 @@ export const MEASUREMENT_BODY_MAP: Record<keyof MeasurementFields, BodyPartId[]>
   shoulder: ['leftShoulder', 'rightShoulder'],
   chest: ['chest'],
   waist: ['waist'],
-  hip: ['hip'],
+  // Perut bawah + pinggul kiri/kanan — deliberately excludes the thigh and
+  // crotch nodes below it (see the hip/leftHip/rightHip coords above).
+  hip: ['hip', 'leftHip', 'rightHip'],
   armhole: ['leftShoulder', 'rightShoulder', 'chest'],
   sleeve: ['leftArm', 'rightArm'],
   biceps: ['leftArm', 'rightArm'],
-  // No dedicated elbow node in the body map yet — nearest limb segment.
-  elbow: ['leftArm', 'rightArm'],
+  elbow: ['leftElbow', 'rightElbow'],
   wrist: ['leftWrist', 'rightWrist'],
   length: ['hip', 'leftThigh', 'rightThigh', 'leftCalf', 'rightCalf'],
   // Garment hem sits at the bottom of the leg — nearest limb segment.

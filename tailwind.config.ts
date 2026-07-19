@@ -67,12 +67,12 @@ const config: Config = {
         'fade-in': 'fadeIn 200ms ease-out',
         'slide-up': 'slideUp 250ms cubic-bezier(0.16, 1, 0.3, 1)',
         'pulse-dot': 'pulseDot 2s ease-in-out infinite',
-        // Measurement Workspace's highlight glow — a one-shot "arrival"
-        // pulse (scale 1 -> 1.08 -> 1, opacity rising) that settles and
-        // holds via `forwards`, unlike pulse-dot's infinite blink. Kept
-        // separate from pulse-dot since that one is shared with Owner
-        // Workspace's critical-alert dots and must not change shape.
-        'focus-pulse': 'focusPulse 550ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        // Measurement Workspace's highlight glow — a slow, continuous
+        // "breathing" loop (subtle scale + opacity fade) rather than a
+        // blink, so the active body-part reads as a premium body-scanner
+        // glow. Kept separate from pulse-dot since that one is shared with
+        // Owner Workspace's critical-alert dots and must not change shape.
+        'highlight-breathe': 'highlightBreathe 2.75s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -87,10 +87,9 @@ const config: Config = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.4' },
         },
-        focusPulse: {
-          '0%': { transform: 'translate(-50%, -50%) scale(1)', opacity: '0' },
-          '40%': { transform: 'translate(-50%, -50%) scale(1.08)', opacity: '1' },
-          '100%': { transform: 'translate(-50%, -50%) scale(1)', opacity: '0.75' },
+        highlightBreathe: {
+          '0%, 100%': { transform: 'translate(-50%, -50%) scale(1)', opacity: '0.55' },
+          '50%': { transform: 'translate(-50%, -50%) scale(1.04)', opacity: '0.85' },
         },
       },
     },
