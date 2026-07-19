@@ -28,8 +28,14 @@ const OPTION_ROWS: Array<{ label: string; key: keyof DesignSpecification }> = [
 export function DesignSummaryPanel({ specification }: DesignSummaryPanelProps) {
   return (
     <aside className="w-[25%] h-full bg-white border-l-[0.5px] border-[#c4c7c7] flex flex-col">
-      <EstimasiHargaPanel priceSnapshot={specification.priceSnapshot} />
-      <div className="p-8 border-b-[0.5px] border-[#c4c7c7]">
+      {/* Capped and independently scrollable so a long price breakdown can
+          never crowd out Ringkasan Desain below — shrink-0 stops flexbox
+          from squeezing it, max-h stops it from growing past its share.
+          Ringkasan Desain (flex-1 below) stays the panel's primary area. */}
+      <div className="shrink-0 max-h-[35%] overflow-y-auto">
+        <EstimasiHargaPanel priceSnapshot={specification.priceSnapshot} />
+      </div>
+      <div className="shrink-0 p-8 border-b-[0.5px] border-[#c4c7c7]">
         <h3 className="font-sans text-sm text-[#151c27] uppercase tracking-[0.2em]">Ringkasan Desain</h3>
       </div>
       <div className="flex-1 min-h-0 p-6 space-y-4 overflow-y-auto">
