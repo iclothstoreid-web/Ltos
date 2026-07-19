@@ -43,6 +43,11 @@ export function MeasurementWorkspace({
 
   const [decoded] = useState(() => decodeNotes(existingMeasurement?.notes ?? null))
 
+  // Customer Digital Profile lives inside consultations.notes alongside the
+  // human measurement notes — tracked separately here so the photo-upload
+  // write (below) and the valid/remeasure write don't clobber each other.
+  const [rawNotes, setRawNotes] = useState(consultation.notes ?? '')
+
   const [fields, setFields] = useState<MeasurementFields>({
     ...EMPTY_FIELDS,
     chest: existingMeasurement?.chest?.toString() || '',
@@ -74,6 +79,26 @@ export function MeasurementWorkspace({
 
   const handleToggleTag = (tag: string) => {
     setTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]))
+  }
+
+  // Measurement is the single source of truth for the customer photo (no
+  // more parallel capture in Consultation Review) — the moment an upload
+  // succeeds, fold the URL straight into the Customer Digital Profile so it
+  // never depends on the fitter also completing the measurement decision.
+  async function handlePhotoUploaded(url: string) {
+    const profile = buildCustomerDigitalProfile({
+      consultationId: consultation.id,
+      fields,
+      bodyTags: tags,
+      customerPhotoUrl: url,
+      existingProfile: decodeCustomerDigitalProfile(rawNotes),
+    })
+    const nextNotes = encodeCustomerDigitalProfile(rawNotes, profile)
+    const { error } = await supabase
+      .from('consultations')
+      .update({ notes: nextNotes })
+      .eq('id', consultation.id)
+    if (!error) setRawNotes(nextNotes)
   }
 
   async function handleDecision(decision: 'valid' | 'remeasure') {
@@ -113,9 +138,9 @@ export function MeasurementWorkspace({
           fields,
           bodyTags: tags,
           measuredAt: new Date().toISOString(),
-          existingProfile: decodeCustomerDigitalProfile(consultation.notes),
+          existingProfile: decodeCustomerDigitalProfile(rawNotes),
         })
-        const nextConsultationNotes = encodeCustomerDigitalProfile(consultation.notes, profile)
+        const nextConsultationNotes = encodeCustomerDigitalProfile(rawNotes, profile)
 
         // Hand off to Design Studio
         await supabase
@@ -199,7 +224,11 @@ export function MeasurementWorkspace({
             {existingMeasurement?.chest != null && (
               <ComparisonCard label="Lingkar Dada" current={fields.chest} previous={existingMeasurement.chest} />
             )}
-            <PhotoUploader />
+            <PhotoUploader
+              consultationId={consultation.id}
+              initialPhotoUrl={decodeCustomerDigitalProfile(rawNotes)?.customerPhoto?.url ?? null}
+              onUploaded={handlePhotoUploaded}
+            />
 
             <div>
               <button

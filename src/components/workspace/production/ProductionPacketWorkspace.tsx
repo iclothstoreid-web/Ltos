@@ -14,6 +14,7 @@ import { completeStage, getProductionPacket, startStage } from '@/lib/production
 import { releaseMaterialReservation } from '@/lib/inventory/stock'
 import { buildProductionQrPayload } from '@/lib/order/qr'
 import type { CommunicationMessage } from '@/lib/communication/types'
+import type { ConsultationDocument } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
 import { HeroCard } from './HeroCard'
 import { ProductionCommunicationPanel } from './ProductionCommunicationPanel'
 import { QrScanModal } from './QrScanModal'
@@ -34,12 +35,14 @@ import { ShippingReferencePanel } from './ShippingReferencePanel'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
 import { ReferenceModelCard } from './ReferenceModelCard'
 import { MaterialSpecCard } from './MaterialSpecCard'
+import { CustomerReferenceCard } from './CustomerReferenceCard'
 
 interface ProductionPacketWorkspaceProps {
   initialPacket: ProductionPacket
   orderId: string
   initialMessages: CommunicationMessage[]
   customerPhotoUrl: string | null
+  customerReferences: ConsultationDocument[]
 }
 
 export function ProductionPacketWorkspace({
@@ -47,6 +50,7 @@ export function ProductionPacketWorkspace({
   orderId,
   initialMessages,
   customerPhotoUrl,
+  customerReferences,
 }: ProductionPacketWorkspaceProps) {
   const [supabase] = useState(() => createClient())
   const [packet, setPacket] = useState(initialPacket)
@@ -259,6 +263,14 @@ export function ProductionPacketWorkspace({
           isShipping) && (
           <MaterialSpecCard design={packet.design} consultationNotes={packet.consultation_notes} />
         )}
+        {(isMaterialPrep ||
+          isPatternFormulation ||
+          isCutting ||
+          isSewing ||
+          isQc ||
+          isFinishing ||
+          isPacking ||
+          isShipping) && <CustomerReferenceCard documents={customerReferences} />}
 
         {!currentRecord && (
           <div className="bg-white/70 border-[0.5px] border-[#c6c6cc]/40 shadow-sm p-6 text-center">

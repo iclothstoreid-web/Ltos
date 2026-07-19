@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getProductionPacket } from '@/lib/production/client'
 import { getCurrentStageRecord } from '@/lib/production/stageConfig'
 import { getCustomerPhotoForOrder } from '@/lib/production/customerPhoto'
+import { getCustomerReferencesForOrder } from '@/lib/production/customerReferences'
 import { getOrderCommunications } from '@/lib/communication/kiosk'
 import { ProductionPacketWorkspace } from '@/components/workspace/production/ProductionPacketWorkspace'
 import { ProductionAccessGate } from '@/components/workspace/production/ProductionAccessGate'
@@ -30,6 +31,7 @@ export default async function ProductionPacketPage({ params }: Props) {
     : false
   const initialMessages = packet ? await getOrderCommunications(supabase, params.orderId) : []
   const customerPhotoUrl = packet ? await getCustomerPhotoForOrder(supabase, params.orderId) : null
+  const customerReferences = packet ? await getCustomerReferencesForOrder(supabase, params.orderId) : []
 
   return (
     <ProductionAccessGate orderId={params.orderId} isInProgress={isInProgress}>
@@ -45,6 +47,7 @@ export default async function ProductionPacketPage({ params }: Props) {
           orderId={params.orderId}
           initialMessages={initialMessages}
           customerPhotoUrl={customerPhotoUrl}
+          customerReferences={customerReferences}
         />
       )}
     </ProductionAccessGate>

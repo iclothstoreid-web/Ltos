@@ -20,15 +20,12 @@ import { ReadinessGauge } from './ReadinessGauge'
 import { DecisionPanel } from './DecisionPanel'
 import { ReviewFooter } from './ReviewFooter'
 import { EstimationCard } from './EstimationCard'
-import { CustomerPhotoCapture } from './CustomerPhotoCapture'
 import { DocumentUploader } from './DocumentUploader'
 import {
   decodeFitterEnhancements,
   encodeFitterEnhancements,
   type FitterEnhancements,
 } from './fitterEnhancementsCodec'
-import { buildCustomerDigitalProfile } from '@/lib/customerProfile/buildProfile'
-import { decodeCustomerDigitalProfile, encodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
 import { buildDesignSpecification } from '@/lib/designSpecification/buildSpecification'
 import { decodeDesignSpecification, encodeDesignSpecification } from '@/lib/designSpecification/codec'
 import type { MasterOptionsByCategory } from '@/lib/design/masterData'
@@ -79,9 +76,9 @@ export function ConsultationReviewWorkspace({
   const [approved, setApproved] = useState(false)
   const [orderError, setOrderError] = useState<string | null>(null)
 
-  // Fitter App sprint additions (Estimasi Pengerjaan / Foto Customer / Upload
-  // Dokumen) — no new columns, encoded into consultations.notes via their own
-  // marker block, same technique as Design Studio's blueprint block.
+  // Fitter App sprint additions (Estimasi Pengerjaan / Referensi Customer) —
+  // no new columns, encoded into consultations.notes via their own marker
+  // block, same technique as Design Studio's blueprint block.
   const [rawNotes, setRawNotes] = useState(consultation.notes ?? '')
   const [enhancements, setEnhancements] = useState<FitterEnhancements>(() =>
     decodeFitterEnhancements(consultation.notes)
@@ -93,22 +90,6 @@ export function ConsultationReviewWorkspace({
     setSavingEnhancements(true)
     try {
       let nextNotes = encodeFitterEnhancements(rawNotes, next)
-
-      // A photo just landed on the active consultation — refresh the
-      // Customer Digital Profile (built during Measurement) so it picks it
-      // up too, in the same notes write. LOCKED (Sprint 4): the profile
-      // only ever keeps the front-view angle, even though the existing
-      // capture UI still offers front/side/back slots.
-      if (patch.customerPhotos) {
-        const profile = buildCustomerDigitalProfile({
-          consultationId: consultation.id,
-          fields: measurementFields,
-          bodyTags: decodedMeasurement.tags,
-          customerPhotoUrl: next.customerPhotos.front,
-          existingProfile: decodeCustomerDigitalProfile(rawNotes),
-        })
-        nextNotes = encodeCustomerDigitalProfile(nextNotes, profile)
-      }
 
       // Estimasi Pengerjaan just changed — refresh the Design Specification
       // (built during Design Studio) so its estimatedProductionSpeed field
@@ -266,11 +247,6 @@ export function ConsultationReviewWorkspace({
       </main>
 
       <section className="max-w-[1440px] mx-auto px-16 pb-16 flex flex-col gap-8">
-        <CustomerPhotoCapture
-          consultationId={consultation.id}
-          photos={enhancements.customerPhotos}
-          onChange={customerPhotos => persistEnhancements({ customerPhotos })}
-        />
         <DocumentUploader
           consultationId={consultation.id}
           documents={enhancements.documents}

@@ -1,19 +1,33 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { uploadConsultationPhoto } from '@/lib/consultation/media'
 
 const CAMERA_UNAVAILABLE_MESSAGE =
   'Kamera tidak tersedia pada perangkat ini. Silakan gunakan Upload Foto.'
+const UPLOAD_ERROR_MESSAGE = 'Gagal mengunggah foto. Silakan coba lagi.'
 
-// Local-preview only this sprint — no Supabase Storage bucket exists yet in
-// this repo, and provisioning one is backend infra, not a UI upgrade.
-// Preview is held in memory (URL.createObjectURL) and is lost on refresh;
-// nothing is uploaded anywhere.
-export function PhotoUploader() {
-  const [preview, setPreview] = useState<string | null>(null)
+interface PhotoUploaderProps {
+  consultationId: string
+  initialPhotoUrl?: string | null
+  onUploaded: (url: string) => void
+}
+
+// Foto Pelanggan is captured/selected here, then uploaded straight to the
+// same `consultation-photos` Supabase Storage bucket Consultation Review
+// used to write to — Measurement is now the single source of truth for this
+// photo (see CustomerDigitalProfile), so it always uploads under the
+// 'front' slot regardless of camera vs. gallery origin.
+export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded }: PhotoUploaderProps) {
+  const [supabase] = useState(() => createClient())
+  const [preview, setPreview] = useState<string | null>(initialPhotoUrl ?? null)
   const [capturedFrame, setCapturedFrame] = useState<string | null>(null)
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   const galleryInputRef = useRef<HTMLInputElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -67,19 +81,40 @@ export function PhotoUploader() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
     canvas.toBlob(blob => {
-      if (blob) setCapturedFrame(URL.createObjectURL(blob))
+      if (blob) {
+        setCapturedFrame(URL.createObjectURL(blob))
+        setCapturedBlob(blob)
+      }
     }, 'image/jpeg', 0.92)
 
     setStream(null)
   }
 
-  function useCapturedFrame() {
-    if (capturedFrame) setPreview(capturedFrame)
+  async function uploadPhoto(file: File) {
+    setUploading(true)
+    setUploadError(null)
+    try {
+      const url = await uploadConsultationPhoto(supabase, { consultationId, slot: 'front', file })
+      setPreview(url)
+      onUploaded(url)
+    } catch {
+      setUploadError(UPLOAD_ERROR_MESSAGE)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function useCapturedFrame() {
+    if (capturedBlob) {
+      await uploadPhoto(new File([capturedBlob], `foto-pelanggan-${Date.now()}.jpg`, { type: 'image/jpeg' }))
+    }
     setCapturedFrame(null)
+    setCapturedBlob(null)
   }
 
   function retakeCapture() {
     setCapturedFrame(null)
+    setCapturedBlob(null)
     startCamera()
   }
 
@@ -87,7 +122,8 @@ export function PhotoUploader() {
     if (!file) return
     setCameraError(null)
     setCapturedFrame(null)
-    setPreview(URL.createObjectURL(file))
+    setCapturedBlob(null)
+    uploadPhoto(file)
   }
 
   return (
@@ -108,6 +144,7 @@ export function PhotoUploader() {
       />
 
       {cameraError && <p className="text-xs text-[#c0392b] mb-2">{cameraError}</p>}
+      {uploadError && <p className="text-xs text-[#c0392b] mb-2">{uploadError}</p>}
 
       {stream ? (
         <div className="space-y-2">
@@ -150,15 +187,17 @@ export function PhotoUploader() {
           <div className="flex gap-2">
             <button
               type="button"
+              disabled={uploading}
               onClick={useCapturedFrame}
-              className="flex-1 text-[10px] uppercase tracking-widest text-[#775a19] border-[0.5px] border-[#c4c7c7] py-2 hover:bg-[#f0f3ff] transition-colors"
+              className="flex-1 text-[10px] uppercase tracking-widest text-[#775a19] border-[0.5px] border-[#c4c7c7] py-2 hover:bg-[#f0f3ff] transition-colors disabled:opacity-40"
             >
-              Gunakan Foto
+              {uploading ? 'Mengunggah...' : 'Gunakan Foto'}
             </button>
             <button
               type="button"
+              disabled={uploading}
               onClick={retakeCapture}
-              className="flex-1 text-[10px] uppercase tracking-widest text-[#444748] border-[0.5px] border-[#c4c7c7] py-2 hover:bg-[#f0f3ff] transition-colors"
+              className="flex-1 text-[10px] uppercase tracking-widest text-[#444748] border-[0.5px] border-[#c4c7c7] py-2 hover:bg-[#f0f3ff] transition-colors disabled:opacity-40"
             >
               Ambil Ulang
             </button>
@@ -191,6 +230,10 @@ export function PhotoUploader() {
             </button>
           </div>
         </div>
+      ) : uploading ? (
+        <div className="aspect-square bg-[#f0f3ff] border-[0.5px] border-dashed border-[#c4c7c7] flex items-center justify-center">
+          <p className="text-[10px] text-[#444748] uppercase tracking-widest">Mengunggah...</p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -219,10 +262,6 @@ export function PhotoUploader() {
           </button>
         </div>
       )}
-
-      <p className="text-[10px] text-[#444748]/60 mt-2 italic">
-        Pratinjau lokal saja — belum tersimpan ke cloud.
-      </p>
     </div>
   )
 }

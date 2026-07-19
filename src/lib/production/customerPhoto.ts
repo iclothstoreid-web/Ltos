@@ -1,12 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { decodeFitterEnhancements } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
+import { decodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
 
-// Customer photos are captured in Consultation Review (CustomerPhotoCapture)
-// and persisted for real in Supabase Storage, but the URL only ever lands
-// inside consultations.notes (marker-encoded, see fitterEnhancementsCodec) —
-// there's no consultation_id on `orders` (see lib/order/createOrder.ts), so
-// this is a read-only lookup through the same business_events row
-// lib/order/lookup.ts already uses in the other direction. No schema change.
+// Measurement is the single source of truth for the customer photo (folded
+// into the Customer Digital Profile, marker-encoded in consultations.notes —
+// see codec.ts). There's no consultation_id on `orders` (see
+// lib/order/createOrder.ts), so this is a read-only lookup through the same
+// business_events row lib/order/lookup.ts already uses in the other
+// direction. No schema change.
 export async function getCustomerPhotoForOrder(
   supabase: SupabaseClient,
   orderId: string
@@ -28,6 +28,6 @@ export async function getCustomerPhotoForOrder(
     .eq('id', event.consultation_id)
     .single()
 
-  const { customerPhotos } = decodeFitterEnhancements(consultation?.notes ?? null)
-  return customerPhotos.front ?? customerPhotos.side ?? customerPhotos.back ?? null
+  const profile = decodeCustomerDigitalProfile(consultation?.notes ?? null)
+  return profile?.customerPhoto?.url ?? null
 }

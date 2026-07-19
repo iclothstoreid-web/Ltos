@@ -56,7 +56,7 @@ export function DocumentUploader({ consultationId, documents, onChange }: Docume
     <section className="bg-white p-4 shadow-sm border-[0.5px] border-[#c4c7c7]">
       <h3 className="font-sans text-xs text-[#151c27] font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
         <span className="material-symbols-outlined text-[18px]">upload_file</span>
-        Unggah Dokumen
+        Referensi Customer
       </h3>
 
       {error && <p className="text-xs text-[#c0392b] mb-4">{error}</p>}
