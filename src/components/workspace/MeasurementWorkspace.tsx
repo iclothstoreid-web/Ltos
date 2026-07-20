@@ -178,7 +178,7 @@ export function MeasurementWorkspace({
       <MeasurementNavAside />
 
       <main className="md:ml-64 pt-20 pb-32 min-h-screen">
-        <div className="max-w-[1440px] mx-auto px-16 py-8 flex flex-col lg:flex-row gap-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 flex flex-col lg:flex-row gap-8">
           <MeasurementSidebar
             fields={fields}
             onFieldChange={handleFieldChange}

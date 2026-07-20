@@ -1,11 +1,24 @@
 'use client'
 
-import { Bell, Search, User } from 'lucide-react'
+import { Bell, Menu, Search, User } from 'lucide-react'
 
-export function OwnerTopBar({ profileName }: { profileName: string }) {
+interface OwnerTopBarProps {
+  profileName: string
+  onMenuClick?: () => void
+}
+
+export function OwnerTopBar({ profileName, onMenuClick }: OwnerTopBarProps) {
   return (
     <header className="border-b border-outline-variant/80 bg-surface/80 backdrop-blur-sm sticky top-0 z-40">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-4 flex items-center gap-4">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-4 flex items-center gap-2 sm:gap-4">
+
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden shrink-0 p-2 rounded-[9999px] border border-outline-variant/90 text-secondary/90 hover:text-on-surface hover:bg-on-surface/5 transition-all duration-200"
+          aria-label="Buka menu"
+        >
+          <Menu size={16} />
+        </button>
 
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="relative flex-1 min-w-0">
@@ -29,7 +42,7 @@ export function OwnerTopBar({ profileName }: { profileName: string }) {
             <Bell size={16} />
           </button>
 
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-[9999px] border border-outline-variant/90 shadow-[0_1px_0_rgba(27,27,28,0.03)]">
+          <div className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-[9999px] border border-outline-variant/90 shadow-[0_1px_0_rgba(27,27,28,0.03)]">
 
             <User size={16} className="text-secondary" />
             <span className="text-body text-secondary max-w-[140px] truncate">{profileName}</span>

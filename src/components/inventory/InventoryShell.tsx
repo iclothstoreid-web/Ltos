@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, Boxes, Calculator, LayoutDashboard, User } from 'lucide-react'
+import { Bell, Boxes, Calculator, LayoutDashboard, Menu, User, X } from 'lucide-react'
 
 // Same Owner OS shell tokens as OwnerCommandCenter (surface-01, atelier-bg,
 // elev-1/2) — Inventory is an Owner/Admin-only workspace analogous to
@@ -15,8 +16,37 @@ const navItems = [
   { label: 'Estimasi Biaya', href: '/inventory/estimasi', icon: Calculator },
 ]
 
+// Shared between the always-visible desktop sidebar and the mobile/tablet
+// drawer below — same nav items, same row markup, just two different
+// containers, so there is only ever one nav list to keep in sync.
+function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  return (
+    <ul className="p-4 space-y-1">
+      {navItems.map(item => {
+        const Icon = item.icon
+        const active = pathname === item.href
+        return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              onClick={onNavigate}
+              className={`group flex items-center gap-3 px-3 py-2 rounded-[14px] text-body transition-all duration-200 hover:bg-on-surface/4 hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none ${
+                active ? 'bg-on-surface/5 text-on-surface font-medium' : 'text-secondary/90 hover:text-on-surface'
+              }`}
+            >
+              <Icon size={16} className={active ? 'text-on-surface' : 'text-secondary/80 group-hover:text-on-surface transition-colors'} />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 export function InventoryShell({ profileName, children }: { profileName: string; children: React.ReactNode }) {
   const pathname = usePathname()
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
@@ -30,25 +60,7 @@ export function InventoryShell({ profileName, children }: { profileName: string;
         </div>
 
         <div className="relative flex-1 overflow-auto">
-          <ul className="p-4 space-y-1">
-            {navItems.map(item => {
-              const Icon = item.icon
-              const active = pathname === item.href
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`group flex items-center gap-3 px-3 py-2 rounded-[14px] text-body transition-all duration-200 hover:bg-on-surface/4 hover:-translate-y-[1px] focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none ${
-                      active ? 'bg-on-surface/5 text-on-surface font-medium' : 'text-secondary/90 hover:text-on-surface'
-                    }`}
-                  >
-                    <Icon size={16} className={active ? 'text-on-surface' : 'text-secondary/80 group-hover:text-on-surface transition-colors'} />
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+          <NavList pathname={pathname} />
         </div>
 
         <div className="relative p-4 border-t border-outline-variant/80">
@@ -61,23 +73,71 @@ export function InventoryShell({ profileName, children }: { profileName: string;
         </div>
       </nav>
 
+      {/* Mobile/tablet nav — same content as the desktop sidebar above, just
+          reached via a hamburger + slide-in drawer instead of always-visible,
+          since there's no room for a persistent 280px rail below lg. */}
+      {mobileNavOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40 lg:hidden"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <nav className="fixed inset-y-0 left-0 w-[280px] max-w-[80vw] bg-surface shadow-2xl z-50 flex flex-col lg:hidden">
+            <div className="px-6 py-6 flex items-center justify-between border-b border-outline-variant/80">
+              <div className="flex flex-col gap-1">
+                <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Inventory Hub</span>
+                <span className="text-label text-secondary uppercase tracking-widest">Local Tailor Operating System</span>
+              </div>
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                className="p-2 -mr-2 rounded-full hover:bg-on-surface/5 text-secondary"
+                aria-label="Tutup menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <NavList pathname={pathname} onNavigate={() => setMobileNavOpen(false)} />
+            </div>
+            <div className="p-4 border-t border-outline-variant/80">
+              <Link
+                href="/command-center"
+                onClick={() => setMobileNavOpen(false)}
+                className="text-label text-secondary hover:text-on-surface uppercase tracking-widest transition-colors"
+              >
+                ← Owner OS
+              </Link>
+            </div>
+          </nav>
+        </>
+      )}
+
       <div className="flex-1 flex flex-col min-w-0">
         <header className="border-b border-outline-variant/80 bg-surface/80 backdrop-blur-sm sticky top-0 z-40">
-          <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-4 flex items-center justify-end gap-2">
+          <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-4 flex items-center justify-between md:justify-end gap-2">
             <button
-              className="p-2 rounded-[9999px] border border-outline-variant/90 text-secondary/90 hover:text-on-surface hover:bg-on-surface/5 transition-all duration-200"
-              aria-label="Notifikasi"
+              onClick={() => setMobileNavOpen(true)}
+              className="lg:hidden p-2 rounded-[9999px] border border-outline-variant/90 text-secondary/90 hover:text-on-surface hover:bg-on-surface/5 transition-all duration-200"
+              aria-label="Buka menu"
             >
-              <Bell size={16} />
+              <Menu size={16} />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-[9999px] border border-outline-variant/90 shadow-[0_1px_0_rgba(27,27,28,0.03)]">
-              <User size={16} className="text-secondary" />
-              <span className="text-body text-secondary max-w-[140px] truncate">{profileName}</span>
+            <div className="flex items-center gap-2">
+              <button
+                className="p-2 rounded-[9999px] border border-outline-variant/90 text-secondary/90 hover:text-on-surface hover:bg-on-surface/5 transition-all duration-200"
+                aria-label="Notifikasi"
+              >
+                <Bell size={16} />
+              </button>
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-[9999px] border border-outline-variant/90 shadow-[0_1px_0_rgba(27,27,28,0.03)]">
+                <User size={16} className="text-secondary" />
+                <span className="text-body text-secondary max-w-[140px] truncate hidden sm:inline">{profileName}</span>
+              </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 px-6 md:px-10 py-10 max-w-[1440px] w-full mx-auto">{children}</main>
+        <main className="flex-1 px-4 sm:px-6 md:px-10 py-6 sm:py-10 max-w-[1440px] w-full mx-auto">{children}</main>
       </div>
     </div>
   )

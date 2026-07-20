@@ -149,7 +149,7 @@ export function CustomerJourneyShareActions({
 
       {qrModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-sm p-6 space-y-4 shadow-xl">
+          <div className="bg-white rounded-lg w-full max-w-sm p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <h3 className="font-sans text-xs text-[#444748] uppercase tracking-widest">
                 Customer Journey QR
@@ -162,8 +162,17 @@ export function CustomerJourneyShareActions({
                 close
               </button>
             </div>
+            {/* Intrinsic size stays 280 for a crisp canvas — CSS constrains the
+                *displayed* size so it can never overflow the modal/viewport on
+                narrow phones (e.g. 320px-wide devices) the way a bare fixed
+                pixel size would. */}
             <div className="flex justify-center bg-white p-4 border border-[#c4c7c7]/60">
-              <QRCodeCanvas value={journeyUrl} size={280} level="M" />
+              <QRCodeCanvas
+                value={journeyUrl}
+                size={280}
+                level="M"
+                style={{ width: '100%', height: 'auto', maxWidth: '280px' }}
+              />
             </div>
             <p className="font-sans text-xs text-[#444748] text-center break-all">{journeyUrl}</p>
           </div>

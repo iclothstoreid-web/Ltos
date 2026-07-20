@@ -149,7 +149,7 @@ export function DesignStudioWorkspace({
         canManageMasterData={canManageMasterData}
       />
 
-      <main className="pt-20 pb-32 h-screen w-full flex overflow-hidden">
+      <main className="pt-20 pb-44 lg:pb-32 w-full flex flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
         <GarmentBlueprintPanel
           selections={selections}
           masterOptions={masterOptions}

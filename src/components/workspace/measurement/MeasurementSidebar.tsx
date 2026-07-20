@@ -76,8 +76,25 @@ export function MeasurementSidebar({ fields, onFieldChange, onFocusField }: Meas
     return () => observer.disconnect()
   }, [])
 
+  // The viewport-height clamp + internal scroll above only make sense once
+  // this section sits *beside* the mannequin panel (lg:flex-row in the
+  // parent). Stacked on mobile/tablet (flex-col), locking it to ~viewport
+  // height would bury everything below it (mannequin, photo, submit) behind
+  // its own internal scrollbar — a confusing nested-scroll, not a fix.
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false)
+  useLayoutEffect(() => {
+    const query = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsDesktopLayout(query.matches)
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
+
   return (
-    <section className="w-[30%] flex flex-col gap-8" style={{ height: `calc(100vh - 7rem - ${footerHeight}px)` }}>
+    <section
+      className="w-full lg:w-[30%] flex flex-col gap-8"
+      style={isDesktopLayout ? { height: `calc(100vh - 7rem - ${footerHeight}px)` } : undefined}
+    >
       <div>
         <h1 className="font-caslon text-3xl text-[#151c27] tracking-tight mb-2">
           Pengukuran Badan

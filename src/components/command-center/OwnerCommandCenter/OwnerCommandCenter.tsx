@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import { LeftSidebar } from './LeftSidebar'
 import { OwnerTopBar } from './OwnerTopBar'
 import { SummaryCards } from './SummaryCards'
@@ -61,15 +64,17 @@ export function OwnerCommandCenter({
   artisanCards,
   agendaItems,
 }: OwnerCommandCenterProps) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
   return (
       <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
-      <LeftSidebar />
+      <LeftSidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
 
 
       <div className="flex-1 flex flex-col min-w-0">
-        <OwnerTopBar profileName={profileName} />
+        <OwnerTopBar profileName={profileName} onMenuClick={() => setMobileNavOpen(true)} />
 
-        <main className="flex-1 px-6 md:px-10 py-10 max-w-[1440px] w-full mx-auto">
+        <main className="flex-1 px-4 sm:px-6 md:px-10 py-6 sm:py-10 max-w-[1440px] w-full mx-auto">
           <section className="mb-10">
             <p className="text-label text-secondary uppercase tracking-widest mb-3">
               {todayLabel}
@@ -105,7 +110,7 @@ export function OwnerCommandCenter({
             </section>
 
             <aside className="lg:col-span-5">
-              <div className="sticky top-[84px] space-y-6">
+              <div className="lg:sticky lg:top-[84px] space-y-6">
                 <ClockCalendar />
                 <AgendaPanel items={agendaItems} />
               </div>

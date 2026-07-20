@@ -28,8 +28,8 @@ export function WorkflowFooter({
   onRemeasure,
 }: WorkflowFooterProps) {
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t-[0.5px] border-[#c4c7c7] px-16 py-6">
-      <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-6 flex-wrap">
+    <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t-[0.5px] border-[#c4c7c7] px-4 sm:px-8 lg:px-16 py-4 lg:py-6">
+      <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-4 sm:gap-6 flex-wrap">
         <div className="flex items-center gap-16 flex-wrap">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-[#1c1b1b] text-[#858383] flex items-center justify-center rounded-sm shrink-0">
@@ -75,9 +75,9 @@ export function WorkflowFooter({
             type="button"
             onClick={onContinue}
             disabled={primaryDisabled || loading}
-            className="bg-[#151c27] text-white px-10 py-4 flex items-center gap-4 font-sans text-sm
+            className="bg-[#151c27] text-white px-5 sm:px-8 lg:px-10 py-4 flex items-center gap-2 sm:gap-4 font-sans text-xs sm:text-sm
                        font-bold tracking-wider hover:bg-[#775a19] transition-all duration-300 group
-                       disabled:opacity-40 disabled:cursor-not-allowed"
+                       disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
             {loading ? 'MENYIMPAN...' : 'LANJUT KE DESIGN STUDIO'}
             <span className="material-symbols-outlined transition-transform duration-300 group-hover:translate-x-2">

@@ -27,6 +27,7 @@ export function CommunicationsCenter({ profileId, profileName, orders, stageGrou
   const [mode, setMode] = useState<ViewMode>('per_order')
   const [messages, setMessages] = useState<CommunicationMessage[]>(initialMessages)
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(orders[0]?.id ?? null)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const selectedOrderLabel = useMemo(() => {
     const order = orders.find(o => o.id === selectedOrderId)
@@ -39,10 +40,10 @@ export function CommunicationsCenter({ profileId, profileName, orders, stageGrou
 
   return (
     <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
-      <LeftSidebar />
+      <LeftSidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <OwnerTopBar profileName={profileName} />
+        <OwnerTopBar profileName={profileName} onMenuClick={() => setMobileNavOpen(true)} />
 
         <main className="flex-1 px-6 md:px-10 py-8 max-w-[1440px] w-full mx-auto flex flex-col min-h-0">
           <div className="mb-6">

@@ -196,7 +196,7 @@ export function ConsultationReviewWorkspace({
     <div className="min-h-screen bg-[#FDFCF8] font-sans text-[#151c27] pb-32">
       <TopNavBar fitterInitial={fitterName.charAt(0).toUpperCase()} />
 
-      <main className="max-w-[1440px] mx-auto px-16 py-16 flex flex-col md:flex-row gap-8">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 lg:py-16 flex flex-col md:flex-row gap-8">
         <aside className="w-full md:w-1/4 flex flex-col gap-8">
           <CustomerSummaryCard
             customerName={consultation.customers.name}
@@ -246,7 +246,7 @@ export function ConsultationReviewWorkspace({
         </aside>
       </main>
 
-      <section className="max-w-[1440px] mx-auto px-16 pb-16 flex flex-col gap-8">
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pb-16 flex flex-col gap-8">
         <DocumentUploader
           consultationId={consultation.id}
           documents={enhancements.documents}

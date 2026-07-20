@@ -13,21 +13,21 @@ interface ReviewFooterProps {
 export function ReviewFooter({ customerName, loading, onContinue }: ReviewFooterProps) {
   return (
     <footer className="fixed bottom-0 left-0 w-full bg-[#151c27] text-white border-t border-white/10 backdrop-blur-md z-50">
-      <div className="max-w-[1440px] mx-auto px-16 py-4 flex items-center justify-between gap-6 flex-wrap">
-        <div className="flex items-center gap-8">
-          <div className="flex flex-col">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-3 sm:py-4 flex items-center justify-between gap-4 sm:gap-6 flex-wrap">
+        <div className="flex items-center gap-4 sm:gap-8 min-w-0">
+          <div className="flex flex-col min-w-0">
             <span className="font-sans text-[10px] text-[#c8c6c5] uppercase opacity-70">Pelanggan</span>
-            <span className="font-sans text-sm font-bold">{customerName}</span>
+            <span className="font-sans text-sm font-bold truncate">{customerName}</span>
           </div>
-          <div className="w-px h-8 bg-white/20" />
-          <div className="flex flex-col">
+          <div className="hidden sm:block w-px h-8 bg-white/20" />
+          <div className="hidden sm:flex flex-col">
             <span className="font-sans text-[10px] text-[#c8c6c5] uppercase opacity-70">
               Investasi
             </span>
             <span className="font-sans text-sm font-bold text-[#e9c176]">Belum dihitung</span>
           </div>
-          <div className="w-px h-8 bg-white/20" />
-          <div className="flex flex-col">
+          <div className="hidden md:block w-px h-8 bg-white/20" />
+          <div className="hidden md:flex flex-col">
             <span className="font-sans text-[10px] text-[#c8c6c5] uppercase opacity-70">Status</span>
             <span className="font-sans text-sm flex items-center gap-1">
               <span className="w-2 h-2 bg-[#775a19] rounded-full animate-pulse" />
@@ -39,8 +39,8 @@ export function ReviewFooter({ customerName, loading, onContinue }: ReviewFooter
           type="button"
           onClick={onContinue}
           disabled={loading}
-          className="bg-white text-[#151c27] px-8 py-2 font-sans text-sm uppercase tracking-widest
-                     hover:bg-[#e5e2e1] transition-colors disabled:opacity-40"
+          className="bg-white text-[#151c27] px-6 sm:px-8 py-2.5 font-sans text-sm uppercase tracking-widest
+                     hover:bg-[#e5e2e1] transition-colors disabled:opacity-40 shrink-0"
         >
           {loading ? 'Memproses...' : 'Lanjutkan'}
         </button>

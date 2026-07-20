@@ -44,8 +44,8 @@ export function GarmentBlueprintPanel({
   const [specOption, setSpecOption] = useState<MasterDataOption | null>(null)
 
   return (
-    <aside className="w-[30%] h-full border-r-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] flex flex-col">
-      <div className="p-8 border-b-[0.5px] border-[#c4c7c7]">
+    <aside className="w-full lg:w-[30%] lg:h-full border-b-[0.5px] lg:border-b-0 lg:border-r-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] flex flex-col">
+      <div className="p-4 sm:p-6 lg:p-8 border-b-[0.5px] border-[#c4c7c7]">
         <h2 className="font-caslon text-2xl text-[#151c27]">Cetak Biru Busana</h2>
         <p className="font-sans text-sm text-[#444748] mt-2">
           Menyempurnakan siluet untuk hasil bespoke yang sempurna.

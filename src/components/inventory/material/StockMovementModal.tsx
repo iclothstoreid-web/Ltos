@@ -45,7 +45,7 @@ export function StockMovementModal({ material, mode, onClose, onSubmit }: StockM
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-      <div className="bg-surface rounded-2xl w-full max-w-sm border border-outline-variant/40 shadow-2xl">
+      <div className="bg-surface rounded-2xl w-full max-w-sm border border-outline-variant/40 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-5 flex items-center justify-between border-b border-outline-variant/30">
           <h3 className="font-serif text-title text-on-surface">{isOut ? 'Stock Keluar' : 'Stock Masuk'}</h3>
           <button onClick={onClose} className="p-1.5 hover:bg-surface-container-low rounded-full text-secondary" aria-label="Tutup">

@@ -36,8 +36,8 @@ export function OrderCreatedWorkspace({
     <div className="min-h-screen bg-[#FDFCF8] font-sans text-[#151c27] pb-32">
       <TopNavBar fitterInitial={fitterName.charAt(0).toUpperCase()} />
 
-      <main className="max-w-[1440px] mx-auto px-16 py-16 grid grid-cols-12 gap-8">
-        <aside className="col-span-3 flex flex-col gap-8">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 lg:py-16 grid grid-cols-1 md:grid-cols-12 gap-8">
+        <aside className="md:col-span-3 flex flex-col gap-8">
           <CustomerOrderCard
             customerName={snapshot.customer.name}
             customerId={snapshot.customer.id}
@@ -47,7 +47,7 @@ export function OrderCreatedWorkspace({
           <PaymentSummaryCard />
         </aside>
 
-        <div className="col-span-5 flex flex-col gap-8">
+        <div className="md:col-span-5 flex flex-col gap-8">
           <OrderSuccessHero orderNumber={order.order_number} snapshot={snapshot} />
           <CustomerJourneyShareActions
             customerToken={order.customer_token}
@@ -57,14 +57,14 @@ export function OrderCreatedWorkspace({
           />
         </div>
 
-        <aside className="col-span-4 flex flex-col gap-8">
+        <aside className="md:col-span-4 flex flex-col gap-8">
           <TechnicalDetailsCard design={snapshot.design} />
           <ProductionJourneyTimeline events={timelineEvents} />
           <SystemLogisticsCard orderId={order.id} orderNumber={order.order_number} />
         </aside>
       </main>
 
-      <section className="max-w-[1440px] mx-auto px-16 pb-16">
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pb-16">
         <OrderCommunicationPanel
           orderId={order.id}
           profileId={profileId}

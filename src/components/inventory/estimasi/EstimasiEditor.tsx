@@ -319,7 +319,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
           const subtotal = (Number(row.quantity) || 0) * (resolved?.price ?? 0)
           return (
             <div key={row.id} className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-4">
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <select
                   value={row.categoryId}
                   onChange={e => updateMaterialRow(row.id, { categoryId: e.target.value, materialId: '' })}

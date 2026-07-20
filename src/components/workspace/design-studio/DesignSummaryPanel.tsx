@@ -27,18 +27,20 @@ const OPTION_ROWS: Array<{ label: string; key: keyof DesignSpecification }> = [
 // never has its own separate copy of the selections.
 export function DesignSummaryPanel({ specification }: DesignSummaryPanelProps) {
   return (
-    <aside className="w-[25%] h-full bg-white border-l-[0.5px] border-[#c4c7c7] flex flex-col">
+    <aside className="w-full lg:w-[25%] lg:h-full bg-white border-t-[0.5px] lg:border-t-0 lg:border-l-[0.5px] border-[#c4c7c7] flex flex-col">
       {/* Capped and independently scrollable so a long price breakdown can
           never crowd out Ringkasan Desain below — shrink-0 stops flexbox
           from squeezing it, max-h stops it from growing past its share.
-          Ringkasan Desain (flex-1 below) stays the panel's primary area. */}
-      <div className="shrink-0 max-h-[35%] overflow-y-auto">
+          Ringkasan Desain (flex-1 below) stays the panel's primary area.
+          Only clamped on lg: stacked on mobile/tablet, both sections should
+          just flow with the page instead of fighting over a shared height. */}
+      <div className="shrink-0 lg:max-h-[35%] overflow-y-auto">
         <EstimasiHargaPanel priceSnapshot={specification.priceSnapshot} />
       </div>
-      <div className="shrink-0 p-8 border-b-[0.5px] border-[#c4c7c7]">
+      <div className="shrink-0 p-4 sm:p-6 lg:p-8 border-b-[0.5px] border-[#c4c7c7]">
         <h3 className="font-sans text-sm text-[#151c27] uppercase tracking-[0.2em]">Ringkasan Desain</h3>
       </div>
-      <div className="flex-1 min-h-0 p-6 space-y-4 overflow-y-auto">
+      <div className="lg:flex-1 lg:min-h-0 p-4 sm:p-6 space-y-4 lg:overflow-y-auto">
         {OPTION_ROWS.map(row => {
           const ref = specification[row.key] as DesignSpecOptionRef | null
           return (

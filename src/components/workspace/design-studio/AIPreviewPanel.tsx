@@ -44,8 +44,8 @@ export function AIPreviewPanel({
   }
 
   return (
-    <section className="w-[45%] h-full bg-[#f9f9ff] relative flex flex-col items-center justify-center p-8 overflow-hidden gap-6">
-      <div className="w-full max-w-lg aspect-[3/4] border border-dashed border-[#c4c7c7] flex flex-col items-center justify-center gap-3 text-center px-10">
+    <section className="w-full lg:w-[45%] lg:h-full bg-[#f9f9ff] relative flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 lg:overflow-hidden gap-6">
+      <div className="w-full max-w-lg aspect-[3/4] border border-dashed border-[#c4c7c7] flex flex-col items-center justify-center gap-3 text-center px-4 sm:px-10">
         <span className="material-symbols-outlined text-6xl text-[#775a19]/30">auto_awesome</span>
         <p className="font-sans text-sm uppercase tracking-widest text-[#151c27]">Pratinjau AI</p>
         <p className="font-sans text-xs text-[#444748] max-w-xs leading-relaxed">

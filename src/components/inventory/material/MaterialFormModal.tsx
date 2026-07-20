@@ -139,7 +139,7 @@ export function MaterialFormModal({ categories, material, defaultCategoryId, onC
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="zone-label block mb-2">SKU (opsional)</label>
               <input
@@ -160,7 +160,7 @@ export function MaterialFormModal({ categories, material, defaultCategoryId, onC
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="zone-label block mb-2">Harga (Rp)</label>
               <input
