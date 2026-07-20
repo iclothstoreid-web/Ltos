@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { scanTokenKey } from '@/lib/production/accessToken'
 
@@ -29,12 +29,25 @@ interface ProductionAccessGateProps {
 export function ProductionAccessGate({ orderId, isInProgress, children }: ProductionAccessGateProps) {
   const router = useRouter()
   const [allowed, setAllowed] = useState(isInProgress)
+  // The scan-token check below is destructive (it consumes a single-use
+  // sessionStorage token) and was observed — via direct sessionStorage
+  // instrumentation — to sometimes run twice for the same mount during a
+  // single client-side navigation from the QR scanner, non-deterministically.
+  // The 2nd run would find the token already removed by the 1st and wrongly
+  // redirect away from an otherwise-valid, already-granted session. This ref
+  // makes the check idempotent per orderId: at most one run per mount (or
+  // per orderId change, in case a future caller ever swaps orderId without
+  // unmounting) actually reads/removes the token and decides `allowed`; any
+  // further invocation is a no-op.
+  const checkedForOrderIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (isInProgress) {
       setAllowed(true)
       return
     }
+    if (checkedForOrderIdRef.current === orderId) return
+    checkedForOrderIdRef.current = orderId
 
     const key = scanTokenKey(orderId)
     const justScanned = sessionStorage.getItem(key) !== null

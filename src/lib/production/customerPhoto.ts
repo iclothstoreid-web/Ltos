@@ -4,30 +4,19 @@ import { decodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
 // Measurement is the single source of truth for the customer photo (folded
 // into the Customer Digital Profile, marker-encoded in consultations.notes —
 // see codec.ts). There's no consultation_id on `orders` (see
-// lib/order/createOrder.ts), so this is a read-only lookup through the same
-// business_events row lib/order/lookup.ts already uses in the other
-// direction. No schema change.
+// lib/order/createOrder.ts). Goes through get_production_customer_notes
+// (SECURITY DEFINER) rather than reading business_events/consultations
+// directly — both tables' RLS is correctly staff-only, and the kiosk has no
+// auth.uid(), so a direct read always silently returned nothing. Same
+// open-kiosk RPC pattern every other kiosk read already uses.
 export async function getCustomerPhotoForOrder(
   supabase: SupabaseClient,
   orderId: string
 ): Promise<string | null> {
-  const { data: event } = await supabase
-    .from('business_events')
-    .select('consultation_id')
-    .eq('order_id', orderId)
-    .eq('event_type', 'order.created')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+  const { data: notes } = await supabase.rpc('get_production_customer_notes', {
+    p_order_id: orderId,
+  })
 
-  if (!event?.consultation_id) return null
-
-  const { data: consultation } = await supabase
-    .from('consultations')
-    .select('notes')
-    .eq('id', event.consultation_id)
-    .single()
-
-  const profile = decodeCustomerDigitalProfile(consultation?.notes ?? null)
+  const profile = decodeCustomerDigitalProfile(notes ?? null)
   return profile?.customerPhoto?.url ?? null
 }
