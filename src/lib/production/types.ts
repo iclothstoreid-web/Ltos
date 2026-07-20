@@ -40,6 +40,7 @@ export interface StageRecord {
   completed_at: string | null
   checklist: Record<string, boolean> | null
   evidence_url: string | null
+  video_url: string | null
   decision: 'approved' | 'alter' | null
   alter_category: string | null
   notes: string | null

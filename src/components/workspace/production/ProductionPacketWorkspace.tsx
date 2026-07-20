@@ -35,7 +35,8 @@ import { ShippingReferencePanel } from './ShippingReferencePanel'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
 import { ReferenceModelCard } from './ReferenceModelCard'
 import { MaterialSpecCard } from './MaterialSpecCard'
-import { CustomerReferenceCard } from './CustomerReferenceCard'
+import { MediaProduksiCard } from './MediaProduksiCard'
+import { PackingVideoUploader } from './PackingVideoUploader'
 
 interface ProductionPacketWorkspaceProps {
   initialPacket: ProductionPacket
@@ -57,6 +58,13 @@ export function ProductionPacketWorkspace({
   const [submitting, setSubmitting] = useState(false)
 
   const currentRecord = getCurrentStageRecord(packet.stage_records)
+  // video_url rides on get_production_packet's stage_records payload
+  // (row_to_json), so this is just a derived read — no separate fetch/state.
+  // Largest Packing attempt, same rule Customer Journey's RPC applies.
+  const packingVideoUrl =
+    [...packet.stage_records]
+      .filter(r => r.stage === 'packing')
+      .sort((a, b) => b.attempt - a.attempt)[0]?.video_url ?? null
   const isMaterialPrep = currentRecord?.stage === 'material_prep'
   const isPatternFormulation = currentRecord?.stage === 'pattern_formulation'
   const isCutting = currentRecord?.stage === 'cutting'
@@ -277,7 +285,13 @@ export function ProductionPacketWorkspace({
           isQc ||
           isFinishing ||
           isPacking ||
-          isShipping) && <CustomerReferenceCard documents={customerReferences} />}
+          isShipping) && (
+          <MediaProduksiCard
+            customerPhotoUrl={customerPhotoUrl}
+            customerReferences={customerReferences}
+            packingVideoUrl={packingVideoUrl}
+          />
+        )}
 
         {!currentRecord && (
           <div className="bg-white/70 border-[0.5px] border-[#c6c6cc]/40 shadow-sm p-6 text-center">
@@ -448,6 +462,16 @@ export function ProductionPacketWorkspace({
                         onUploadingChange={setEvidenceUploading}
                         onErrorChange={setEvidenceUploadError}
                       />
+
+                      {isPacking && (
+                        <PackingVideoUploader
+                          supabase={supabase}
+                          orderId={orderId}
+                          stageRecordId={currentRecord.id}
+                          value={currentRecord.video_url}
+                          onUploaded={refetch}
+                        />
+                      )}
 
                       <button
                         type="button"

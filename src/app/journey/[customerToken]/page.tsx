@@ -35,6 +35,7 @@ interface CustomerJourneySnapshotRow {
   latest_stage: string | null
   event_data: OrderSnapshot | null
   production_updates: ProductionUpdate[] | null
+  packing_video_url: string | null
 }
 
 // Public entry point — deliberately unauthenticated. customer_token is the
@@ -115,7 +116,10 @@ export default async function CustomerJourneyPage({ params }: Props) {
         <>
           <MilestoneHero {...MILESTONE_4_CONTENT.hero} variant="overlay" />
           <PhotoGridSection {...MILESTONE_4_CONTENT.gallery} />
-          <VideoFinishingSection {...MILESTONE_4_CONTENT.video} />
+          <VideoFinishingSection
+            {...MILESTONE_4_CONTENT.video}
+            videoSrc={data.packing_video_url ?? MILESTONE_4_CONTENT.video.videoSrc}
+          />
           <ShareMomentSection
             {...MILESTONE_4_CONTENT.share}
             shareUrl={buildCustomerJourneyUrl(params.customerToken)}

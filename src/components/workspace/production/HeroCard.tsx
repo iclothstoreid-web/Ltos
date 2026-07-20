@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import type { ProductionPacket, StageStatus } from '@/lib/production/types'
+import { FullscreenMediaModal } from './FullscreenMediaModal'
 
 interface HeroCardProps {
   packet: ProductionPacket
@@ -24,11 +26,17 @@ const STATUS_LABELS: Record<StageStatus, string> = {
 export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }: HeroCardProps) {
   const initial = (packet.customer_name || '?').charAt(0).toUpperCase()
   const progressPct = Math.round((packet.progress || 0) * 100)
+  const [showPhoto, setShowPhoto] = useState(false)
 
   return (
     <div className="bg-[#fbf9fc] rounded-2xl p-5 shadow-[0px_4px_20px_rgba(14,19,32,0.04)] border border-[#c6c6cc]/30 space-y-4">
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#161b29] text-white flex items-center justify-center font-caslon text-2xl">
+        <button
+          type="button"
+          onClick={() => customerPhotoUrl && setShowPhoto(true)}
+          disabled={!customerPhotoUrl}
+          className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#161b29] text-white flex items-center justify-center font-caslon text-2xl disabled:cursor-default"
+        >
           {customerPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
             <img
@@ -39,7 +47,7 @@ export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }
           ) : (
             initial
           )}
-        </div>
+        </button>
         <div className="flex-1 space-y-1 min-w-0">
           <div className="flex justify-between items-center">
             <span className="font-jetbrains text-[10px] tracking-widest text-[#755b00] bg-[#fed977] px-2 py-0.5 rounded uppercase">
@@ -89,6 +97,15 @@ export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }
           style={{ width: `${progressPct}%` }}
         />
       </div>
+
+      {showPhoto && customerPhotoUrl && (
+        <FullscreenMediaModal
+          kind="image"
+          src={customerPhotoUrl}
+          alt={packet.customer_name || 'Foto Pelanggan'}
+          onClose={() => setShowPhoto(false)}
+        />
+      )}
     </div>
   )
 }
