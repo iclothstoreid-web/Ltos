@@ -87,6 +87,11 @@ export function ProductionPacketWorkspace({
   const [notes, setNotes] = useState('')
   const [alterCategory, setAlterCategory] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
+  // Mirrors EvidenceUploader's own uploading/error state up here so it
+  // survives the pre-scan uploader unmounting the instant "Scan QR
+  // Penyelesaian" succeeds — see root cause note in EvidenceUploader.tsx.
+  const [evidenceUploading, setEvidenceUploading] = useState(false)
+  const [evidenceUploadError, setEvidenceUploadError] = useState<string | null>(null)
 
   // Gates Evidence/Checklist/Setujui/Kembalikan behind a successful "Scan QR
   // Penyelesaian" — completedAtCaptured is the scan moment, used as Jam
@@ -107,6 +112,8 @@ export function ProductionPacketWorkspace({
     setAlterCategory('')
     setCompletionScanned(false)
     setCompletedAtCaptured(null)
+    setEvidenceUploading(false)
+    setEvidenceUploadError(null)
     // Only the stage/attempt identity should retrigger this reset — the
     // record object itself is recreated every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -338,6 +345,15 @@ export function ProductionPacketWorkspace({
                   {currentRecord.division}
                 </p>
 
+                {/* Rendered outside the completionScanned ternary on purpose:
+                    for custom-panel-shell stages the EvidenceUploader that
+                    produced this error unmounts the instant the operator
+                    scans, so this is the only place left that can still show
+                    it afterwards. */}
+                {evidenceUploadError && (
+                  <p className="font-hanken text-xs text-red-600">{evidenceUploadError}</p>
+                )}
+
                 {isPatternFormulation && (
                   <PatternFormulationPanel
                     supabase={supabase}
@@ -429,17 +445,20 @@ export function ProductionPacketWorkspace({
                         attempt={currentRecord.attempt}
                         value={evidenceUrl}
                         onChange={setEvidenceUrl}
+                        onUploadingChange={setEvidenceUploading}
+                        onErrorChange={setEvidenceUploadError}
                       />
 
                       <button
                         type="button"
                         onClick={() => setShowCompletionScan(true)}
+                        disabled={evidenceUploading}
                         className="w-full flex items-center justify-center gap-2 bg-[#161b29] text-white
                                    font-hanken font-semibold py-3.5 rounded-2xl hover:bg-[#755b00]
-                                   transition-colors"
+                                   transition-colors disabled:opacity-40"
                       >
                         <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
-                        Scan QR Penyelesaian
+                        {evidenceUploading ? 'Mengunggah Foto...' : 'Scan QR Penyelesaian'}
                       </button>
                     </>
                   ) : (
@@ -451,12 +470,13 @@ export function ProductionPacketWorkspace({
                       <button
                         type="button"
                         onClick={() => setShowCompletionScan(true)}
+                        disabled={evidenceUploading}
                         className="w-full flex items-center justify-center gap-2 bg-[#161b29] text-white
                                    font-hanken font-semibold py-3.5 rounded-2xl hover:bg-[#755b00]
-                                   transition-colors"
+                                   transition-colors disabled:opacity-40"
                       >
                         <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
-                        Scan QR Penyelesaian
+                        {evidenceUploading ? 'Mengunggah Foto...' : 'Scan QR Penyelesaian'}
                       </button>
                     </div>
                   )
@@ -470,6 +490,8 @@ export function ProductionPacketWorkspace({
                         attempt={currentRecord.attempt}
                         value={evidenceUrl}
                         onChange={setEvidenceUrl}
+                        onUploadingChange={setEvidenceUploading}
+                        onErrorChange={setEvidenceUploadError}
                       />
                     )}
 

@@ -12,6 +12,14 @@ interface EvidenceUploaderProps {
   attempt: number
   value: string | null
   onChange: (url: string) => void
+  // Mirrors this component's own `uploading`/`error` state up to the parent.
+  // Needed because the pre-scan custom-panel-shell stages unmount this whole
+  // component the instant "Scan QR Penyelesaian" succeeds (see
+  // ProductionPacketWorkspace) — without this, an in-flight or failed upload
+  // becomes invisible (and unrecoverable via canApprove) the moment the
+  // operator scans, since nothing else ever surfaces that state again.
+  onUploadingChange?: (uploading: boolean) => void
+  onErrorChange?: (error: string | null) => void
 }
 
 // Single-photo evidence, max 1 per stage per the brief ("Maksimal 1 Foto per
@@ -24,6 +32,8 @@ export function EvidenceUploader({
   attempt,
   value,
   onChange,
+  onUploadingChange,
+  onErrorChange,
 }: EvidenceUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(value)
@@ -33,17 +43,22 @@ export function EvidenceUploader({
   async function handleFile(file: File | undefined) {
     if (!file) return
     setError(null)
+    onErrorChange?.(null)
     setPreview(URL.createObjectURL(file))
     setUploading(true)
+    onUploadingChange?.(true)
     try {
       const url = await uploadEvidencePhoto(supabase, { orderId, stage, attempt, file })
       onChange(url)
     } catch (err) {
       console.error('[production] evidence upload failed', err)
       setPreview(value)
-      setError('Gagal mengunggah foto. Coba lagi.')
+      const message = 'Gagal mengunggah foto. Coba lagi.'
+      setError(message)
+      onErrorChange?.(message)
     } finally {
       setUploading(false)
+      onUploadingChange?.(false)
     }
   }
 
