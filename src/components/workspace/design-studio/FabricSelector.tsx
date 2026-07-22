@@ -46,8 +46,8 @@ export function FabricSelector({ options, selected, materialStock, onSelect, onV
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start gap-2">
-                <div className="flex items-center gap-1">
-                  <h4 className="font-sans text-sm text-[#151c27]">{option.name}</h4>
+                <div className="flex items-center gap-1 min-w-0">
+                  <h4 className="font-sans text-sm text-[#151c27] truncate">{option.name}</h4>
                   <span
                     role="button"
                     tabIndex={0}

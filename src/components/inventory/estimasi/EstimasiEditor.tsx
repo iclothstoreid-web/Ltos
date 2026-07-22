@@ -342,7 +342,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
                   ))}
                 </select>
               </div>
-              <div className="flex items-center gap-2 text-label">
+              <div className="flex flex-wrap items-center gap-2 gap-y-1 text-label">
                 <input
                   type="number"
                   min="0"

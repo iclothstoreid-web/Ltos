@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { searchCustomers, getRecentConsultations, getCustomerById } from '../actions'
-import type { Customer, RecentConsultation } from '../types'
+import { useRouter } from 'next/navigation'
+import { searchCustomers, getRecentConsultations, getFitterOrders, getCustomerById } from '../actions'
+import type { Customer, RecentConsultation, FitterOrder } from '../types'
 import { CustomerCard } from './CustomerCard'
+import { OrderCard } from './OrderCard'
 
 const STATUS_LABELS: Record<string, string> = {
   check_in: 'Check-In',
@@ -24,12 +26,15 @@ export function CustomerSearch({
   onSelectCustomer,
   onNewCustomer,
 }: CustomerSearchProps) {
+  const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [recentConsultations, setRecentConsultations] = useState<RecentConsultation[]>([])
   const [loadingRecent, setLoadingRecent] = useState(true)
+  const [fitterOrders, setFitterOrders] = useState<FitterOrder[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(true)
 
   useEffect(() => {
     const fetchRecent = async () => {
@@ -39,6 +44,25 @@ export function CustomerSearch({
     }
     fetchRecent()
   }, [])
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const { orders } = await getFitterOrders(10)
+      setFitterOrders(orders)
+      setLoadingOrders(false)
+    }
+    fetchOrders()
+  }, [])
+
+  const handleSelectOrder = (order: FitterOrder) => {
+    router.push(`/workspace/order-summary/${order.id}`)
+  }
+
+  // order_created consultations now live in "Order Monitoring" above as
+  // Order Cards instead — filtered out here (not in the action itself,
+  // which ConsultationInsights also reads for its "Order Selesai" stat) so
+  // the same underlying consultation isn't shown twice under two flows.
+  const activeConsultations = recentConsultations.filter(c => c.status !== 'order_created')
 
   const handleSearch = useCallback(
     async (searchQuery: string) => {
@@ -137,16 +161,32 @@ export function CustomerSearch({
 
         {!showResults && (
           <div className="space-y-6">
-            {!loadingRecent && recentConsultations.length > 0 && (
+            {!loadingOrders && fitterOrders.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-sans text-xs uppercase tracking-widest text-[#444748] flex justify-between items-center">
+                  Order Monitoring
+                  <span className="bg-[#e2e8f8] px-2 py-0.5 rounded-full text-[10px]">
+                    {fitterOrders.length} Order
+                  </span>
+                </h3>
+                <div className="space-y-2">
+                  {fitterOrders.map(order => (
+                    <OrderCard key={order.id} order={order} onClick={() => handleSelectOrder(order)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!loadingRecent && activeConsultations.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-sans text-xs uppercase tracking-widest text-[#444748] flex justify-between items-center">
                   Konsultasi Terakhir
                   <span className="bg-[#e2e8f8] px-2 py-0.5 rounded-full text-[10px]">
-                    {recentConsultations.length} Aktif
+                    {activeConsultations.length} Aktif
                   </span>
                 </h3>
                 <div className="space-y-2">
-                  {recentConsultations.map(consultation => (
+                  {activeConsultations.map(consultation => (
                     <button
                       key={consultation.id}
                       type="button"

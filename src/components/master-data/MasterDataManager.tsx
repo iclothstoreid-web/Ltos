@@ -296,7 +296,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
   return (
     <div className="min-h-screen bg-[#f9f9ff] font-sans text-[#151c27]">
-      <header className="h-20 border-b-[0.5px] border-[#c4c7c7] flex items-center px-16 justify-between">
+      <header className="h-20 border-b-[0.5px] border-[#c4c7c7] flex items-center px-4 sm:px-8 lg:px-16 justify-between">
         <div>
           <h1 className="font-caslon text-2xl">Kelola Master Data</h1>
           <p className="text-sm text-[#444748] mt-1">Product Knowledge Base — Owner OS &amp; Fitter</p>
@@ -310,7 +310,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
         </button>
       </header>
 
-      <main className="max-w-5xl mx-auto px-16 py-12">
+      <main className="max-w-5xl mx-auto px-4 sm:px-8 lg:px-16 py-12">
         <div className="flex flex-wrap items-center gap-2 mb-8">
           {MASTER_DATA_CATEGORIES.map(category => (
             <button
@@ -345,7 +345,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
           {rows.map((option, index) =>
             editingId === option.id ? (
               <div key={option.id} className="px-6 py-6 border-b border-[#c4c7c7]/20 last:border-b-0 space-y-5">
-                <div className="flex items-start gap-6">
+                <div className="flex flex-wrap items-start gap-6">
                   <div className="shrink-0">
                     <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">Foto</p>
                     <button
@@ -375,9 +375,9 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                     </button>
                   </div>
 
-                  <div className="flex-1 space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
+                  <div className="flex-1 min-w-[200px] space-y-4">
+                    <div className="flex flex-wrap items-start gap-4">
+                      <div className="flex-1 min-w-[160px]">
                         <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
                           {MASTER_DATA_NAME_LABEL[editingCategory]}
                         </p>
@@ -387,7 +387,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                           className="w-full border-b border-[#775a19] bg-transparent py-1 text-sm outline-none"
                         />
                       </div>
-                      <div className="w-40">
+                      <div className="w-full sm:w-40">
                         <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">Harga</p>
                         <input
                           type="number"
@@ -534,7 +534,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
             ) : (
               <div
                 key={option.id}
-                className="flex items-center gap-4 px-6 py-4 border-b border-[#c4c7c7]/20 last:border-b-0"
+                className="flex flex-wrap items-center gap-4 px-6 py-4 border-b border-[#c4c7c7]/20 last:border-b-0"
               >
                 <div className="flex flex-col shrink-0">
                   <button
@@ -571,7 +571,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                   <div className="w-10 h-10 border border-dashed border-[#c4c7c7] shrink-0" />
                 )}
 
-                <span className={`flex-1 text-sm ${option.is_active ? '' : 'text-[#444748] line-through'}`}>
+                <span className={`flex-1 min-w-[100px] text-sm truncate ${option.is_active ? '' : 'text-[#444748] line-through'}`}>
                   {option.name}
                 </span>
 
@@ -649,12 +649,12 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <input
             value={newName}
             onChange={e => setNewName(e.target.value)}
             placeholder={`Tambah ${masterDataCategoryLabel(activeCategory)} baru (${MASTER_DATA_NAME_LABEL[activeCategory]})`}
-            className="flex-1 border-b border-[#c4c7c7] bg-transparent py-2 text-sm outline-none focus:border-[#775a19]"
+            className="flex-1 min-w-[200px] border-b border-[#c4c7c7] bg-transparent py-2 text-sm outline-none focus:border-[#775a19]"
           />
           <input
             type="number"

@@ -3,12 +3,12 @@ import { Lock } from 'lucide-react'
 
 export function ReservedNotice({ reservedTotal, orderCount }: { reservedTotal: number; orderCount: number }) {
   return (
-    <div className="bg-surface/45 backdrop-blur-sm text-on-surface p-6 rounded-2xl flex items-center justify-between border border-outline-variant/60 elev-1">
+    <div className="bg-surface/45 backdrop-blur-sm text-on-surface p-6 rounded-2xl flex items-center justify-between flex-wrap gap-4 border border-outline-variant/60 elev-1">
       <div className="flex items-center gap-5">
         <div className="bg-surface-container p-3 rounded-xl">
           <Lock size={20} />
         </div>
-        <div>
+        <div className="min-w-0">
           <h4 className="font-serif text-title text-on-surface">Material Reserved</h4>
           <p className="text-body text-secondary">
             {reservedTotal.toLocaleString('id-ID')} unit dialokasikan untuk {orderCount} order aktif.

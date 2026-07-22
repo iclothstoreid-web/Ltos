@@ -1,12 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 interface FullscreenMediaModalProps {
-  kind: 'image' | 'pdf' | 'video'
-  src: string
+  kind: 'image' | 'pdf' | 'video' | 'detail'
+  src?: string
   alt?: string
   onClose: () => void
+  // 'detail' kind only — non-media (structured text) content, e.g. Formulasi
+  // Pola's reference card, reusing this same overlay shell instead of a
+  // second lightbox pattern for non-image content.
+  children?: ReactNode
 }
 
 // Shared fullscreen viewer for Media Produksi (Customer Photo, Customer
@@ -17,7 +21,9 @@ interface FullscreenMediaModalProps {
 // natively, no zoom library needed); PDF uses the browser's native inline
 // viewer via <iframe>, with a "Buka File" fallback link since some mobile
 // browsers don't render PDFs inline; video is a plain native <video controls>.
-export function FullscreenMediaModal({ kind, src, alt, onClose }: FullscreenMediaModalProps) {
+// 'detail' renders arbitrary children instead of a media src, for reference
+// cards (Formulasi Pola) that have no image/PDF/video representation.
+export function FullscreenMediaModal({ kind, src, alt, onClose, children }: FullscreenMediaModalProps) {
   const [zoomed, setZoomed] = useState(false)
 
   return (
@@ -47,7 +53,15 @@ export function FullscreenMediaModal({ kind, src, alt, onClose }: FullscreenMedi
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 bg-black/5 overflow-auto flex items-center justify-center">
+        <div
+          className={`flex-1 min-h-0 bg-black/5 overflow-auto flex ${
+            zoomed ? 'items-start justify-start' : 'items-center justify-center'
+          }`}
+        >
+          {kind === 'detail' && (
+            <div className="w-full h-full overflow-auto bg-[#fbf9fc]">{children}</div>
+          )}
+
           {kind === 'image' && (
             // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
             <img

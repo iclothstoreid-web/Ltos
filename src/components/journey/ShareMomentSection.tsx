@@ -95,7 +95,7 @@ export function ShareMomentSection({
       >
         {message}
       </p>
-      <div className="flex items-center justify-center gap-4 flex-wrap">
+      <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
         {platforms.map(platform => {
           const { label, onClick, path } = ICONS[platform]
           return (
@@ -105,7 +105,7 @@ export function ShareMomentSection({
               onClick={onClick}
               aria-label={label}
               className={`rounded-full border border-[#151c27]/15 flex items-center justify-center text-secondary hover:text-primary hover:border-primary/40 transition-colors ${
-                isProminent ? 'w-14 h-14' : 'w-11 h-11'
+                isProminent ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-11 h-11'
               }`}
             >
               <svg viewBox="0 0 24 24" className={`fill-current ${isProminent ? 'w-6 h-6' : 'w-5 h-5'}`}>

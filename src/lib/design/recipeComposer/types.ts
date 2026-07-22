@@ -70,6 +70,14 @@ export interface MasterRenderRecipe {
   focus: Record<string, unknown>
   fabricBehavior: Record<string, unknown>
   visibilityRules: Record<string, unknown>
+  // Same Component-DNA producers as RenderRecipe (see renderRecipe/types.ts)
+  // — Recipe Composer merges them with the same per-item algorithm as the
+  // other 7 shared fields; no GlobalRenderPolicy equivalent exists for
+  // these (identity/construction is per-item, never a global default).
+  garment: Record<string, unknown>
+  fabricIdentity: Record<string, unknown>
+  stitching: Record<string, unknown>
+  embroidery: Record<string, unknown>
   background: Record<string, unknown>
   quality: Record<string, unknown>
   style: Record<string, unknown>

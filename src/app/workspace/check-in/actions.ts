@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { STAGE_ORDER, STAGE_LABELS } from '@/lib/production/stageConfig'
 import type {
   Customer,
   Consultation,
@@ -10,6 +11,8 @@ import type {
   SearchResult,
   ConsultationHistoryResult,
   RecentConsultationsResult,
+  FitterOrder,
+  FitterOrdersResult,
 } from './types'
 
 export async function searchCustomers(query: string): Promise<SearchResult> {
@@ -97,6 +100,11 @@ export async function getRecentConsultations(
 ): Promise<RecentConsultationsResult> {
   const supabase = createClient()
 
+  // Unchanged query — ConsultationInsights also reads this action (with a
+  // larger limit) to derive its "Order Selesai" stat from order_created
+  // rows, so status filtering can't happen here. CustomerSearch filters
+  // order_created out of its own "Konsultasi Terakhir" list client-side
+  // instead (those now live in "Order Monitoring" as Order Cards).
   const { data, error } = await supabase
     .from('consultations')
     .select(
@@ -111,6 +119,100 @@ export async function getRecentConsultations(
   }
 
   return { consultations: (data || []) as unknown as RecentConsultation[], error: null }
+}
+
+// Every stage a given set of orders has recorded, in the shape
+// get_current_stage_record's own algorithm needs — deliberately a lighter
+// query than get_production_packet (no evidence/checklist/etc.) since the
+// dashboard only needs the current stage label per order, for potentially
+// many orders at once.
+//
+// Returns a category alongside the label (Task 2 / Order Card Polish) so
+// the card can color-code the badge without re-parsing the Indonesian
+// label string — derived from the same records already fetched here, no
+// new query.
+function resolveStatusProduksi(
+  records: { stage: string; status: string; attempt: number }[]
+): { label: string; category: 'waiting' | 'in_progress' | 'completed' } {
+  if (records.length === 0) return { label: 'Menunggu Produksi', category: 'waiting' }
+  for (const stage of STAGE_ORDER) {
+    const forStage = records.filter(r => r.stage === stage)
+    if (forStage.length === 0) return { label: 'Menunggu Produksi', category: 'waiting' }
+    const latest = [...forStage].sort((a, b) => b.attempt - a.attempt)[0]
+    if (latest.status !== 'completed') {
+      return latest.status === 'in_progress'
+        ? { label: STAGE_LABELS[stage], category: 'in_progress' }
+        : { label: `${STAGE_LABELS[stage]} (Menunggu)`, category: 'waiting' }
+    }
+  }
+  return { label: 'Produksi Selesai', category: 'completed' }
+}
+
+// Dashboard Fitter = Order Monitoring (Task 1 of the Fitter Order
+// Monitoring & Shipping Experience sprint) — every order ever created,
+// newest first, each carrying just enough to render an Order Card
+// (Nama Customer, Order Number, Status Produksi, Estimasi, Tanggal Order).
+// Reads `orders` + a batched `production_stage_records`/`business_events`
+// query directly (same pattern as findOrderIdForConsultation/order-created's
+// page.tsx) rather than calling get_production_packet once per order.
+export async function getFitterOrders(limit: number = 10): Promise<FitterOrdersResult> {
+  const supabase = createClient()
+
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('id, order_number, created_at, customers(name)')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    return { orders: [], error: error.message }
+  }
+  if (!orders || orders.length === 0) {
+    return { orders: [], error: null }
+  }
+
+  const orderIds = orders.map(o => o.id)
+
+  const [{ data: stageRecords }, { data: events }] = await Promise.all([
+    supabase
+      .from('production_stage_records')
+      .select('order_id, stage, status, attempt')
+      .in('order_id', orderIds),
+    supabase
+      .from('business_events')
+      .select('order_id, event_data')
+      .eq('event_type', 'order.created')
+      .in('order_id', orderIds),
+  ])
+
+  const stagesByOrder = new Map<string, { stage: string; status: string; attempt: number }[]>()
+  for (const record of stageRecords || []) {
+    const list = stagesByOrder.get(record.order_id) ?? []
+    list.push(record)
+    stagesByOrder.set(record.order_id, list)
+  }
+
+  const estimasiByOrder = new Map<string, string>()
+  for (const event of events || []) {
+    const speed = (event.event_data as { designSpecification?: { estimatedProductionSpeed?: string } } | null)
+      ?.designSpecification?.estimatedProductionSpeed
+    if (speed) estimasiByOrder.set(event.order_id, speed)
+  }
+
+  const result: FitterOrder[] = orders.map(order => {
+    const status = resolveStatusProduksi(stagesByOrder.get(order.id) ?? [])
+    return {
+      id: order.id,
+      order_number: order.order_number,
+      created_at: order.created_at,
+      customer_name: (order.customers as unknown as { name: string } | null)?.name ?? 'Pelanggan',
+      status_produksi: status.label,
+      status_category: status.category,
+      estimasi: estimasiByOrder.get(order.id) ?? '',
+    }
+  })
+
+  return { orders: result, error: null }
 }
 
 export async function createNewCustomer(

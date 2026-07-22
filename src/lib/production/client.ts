@@ -89,6 +89,19 @@ export async function completeStage(
   if (error) throw error
 }
 
+export async function setShippingInfo(
+  supabase: SupabaseClient,
+  params: { orderId: string; stageRecordId: string; courier: string; trackingNumber: string }
+): Promise<void> {
+  const { error } = await supabase.rpc('set_shipping_info', {
+    p_order_id: params.orderId,
+    p_stage_record_id: params.stageRecordId,
+    p_courier: params.courier,
+    p_tracking_number: params.trackingNumber,
+  })
+  if (error) throw error
+}
+
 export async function savePatternFormulation(
   supabase: SupabaseClient,
   params: {

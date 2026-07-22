@@ -41,6 +41,8 @@ export interface StageRecord {
   checklist: Record<string, boolean> | null
   evidence_url: string | null
   video_url: string | null
+  courier: string | null
+  tracking_number: string | null
   decision: 'approved' | 'alter' | null
   alter_category: string | null
   notes: string | null

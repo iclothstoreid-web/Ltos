@@ -59,7 +59,7 @@ export function EstimasiWorkspace({ initialCategories, initialMaterials }: Estim
         </button>
       </div>
 
-      <div className="flex gap-8">
+      <div className="flex flex-col lg:flex-row gap-8">
         <TemplateListPanel templates={templates} onSelectTemplate={handleSelectTemplate} />
 
         <div className="flex-1 min-w-0 bg-surface rounded-2xl border border-outline-variant/40">

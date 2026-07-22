@@ -137,10 +137,11 @@ export const MILESTONE_5_CONTENT = {
       title: 'Pakaian Anda Sedang Dalam Perjalanan',
       subtitle: 'Pakaian Anda telah meninggalkan atelier kami dan sedang menuju alamat Anda.',
     },
+    // courier/trackingNumber/trackingUrl are intentionally absent here — the
+    // journey page always supplies those from the real Shipping stage data
+    // (see get_customer_journey_snapshot), never static copy.
     shippingInfo: {
       statusLabel: 'Dalam perjalanan menuju Anda',
-      courier: 'Tim Logistik Local Tailor',
-      trackingNumber: 'Akan diperbarui oleh tim kami',
       estimatedArrival: 'Akan diinformasikan segera',
       ctaLabel: 'Lacak Pengiriman',
     },

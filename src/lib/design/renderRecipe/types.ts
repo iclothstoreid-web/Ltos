@@ -22,6 +22,17 @@ export interface RenderRecipe {
   focus: Record<string, unknown>
   fabricBehavior: Record<string, unknown>
   visibilityRules: Record<string, unknown>
+  // Producers for what Component DNA (still unbuilt) will eventually
+  // describe about the item itself, as opposed to how it's shot/lit above.
+  // Sprint AI-07 only opens these as structured containers — no Component
+  // DNA exists yet to populate them, so every item's recipe carries them
+  // empty until that sprint lands. `fabricIdentity` (what the fabric IS —
+  // weave, color, material identity) is deliberately separate from the
+  // existing `fabricBehavior` (how it drapes/moves in a render).
+  garment: Record<string, unknown>
+  fabricIdentity: Record<string, unknown>
+  stitching: Record<string, unknown>
+  embroidery: Record<string, unknown>
   renderPriority: string[]
   negativeRules: string[]
 }
@@ -40,6 +51,10 @@ export const DEFAULT_RENDER_RECIPE: RenderRecipe = {
   focus: {},
   fabricBehavior: {},
   visibilityRules: {},
+  garment: {},
+  fabricIdentity: {},
+  stitching: {},
+  embroidery: {},
   renderPriority: [],
   negativeRules: [],
 }

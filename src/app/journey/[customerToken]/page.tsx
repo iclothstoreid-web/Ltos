@@ -3,6 +3,7 @@ import type { OrderSnapshot } from '@/lib/order/types'
 import { resolveJourneyMilestone, resolveDeliveryState } from '@/lib/journey/milestone'
 import type { ProductionUpdate } from '@/lib/journey/production-update'
 import { buildCustomerJourneyUrl } from '@/lib/order/qr'
+import { courierLabel, courierTrackingUrl } from '@/lib/shipping/couriers'
 import { JourneyLayout } from '@/components/journey/JourneyLayout'
 import { GreetingSection } from '@/components/journey/GreetingSection'
 import { OrderStatusSection } from '@/components/journey/OrderStatusSection'
@@ -36,6 +37,8 @@ interface CustomerJourneySnapshotRow {
   event_data: OrderSnapshot | null
   production_updates: ProductionUpdate[] | null
   packing_video_url: string | null
+  courier: string | null
+  tracking_number: string | null
 }
 
 // Public entry point — deliberately unauthenticated. customer_token is the
@@ -132,7 +135,12 @@ export default async function CustomerJourneyPage({ params }: Props) {
       {milestone === 5 && deliveryState === 'shipping' && (
         <>
           <MilestoneHero {...MILESTONE_5_CONTENT.shipping.hero} />
-          <ShippingInfoSection {...MILESTONE_5_CONTENT.shipping.shippingInfo} />
+          <ShippingInfoSection
+            {...MILESTONE_5_CONTENT.shipping.shippingInfo}
+            courier={courierLabel(data.courier)}
+            trackingNumber={data.tracking_number}
+            trackingUrl={courierTrackingUrl(data.courier)}
+          />
         </>
       )}
       {milestone === 5 && deliveryState === 'delivered' && (

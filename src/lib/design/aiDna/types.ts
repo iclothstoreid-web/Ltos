@@ -1,8 +1,6 @@
 // AI Design DNA — permanent, per-ITEM asset (never per-category; Category is
-// only a container). This sprint builds the lifecycle/structure only: no
-// OpenAI call, no Vision, no Prompt content. See buildPromptFromDNA /
-// buildRenderInstruction (promptBuilder.ts) for the (still-empty) interface
-// a later "AI Vision Integration" sprint will fill in.
+// only a container). Prompt and render-instruction construction lives in
+// src/lib/design/promptBuilder/; this module owns the DNA lifecycle and shape.
 export type AiDnaStatus = 'pending' | 'draft' | 'approved' | 'needs_regeneration'
 
 export interface AiDesignDnaMetadata {

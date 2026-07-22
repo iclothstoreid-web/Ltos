@@ -171,10 +171,10 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
                 ) : (
                   <div className="space-y-3">
                     {usage.map(u => (
-                      <div key={u.orderId} className="bg-surface border border-outline-variant/30 rounded-xl p-4 flex items-center justify-between">
-                        <div>
-                          <p className="text-body font-bold text-on-surface">{u.orderNumber}</p>
-                          <p className="text-label text-secondary">{u.customerName} · {u.currentState}</p>
+                      <div key={u.orderId} className="bg-surface border border-outline-variant/30 rounded-xl p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-body font-bold text-on-surface truncate">{u.orderNumber}</p>
+                          <p className="text-label text-secondary truncate">{u.customerName} · {u.currentState}</p>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">

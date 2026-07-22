@@ -10,7 +10,7 @@ import {
   checklistItemsForStage,
   getCurrentStageRecord,
 } from '@/lib/production/stageConfig'
-import { completeStage, getProductionPacket, startStage } from '@/lib/production/client'
+import { completeStage, getProductionPacket, setShippingInfo, startStage } from '@/lib/production/client'
 import { releaseMaterialReservation } from '@/lib/inventory/stock'
 import { buildProductionQrPayload } from '@/lib/order/qr'
 import type { CommunicationMessage } from '@/lib/communication/types'
@@ -27,6 +27,7 @@ import { QcDecisionPanel } from './QcDecisionPanel'
 import { ApproveReturnPanel } from './ApproveReturnPanel'
 import { PatternFormulationPanel } from './PatternFormulationPanel'
 import { PatternReferenceCard } from './PatternReferenceCard'
+import { PatternFormulationCard } from './PatternFormulationCard'
 import { SewingReferencePanel } from './SewingReferencePanel'
 import { QcReferencePanel } from './QcReferencePanel'
 import { FinishingReferencePanel } from './FinishingReferencePanel'
@@ -94,6 +95,8 @@ export function ProductionPacketWorkspace({
   const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [alterCategory, setAlterCategory] = useState('')
+  const [courier, setCourier] = useState('')
+  const [trackingNumber, setTrackingNumber] = useState('')
   const [submitError, setSubmitError] = useState<string | null>(null)
   // Mirrors EvidenceUploader's own uploading/error state up here so it
   // survives the pre-scan uploader unmounting the instant "Scan QR
@@ -118,6 +121,8 @@ export function ProductionPacketWorkspace({
     setEvidenceUrl(null)
     setNotes('')
     setAlterCategory('')
+    setCourier('')
+    setTrackingNumber('')
     setCompletionScanned(false)
     setCompletedAtCaptured(null)
     setEvidenceUploading(false)
@@ -160,6 +165,19 @@ export function ProductionPacketWorkspace({
     try {
       const requiresEvidence = STAGES_WITH_EVIDENCE.includes(currentRecord.stage)
       const finalDecision = explicitDecision ?? null
+
+      // Data Pengiriman is saved just before the order is finalized — same
+      // "Approve Shipping" click, so courier/resi are never left stale from
+      // a previous attempt if this stage is ever reopened.
+      if (currentRecord.stage === 'shipping') {
+        await setShippingInfo(supabase, {
+          orderId,
+          stageRecordId: currentRecord.id,
+          courier,
+          trackingNumber: trackingNumber.trim(),
+        })
+      }
+
       await completeStage(supabase, {
         orderId,
         stageRecordId: currentRecord.id,
@@ -212,7 +230,10 @@ export function ProductionPacketWorkspace({
 
   const requiresEvidence = currentRecord ? STAGES_WITH_EVIDENCE.includes(currentRecord.stage) : false
   const checklistComplete = Object.values(checklist).every(Boolean)
-  const canApprove = checklistComplete && (!requiresEvidence || !!evidenceUrl)
+  const canApprove =
+    checklistComplete &&
+    (!requiresEvidence || !!evidenceUrl) &&
+    (!isShipping || (!!courier && trackingNumber.trim().length > 0))
   // QC's "Kembalikan ke Penjahitan" additionally requires a Kategori Temuan
   // so the alter reason is never left blank.
   const canReturn = isQc
@@ -226,10 +247,8 @@ export function ProductionPacketWorkspace({
 
   return (
     <div className="min-h-screen bg-[#FDFCF7]">
-      <div className="max-w-md mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <HeroCard packet={packet} currentStatus={currentRecord?.status} customerPhotoUrl={customerPhotoUrl} />
-
-        <ProductionCommunicationPanel supabase={supabase} orderId={orderId} initialMessages={initialMessages} />
 
         {!isMaterialPrep &&
           !isPatternFormulation &&
@@ -257,39 +276,6 @@ export function ProductionPacketWorkspace({
             stageRecords={packet.stage_records}
             currentStage={currentRecord?.stage ?? 'material_prep'}
             variant="vertical"
-          />
-        )}
-
-        {(isMaterialPrep ||
-          isPatternFormulation ||
-          isCutting ||
-          isSewing ||
-          isQc ||
-          isFinishing ||
-          isPacking ||
-          isShipping) && <ReferenceModelCard design={packet.design} />}
-        {(isMaterialPrep ||
-          isPatternFormulation ||
-          isCutting ||
-          isSewing ||
-          isQc ||
-          isFinishing ||
-          isPacking ||
-          isShipping) && (
-          <MaterialSpecCard design={packet.design} consultationNotes={packet.consultation_notes} />
-        )}
-        {(isMaterialPrep ||
-          isPatternFormulation ||
-          isCutting ||
-          isSewing ||
-          isQc ||
-          isFinishing ||
-          isPacking ||
-          isShipping) && (
-          <MediaProduksiCard
-            customerPhotoUrl={customerPhotoUrl}
-            customerReferences={customerReferences}
-            packingVideoUrl={packingVideoUrl}
           />
         )}
 
@@ -415,7 +401,13 @@ export function ProductionPacketWorkspace({
                 )}
 
                 {isShipping && (
-                  <ShippingReferencePanel stageRecords={packet.stage_records} />
+                  <ShippingReferencePanel
+                    stageRecords={packet.stage_records}
+                    courier={courier}
+                    trackingNumber={trackingNumber}
+                    onCourierChange={setCourier}
+                    onTrackingNumberChange={setTrackingNumber}
+                  />
                 )}
 
                 {!completionScanned ? (
@@ -586,7 +578,7 @@ export function ProductionPacketWorkspace({
                         className="w-full bg-[#161b29] text-white py-3 font-hanken text-sm font-semibold
                                    uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-40"
                       >
-                        {isShipping ? 'Selesaikan Order' : 'Selesai'}
+                        {isShipping ? 'Approve Shipping' : 'Selesai'}
                       </button>
                     )}
                   </>
@@ -609,6 +601,51 @@ export function ProductionPacketWorkspace({
             onClose={() => setShowCompletionScan(false)}
           />
         )}
+
+        {(isMaterialPrep ||
+          isPatternFormulation ||
+          isCutting ||
+          isSewing ||
+          isQc ||
+          isFinishing ||
+          isPacking ||
+          isShipping) && <ReferenceModelCard design={packet.design} />}
+        {(isMaterialPrep ||
+          isPatternFormulation ||
+          isCutting ||
+          isSewing ||
+          isQc ||
+          isFinishing ||
+          isPacking ||
+          isShipping) && (
+          <MaterialSpecCard design={packet.design} consultationNotes={packet.consultation_notes} />
+        )}
+        {(isMaterialPrep ||
+          isPatternFormulation ||
+          isCutting ||
+          isSewing ||
+          isQc ||
+          isFinishing ||
+          isPacking ||
+          isShipping) && (
+          <MediaProduksiCard
+            customerPhotoUrl={customerPhotoUrl}
+            customerReferences={customerReferences}
+            packingVideoUrl={packingVideoUrl}
+          />
+        )}
+
+        {/* Cutting/Sewing/QC already surface Formulasi Pola inline in their
+            own custom panel above, right where those operators are working —
+            this fills the gap for the stages that don't. */}
+        {(isMaterialPrep || isFinishing || isPacking || isShipping) && (
+          <PatternFormulationCard
+            patternFormulation={packet.pattern_formulation}
+            stageRecords={packet.stage_records}
+          />
+        )}
+
+        <ProductionCommunicationPanel supabase={supabase} orderId={orderId} initialMessages={initialMessages} />
 
         {completedRecords.length > 0 && (
           <div>

@@ -128,7 +128,7 @@ export function QrScanModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-      <div className="bg-[#fbf9fc] rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-xl">
+      <div className="bg-[#fbf9fc] rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-caslon text-lg text-[#161b29]">{title}</h3>

@@ -28,10 +28,10 @@ export function TechnicalDetailsCard({ design }: TechnicalDetailsCardProps) {
           is now the source of truth for material stock, so this deep-links
           into its Material workspace (matched by fabric name) instead of
           duplicating stock data here. */}
-      <div className="flex justify-between items-center border-b border-[#c4c7c7]/20 pb-2 mb-3">
-        <div>
+      <div className="flex justify-between items-center gap-2 border-b border-[#c4c7c7]/20 pb-2 mb-3">
+        <div className="min-w-0">
           <span className="font-sans text-xs text-[#444748] uppercase block">Material</span>
-          <span className="font-sans text-sm text-[#151c27]">{design.fabric} · {design.color}</span>
+          <span className="font-sans text-sm text-[#151c27] truncate block">{design.fabric} · {design.color}</span>
         </div>
         <Link
           href={`/inventory/material?q=${encodeURIComponent(design.fabric)}`}

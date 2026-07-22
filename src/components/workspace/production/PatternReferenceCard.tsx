@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import type { PatternFormulation, StageRecord } from '@/lib/production/types'
 import { PATTERN_TEMPLATE_LABELS } from '@/lib/production/stageConfig'
 import { FIELD_LABELS } from './PatternFormulationPanel'
+import { FullscreenMediaModal } from './FullscreenMediaModal'
 
 interface PatternReferenceCardProps {
   patternFormulation: PatternFormulation | null
@@ -14,20 +16,33 @@ interface PatternReferenceCardProps {
 // the formulator's own completion notes). Per the master prompt, cutting
 // operators may only reference this data; editing it stays Formulasi Pola's
 // job, so this renders text only, never inputs.
+//
+// Sprint 01 Task 4.5 — click-to-fullscreen lives here (not in each caller)
+// so every place this card is used — inline in Cutting/Sewing/QC's own
+// panel, and wrapped by PatternFormulationCard for the other stages — gets
+// the same expand behavior for free via the same FullscreenMediaModal
+// instance, instead of each call site wiring its own modal.
 export function PatternReferenceCard({ patternFormulation, stageRecords }: PatternReferenceCardProps) {
+  const [expanded, setExpanded] = useState(false)
+
   const formulationRecord = [...stageRecords]
     .filter(r => r.stage === 'pattern_formulation' && r.status === 'completed')
     .sort((a, b) => b.attempt - a.attempt)[0]
 
-  return (
+  const body = (
     <div className="mb-6 pb-6 border-b border-[#c6c6cc]">
       <div className="flex items-center justify-between mb-3">
         <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
           Data Acuan Formulasi Pola
         </p>
-        <span className="font-hanken text-[9px] uppercase tracking-widest text-[#76777d] bg-[#efedf0] px-2 py-0.5 rounded">
-          Hanya Baca
-        </span>
+        <div className="flex items-center gap-2">
+          {patternFormulation && (
+            <span className="material-symbols-outlined text-[16px] text-[#76777d]">open_in_full</span>
+          )}
+          <span className="font-hanken text-[9px] uppercase tracking-widest text-[#76777d] bg-[#efedf0] px-2 py-0.5 rounded">
+            Hanya Baca
+          </span>
+        </div>
       </div>
 
       {!patternFormulation ? (
@@ -58,5 +73,24 @@ export function PatternReferenceCard({ patternFormulation, stageRecords }: Patte
         </div>
       )}
     </div>
+  )
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => patternFormulation && setExpanded(true)}
+        disabled={!patternFormulation}
+        className="w-full text-left disabled:cursor-default"
+      >
+        {body}
+      </button>
+
+      {expanded && patternFormulation && (
+        <FullscreenMediaModal kind="detail" alt="Formulasi Pola" onClose={() => setExpanded(false)}>
+          <div className="p-6">{body}</div>
+        </FullscreenMediaModal>
+      )}
+    </>
   )
 }
