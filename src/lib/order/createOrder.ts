@@ -7,6 +7,7 @@ import type { OrderSnapshot } from './types'
 import { buildQrPayload, generateCustomerToken, buildCustomerJourneyUrl } from './qr'
 import { reserveInventory } from './inventory'
 import { notifyOrderCreated } from './notifications'
+import { mapEstimasiToServiceLevel, setOrderService } from './service'
 
 interface CreateOrderParams {
   supabase: SupabaseClient
@@ -117,6 +118,21 @@ export async function createOrderFromConsultation({
   // 7. QR payload based on Order ID (never Customer ID)
   const qrPayload = buildQrPayload(order.id)
   const customerJourneyUrl = buildCustomerJourneyUrl(customerToken)
+
+  // Service Engine: commit the Fitter's Estimasi Pengerjaan pick (already
+  // previewed with 🟢/🟡/🔴 in EstimationCard) as the order's real
+  // service_level, resolving + locking Hari D at the same time. Best-effort
+  // and non-blocking -- if the Fitter left it unset, or no capacity slot is
+  // found, the order still gets created and get_production_packet falls
+  // back to created_at + 14 days, same as every pre-Sprint-C order.
+  const serviceLevel = mapEstimasiToServiceLevel(designSpecification?.estimatedProductionSpeed ?? '')
+  if (serviceLevel) {
+    try {
+      await setOrderService(supabase, order.id, serviceLevel)
+    } catch (err) {
+      console.error('set_order_service failed, order keeps legacy +14 day estimate:', err)
+    }
+  }
 
   // 9/10. Full snapshot — customer, measurement, body tags, design, notes —
   // captured now so it never drifts if the source records change later.

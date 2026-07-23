@@ -221,6 +221,7 @@ export function ConsultationReviewWorkspace({
         <aside className="w-full md:w-[30%] flex flex-col gap-8">
           <PriceSummaryCard />
           <EstimationCard
+            supabase={supabase}
             value={enhancements.estimasiPengerjaan}
             saving={savingEnhancements}
             onChange={estimasiPengerjaan => persistEnhancements({ estimasiPengerjaan })}

@@ -8,6 +8,7 @@ import {
   Calendar,
   ClipboardList,
   Factory,
+  Gauge,
   LayoutDashboard,
   MessageSquare,
   Settings,
@@ -18,16 +19,18 @@ import {
 // Owner OS is monitoring/decision-making only — every operational workspace
 // (Check-In, Pengukuran, Design Studio, Review Konsultasi, Order Created,
 // Produksi, QC, Persediaan) lives in its own app now, not here. Dashboard,
-// Komunikasi, and Monitoring Persediaan are the only items with a real,
-// distinct destination (/command-center, /owner/communications,
-// /inventory) — the rest have no page of their own yet, so they're
-// rendered disabled with a "Segera Hadir" badge instead of silently
-// re-navigating to Dashboard.
+// Decision Center, Komunikasi, KPI Operator, and Monitoring Persediaan are
+// the only items with a real, distinct destination (/command-center,
+// /command-center/decision-center, /owner/communications,
+// /command-center/kpi-operator, /inventory) — the rest have no page of
+// their own yet, so they're rendered disabled with a "Segera Hadir" badge
+// instead of silently re-navigating to Dashboard.
 const navItems = [
   { label: 'Dashboard', href: '/command-center', icon: LayoutDashboard, implemented: true },
   { label: 'Hari Ini', href: '/command-center', icon: Calendar, implemented: false },
-  { label: 'Antrian Keputusan', href: '/command-center', icon: ClipboardList, implemented: false },
+  { label: 'Decision Center', href: '/command-center/decision-center', icon: ClipboardList, implemented: true },
   { label: 'Komunikasi', href: '/owner/communications', icon: MessageSquare, implemented: true },
+  { label: 'KPI Operator', href: '/command-center/kpi-operator', icon: Gauge, implemented: true },
   { label: 'Monitoring Produksi', href: '/command-center', icon: Factory, implemented: false },
   { label: 'Monitoring Persediaan', href: '/inventory', icon: Boxes, implemented: true },
   { label: 'Monitoring Perjalanan Pelanggan', href: '/command-center', icon: Users, implemented: false },

@@ -103,20 +103,6 @@ export default function CheckInPage() {
           />
 
           <section className="w-full lg:w-[45%] overflow-visible lg:overflow-y-auto bg-[#FDFCF8]/50">
-            {view === 'search' && (
-              <div className="min-h-[50vh] lg:h-full flex flex-col items-center justify-center p-8 lg:p-16 text-center">
-                <span className="material-symbols-outlined text-6xl text-[#775a19]/20 mb-6">
-                  content_cut
-                </span>
-                <h2 className="font-fraunces text-3xl text-[#151c27] mb-2">
-                  Pilih atau Cari Pelanggan
-                </h2>
-                <p className="font-sans text-sm text-[#444748] max-w-xs">
-                  Gunakan pencarian di panel kiri untuk memulai konsultasi.
-                </p>
-              </div>
-            )}
-
             {error && (
               <div className="mx-4 lg:mx-16 mt-8 p-4 rounded-lg bg-[#ffdad6] border border-[#ba1a1a]/30">
                 <p className="font-sans text-sm text-[#ba1a1a]">{error}</p>

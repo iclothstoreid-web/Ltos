@@ -86,7 +86,19 @@ export interface ProductionPacket {
   order_id: string
   order_number: string
   created_at: string
+  // Service Engine: null for pre-Sprint-C orders (no service selected yet),
+  // in which case estimated_completion below falls back to created_at + 14
+  // days instead of Hari D + SLA -- see get_production_packet.
+  service_level: 'standard' | 'fast' | 'very_fast' | null
+  hari_d: string | null
   estimated_completion: string
+  // Queue Engine (Sprint D). queue_position/priority_level are null once the
+  // order is 'completed' or 'hold' -- both are out of the active queue.
+  // priority_level is the Priority Engine rank (1 Very Fast, 2 Fast, 3
+  // Standard, 4 unset), not a raw service_level string.
+  queue_status: 'waiting' | 'ready' | 'in_progress' | 'hold' | 'completed'
+  priority_level: number | null
+  queue_position: number | null
   customer_name: string | null
   design: DesignSelections | null
   locked_measurements: MeasurementFields | null

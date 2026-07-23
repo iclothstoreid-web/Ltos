@@ -15,6 +15,7 @@ const EVENT_LABELS: Record<string, string> = {
   'consultation.approved': 'Konsultasi Disetujui',
   'consultation.completed': 'Konsultasi Selesai',
   'order.created': 'Pesanan Berhasil Dibuat',
+  'order.service_selected': 'Layanan & Hari D Ditetapkan',
 }
 
 // Real events from business_events, not Stitch's fixed three-step list —
