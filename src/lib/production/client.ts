@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   Operator,
   PatternTemplate,
+  PendingAssignment,
   ProductionPacket,
   ProductionStage,
 } from './types'
@@ -39,6 +40,45 @@ export async function upsertOperator(
   const { data, error } = await supabase.rpc('upsert_operator', { p_nama: nama })
   if (error) throw error
   return data as string
+}
+
+// Full active operator list for the Owner's "Pilih Operator" picker (Tugaskan
+// flow) — unlike searchOperators, not capped at 10 and not query-driven.
+export async function listActiveOperators(supabase: SupabaseClient): Promise<Operator[]> {
+  const { data, error } = await supabase.rpc('list_active_operators')
+  if (error) throw error
+  return (data as Operator[]) || []
+}
+
+export async function assignStageOperator(
+  supabase: SupabaseClient,
+  params: { orderId: string; stageRecordId: string; operatorId: string }
+): Promise<void> {
+  const { error } = await supabase.rpc('assign_stage_operator', {
+    p_order_id: params.orderId,
+    p_stage_record_id: params.stageRecordId,
+    p_operator_id: params.operatorId,
+  })
+  if (error) throw error
+}
+
+// Kiosk-wide unread job list for the /production landing page bell panel —
+// see supabase/migrations/20260726000000_add_operator_assignment_and_notifications.sql
+// for why this is kiosk-wide rather than per-operator (operators have no login).
+export async function listPendingAssignments(supabase: SupabaseClient): Promise<PendingAssignment[]> {
+  const { data, error } = await supabase.rpc('list_pending_assignments')
+  if (error) throw error
+  return (data as PendingAssignment[]) || []
+}
+
+export async function markNotificationRead(
+  supabase: SupabaseClient,
+  notificationId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('mark_notification_read', {
+    p_notification_id: notificationId,
+  })
+  if (error) throw error
 }
 
 export async function startStage(

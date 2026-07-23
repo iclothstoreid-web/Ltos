@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { MeasurementFields } from '@/components/workspace/measurement/types'
+import type { MeasurementFields, MeasurementKey } from '@/components/workspace/measurement/types'
+import { CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from '@/components/workspace/measurement/types'
 import { MeasurementInput } from '@/components/workspace/measurement/MeasurementInput'
 import type { Operator, PatternFormulation, PatternTemplate } from '@/lib/production/types'
 import { PATTERN_TEMPLATE_LABELS } from '@/lib/production/stageConfig'
 import { savePatternFormulation } from '@/lib/production/client'
+import { computePatternFormulation } from '@/lib/production/patternFormulas'
 
 interface PatternFormulationPanelProps {
   supabase: SupabaseClient
@@ -19,7 +21,7 @@ interface PatternFormulationPanelProps {
 
 const TEMPLATES: PatternTemplate[] = ['slim_fit', 'standar', 'regular', 'custom']
 
-export const FIELD_LABELS: Record<keyof MeasurementFields, string> = {
+export const FIELD_LABELS: Record<MeasurementKey, string> = {
   neck: 'Leher',
   shoulder: 'Bahu',
   chest: 'Dada',
@@ -50,16 +52,18 @@ export function PatternFormulationPanel({
 }: PatternFormulationPanelProps) {
   const [template, setTemplate] = useState<PatternTemplate>(existing?.template ?? 'standar')
   const [fields, setFields] = useState<MeasurementFields>(
-    existing?.pattern_measurements ?? lockedMeasurements ?? ({} as MeasurementFields)
+    existing?.pattern_measurements ??
+      (lockedMeasurements ? computePatternFormulation(lockedMeasurements) : ({} as MeasurementFields))
   )
   const [saving, setSaving] = useState(false)
 
   function handleTemplateChange(next: PatternTemplate) {
     setTemplate(next)
     if (!existing) {
-      // Re-copy the locked measurements as the starting point for the newly
-      // chosen template — still directly editable afterwards.
-      setFields(lockedMeasurements ?? ({} as MeasurementFields))
+      // Re-copy the computed starting point (locked measurement + Cutting
+      // Model + Finishing Pergelangan rules) for the newly chosen template —
+      // still directly editable afterwards.
+      setFields(lockedMeasurements ? computePatternFormulation(lockedMeasurements) : ({} as MeasurementFields))
     }
   }
 
@@ -86,11 +90,23 @@ export function PatternFormulationPanel({
             Ukuran Tubuh (Terkunci)
           </p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-hanken text-xs text-[#46464c]">
-            {Object.entries(lockedMeasurements).map(([key, value]) => (
+            {(Object.keys(FIELD_LABELS) as Array<MeasurementKey>).map(key => (
               <span key={key}>
-                {FIELD_LABELS[key as keyof MeasurementFields]}: {value || '—'} cm
+                {FIELD_LABELS[key]}: {lockedMeasurements[key] || '—'} cm
               </span>
             ))}
+          </div>
+          <div className="mt-3 pt-3 border-t border-[#c6c6cc]/60 flex gap-6 font-hanken text-xs text-[#46464c]">
+            <span>
+              Model Potongan:{' '}
+              {lockedMeasurements.cuttingModel ? CUTTING_MODEL_LABELS[lockedMeasurements.cuttingModel] : '—'}
+            </span>
+            <span>
+              Finishing Pergelangan:{' '}
+              {lockedMeasurements.wristFinishing
+                ? WRIST_FINISHING_LABELS[lockedMeasurements.wristFinishing]
+                : '—'}
+            </span>
           </div>
         </div>
       )}
@@ -115,7 +131,7 @@ export function PatternFormulationPanel({
         Ukuran Pola
       </p>
       <div className="space-y-2 mb-6">
-        {(Object.keys(FIELD_LABELS) as Array<keyof MeasurementFields>).map(key => (
+        {(Object.keys(FIELD_LABELS) as Array<MeasurementKey>).map(key => (
           <MeasurementInput
             key={key}
             label={FIELD_LABELS[key]}

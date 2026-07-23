@@ -1,4 +1,4 @@
-import type { MeasurementFields } from '@/components/workspace/measurement/types'
+import type { MeasurementFields, MeasurementKey } from '@/components/workspace/measurement/types'
 import { SectionShell } from './SectionShell'
 import { SectionEyebrow } from './SectionEyebrow'
 
@@ -6,7 +6,7 @@ interface MeasurementSummarySectionProps {
   measurement: MeasurementFields
 }
 
-const LABELS: Record<keyof MeasurementFields, string> = {
+const LABELS: Record<MeasurementKey, string> = {
   neck: 'Leher',
   shoulder: 'Bahu',
   chest: 'Dada',
@@ -25,7 +25,7 @@ const LABELS: Record<keyof MeasurementFields, string> = {
 // menyerupai spreadsheet". Fields the Fitter left blank are skipped rather
 // than shown empty.
 export function MeasurementSummarySection({ measurement }: MeasurementSummarySectionProps) {
-  const rows = (Object.keys(LABELS) as (keyof MeasurementFields)[])
+  const rows = (Object.keys(LABELS) as MeasurementKey[])
     .map(key => ({ label: LABELS[key], value: measurement[key] }))
     .filter(row => row.value.trim().length > 0)
 

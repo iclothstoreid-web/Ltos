@@ -1,4 +1,4 @@
-import type { MeasurementFields } from '@/components/workspace/measurement/types'
+import type { MeasurementFields, MeasurementKey } from '@/components/workspace/measurement/types'
 import type { BodyPartId } from '@/lib/measurement/bodyMap'
 
 export interface CustomerPhotoMeta {
@@ -25,7 +25,7 @@ export interface CustomerDigitalProfile {
   // Static reference (from src/lib/measurement/bodyMap.ts) copied in so
   // downstream consumers don't need a separate import to know which body
   // part(s) each measurement field corresponds to.
-  bodyMapReference: Record<keyof MeasurementFields, BodyPartId[]>
+  bodyMapReference: Record<MeasurementKey, BodyPartId[]>
   // LOCKED (Sprint 4): single front-view photo only — no side/back slots.
   // Sufficient for AI Render since Measurement supplies the body constraints;
   // Production separately shows this alongside (never merged with) the AI

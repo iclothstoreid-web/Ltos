@@ -1,6 +1,6 @@
 'use client'
 
-import type { MeasurementFields } from '@/components/workspace/measurement/types'
+import type { MeasurementFields, MeasurementKey } from '@/components/workspace/measurement/types'
 import { FIELD_LABELS } from '@/components/workspace/production/PatternFormulationPanel'
 
 interface OrderSummaryMeasurementCardProps {
@@ -33,7 +33,7 @@ export function OrderSummaryMeasurementCard({ measurement, bodyTags }: OrderSumm
 
       {measurement ? (
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 font-hanken text-xs text-[#46464c]">
-          {(Object.keys(FIELD_LABELS) as Array<keyof MeasurementFields>).map(key => (
+          {(Object.keys(FIELD_LABELS) as Array<MeasurementKey>).map(key => (
             <span key={key}>
               {FIELD_LABELS[key]}: {measurement[key] || '—'} cm
             </span>

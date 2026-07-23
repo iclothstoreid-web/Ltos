@@ -1,12 +1,12 @@
 'use client'
 
 import { useLayoutEffect, useState } from 'react'
-import type { MeasurementFields } from './types'
+import type { MeasurementFields, MeasurementKey } from './types'
 import { MeasurementAccordion } from './MeasurementAccordion'
 import { MeasurementInput } from './MeasurementInput'
 
 interface FieldSpec {
-  key: keyof MeasurementFields
+  key: MeasurementKey
   label: string
   tooltip?: string
 }
@@ -50,8 +50,8 @@ const GROUPS: { title: string; fields: FieldSpec[] }[] = [
 
 interface MeasurementSidebarProps {
   fields: MeasurementFields
-  onFieldChange: (key: keyof MeasurementFields, value: string) => void
-  onFocusField: (key: keyof MeasurementFields | null) => void
+  onFieldChange: (key: MeasurementKey, value: string) => void
+  onFocusField: (key: MeasurementKey | null) => void
 }
 
 export function MeasurementSidebar({ fields, onFieldChange, onFocusField }: MeasurementSidebarProps) {

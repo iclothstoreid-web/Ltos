@@ -1,4 +1,4 @@
-import type { MeasurementFields } from '@/components/workspace/measurement/types'
+import type { MeasurementKey } from '@/components/workspace/measurement/types'
 
 // Source of truth for addressable body parts across the Measurement
 // Workspace. `coords` are percentages of the MeasurementPanel box (front
@@ -93,7 +93,7 @@ export const BODY_MAP: Record<BodyPartId, BodyMapEntry> = {
 
 // Which body part(s) a given measurement field relates to — drives the
 // highlight overlay when a measurement input gains focus.
-export const MEASUREMENT_BODY_MAP: Record<keyof MeasurementFields, BodyPartId[]> = {
+export const MEASUREMENT_BODY_MAP: Record<MeasurementKey, BodyPartId[]> = {
   neck: ['neck'],
   shoulder: ['leftShoulder', 'rightShoulder'],
   chest: ['chest'],

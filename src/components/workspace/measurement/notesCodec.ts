@@ -12,6 +12,8 @@ const EXTRA_KEYS: (keyof MeasurementFields)[] = [
   'elbow',
   'wrist',
   'hemWidth',
+  'cuttingModel',
+  'wristFinishing',
 ]
 
 // The `measurements` table only has columns for chest/shoulder/sleeve/length
@@ -45,7 +47,11 @@ export function decodeNotes(raw: string | null): {
     block.split('|').forEach(pair => {
       const [key, value] = pair.split('=')
       if (key && value && (EXTRA_KEYS as string[]).includes(key)) {
-        extras[key as keyof MeasurementFields] = value
+        // Cast through Record<string, string>: cuttingModel/wristFinishing
+        // are narrower literal unions on MeasurementFields itself, but this
+        // codec only ever round-trips whatever encodeNotes wrote, so a plain
+        // string is always a valid value for any of these keys at runtime.
+        ;(extras as Record<string, string>)[key] = value
       }
     })
   }

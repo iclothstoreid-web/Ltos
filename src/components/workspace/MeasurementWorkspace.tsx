@@ -11,14 +11,15 @@ import { MeasurementNavAside } from './measurement/MeasurementNavAside'
 import { MeasurementSidebar } from './measurement/MeasurementSidebar'
 import { MeasurementPanel } from './measurement/MeasurementPanel'
 import { BodyTagSelector } from './measurement/BodyTagSelector'
+import { SingleSelectPanel } from './measurement/SingleSelectPanel'
 import { ProgressCard } from './measurement/ProgressCard'
 import { SessionCard } from './measurement/SessionCard'
 import { ComparisonCard } from './measurement/ComparisonCard'
 import { PhotoUploader } from './measurement/PhotoUploader'
 import { WorkflowFooter } from './measurement/WorkflowFooter'
 import { encodeNotes, decodeNotes } from './measurement/notesCodec'
-import { EMPTY_FIELDS, FIELD_LABELS } from './measurement/types'
-import type { MeasurementFields } from './measurement/types'
+import { EMPTY_FIELDS, FIELD_LABELS, CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from './measurement/types'
+import type { MeasurementFields, MeasurementKey, CuttingModel, WristFinishing } from './measurement/types'
 import { MEASUREMENT_BODY_MAP } from '@/lib/measurement/bodyMap'
 import { buildCustomerDigitalProfile } from '@/lib/customerProfile/buildProfile'
 import { decodeCustomerDigitalProfile, encodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
@@ -58,13 +59,22 @@ export function MeasurementWorkspace({
   })
   const [humanNotes, setHumanNotes] = useState(decoded.humanNotes)
   const [tags, setTags] = useState<string[]>(decoded.tags)
-  const [focusedField, setFocusedField] = useState<keyof MeasurementFields | null>(null)
+  const [focusedField, setFocusedField] = useState<MeasurementKey | null>(null)
   const [loading, setLoading] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
 
+  // Restricted to the 12 canonical measurement keys (not cuttingModel /
+  // wristFinishing, which live on the same `fields` object but represent a
+  // separate required choice, not a body measurement) — Object.values(fields)
+  // would otherwise over-count once those two are also selected.
   const totalFields = Object.keys(EMPTY_FIELDS).length
-  const filledCount = Object.values(fields).filter(Boolean).length
-  const isFormValid = Boolean(fields.chest && fields.shoulder && fields.sleeve && fields.length)
+  const filledCount = (Object.keys(EMPTY_FIELDS) as MeasurementKey[]).filter(
+    k => fields[k]
+  ).length
+  const isFormValid = Boolean(
+    fields.chest && fields.shoulder && fields.sleeve && fields.length &&
+    fields.cuttingModel && fields.wristFinishing
+  )
 
   // Body Map is the source of truth for which part(s) glow — see
   // src/lib/measurement/bodyMap.ts
@@ -73,12 +83,20 @@ export function MeasurementWorkspace({
     ? { title: FIELD_LABELS[focusedField], value: fields[focusedField] ? `${fields[focusedField]} cm` : '' }
     : null
 
-  const handleFieldChange = (key: keyof MeasurementFields, value: string) => {
+  const handleFieldChange = (key: MeasurementKey, value: string) => {
     setFields(prev => ({ ...prev, [key]: value }))
   }
 
   const handleToggleTag = (tag: string) => {
     setTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]))
+  }
+
+  const handleCuttingModelChange = (value: CuttingModel) => {
+    setFields(prev => ({ ...prev, cuttingModel: value }))
+  }
+
+  const handleWristFinishingChange = (value: WristFinishing) => {
+    setFields(prev => ({ ...prev, wristFinishing: value }))
   }
 
   // Measurement is the single source of truth for the customer photo (no
@@ -190,6 +208,30 @@ export function MeasurementWorkspace({
 
             <div className="w-full px-4 mt-4">
               <BodyTagSelector selected={tags} onToggle={handleToggleTag} />
+
+              <div className="mt-8">
+                <SingleSelectPanel
+                  title="Cutting Model"
+                  options={(Object.keys(CUTTING_MODEL_LABELS) as CuttingModel[]).map(value => ({
+                    value,
+                    label: CUTTING_MODEL_LABELS[value],
+                  }))}
+                  value={fields.cuttingModel}
+                  onChange={handleCuttingModelChange}
+                />
+              </div>
+
+              <div className="mt-6">
+                <SingleSelectPanel
+                  title="Finishing Pergelangan"
+                  options={(Object.keys(WRIST_FINISHING_LABELS) as WristFinishing[]).map(value => ({
+                    value,
+                    label: WRIST_FINISHING_LABELS[value],
+                  }))}
+                  value={fields.wristFinishing}
+                  onChange={handleWristFinishingChange}
+                />
+              </div>
 
               <div className="mt-8">
                 <label className="font-sans text-xs uppercase tracking-widest text-[#444748] block mb-2">

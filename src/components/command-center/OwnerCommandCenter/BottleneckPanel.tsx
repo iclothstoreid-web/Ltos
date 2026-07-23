@@ -1,8 +1,17 @@
+'use client'
+
+import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { BOTTLENECK_SEVERITY_LABEL, BottleneckSeverity } from '@/lib/ltos'
+import { OrderDetailModal } from './OrderDetailModal'
+import { AssignOperatorModal } from './AssignOperatorModal'
 
 export type BottleneckItem = {
   id: string
+  // Present only for rows backed by a real `orders` row (not, e.g., low-stock
+  // material rows) — gates both the row-click Detail Order modal and the
+  // Tugaskan Artisan assignment modal below.
+  orderId?: string
   severity: BottleneckSeverity
   customer: string
   order: string
@@ -27,6 +36,8 @@ const SEVERITY_BORDER: Record<BottleneckSeverity, string> = {
 
 export function BottleneckPanel({ items }: { items: BottleneckItem[] }) {
   const sorted = [...items].sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
+  const [detailOrderId, setDetailOrderId] = useState<string | null>(null)
+  const [assignItem, setAssignItem] = useState<BottleneckItem | null>(null)
 
   return (
     <section>
@@ -55,7 +66,10 @@ export function BottleneckPanel({ items }: { items: BottleneckItem[] }) {
               {sorted.map((it, idx) => (
                 <li
                   key={it.id}
-                  className={`px-5 py-4 border-l-4 ${SEVERITY_BORDER[it.severity]} transition-colors`}
+                  className={`px-5 py-4 border-l-4 ${SEVERITY_BORDER[it.severity]} transition-colors ${
+                    it.orderId ? 'cursor-pointer hover:bg-on-surface/5' : ''
+                  }`}
+                  onClick={() => it.orderId && setDetailOrderId(it.orderId)}
                 >
                   <div className="group grid grid-cols-12 gap-4 items-start">
                     <div className="col-span-2">
@@ -80,13 +94,28 @@ export function BottleneckPanel({ items }: { items: BottleneckItem[] }) {
                     </div>
 
                     <div className="col-span-2">
-                      <a
-                        href={it.workspaceUrl}
-                        className="inline-flex items-center justify-between gap-2 w-full px-3 py-2 rounded-lg border border-outline-variant/90 bg-surface/10 text-body text-on-surface transition-all duration-200 hover:bg-on-surface/5 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
-                      >
-                        <span className="truncate">{it.suggestedAction}</span>
-                        <ChevronRight size={16} className="text-secondary transition-transform duration-200 group-hover:translate-x-[1px]" />
-                      </a>
+                      {it.suggestedAction === 'Tugaskan Artisan' && it.orderId ? (
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation()
+                            setAssignItem(it)
+                          }}
+                          className="inline-flex items-center justify-between gap-2 w-full px-3 py-2 rounded-lg border border-outline-variant/90 bg-surface/10 text-body text-on-surface transition-all duration-200 hover:bg-on-surface/5 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
+                        >
+                          <span className="truncate">{it.suggestedAction}</span>
+                          <ChevronRight size={16} className="text-secondary transition-transform duration-200 group-hover:translate-x-[1px]" />
+                        </button>
+                      ) : (
+                        <a
+                          href={it.workspaceUrl}
+                          onClick={e => e.stopPropagation()}
+                          className="inline-flex items-center justify-between gap-2 w-full px-3 py-2 rounded-lg border border-outline-variant/90 bg-surface/10 text-body text-on-surface transition-all duration-200 hover:bg-on-surface/5 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
+                        >
+                          <span className="truncate">{it.suggestedAction}</span>
+                          <ChevronRight size={16} className="text-secondary transition-transform duration-200 group-hover:translate-x-[1px]" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </li>
@@ -95,6 +124,19 @@ export function BottleneckPanel({ items }: { items: BottleneckItem[] }) {
           )}
         </div>
       </div>
+
+      {detailOrderId && (
+        <OrderDetailModal orderId={detailOrderId} onClose={() => setDetailOrderId(null)} />
+      )}
+
+      {assignItem && assignItem.orderId && (
+        <AssignOperatorModal
+          orderId={assignItem.orderId}
+          orderNumber={assignItem.order}
+          onClose={() => setAssignItem(null)}
+          onAssigned={() => setAssignItem(null)}
+        />
+      )}
     </section>
   )
 }

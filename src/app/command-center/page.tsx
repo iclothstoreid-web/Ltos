@@ -188,6 +188,7 @@ export default async function CommandCenterPage() {
   const bottleneckItems: BottleneckItem[] = [
     ...(ordersAwaiting || []).map(o => ({
       id: `assign-${o.id}`,
+      orderId: o.id,
       severity: getBottleneckSeverityByHours(hoursWaiting(o.created_at)),
       customer: customerName(o),
       order: o.order_number,
@@ -206,6 +207,7 @@ export default async function CommandCenterPage() {
     })),
     ...(ordersInQuotation || []).map(o => ({
       id: `quotation-${o.id}`,
+      orderId: o.id,
       severity: getBottleneckSeverityByHours(hoursWaiting(o.created_at)),
       customer: customerName(o),
       order: o.order_number,
@@ -215,6 +217,7 @@ export default async function CommandCenterPage() {
     })),
     ...(ordersInQc || []).map(o => ({
       id: `qc-${o.id}`,
+      orderId: o.id,
       severity: getBottleneckSeverityByHours(hoursWaiting(o.created_at)),
       customer: customerName(o),
       order: o.order_number,
@@ -224,6 +227,7 @@ export default async function CommandCenterPage() {
     })),
     ...(vipOrdersWaiting || []).map(o => ({
       id: `vip-${o.id}`,
+      orderId: o.id,
       severity: getBottleneckSeverityByHours(hoursWaiting(o.created_at)),
       customer: vipCustomerNameById.get(o.customer_id) || 'Unknown',
       order: o.order_number,

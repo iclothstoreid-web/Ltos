@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { parseProductionQrPayload } from '@/lib/order/qr'
 import { scanTokenKey } from '@/lib/production/accessToken'
 import { QrScanModal } from '@/components/workspace/production/QrScanModal'
+import { AssignedJobsPanel } from '@/components/workspace/production/AssignedJobsPanel'
 
 // Sole entry point of the Production app. There is no order list here —
 // Fitter prints the QR, sticks it on the physical order, and this scanner
@@ -15,6 +16,8 @@ export default function ProductionScanEntryPage() {
 
   return (
     <div className="min-h-screen bg-[#FDFCF7] flex items-center justify-center p-6">
+      <AssignedJobsPanel />
+
       {/* App identity, shown above the (always-open, non-dismissible) scan
           modal's backdrop — purely visual, no effect on the scan flow below. */}
       <div className="fixed top-0 inset-x-0 z-[60] text-center pt-8 pb-4 px-6 pointer-events-none">

@@ -38,6 +38,8 @@ import { ReferenceModelCard } from './ReferenceModelCard'
 import { MaterialSpecCard } from './MaterialSpecCard'
 import { MediaProduksiCard } from './MediaProduksiCard'
 import { PackingVideoUploader } from './PackingVideoUploader'
+import { useProductionBackGuard } from './useProductionBackGuard'
+import { ExitConfirmModal } from './ExitConfirmModal'
 
 interface ProductionPacketWorkspaceProps {
   initialPacket: ProductionPacket
@@ -57,6 +59,7 @@ export function ProductionPacketWorkspace({
   const [supabase] = useState(() => createClient())
   const [packet, setPacket] = useState(initialPacket)
   const [submitting, setSubmitting] = useState(false)
+  const { showExitConfirm, dismiss: dismissExitConfirm } = useProductionBackGuard()
 
   const currentRecord = getCurrentStageRecord(packet.stage_records)
   // video_url rides on get_production_packet's stage_records payload
@@ -247,6 +250,7 @@ export function ProductionPacketWorkspace({
 
   return (
     <div className="min-h-screen bg-[#FDFCF7]">
+      <ExitConfirmModal open={showExitConfirm} onCancel={dismissExitConfirm} />
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <HeroCard packet={packet} currentStatus={currentRecord?.status} customerPhotoUrl={customerPhotoUrl} />
 

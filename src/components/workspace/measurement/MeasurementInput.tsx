@@ -1,13 +1,13 @@
 'use client'
 
-import type { MeasurementFields } from './types'
+import type { MeasurementKey } from './types'
 
 interface MeasurementInputProps {
   label: string
   value: string
   onChange: (value: string) => void
-  fieldKey?: keyof MeasurementFields
-  onFocusField?: (key: keyof MeasurementFields | null) => void
+  fieldKey?: MeasurementKey
+  onFocusField?: (key: MeasurementKey | null) => void
   tooltip?: string
   step?: number
 }

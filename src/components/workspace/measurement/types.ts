@@ -31,6 +31,35 @@ export interface MeasurementFields {
   wrist: string
   length: string // "Thobe Length" / garment full length
   hemWidth: string
+  // Cutting Model / Finishing Pergelangan sprint: not body measurements
+  // themselves, but they ride inside this same object so they flow through
+  // the existing zero-schema-change pipeline (notesCodec -> consultations
+  // snapshot -> order.created business_events -> get_production_packet's
+  // locked_measurements) without touching that RPC. Optional so every
+  // existing `{} as MeasurementFields` / EMPTY_FIELDS construction stays valid.
+  cuttingModel?: CuttingModel
+  wristFinishing?: WristFinishing
+}
+
+export type CuttingModel = 'slim' | 'semi_slim' | 'regular'
+export type WristFinishing = 'manset' | 'sleting' | 'polos'
+
+// The 12 canonical cm measurement keys, excluding the two categorical
+// selections above — used by every Record<..., X> that must cover exactly
+// those 12 fields (labels, body-map, delta tables), since `keyof
+// MeasurementFields` now also includes cuttingModel/wristFinishing.
+export type MeasurementKey = Exclude<keyof MeasurementFields, 'cuttingModel' | 'wristFinishing'>
+
+export const CUTTING_MODEL_LABELS: Record<CuttingModel, string> = {
+  slim: 'Slim Fit',
+  semi_slim: 'Semi Slim Fit',
+  regular: 'Regular',
+}
+
+export const WRIST_FINISHING_LABELS: Record<WristFinishing, string> = {
+  manset: 'Manset',
+  sleting: 'Sleting',
+  polos: 'Polos',
 }
 
 export const EMPTY_FIELDS: MeasurementFields = {
@@ -49,7 +78,7 @@ export const EMPTY_FIELDS: MeasurementFields = {
 }
 
 // Which mannequin part(s) glow when a given measurement field is focused.
-export const FIELD_BODY_PARTS: Record<keyof MeasurementFields, BodyPart[]> = {
+export const FIELD_BODY_PARTS: Record<MeasurementKey, BodyPart[]> = {
   neck: ['neck'],
   shoulder: ['shoulders'],
   chest: ['chest'],
@@ -68,7 +97,7 @@ export const FIELD_BODY_PARTS: Record<keyof MeasurementFields, BodyPart[]> = {
 // intentionally terser set than MeasurementSidebar's own field labels
 // (e.g. "Shoulder Width"), since the overlay label sits next to the body
 // part itself and doesn't need the sidebar's fuller wording.
-export const FIELD_LABELS: Record<keyof MeasurementFields, string> = {
+export const FIELD_LABELS: Record<MeasurementKey, string> = {
   neck: 'Leher',
   shoulder: 'Bahu',
   chest: 'Dada',

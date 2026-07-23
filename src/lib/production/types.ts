@@ -46,8 +46,27 @@ export interface StageRecord {
   decision: 'approved' | 'alter' | null
   alter_category: string | null
   notes: string | null
+  // Set by assign_stage_operator (Owner's "Tugaskan" flow) — distinct from
+  // operator_id/started_at above, which start_stage sets once the operator
+  // actually begins work. A stage can be assigned before anyone has started it.
+  assigned_operator_id: string | null
+  assigned_operator_name: string | null
+  assigned_at: string | null
   created_at: string
   updated_at: string
+}
+
+// One row of list_pending_assignments() — the kiosk-wide "Pekerjaan Baru
+// Ditugaskan" list shown on the /production scan-entry landing page.
+export interface PendingAssignment {
+  notification_id: string
+  order_id: string
+  order_number: string
+  customer_name: string | null
+  stage: ProductionStage
+  stage_record_id: string
+  assigned_operator_name: string | null
+  created_at: string
 }
 
 export interface PatternFormulation {
