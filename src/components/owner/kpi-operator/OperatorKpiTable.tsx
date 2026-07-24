@@ -1,6 +1,7 @@
 'use client'
 
-import type { OperatorKpiRow } from '@/lib/kpi/types'
+import { summarizePerformance } from '@/lib/kpi/performanceMetrics'
+import type { OperatorKpiRow, OperatorPerformanceRecord } from '@/lib/kpi/types'
 
 function formatDuration(minutes: number | null): string {
   if (minutes == null) return '—'
@@ -20,13 +21,23 @@ function formatPct(pct: number | null): string {
 // same row-click-opens-modal pattern as BottleneckPanel/OrderDetailModal.
 export function OperatorKpiTable({
   operators,
+  performanceRecords,
   onSelectOperator,
   title = 'Daftar Operator',
 }: {
   operators: OperatorKpiRow[]
+  performanceRecords: OperatorPerformanceRecord[]
   onSelectOperator: (operatorId: string) => void
   title?: string
 }) {
+  const recordsByOperator = new Map<string, OperatorPerformanceRecord[]>()
+  for (const record of performanceRecords) {
+    if (!record.operator_id) continue
+    const records = recordsByOperator.get(record.operator_id) || []
+    records.push(record)
+    recordsByOperator.set(record.operator_id, records)
+  }
+
   return (
     <section>
       <div className="flex items-end justify-between gap-4 mb-3">
@@ -42,26 +53,32 @@ export function OperatorKpiTable({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse">
+            <table className="w-full min-w-[1320px] border-collapse">
               <thead>
                 <tr className="bg-on-surface/5 border-b border-outline-variant/80">
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
                     Nama Operator
                   </th>
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Order Dikerjakan
+                    Primary Task Time
                   </th>
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Order Selesai
+                    Alter
                   </th>
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Avg Duration
+                    Alter Time
                   </th>
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Efficiency
+                    Return Rate
                   </th>
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Capacity
+                    Productivity
+                  </th>
+                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
+                    Utilization
+                  </th>
+                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
+                    Weekly / Monthly
                   </th>
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
                     Status
@@ -70,7 +87,9 @@ export function OperatorKpiTable({
               </thead>
               <tbody className="divide-y divide-outline-variant">
                 {operators.map(op => (
-                  <tr
+                  (() => {
+                    const summary = summarizePerformance(recordsByOperator.get(op.operator_id) || [])
+                    return <tr
                     key={op.operator_id}
                     onClick={() => onSelectOperator(op.operator_id)}
                     tabIndex={0}
@@ -84,16 +103,26 @@ export function OperatorKpiTable({
                     className="cursor-pointer transition-colors hover:bg-on-surface/5 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
                   >
                     <td className="px-5 py-4 text-body font-medium text-on-surface whitespace-nowrap">{op.nama}</td>
-                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">{op.order_dikerjakan}</td>
-                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">{op.order_selesai}</td>
                     <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
-                      {formatDuration(op.avg_duration_minutes)}
+                      {formatDuration(summary.primaryTaskMinutes ?? op.avg_duration_minutes)}
                     </td>
                     <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
-                      {formatPct(op.efficiency_pct)}
+                      {summary.alterCount}
                     </td>
                     <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
-                      {op.active_jobs}/{op.max_concurrent_capacity}
+                      {formatDuration(summary.alterMinutes || null)}
+                    </td>
+                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
+                      {formatPct(summary.returnRatePct)}
+                    </td>
+                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
+                      {summary.productivity || op.order_selesai}
+                    </td>
+                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
+                      {formatPct(op.capacity_utilization_pct)}
+                    </td>
+                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
+                      {summary.weeklyProductivity} / {summary.monthlyProductivity}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
                       <span
@@ -105,6 +134,7 @@ export function OperatorKpiTable({
                       </span>
                     </td>
                   </tr>
+                  })()
                 ))}
               </tbody>
             </table>

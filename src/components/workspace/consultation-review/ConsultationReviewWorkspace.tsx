@@ -20,15 +20,24 @@ import { ReadinessGauge } from './ReadinessGauge'
 import { DecisionPanel } from './DecisionPanel'
 import { ReviewFooter } from './ReviewFooter'
 import { EstimationCard } from './EstimationCard'
+import { EventInformationCard } from './EventInformationCard'
+import { EstimationValidationCard } from './EstimationValidationCard'
 import { DocumentUploader } from './DocumentUploader'
 import {
   decodeFitterEnhancements,
   encodeFitterEnhancements,
   type FitterEnhancements,
 } from './fitterEnhancementsCodec'
+import {
+  decodeEventInformation,
+  encodeEventInformation,
+  type EventInformation,
+} from './eventInformationCodec'
 import { buildDesignSpecification } from '@/lib/designSpecification/buildSpecification'
 import { decodeDesignSpecification, encodeDesignSpecification } from '@/lib/designSpecification/codec'
 import type { MasterOptionsByCategory } from '@/lib/design/masterData'
+import type { ServiceValidationResult } from '@/lib/order/service'
+import { computeEstimationValidation } from '@/lib/order/estimationValidation'
 
 // Distinguishes validation failures (OrderValidationError, thrown before
 // any Supabase call — e.g. duplicate Create Order) from real Supabase/DB
@@ -85,6 +94,15 @@ export function ConsultationReviewWorkspace({
   )
   const [savingEnhancements, setSavingEnhancements] = useState(false)
 
+  // Milestone 3 (Consultation Decision Engine): Event Information, same
+  // notes-encoding technique, own marker block, coexists with the Fitter
+  // Enhancements block above via rawNotes as the shared source of truth.
+  const [eventInfo, setEventInfo] = useState<EventInformation>(() =>
+    decodeEventInformation(consultation.notes)
+  )
+  const [savingEventInfo, setSavingEventInfo] = useState(false)
+  const [serviceValidation, setServiceValidation] = useState<ServiceValidationResult | null>(null)
+
   async function persistEnhancements(patch: Partial<FitterEnhancements>) {
     const next = { ...enhancements, ...patch }
     setSavingEnhancements(true)
@@ -122,6 +140,25 @@ export function ConsultationReviewWorkspace({
     }
   }
 
+  async function persistEventInformation(patch: Partial<EventInformation>) {
+    const next = { ...eventInfo, ...patch }
+    setSavingEventInfo(true)
+    try {
+      const nextNotes = encodeEventInformation(rawNotes, next)
+      const { error } = await supabase
+        .from('consultations')
+        .update({ notes: nextNotes })
+        .eq('id', consultation.id)
+      if (error) throw error
+      setRawNotes(nextNotes)
+      setEventInfo(next)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSavingEventInfo(false)
+    }
+  }
+
   // Reusing Measurement's own decoder (read-only import, no edits to
   // Measurement) to recover the 8 extra fields + body tags + fitter notes
   // that live inside measurements.notes.
@@ -147,6 +184,15 @@ export function ConsultationReviewWorkspace({
   // into the Order — PriceSummaryCard displays it read-only here, before an
   // Order (and therefore a persistable quotation) exists.
   const liveDesignSpecification = decodeDesignSpecification(rawNotes)
+
+  // Milestone 3: pure comparison of the live Estimated Finish (already
+  // fetched inside EstimationCard) against Target Usage Date. No new
+  // estimation engine -- see estimationValidation.ts.
+  const estimationValidationResult = computeEstimationValidation(
+    serviceValidation,
+    eventInfo.targetUsageDate,
+    eventInfo.deadlineFlexibility
+  )
 
   const readiness = {
     measurementComplete: filledCount === totalFields,
@@ -185,6 +231,8 @@ export function ConsultationReviewWorkspace({
         // Pengerjaan changes) — carried into the Order snapshot as-is so a
         // future catalog price change can never alter this Order's total.
         designSpecification: decodeDesignSpecification(rawNotes),
+        eventInformation: eventInfo,
+        estimationValidation: estimationValidationResult,
         userId,
       })
 
@@ -225,11 +273,22 @@ export function ConsultationReviewWorkspace({
 
         <aside className="w-full md:w-[30%] flex flex-col gap-8">
           <PriceSummaryCard priceSnapshot={liveDesignSpecification?.priceSnapshot ?? null} />
+          <EventInformationCard
+            value={eventInfo}
+            saving={savingEventInfo}
+            onChange={persistEventInformation}
+          />
           <EstimationCard
             supabase={supabase}
             value={enhancements.estimasiPengerjaan}
             saving={savingEnhancements}
             onChange={estimasiPengerjaan => persistEnhancements({ estimasiPengerjaan })}
+            onValidationChange={setServiceValidation}
+          />
+          <EstimationValidationCard
+            result={estimationValidationResult}
+            hasEstimasi={Boolean(enhancements.estimasiPengerjaan)}
+            hasTargetDate={Boolean(eventInfo.targetUsageDate)}
           />
           <ReadinessGauge
             measurementComplete={readiness.measurementComplete}

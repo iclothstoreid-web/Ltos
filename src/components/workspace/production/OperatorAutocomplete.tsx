@@ -61,9 +61,17 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
     if (divisiHintId) setNewDivisionId(prev => prev || divisiHintId)
   }, [divisiHintId])
 
+  // A scoped picker (divisiHint set, e.g. check-in's Fitter picker or a
+  // production stage's operator picker) is searching a short, known list --
+  // safe to show it immediately on an empty query. An unscoped picker (e.g.
+  // ProductionCommunicationPanel's full operator list) still requires
+  // typing, since showing everyone on focus would be the wrong tradeoff
+  // there. Bug: an empty-query field with zero visible options and no
+  // affordance reads as "there is no fitter picker" even though the input
+  // is right there -- see check-in bug report.
   async function handleSearch(q: string) {
     setQuery(q)
-    if (q.length < 1) {
+    if (q.length < 1 && !divisiHintId) {
       setResults([])
       setShowResults(false)
       return
@@ -142,7 +150,10 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
         type="text"
         value={query}
         onChange={e => handleSearch(e.target.value)}
-        onFocus={() => query.length >= 1 && setShowResults(true)}
+        onFocus={() => {
+          if (query.length >= 1) setShowResults(true)
+          else if (divisiHintId) handleSearch('')
+        }}
         placeholder="Ketik nama operator..."
         className="w-full py-2 bg-transparent border-b border-[#c6c6cc] focus:border-[#755b00]
                    outline-none font-hanken text-sm text-[#161b29] placeholder:text-[#46464c]/40

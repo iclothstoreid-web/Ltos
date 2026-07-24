@@ -1,9 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OwnerCommandCenter } from '@/components/command-center/OwnerCommandCenter/OwnerCommandCenter'
+import { EngineOverviewSection } from '@/components/command-center/OwnerCommandCenter/EngineOverviewSection'
 import { getBottleneckSeverityByHours, QUEUE_WORKSPACE_URL } from '@/lib/ltos'
 import type { BottleneckItem } from '@/components/command-center/OwnerCommandCenter/BottleneckPanel'
 import type { AgendaItem } from '@/components/command-center/OwnerCommandCenter/AgendaPanel'
+import { getCommercialSummary } from '@/lib/commercial/summary'
+import { getOwnerSummary, getSlaRiskOrders } from '@/lib/decision/client'
+import { getCapacityDashboard, getKpiDashboard, getOperatorKpiList, getDivisiKpiList } from '@/lib/kpi/client'
 
 // OwnerCommandCenter itself is untouched in structure (chrome/layout unchanged)
 // — this file only feeds it real data. /command-center previously rendered a
@@ -100,6 +104,20 @@ export default async function CommandCenterPage() {
       .eq('status', 'approved')
       .gte('approved_at', monthStart.toISOString()),
   ])
+
+  // Sprint K Dashboard Integration: every number the Engine Overview section
+  // needs, reusing the exact RPCs/queries Decision Center, KPI Operator, and
+  // Commercial Center already fetch server-side — no new RPC.
+  const [commercialSummary, ownerSummary, slaRiskOrders, capacityDashboard, kpiDashboard, operators, divisiRows] =
+    await Promise.all([
+      getCommercialSummary(supabase),
+      getOwnerSummary(supabase),
+      getSlaRiskOrders(supabase),
+      getCapacityDashboard(supabase),
+      getKpiDashboard(supabase),
+      getOperatorKpiList(supabase),
+      getDivisiKpiList(supabase),
+    ])
 
   // Internal 8-stage production workflow now populates production_stage_records
   // (readable here via the staff RLS policy) — cutting/sewing are not
@@ -324,6 +342,15 @@ export default async function CommandCenterPage() {
     <OwnerCommandCenter
       profileName={profile?.name || 'Pemilik'}
       todayLabel={todayLabel}
+      engineOverview={{
+        commercial: commercialSummary,
+        ownerSummary,
+        slaRiskOrders,
+        capacityDashboard,
+        kpiDashboard,
+        operators,
+        divisiRows,
+      }}
       summary={{
         revenueToday,
         revenueThisMonth,
@@ -335,9 +362,10 @@ export default async function CommandCenterPage() {
         newLeads: newLeadsCount,
         consultationsToday: consultationsToday?.length || 0,
         waitingQuotation: ordersInQuotation?.length || 0,
-        // No down-payment tracking exists in the schema yet (no DP field or
-        // state) — honestly 0 rather than guessed from an unrelated state.
-        waitingDp: 0,
+        // Commercial Engine now tracks DP/payment status for real (Sprint K)
+        // — reuses the same dpOutstandingCount the Commercial pillar shows,
+        // replacing the honest-but-stale "0" from before that engine existed.
+        waitingDp: commercialSummary.dpOutstandingCount,
         followUpToday: followUpTodayCount || 0,
         vipCustomers: vipCustomers?.length || 0,
       }}

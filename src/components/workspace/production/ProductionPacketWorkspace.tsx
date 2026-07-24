@@ -52,6 +52,9 @@ interface ProductionPacketWorkspaceProps {
   // Fetched once server-side (page.tsx); this kiosk workspace has no login
   // session to refetch against mid-shift, same as every other packet field.
   productionRules: ProductionRules
+  // Return Rules (Business Rules) — QC's Kategori Temuan options, fetched
+  // the same way. See 20260813000000_add_return_notification_rules.sql.
+  returnReasons: string[]
 }
 
 export function ProductionPacketWorkspace({
@@ -61,6 +64,7 @@ export function ProductionPacketWorkspace({
   customerPhotoUrl,
   customerReferences,
   productionRules,
+  returnReasons,
 }: ProductionPacketWorkspaceProps) {
   const [supabase] = useState(() => createClient())
   const [packet, setPacket] = useState(initialPacket)
@@ -569,6 +573,7 @@ export function ProductionPacketWorkspace({
 
                     {isQc && (
                       <QcDecisionPanel
+                        returnReasons={returnReasons}
                         uncheckedItems={Object.entries(checklist)
                           .filter(([, done]) => !done)
                           .map(([item]) => item)}

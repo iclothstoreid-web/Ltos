@@ -12,16 +12,19 @@ import {
 } from '@/lib/commercial/client'
 import type { DiscountType, OrderInvoice } from '@/lib/commercial/types'
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS } from '@/lib/commercial/types'
+import { PaymentTimeline } from './PaymentTimeline'
 
 interface OrderCommercialSectionProps {
   orderId: string
+  productionStarted?: boolean
+  deliveryCompleted?: boolean
 }
 
 // Owner OS-only ("Owner Override"/"Discount"/"KOL" are owner/admin-gated at
 // the RPC level, see supabase/migrations/20260804000002) section inside
 // OrderDetailModal — everything a Fitter can already see on
 // PaymentSummaryCard, plus the controls only an owner should have.
-export function OrderCommercialSection({ orderId }: OrderCommercialSectionProps) {
+export function OrderCommercialSection({ orderId, productionStarted = false, deliveryCompleted = false }: OrderCommercialSectionProps) {
   const [supabase] = useState(() => createClient())
   const [invoice, setInvoice] = useState<OrderInvoice | null>(null)
   const [loading, setLoading] = useState(true)
@@ -216,6 +219,14 @@ export function OrderCommercialSection({ orderId }: OrderCommercialSectionProps)
               ))}
             </div>
           )}
+
+          <div className="mt-5 border-t border-[#e5e5e0] pt-4">
+            <PaymentTimeline
+              invoice={invoice}
+              productionStarted={productionStarted}
+              deliveryCompleted={deliveryCompleted}
+            />
+          </div>
 
           <div className="space-y-4">
             <div className="border-t border-[#e5e5e0] pt-3">

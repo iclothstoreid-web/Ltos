@@ -41,13 +41,18 @@ export default async function KpiOperatorPage() {
 
   const { data: profile } = await supabase.from('profiles').select('id, name').eq('id', user.id).single()
 
-  const [kpiDashboard, capacityDashboard, bottleneckDashboard, divisiRows, operators] = await Promise.all([
+  const [kpiDashboard, capacityDashboard, bottleneckDashboard, divisiRows, operators, performanceRecordsResult] = await Promise.all([
     getKpiDashboard(supabase),
     getCapacityDashboard(supabase),
     getBottleneckDashboard(supabase),
     getDivisiKpiList(supabase),
     getOperatorKpiList(supabase),
+    supabase
+      .from('production_stage_records')
+      .select('order_id, operator_id, stage, attempt, decision, alter_category, notes, division, started_at, completed_at, created_at'),
   ])
+
+  if (performanceRecordsResult.error) throw performanceRecordsResult.error
 
   return (
     <KpiOperatorCenter
@@ -57,6 +62,7 @@ export default async function KpiOperatorPage() {
       bottleneckDashboard={bottleneckDashboard}
       divisiRows={divisiRows}
       operators={operators}
+      performanceRecords={performanceRecordsResult.data || []}
     />
   )
 }

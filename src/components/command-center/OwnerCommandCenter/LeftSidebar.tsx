@@ -15,6 +15,7 @@ import {
   Tag,
   TrendingUp,
   Users,
+  WalletCards,
   X,
 } from 'lucide-react'
 
@@ -34,6 +35,7 @@ const navItems = [
   { label: 'Komunikasi', href: '/owner/communications', icon: MessageSquare, implemented: true },
   { label: 'KPI Operator', href: '/command-center/kpi-operator', icon: Gauge, implemented: true },
   { label: 'KPI Fitter', href: '/command-center/kpi-fitter', icon: TrendingUp, implemented: true },
+  { label: 'Commercial Center', href: '/command-center/commercial', icon: WalletCards, implemented: true },
   { label: 'Master Data Center', href: '/owner/master-data-center', icon: Tag, implemented: true },
   { label: 'Monitoring Produksi', href: '/command-center', icon: Factory, implemented: false },
   { label: 'Monitoring Persediaan', href: '/inventory', icon: Boxes, implemented: true },

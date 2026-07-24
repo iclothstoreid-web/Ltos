@@ -3,7 +3,9 @@ import type { Consultation } from '@/app/workspace/check-in/types'
 import type { MeasurementFields } from '@/components/workspace/measurement/types'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 import type { DesignSpecification } from '@/lib/designSpecification/types'
+import type { EventInformation } from '@/components/workspace/consultation-review/eventInformationCodec'
 import type { OrderSnapshot } from './types'
+import type { EstimationValidationResult } from './estimationValidation'
 import { buildQrPayload, generateCustomerToken, buildCustomerJourneyUrl } from './qr'
 import { reserveInventory } from './inventory'
 import { notifyOrderCreated } from './notifications'
@@ -25,6 +27,8 @@ interface CreateOrderParams {
   humanNotes: string
   selections: DesignSelections
   designSpecification?: DesignSpecification | null
+  eventInformation?: EventInformation | null
+  estimationValidation?: EstimationValidationResult | null
   userId: string
 }
 
@@ -67,6 +71,8 @@ export async function createOrderFromConsultation({
   humanNotes,
   selections,
   designSpecification = null,
+  eventInformation = null,
+  estimationValidation = null,
   userId,
 }: CreateOrderParams): Promise<CreateOrderResult> {
   // Root cause of "Create Order gagal tanpa alasan": order_number is
@@ -152,6 +158,8 @@ export async function createOrderFromConsultation({
     qrPayload,
     consultationId: consultation.id,
     consultationNumber: consultation.consultation_number,
+    eventInformation,
+    estimationValidation,
   }
 
   // 3. Consultation -> order_created

@@ -145,6 +145,23 @@ export interface ProductionRules {
   updated_by: string | null
 }
 
+// Return Rules — the QC "Kategori Temuan" options ("Kembalikan ke
+// Penjahitan" reason picklist), formerly hardcoded as QC_CHECKLIST_ITEMS.
+// See 20260813000000_add_return_notification_rules.sql.
+export interface ReturnRules {
+  reasons: string[]
+  updated_at: string
+  updated_by: string | null
+}
+
+// Notification Rules — governs whether assign_stage_operator() creates the
+// kiosk-wide "Pekerjaan Baru Ditugaskan" notification. Same migration.
+export interface NotificationRules {
+  assignment_notification_enabled: boolean
+  updated_at: string
+  updated_by: string | null
+}
+
 // One row of production_stage_override_audit_log — the append-only trail
 // for Emergency Override. Order-scoped by design (order_id), never global.
 export interface ProductionStageOverrideAuditLogEntry {

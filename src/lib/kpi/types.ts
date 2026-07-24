@@ -99,6 +99,23 @@ export interface OperatorKpiJobHistoryRow {
   duration_minutes: number | null
 }
 
+// Raw, read-only stage-record facts used by the Performance & Accountability
+// views. Metrics are derived from these existing records, never persisted as
+// a competing KPI source.
+export interface OperatorPerformanceRecord {
+  order_id: string
+  operator_id: string | null
+  stage: ProductionStage
+  attempt: number
+  decision: 'approved' | 'alter' | 'skipped' | null
+  alter_category: string | null
+  notes: string | null
+  division: string | null
+  started_at: string | null
+  completed_at: string | null
+  created_at: string
+}
+
 // The full shape of get_operator_kpi_detail(p_operator_id) -- the Detail
 // Operator drill-down opened by clicking a Daftar Operator row.
 export interface OperatorKpiDetail {

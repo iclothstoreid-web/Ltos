@@ -8,9 +8,31 @@ import type { BottleneckDashboard } from '@/lib/kpi/types'
 export type ServiceLevel = 'standard' | 'fast' | 'very_fast'
 export type SlaRiskLevel = 'over_sla' | 'risk' | 'on_track'
 
+// Milestone 4 (Priority & Capacity Engine). null business_priority means the
+// order is on Hold (Owner Override) -- deliberately never auto-escalated,
+// see get_sla_risk_orders() in
+// supabase/migrations/20260814000000_add_priority_capacity_engine.sql.
+export type BusinessPriority = 'critical' | 'high' | 'normal'
+
+// Milestone 4's Bottleneck classification -- grounded in real signals only,
+// see the migration above for exactly what each category means. null means
+// no clear bottleneck signal (order is actively progressing normally).
+export type BottleneckCategory =
+  | 'material'
+  | 'capacity'
+  | 'operator'
+  | 'supplier'
+  | 'approval'
+  | 'qc'
+  | 'finishing'
+  | 'packing'
+
+export type EstimationVerdict = 'SAFE' | 'RISK' | 'IMPOSSIBLE'
+
 // One row of get_sla_risk_orders() -- every non-completed order classified
-// against its SLA window. Full list (not just the at-risk subset), so
-// Section 1 can render all three buckets with a clickable row into Detail
+// against its SLA window, plus (Milestone 4) Business Priority, Bottleneck,
+// and Queue Recommendation fields. Full list (not just the at-risk subset),
+// so Section 1 can render all three buckets with a clickable row into Detail
 // Order.
 export interface SlaRiskOrder {
   order_id: string
@@ -22,6 +44,13 @@ export interface SlaRiskOrder {
   risk_level: SlaRiskLevel
   risk_label: string
   hours_remaining: number
+  business_priority: BusinessPriority | null
+  bottleneck_category: BottleneckCategory | null
+  target_usage_date: string | null
+  estimation_verdict: EstimationVerdict | null
+  payment_status: string | null
+  priority_rank: number
+  queue_position: number | null
 }
 
 export interface SlaRiskSummary {

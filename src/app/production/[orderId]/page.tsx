@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getProductionPacket, getProductionRules } from '@/lib/production/client'
+import { getProductionPacket, getProductionRules, getReturnRules } from '@/lib/production/client'
 import { getCurrentStageRecord } from '@/lib/production/stageConfig'
 import { getCustomerPhotoForOrder } from '@/lib/production/customerPhoto'
 import { getCustomerReferencesForOrder } from '@/lib/production/customerReferences'
@@ -26,7 +26,10 @@ interface Props {
 export default async function ProductionPacketPage({ params }: Props) {
   const supabase = createClient()
   const packet = await getProductionPacket(supabase, params.orderId)
-  const productionRules = await getProductionRules(supabase)
+  const [productionRules, returnRules] = await Promise.all([
+    getProductionRules(supabase),
+    getReturnRules(supabase),
+  ])
   const isInProgress = packet
     ? getCurrentStageRecord(packet.stage_records)?.status === 'in_progress'
     : false
@@ -50,6 +53,7 @@ export default async function ProductionPacketPage({ params }: Props) {
           customerPhotoUrl={customerPhotoUrl}
           customerReferences={customerReferences}
           productionRules={productionRules}
+          returnReasons={returnRules.reasons}
         />
       )}
     </ProductionAccessGate>

@@ -15,7 +15,16 @@ const SERVICE_LEVEL_LABELS: Record<ServiceLevel, string> = {
 // inventing a new one; this function only turns get_owner_summary()'s
 // existing fields into text. Pure and side-effect free so it needs no new
 // RPC -- called client-side over the OwnerSummary the page already fetched.
-export function computeTodaysActions(summary: OwnerSummary): TodaysAction[] {
+//
+// Sprint K Dashboard Integration: `commercial` is an optional second input
+// (dpOutstandingCount from getCommercialSummary, src/lib/commercial/summary.ts)
+// so the Owner Dashboard's Today's Action can also reflect Commercial Status
+// -- Decision Center keeps calling this with one argument, so that branch
+// simply never fires there and its existing output is unchanged.
+export function computeTodaysActions(
+  summary: OwnerSummary,
+  commercial?: { dpOutstandingCount: number }
+): TodaysAction[] {
   const actions: TodaysAction[] = []
 
   if (summary.sla_risk.total_over_sla > 0) {
@@ -82,6 +91,14 @@ export function computeTodaysActions(summary: OwnerSummary): TodaysAction[] {
       })
     }
   })
+
+  if (commercial && commercial.dpOutstandingCount > 0) {
+    actions.push({
+      id: 'commercial-dp-outstanding',
+      severity: 'warning',
+      text: `${commercial.dpOutstandingCount} order belum memenuhi DP/pembayaran minimum sesuai Commercial Rules — tindak lanjuti penagihan`,
+    })
+  }
 
   if (actions.length === 0) {
     actions.push({

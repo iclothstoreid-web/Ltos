@@ -10,6 +10,7 @@ import type {
   CapacityDashboard,
   DivisiKpiRow,
   KpiDashboard,
+  OperatorPerformanceRecord,
   OperatorKpiRow,
 } from '@/lib/kpi/types'
 import { OperatorStatCard } from './OperatorStatCard'
@@ -26,6 +27,7 @@ export type KpiOperatorCenterProps = {
   bottleneckDashboard: BottleneckDashboard
   divisiRows: DivisiKpiRow[]
   operators: OperatorKpiRow[]
+  performanceRecords: OperatorPerformanceRecord[]
 }
 
 // Owner OS's "KPI Operator" page (Sprint G, per-divisi breakdown added in a
@@ -43,6 +45,7 @@ export function KpiOperatorCenter({
   bottleneckDashboard,
   divisiRows,
   operators,
+  performanceRecords,
 }: KpiOperatorCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null)
@@ -101,7 +104,11 @@ export function KpiOperatorCenter({
 
           <DivisiKpiGrid divisiRows={divisiRows} onSelectDivisi={setSelectedDivision} />
 
-          <OperatorKpiTable operators={operators} onSelectOperator={setSelectedOperatorId} />
+          <OperatorKpiTable
+            operators={operators}
+            performanceRecords={performanceRecords}
+            onSelectOperator={setSelectedOperatorId}
+          />
 
           <Link
             href="/command-center/kpi-fitter"
@@ -124,6 +131,7 @@ export function KpiOperatorCenter({
           divisionId={selectedDivision.id}
           label={selectedDivision.label}
           operators={operators}
+          performanceRecords={performanceRecords}
           onClose={() => setSelectedDivision(null)}
           onSelectOperator={setSelectedOperatorId}
         />

@@ -10,6 +10,9 @@ import type { OwnerSummary, SlaRiskOrder } from '@/lib/decision/types'
 import type { OperatorKpiRow } from '@/lib/kpi/types'
 import { computeTodaysActions } from '@/lib/decision/actions'
 import { PriorityTodaySection } from './PriorityTodaySection'
+import { BusinessPriorityBoard } from './BusinessPriorityBoard'
+import { QueueRecommendationSection } from './QueueRecommendationSection'
+import { BottleneckBoard } from './BottleneckBoard'
 import { OperatorAttentionSection } from './OperatorAttentionSection'
 import { ServiceAvailabilitySection } from './ServiceAvailabilitySection'
 import { TodaysActionSection } from './TodaysActionSection'
@@ -21,14 +24,22 @@ export type DecisionCenterProps = {
   operators: OperatorKpiRow[]
 }
 
-// Owner OS's "Decision Center" (Sprint I). Same chrome as
-// OwnerCommandCenter/KpiOperatorCenter -- this page composes the brief's
-// five sections entirely from data three existing RPCs already fetched
-// server-side (get_owner_summary, get_sla_risk_orders, get_operator_kpi_list).
-// Nothing here recomputes SLA/capacity/bottleneck signals, it only groups
+// Owner OS's "Decision Center" (Sprint I, extended by Milestone 4's
+// Priority & Capacity Engine). Same chrome as
+// OwnerCommandCenter/KpiOperatorCenter -- this page composes every section
+// entirely from data three existing RPCs already fetched server-side
+// (get_owner_summary, get_sla_risk_orders, get_operator_kpi_list). Nothing
+// here recomputes SLA/priority/bottleneck/capacity signals, it only groups
 // and displays them, reusing OrderDetailModal / OperatorDetailModal /
 // BottleneckSummary verbatim rather than rebuilding "click row -> open
 // detail" a third time.
+//
+// Milestone 4 kept Status SLA, Business Priority, and Bottleneck as three
+// separate sections on purpose (the brief: "Jangan mencampur ketiganya") --
+// all three are grouped from the same get_sla_risk_orders() rows, they just
+// group by a different field each (risk_level / business_priority /
+// bottleneck_category). Queue Recommendation is presented as exactly that:
+// a recommendation, never a workflow change.
 export function DecisionCenter({ profileName, ownerSummary, slaRiskOrders, operators }: DecisionCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
@@ -63,6 +74,12 @@ export function DecisionCenter({ profileName, ownerSummary, slaRiskOrders, opera
           </section>
 
           <PriorityTodaySection orders={slaRiskOrders} onSelectOrder={setSelectedOrderId} />
+
+          <BusinessPriorityBoard orders={slaRiskOrders} onSelectOrder={setSelectedOrderId} />
+
+          <QueueRecommendationSection orders={slaRiskOrders} onSelectOrder={setSelectedOrderId} />
+
+          <BottleneckBoard orders={slaRiskOrders} onSelectOrder={setSelectedOrderId} />
 
           <OperatorAttentionSection operators={operators} onSelectOperator={setSelectedOperatorId} />
 

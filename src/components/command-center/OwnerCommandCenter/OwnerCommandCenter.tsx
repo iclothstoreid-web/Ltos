@@ -11,10 +11,12 @@ import { ProductionLiveKanban } from './ProductionLiveKanban'
 import { ArtisanPerformanceGrid } from './ArtisanPerformanceGrid'
 import { AgendaPanel, AgendaItem } from './AgendaPanel'
 import { ClockCalendar } from './widgets/ClockCalendar'
+import { EngineOverviewSection, type EngineOverviewSectionProps } from './EngineOverviewSection'
 
 export type OwnerCommandCenterProps = {
   profileName: string
   todayLabel: string
+  engineOverview: EngineOverviewSectionProps
   summary: {
     revenueToday: number
     revenueThisMonth: number
@@ -56,6 +58,7 @@ export type OwnerCommandCenterProps = {
 export function OwnerCommandCenter({
   profileName,
   todayLabel,
+  engineOverview,
   summary,
   crmSnapshot,
   bottleneckItems,
@@ -89,6 +92,8 @@ export function OwnerCommandCenter({
             </div>
 
           </section>
+
+          <EngineOverviewSection {...engineOverview} />
 
           <section className="mb-10">
             <SummaryCards {...summary} />

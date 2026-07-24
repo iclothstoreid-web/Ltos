@@ -55,7 +55,7 @@ const CARDS: HubCard[] = [
   },
   {
     label: 'Business Rules',
-    description: 'Commercial, Production, Capacity & Service Rules.',
+    description: 'Commercial, Production, Capacity, Return, Service & Notification Rules.',
     href: '/owner/business-rules',
     icon: ClipboardList,
     ownerOnly: true,

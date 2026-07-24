@@ -1,12 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { canManageOperators } from '@/lib/operators/access'
-import { BusinessRulesHub } from '@/components/business-rules/BusinessRulesHub'
+import { getReturnRules } from '@/lib/production/client'
+import { ReturnRulesManager } from '@/components/business-rules/ReturnRulesManager'
 
-// Business Rules hub (Business Configuration Layer, Sprint K Milestone 1) —
-// Commercial/Production/Capacity/Return/Service/Notification Rules, all six
-// backed by real Runtime Configuration read live by their engines.
-export default async function BusinessRulesPage() {
+export default async function ReturnRulesPage() {
   const supabase = createClient()
 
   const {
@@ -17,5 +15,7 @@ export default async function BusinessRulesPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!canManageOperators(profile?.role)) redirect('/command-center')
 
-  return <BusinessRulesHub />
+  const initialRules = await getReturnRules(supabase)
+
+  return <ReturnRulesManager initialRules={initialRules} />
 }

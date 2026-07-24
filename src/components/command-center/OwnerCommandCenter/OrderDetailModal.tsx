@@ -295,7 +295,11 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
               </p>
             </div>
 
-            <OrderCommercialSection orderId={orderId} />
+            <OrderCommercialSection
+              orderId={orderId}
+              productionStarted={packet.stage_records.length > 0 || packet.current_state === 'production'}
+              deliveryCompleted={shippingCompleted || isDelivered}
+            />
 
             <div>
               <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">

@@ -16,6 +16,10 @@ interface EstimationCardProps {
   value: EstimasiPengerjaan
   onChange: (value: EstimasiPengerjaan) => void
   saving: boolean
+  // Milestone 3: lets the parent reuse the same live ServiceValidationResult
+  // for Estimation Validation (SAFE/RISK/IMPOSSIBLE) instead of a second
+  // preview_service_validation call.
+  onValidationChange?: (validation: ServiceValidationResult | null) => void
 }
 
 // 🟢/🟡/🔴 per the Service Validation spec -- Available / Warning / Over
@@ -27,7 +31,13 @@ const STATUS_DISPLAY: Record<ServiceValidationResult['overall_status'], { dot: s
   red: { dot: 'bg-[#c0392b]', label: 'Kapasitas Penuh' },
 }
 
-export function EstimationCard({ supabase, value, onChange, saving }: EstimationCardProps) {
+export function EstimationCard({
+  supabase,
+  value,
+  onChange,
+  saving,
+  onValidationChange,
+}: EstimationCardProps) {
   // SLA Engine: working-day counts are never hardcoded here -- they're
   // fetched from service_sla_rules via get_service_sla_rules() so an owner
   // changing the business rule is reflected immediately, with no redeploy.
@@ -71,6 +81,10 @@ export function EstimationCard({ supabase, value, onChange, saving }: Estimation
       cancelled = true
     }
   }, [supabase, value])
+
+  useEffect(() => {
+    onValidationChange?.(validation)
+  }, [validation, onValidationChange])
 
   const statusDisplay = validation ? STATUS_DISPLAY[validation.overall_status] : null
 

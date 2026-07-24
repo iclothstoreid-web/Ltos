@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
+  NotificationRules,
   Operator,
   PatternTemplate,
   PendingAssignment,
@@ -7,6 +8,7 @@ import type {
   ProductionRules,
   ProductionStage,
   ProductionStageOverrideAuditLogEntry,
+  ReturnRules,
 } from './types'
 import type { MeasurementFields } from '@/components/workspace/measurement/types'
 
@@ -179,6 +181,45 @@ export async function setProductionRules(
   })
   if (error) throw error
   return data as ProductionRules
+}
+
+// Return Rules — QC "Kategori Temuan" picklist. get_return_rules() is
+// anon-callable (the no-login kiosk renders the picklist from it);
+// set_return_rules() is admin/owner-gated inside the RPC.
+
+export async function getReturnRules(supabase: SupabaseClient): Promise<ReturnRules> {
+  const { data, error } = await supabase.rpc('get_return_rules')
+  if (error) throw error
+  return data as ReturnRules
+}
+
+export async function setReturnRules(
+  supabase: SupabaseClient,
+  reasons: string[]
+): Promise<ReturnRules> {
+  const { data, error } = await supabase.rpc('set_return_rules', { p_reasons: reasons })
+  if (error) throw error
+  return data as ReturnRules
+}
+
+// Notification Rules — read by assign_stage_operator() server-side; this
+// pair only feeds the owner panel.
+
+export async function getNotificationRules(supabase: SupabaseClient): Promise<NotificationRules> {
+  const { data, error } = await supabase.rpc('get_notification_rules')
+  if (error) throw error
+  return data as NotificationRules
+}
+
+export async function setNotificationRules(
+  supabase: SupabaseClient,
+  assignmentNotificationEnabled: boolean
+): Promise<NotificationRules> {
+  const { data, error } = await supabase.rpc('set_notification_rules', {
+    p_assignment_notification_enabled: assignmentNotificationEnabled,
+  })
+  if (error) throw error
+  return data as NotificationRules
 }
 
 // Emergency Override — NOT a Business Rule (no toggle anywhere enables or

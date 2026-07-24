@@ -1,6 +1,8 @@
 import type { MeasurementFields } from '@/components/workspace/measurement/types'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 import type { DesignSpecification } from '@/lib/designSpecification/types'
+import type { EventInformation } from '@/components/workspace/consultation-review/eventInformationCodec'
+import type { EstimationValidationResult } from '@/lib/order/estimationValidation'
 
 // Full order snapshot, captured once at Create Order time. `orders` has no
 // flexible/JSONB column (id, customer_id, order_number, current_state,
@@ -31,6 +33,12 @@ export interface OrderSnapshot {
   qrPayload: string
   consultationId: string
   consultationNumber: string
+  // Milestone 3 (Consultation Decision Engine) -- optional so pre-existing
+  // order.created events (which have no such key) still decode fine. Null
+  // estimationValidation means Target Usage Date or Estimasi Pengerjaan was
+  // left empty at Create Order time, not that validation failed.
+  eventInformation?: EventInformation | null
+  estimationValidation?: EstimationValidationResult | null
 }
 
 // Prepared for future wiring — no inventory table exists yet, and the

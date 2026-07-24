@@ -1,8 +1,11 @@
 'use client'
 
-import { QC_CHECKLIST_ITEMS } from '@/lib/production/stageConfig'
-
 interface QcDecisionPanelProps {
+  // Kategori Temuan options — Return Rules (Business Rules), fetched once
+  // server-side via get_return_rules() and passed down through
+  // ProductionPacketWorkspace. Formerly hardcoded to QC_CHECKLIST_ITEMS;
+  // the Return Rules default seeds those same 5 items.
+  returnReasons: string[]
   uncheckedItems: string[]
   alterCategory: string
   onAlterCategoryChange: (category: string) => void
@@ -10,12 +13,11 @@ interface QcDecisionPanelProps {
 
 // "Jika gagal, QC memilih ALTER, lalu mengisi Kategori Temuan + Catatan +
 // Evidence" — Catatan/Evidence are the generic notes/evidence fields already
-// on the stage shell; Kategori Temuan suggests the checklist items left
-// unchecked (no separate taxonomy invented). The Setujui/Kembalikan decision
-// itself is made via the two AKHIR buttons (ApproveReturnPanel), so this
-// panel only needs to capture the finding category ahead of "Kembalikan ke
-// Penjahitan".
+// on the stage shell. The Setujui/Kembalikan decision itself is made via the
+// two AKHIR buttons (ApproveReturnPanel), so this panel only needs to
+// capture the finding category ahead of "Kembalikan ke Penjahitan".
 export function QcDecisionPanel({
+  returnReasons,
   uncheckedItems,
   alterCategory,
   onAlterCategoryChange,
@@ -32,7 +34,7 @@ export function QcDecisionPanel({
                    outline-none font-hanken text-sm text-[#161b29] transition-colors"
       >
         <option value="">Pilih kategori...</option>
-        {QC_CHECKLIST_ITEMS.map(item => (
+        {returnReasons.map(item => (
           <option key={item} value={item}>
             {item}
             {uncheckedItems.includes(item) ? ' (belum sesuai)' : ''}
