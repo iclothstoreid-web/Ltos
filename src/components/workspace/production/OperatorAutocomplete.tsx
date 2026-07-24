@@ -23,12 +23,31 @@ interface OperatorAutocompleteProps {
   // field reads as what it actually does. Defaults to the original label so
   // every other caller is unaffected.
   label?: string
+  // Bottom Action Bar sprint: check-in's Fitter picker now lives inside the
+  // dark, translucent SessionBar instead of a white content panel -- the
+  // default dark-text-on-light-border styling would be nearly invisible
+  // there. 'dark' swaps to light text/borders. Defaults to 'light' so every
+  // existing white-panel caller (production stage cards) is unaffected.
+  variant?: 'light' | 'dark'
+  // Same sprint: SessionBar is pinned to the bottom of the viewport, so a
+  // downward-opening results list would render off-screen. Opens the list
+  // above the input instead. Defaults to false for every other caller.
+  dropUp?: boolean
 }
 
 // Mirrors check-in's CustomerSearch: search-as-you-type, and if nothing
 // matches, an explicit "+ Tambah operator baru" action — never a silent
 // auto-insert on every scan.
-export function OperatorAutocomplete({ supabase, value, onChange, onReset, divisiHint, label = 'Nama Operator' }: OperatorAutocompleteProps) {
+export function OperatorAutocomplete({
+  supabase,
+  value,
+  onChange,
+  onReset,
+  divisiHint,
+  label = 'Nama Operator',
+  variant = 'light',
+  dropUp = false,
+}: OperatorAutocompleteProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Operator[]>([])
   const [showResults, setShowResults] = useState(false)
@@ -118,22 +137,30 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
     setShowResults(false)
   }
 
+  const isDark = variant === 'dark'
+  const hintColor = isDark ? 'text-white/50' : 'text-[#46464c]'
+  const valueColor = isDark ? 'text-white' : 'text-[#161b29]'
+  const borderColor = isDark ? 'border-white/20' : 'border-[#c6c6cc]'
+  const focusBorder = isDark ? 'focus:border-white' : 'focus:border-[#755b00]'
+  const placeholderColor = isDark ? 'placeholder:text-white/30' : 'placeholder:text-[#46464c]/40'
+  const linkColor = isDark ? 'text-[#e9c176]' : 'text-[#755b00]'
+
   if (value) {
     return (
-      <div className="flex items-center justify-between border-b border-[#c6c6cc] py-3">
-        <div>
-          <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
+      <div className={`flex items-center justify-between gap-3 border-b ${borderColor} py-3`}>
+        <div className="min-w-0">
+          <p className={`font-hanken text-[10px] uppercase tracking-widest ${hintColor}`}>
             {label}
           </p>
-          <p className="font-hanken text-sm text-[#161b29]">{value.nama}</p>
+          <p className={`font-hanken text-sm ${valueColor} truncate`}>{value.nama}</p>
           {value.divisi && (
-            <p className="font-hanken text-xs text-[#46464c]">Divisi: {value.divisi}</p>
+            <p className={`font-hanken text-xs ${hintColor}`}>Divisi: {value.divisi}</p>
           )}
         </div>
         <button
           type="button"
           onClick={onReset}
-          className="font-hanken text-xs text-[#755b00] hover:underline"
+          className={`font-hanken text-xs ${linkColor} hover:underline shrink-0`}
         >
           Ganti
         </button>
@@ -143,7 +170,7 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
 
   return (
     <div className="relative">
-      <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+      <label className={`font-hanken text-[10px] uppercase tracking-widest ${hintColor} block mb-1`}>
         {label}
       </label>
       <input
@@ -155,13 +182,16 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
           else if (divisiHintId) handleSearch('')
         }}
         placeholder="Ketik nama operator..."
-        className="w-full py-2 bg-transparent border-b border-[#c6c6cc] focus:border-[#755b00]
-                   outline-none font-hanken text-sm text-[#161b29] placeholder:text-[#46464c]/40
-                   transition-colors"
+        className={`w-full py-2 bg-transparent border-b ${borderColor} ${focusBorder}
+                   outline-none font-hanken text-sm ${valueColor} ${placeholderColor}
+                   transition-colors`}
       />
 
       {showResults && (
-        <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#c6c6cc]/60 shadow-md max-h-64 overflow-y-auto">
+        <div
+          className={`absolute z-10 left-0 right-0 ${dropUp ? 'bottom-full mb-1' : 'mt-1'}
+                     bg-white border border-[#c6c6cc]/60 shadow-md max-h-64 overflow-y-auto`}
+        >
           {results.map(op => (
             <button
               key={op.id}

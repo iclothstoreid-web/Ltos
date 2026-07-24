@@ -98,7 +98,11 @@ export default function CheckInPage() {
 
       <main
         className={`flex-1 flex flex-col lg:overflow-hidden relative ${
-          view === 'profile' || view === 'success' ? 'pb-40 lg:pb-0' : ''
+          view === 'success'
+            ? 'pb-40 lg:pb-0'
+            : view === 'profile'
+              ? 'pb-56 lg:pb-0'
+              : ''
         }`}
       >
         <CheckInHeader />
@@ -125,19 +129,7 @@ export default function CheckInPage() {
               )}
 
               {view === 'profile' && selectedCustomer && (
-                <>
-                  <CustomerProfile customer={selectedCustomer} />
-                  <div className="px-4 lg:px-16 mt-4">
-                    <OperatorAutocomplete
-                      supabase={supabase}
-                      value={fitter}
-                      onChange={setFitter}
-                      onReset={() => setFitter(null)}
-                      divisiHint={FITTER_DIVISI}
-                      label="Pilih Fitter"
-                    />
-                  </div>
-                </>
+                <CustomerProfile customer={selectedCustomer} />
               )}
 
               {view === 'new-customer' && (
@@ -165,10 +157,22 @@ export default function CheckInPage() {
           <SessionBar
             customerName={selectedCustomer.name}
             sessionLabel={fitter ? `Fitter: ${fitter.nama}` : 'Pilih fitter dahulu'}
-            statusLabel={creating ? 'Membuat...' : fitter ? 'Siap' : 'Menunggu Fitter'}
+            statusLabel={creating ? 'Membuat...' : fitter ? 'Siap Konsultasi' : 'Menunggu Fitter'}
             primaryLabel={creating ? 'Membuat sesi...' : 'Mulai Konsultasi Baru'}
             onPrimaryAction={handleCreateSession}
             primaryDisabled={creating || !fitter}
+            fitterPicker={
+              <OperatorAutocomplete
+                supabase={supabase}
+                value={fitter}
+                onChange={setFitter}
+                onReset={() => setFitter(null)}
+                divisiHint={FITTER_DIVISI}
+                label="Pilih Fitter"
+                variant="dark"
+                dropUp
+              />
+            }
           />
         )}
 

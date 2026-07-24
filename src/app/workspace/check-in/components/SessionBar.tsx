@@ -1,5 +1,7 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 interface SessionBarProps {
   customerName: string
   sessionLabel: string
@@ -7,6 +9,12 @@ interface SessionBarProps {
   primaryLabel: string
   onPrimaryAction: () => void
   primaryDisabled?: boolean
+  // Bottom Action Bar sprint: check-in's Fitter OperatorAutocomplete renders
+  // here instead of the static "Sesi" text, as its own full-width row on
+  // mobile/tablet and inline on desktop. Driven by the same `fitter` state
+  // the caller already threads into sessionLabel/statusLabel/primaryDisabled
+  // -- this only changes what's displayed, not what drives it.
+  fitterPicker?: ReactNode
 }
 
 export function SessionBar({
@@ -16,6 +24,7 @@ export function SessionBar({
   primaryLabel,
   onPrimaryAction,
   primaryDisabled = false,
+  fitterPicker,
 }: SessionBarProps) {
   return (
     <div className="fixed inset-x-0 bottom-0 lg:absolute lg:bottom-10 lg:left-1/2 lg:-translate-x-1/2 w-full lg:max-w-4xl px-4 pb-4 lg:px-16 lg:pb-0 pointer-events-none z-40">
@@ -30,17 +39,30 @@ export function SessionBar({
               <p className="font-sans text-sm font-semibold truncate">{customerName}</p>
             </div>
           </div>
-          <div className="h-8 w-px bg-white/10 shrink-0 hidden sm:block" />
-          <div className="hidden sm:block">
-            <p className="font-sans opacity-50 uppercase text-[9px] tracking-widest">Sesi</p>
-            <p className="font-sans text-sm font-semibold">{sessionLabel}</p>
-          </div>
+
+          {!fitterPicker && (
+            <>
+              <div className="h-8 w-px bg-white/10 shrink-0 hidden sm:block" />
+              <div className="hidden sm:block">
+                <p className="font-sans opacity-50 uppercase text-[9px] tracking-widest">Sesi</p>
+                <p className="font-sans text-sm font-semibold">{sessionLabel}</p>
+              </div>
+            </>
+          )}
+
           <div className="h-8 w-px bg-white/10 shrink-0 hidden sm:block" />
           <div className="flex items-center gap-2 shrink-0 ml-auto lg:ml-0">
             <span className="w-2 h-2 rounded-full bg-[#e9c176] animate-pulse" />
             <p className="font-sans text-sm font-semibold">{statusLabel}</p>
           </div>
         </div>
+
+        {fitterPicker && (
+          <div className="min-w-0 lg:w-64 lg:shrink-0 lg:border-l lg:border-white/10 lg:pl-4">
+            {fitterPicker}
+          </div>
+        )}
+
         <button
           onClick={onPrimaryAction}
           disabled={primaryDisabled}
