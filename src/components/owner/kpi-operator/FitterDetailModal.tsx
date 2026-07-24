@@ -5,6 +5,11 @@ import { X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getFitterKpiDetail } from '@/lib/fitter/client'
 import type { FitterKpiDetail } from '@/lib/fitter/types'
+import { formatRupiah } from '@/lib/format/money'
+
+function formatPct(pct: number | null): string {
+  return pct == null ? '—' : `${pct.toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`
+}
 
 interface FitterDetailModalProps {
   fitterId: string
@@ -82,6 +87,47 @@ export function FitterDetailModal({ fitterId, onClose }: FitterDetailModalProps)
                 <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Order Dibuat</p>
                 <p className="font-hanken text-lg text-[#161b29] mt-1">{detail.order_dibuat}</p>
               </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Closing Rate</p>
+                <p className="font-hanken text-lg text-[#161b29] mt-1">{formatPct(detail.closing_rate_pct)}</p>
+              </div>
+              <div>
+                <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Conversion Rate</p>
+                <p className="font-hanken text-lg text-[#161b29] mt-1">{formatPct(detail.conversion_rate_pct)}</p>
+              </div>
+              <div>
+                <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Ranking</p>
+                <p className="font-hanken text-lg text-[#161b29] mt-1">
+                  {detail.ranking != null ? `#${detail.ranking}` : '—'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Revenue</p>
+                <p className="font-hanken text-lg text-[#161b29] mt-1">{formatRupiah(detail.total_revenue)}</p>
+              </div>
+              <div>
+                <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Average Order</p>
+                <p className="font-hanken text-lg text-[#161b29] mt-1">
+                  {detail.average_order_value != null ? formatRupiah(detail.average_order_value) : '—'}
+                </p>
+              </div>
+              <div>
+                <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Repeat Customer</p>
+                <p className="font-hanken text-lg text-[#161b29] mt-1">{formatPct(detail.repeat_customer_pct)}</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Consultation Time</p>
+              <p className="font-hanken text-lg text-[#161b29] mt-1">
+                {detail.avg_consultation_minutes != null ? `${Math.round(detail.avg_consultation_minutes)} mnt` : '—'}
+              </p>
             </div>
 
             <div>

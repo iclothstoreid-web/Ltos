@@ -7,7 +7,6 @@ import {
   Gauge,
   Network,
   Package,
-  ScrollText,
   Sparkles,
   Tag,
   Users,
@@ -35,10 +34,11 @@ const CARDS: HubCard[] = [
     icon: Sparkles,
   },
   {
-    label: 'Material',
-    description: 'Kategori & item material, harga satuan, stok.',
-    href: '/inventory/material',
+    label: 'Material Master',
+    description: 'Nama, kategori, supplier, default cost, default color, SKU, status — bukan stok.',
+    href: '/owner/material-master',
     icon: Package,
+    ownerOnly: true,
   },
   {
     label: 'Inventory',
@@ -62,22 +62,15 @@ const CARDS: HubCard[] = [
   },
   {
     label: 'Business Rules',
-    description: 'Kalender Kapasitas (Hari D) — max order baru per tanggal.',
+    description: 'Commercial, Production, Capacity, Consultation, Service & Notification Rules.',
     href: '/owner/business-rules',
     icon: ClipboardList,
     ownerOnly: true,
   },
   {
-    label: 'Service Rules',
-    description: 'SLA — jumlah hari kerja per tingkat layanan (Standard/Fast/Very Fast).',
-    href: '/owner/service-rules',
-    icon: ScrollText,
-    ownerOnly: true,
-  },
-  {
     label: 'KPI Fitter',
-    description: 'Konsultasi per Fitter dan konversi menjadi Order.',
-    href: '/command-center/kpi-operator',
+    description: 'Konsultasi, closing, revenue, dan ranking per Fitter.',
+    href: '/command-center/kpi-fitter',
     icon: Gauge,
   },
 ]

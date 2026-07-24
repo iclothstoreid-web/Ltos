@@ -1,6 +1,7 @@
 'use client'
 
 import type { FitterKpiRow } from '@/lib/fitter/types'
+import { formatRupiah } from '@/lib/format/money'
 
 function formatPct(pct: number | null): string {
   return pct == null ? '—' : `${pct.toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`
@@ -49,7 +50,13 @@ export function FitterKpiTable({
                     Order Dibuat
                   </th>
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Konversi
+                    Closing
+                  </th>
+                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
+                    Revenue
+                  </th>
+                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
+                    Ranking
                   </th>
                 </tr>
               </thead>
@@ -73,8 +80,12 @@ export function FitterKpiTable({
                     <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">{f.konsultasi_selesai}</td>
                     <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">{f.order_dibuat}</td>
                     <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
-                      {formatPct(f.conversion_rate_pct)}
+                      {formatPct(f.closing_rate_pct)}
                     </td>
+                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
+                      {formatRupiah(f.total_revenue)}
+                    </td>
+                    <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">#{f.ranking}</td>
                   </tr>
                 ))}
               </tbody>

@@ -91,7 +91,7 @@ export function OperatorKpiTable({
                       {formatPct(op.efficiency_pct)}
                     </td>
                     <td className="px-5 py-4 text-body text-secondary whitespace-nowrap">
-                      {formatPct(op.capacity_utilization_pct)}
+                      {op.active_jobs}/{op.max_concurrent_capacity}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
                       <span

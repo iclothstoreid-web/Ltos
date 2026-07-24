@@ -21,7 +21,6 @@ export function TodaysActionSection({ actions }: { actions: TodaysAction[] }) {
     <section>
       <div className="flex items-end justify-between gap-4 mb-3">
         <h2 className="text-label text-secondary uppercase tracking-[0.24em]">Today&apos;s Action</h2>
-        <p className="text-body text-secondary">Rule-based, bukan AI</p>
       </div>
 
       <ul className="space-y-2">

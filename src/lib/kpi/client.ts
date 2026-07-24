@@ -3,6 +3,7 @@ import type {
   BottleneckDashboard,
   CapacityDashboard,
   KpiDashboard,
+  OperatorCapacityRow,
   OperatorKpiDetail,
   OperatorKpiRow,
 } from './types'
@@ -33,6 +34,12 @@ export async function getBottleneckDashboard(supabase: SupabaseClient): Promise<
   const { data, error } = await supabase.rpc('get_bottleneck_dashboard')
   if (error) throw error
   return data as BottleneckDashboard
+}
+
+export async function getOperatorCapacity(supabase: SupabaseClient): Promise<OperatorCapacityRow[]> {
+  const { data, error } = await supabase.rpc('get_operator_capacity')
+  if (error) throw error
+  return (data as OperatorCapacityRow[]) || []
 }
 
 export async function getOperatorKpiList(supabase: SupabaseClient): Promise<OperatorKpiRow[]> {

@@ -1,16 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { LeftSidebar } from '@/components/command-center/OwnerCommandCenter/LeftSidebar'
 import { OwnerTopBar } from '@/components/command-center/OwnerCommandCenter/OwnerTopBar'
 import type { BottleneckDashboard, CapacityDashboard, KpiDashboard, OperatorKpiRow } from '@/lib/kpi/types'
-import type { FitterKpiRow } from '@/lib/fitter/types'
 import { OperatorStatCard } from './OperatorStatCard'
 import { BottleneckSummary } from './BottleneckSummary'
 import { OperatorKpiTable } from './OperatorKpiTable'
 import { OperatorDetailModal } from './OperatorDetailModal'
-import { FitterKpiTable } from './FitterKpiTable'
-import { FitterDetailModal } from './FitterDetailModal'
 
 export type KpiOperatorCenterProps = {
   profileName: string
@@ -18,7 +17,6 @@ export type KpiOperatorCenterProps = {
   capacityDashboard: CapacityDashboard
   bottleneckDashboard: BottleneckDashboard
   operators: OperatorKpiRow[]
-  fitters: FitterKpiRow[]
 }
 
 // Owner OS's new "KPI Operator" page (Sprint G). Same chrome
@@ -32,11 +30,9 @@ export function KpiOperatorCenter({
   capacityDashboard,
   bottleneckDashboard,
   operators,
-  fitters,
 }: KpiOperatorCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null)
-  const [selectedFitterId, setSelectedFitterId] = useState<string | null>(null)
 
   return (
     <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
@@ -82,15 +78,24 @@ export function KpiOperatorCenter({
 
           <OperatorKpiTable operators={operators} onSelectOperator={setSelectedOperatorId} />
 
-          <FitterKpiTable fitters={fitters} onSelectFitter={setSelectedFitterId} />
+          <Link
+            href="/command-center/kpi-fitter"
+            className="group flex items-center justify-between gap-4 rounded-[14px] border border-outline-variant/85 bg-surface/45 px-6 py-5 elev-1 hover:-translate-y-[1px] transition-all duration-200"
+          >
+            <div>
+              <p className="text-label text-secondary uppercase tracking-[0.24em]">Daftar Fitter</p>
+              <p className="text-body-md text-secondary mt-1">Konsultasi, closing, revenue, dan ranking per Fitter.</p>
+            </div>
+            <span className="flex items-center gap-1 text-body text-primary shrink-0">
+              Lihat KPI Fitter
+              <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </Link>
         </main>
       </div>
 
       {selectedOperatorId && (
         <OperatorDetailModal operatorId={selectedOperatorId} onClose={() => setSelectedOperatorId(null)} />
-      )}
-      {selectedFitterId && (
-        <FitterDetailModal fitterId={selectedFitterId} onClose={() => setSelectedFitterId(null)} />
       )}
     </div>
   )

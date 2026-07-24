@@ -57,8 +57,8 @@ export async function getServiceSlaRules(supabase: SupabaseClient): Promise<Serv
 
 // Sprint K Service Rules admin — set_service_sla_rule() existed since
 // Sprint C but had zero frontend caller until now (see
-// src/app/owner/service-rules). Owner/admin-gated at the DB/RLS level
-// already; this is just the missing write wrapper.
+// src/app/owner/business-rules/service). Owner/admin-gated at the DB/RLS
+// level already; this is just the missing write wrapper.
 export async function setServiceSlaRule(
   supabase: SupabaseClient,
   serviceLevel: ServiceLevel,

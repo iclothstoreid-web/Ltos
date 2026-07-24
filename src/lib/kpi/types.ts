@@ -33,6 +33,19 @@ export interface BottleneckDashboard {
   most_idle_operator_utilization_pct: number | null
 }
 
+// One row of get_operator_capacity() (Sprint B) -- the raw active_jobs/
+// max_concurrent_capacity pair get_operator_kpi_list() already composes.
+// Used directly (not via the KPI list) wherever only the capacity
+// indicator is needed, e.g. AssignOperatorModal, to avoid pulling in
+// performance/efficiency data that view doesn't use.
+export interface OperatorCapacityRow {
+  operator_id: string
+  nama: string
+  max_concurrent_capacity: number
+  active_jobs: number
+  utilization_pct: number | null
+}
+
 // One row of get_operator_kpi_list() -- the Daftar Operator table.
 export interface OperatorKpiRow {
   operator_id: string

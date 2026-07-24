@@ -47,7 +47,7 @@ export function ServiceRulesManager({ initialRules }: ServiceRulesManagerProps) 
         </div>
         <button
           type="button"
-          onClick={() => router.push('/owner/master-data-center')}
+          onClick={() => router.push('/owner/business-rules')}
           className="text-xs uppercase tracking-widest text-[#755b00] hover:underline"
         >
           Kembali

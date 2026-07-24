@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { assignStageOperator, getProductionPacket, listActiveOperators } from '@/lib/production/client'
 import { STAGE_LABELS, getCurrentStageRecord } from '@/lib/production/stageConfig'
 import type { Operator } from '@/lib/production/types'
+import { getOperatorCapacity } from '@/lib/kpi/client'
+import type { OperatorCapacityRow } from '@/lib/kpi/types'
 
 interface AssignOperatorModalProps {
   orderId: string
@@ -22,6 +24,7 @@ interface AssignOperatorModalProps {
 export function AssignOperatorModal({ orderId, orderNumber, onClose, onAssigned }: AssignOperatorModalProps) {
   const [supabase] = useState(() => createClient())
   const [operators, setOperators] = useState<Operator[]>([])
+  const [capacityByOperator, setCapacityByOperator] = useState<Map<string, OperatorCapacityRow>>(new Map())
   const [stageRecordId, setStageRecordId] = useState<string | null>(null)
   const [stageLabel, setStageLabel] = useState<string | null>(null)
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null)
@@ -35,9 +38,10 @@ export function AssignOperatorModal({ orderId, orderNumber, onClose, onAssigned 
       setLoading(true)
       setError(null)
       try {
-        const [packet, activeOperators] = await Promise.all([
+        const [packet, activeOperators, capacityRows] = await Promise.all([
           getProductionPacket(supabase, orderId),
           listActiveOperators(supabase),
+          getOperatorCapacity(supabase),
         ])
         if (cancelled) return
         const target = packet ? getCurrentStageRecord(packet.stage_records) : null
@@ -48,6 +52,7 @@ export function AssignOperatorModal({ orderId, orderNumber, onClose, onAssigned 
           setStageLabel(STAGE_LABELS[target.stage])
         }
         setOperators(activeOperators)
+        setCapacityByOperator(new Map(capacityRows.map(c => [c.operator_id, c])))
       } catch (err) {
         console.error('[command-center] load assign operator data failed', err)
         if (!cancelled) setError('Gagal memuat data operator.')
@@ -115,8 +120,13 @@ export function AssignOperatorModal({ orderId, orderNumber, onClose, onAssigned 
                         />
                         <span className="font-hanken text-sm text-[#161b29]">
                           {op.nama}
-                          {op.divisi && (
-                            <span className="block font-hanken text-[10px] text-[#46464c]">{op.divisi}</span>
+                          {(op.divisi || capacityByOperator.has(op.id)) && (
+                            <span className="block font-hanken text-[10px] text-[#46464c]">
+                              {op.divisi}
+                              {op.divisi && capacityByOperator.has(op.id) && ' · '}
+                              {capacityByOperator.has(op.id) &&
+                                `${capacityByOperator.get(op.id)!.active_jobs}/${capacityByOperator.get(op.id)!.max_concurrent_capacity}`}
+                            </span>
                           )}
                         </span>
                       </label>
