@@ -6,11 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import type { Operator, OperatorStatus } from '@/lib/production/types'
 import { OPERATOR_STATUS_LABELS, OPERATOR_STATUS_OPTIONS } from '@/lib/operators/types'
 import { createOperator, listAllOperators, setOperatorStatus, softDeleteOperator, updateOperator } from '@/lib/operators/client'
-import type { MasterDivision } from '@/lib/divisions/types'
 
 interface OperatorManagerProps {
   initialOperators: Operator[]
-  initialDivisions: MasterDivision[]
 }
 
 const STATUS_BADGE: Record<OperatorStatus, string> = {
@@ -20,28 +18,28 @@ const STATUS_BADGE: Record<OperatorStatus, string> = {
   nonaktif: 'bg-[#f3d8d8] text-[#a33]',
 }
 
-// Sprint K Operator Management — CRUD + Divisi + status
-// (Aktif/Libur/Cuti/Nonaktif) + soft delete. Every write here goes through
-// the RPC surface in supabase/migrations/20260804000000_add_operator_management.sql,
-// which keeps production_operators.is_active in sync via trigger — so
-// marking someone Libur/Cuti/Nonaktif here automatically removes them from
-// every existing capacity/KPI/picker query without touching that code
-// (Capacity Integration requirement).
-export function OperatorManager({ initialOperators, initialDivisions }: OperatorManagerProps) {
+// Sprint K Operator Management — CRUD + status (Aktif/Libur/Cuti/Nonaktif) +
+// soft delete. Every write here goes through the RPC surface in
+// supabase/migrations/20260804000000_add_operator_management.sql, which
+// keeps production_operators.is_active in sync via trigger — so marking
+// someone Libur/Cuti/Nonaktif here automatically removes them from every
+// existing capacity/KPI/picker query without touching that code (Capacity
+// Integration requirement). Divisi assignment stays read-only here (UX
+// Cleanup sprint) — an operator's division_id, once set, carries through
+// edits unchanged; it's just no longer choosable from this form.
+export function OperatorManager({ initialOperators }: OperatorManagerProps) {
   const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [operators, setOperators] = useState(initialOperators)
-  const [divisions] = useState(initialDivisions)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [newNama, setNewNama] = useState('')
-  const [newDivisionId, setNewDivisionId] = useState('')
   const [creating, setCreating] = useState(false)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editNama, setEditNama] = useState('')
-  const [editDivisionId, setEditDivisionId] = useState('')
+  const [editDivisionId, setEditDivisionId] = useState<string | null>(null)
 
   async function refresh() {
     setLoading(true)
@@ -60,9 +58,8 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
     setCreating(true)
     setError(null)
     try {
-      await createOperator(supabase, newNama, newDivisionId || null)
+      await createOperator(supabase, newNama, null)
       setNewNama('')
-      setNewDivisionId('')
       await refresh()
     } catch (err) {
       console.error('[operators] create failed', err)
@@ -75,7 +72,7 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
   function startEdit(op: Operator) {
     setEditingId(op.id)
     setEditNama(op.nama)
-    setEditDivisionId(op.division_id || '')
+    setEditDivisionId(op.division_id ?? null)
   }
 
   async function handleSaveEdit() {
@@ -83,7 +80,7 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
     setLoading(true)
     setError(null)
     try {
-      await updateOperator(supabase, editingId, editNama, editDivisionId || null)
+      await updateOperator(supabase, editingId, editNama, editDivisionId)
       setEditingId(null)
       await refresh()
     } catch (err) {
@@ -128,7 +125,7 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
       <header className="h-20 border-b-[0.5px] border-[#c4c7c7] flex items-center px-4 sm:px-8 lg:px-16 justify-between">
         <div>
           <h1 className="font-fraunces text-xl">Manajemen Operator</h1>
-          <p className="text-xs text-[#444748]">Divisi, status (Aktif/Libur/Cuti/Nonaktif), dan soft delete</p>
+          <p className="text-xs text-[#444748]">Status (Aktif/Libur/Cuti/Nonaktif) dan soft delete</p>
         </div>
         <button
           type="button"
@@ -156,18 +153,6 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
               placeholder="Nama operator"
               className="flex-1 py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
             />
-            <select
-              value={newDivisionId}
-              onChange={e => setNewDivisionId(e.target.value)}
-              className="py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
-            >
-              <option value="">Divisi (opsional)</option>
-              {divisions.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
             <button
               type="button"
               onClick={handleCreate}
@@ -196,18 +181,6 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
                     onChange={e => setEditNama(e.target.value)}
                     className="w-full py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
                   />
-                  <select
-                    value={editDivisionId}
-                    onChange={e => setEditDivisionId(e.target.value)}
-                    className="w-full py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
-                  >
-                    <option value="">Divisi (opsional)</option>
-                    {divisions.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
                   <div className="flex gap-2">
                     <button
                       type="button"

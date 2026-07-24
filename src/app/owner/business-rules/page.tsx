@@ -3,9 +3,10 @@ import { redirect } from 'next/navigation'
 import { canManageOperators } from '@/lib/operators/access'
 import { BusinessRulesHub } from '@/components/business-rules/BusinessRulesHub'
 
-// Business Rules hub — Commercial/Production/Capacity/Consultation/Service/
-// Notification Rules. Only Capacity and Service have real config today; the
-// other four render ComingSoonRule (never a dead click-through).
+// Business Rules hub — Commercial/Production/Capacity/Service Rules, all
+// four backed by real Runtime Configuration read live by their engines.
+// Consultation/Notification Rules were removed entirely (UX Cleanup sprint):
+// no engine ever read them.
 export default async function BusinessRulesPage() {
   const supabase = createClient()
 

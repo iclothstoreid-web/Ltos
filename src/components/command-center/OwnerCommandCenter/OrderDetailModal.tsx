@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { getProductionPacket } from '@/lib/production/client'
-import type { ProductionPacket } from '@/lib/production/types'
+import { emergencyOverrideStage, getProductionPacket, getProductionStageOverrideAuditLog } from '@/lib/production/client'
+import type { ProductionPacket, ProductionStageOverrideAuditLogEntry } from '@/lib/production/types'
 import { STAGE_ORDER, STAGE_LABELS, getCurrentStageRecord } from '@/lib/production/stageConfig'
 import { FIELD_LABELS, CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from '@/components/workspace/measurement/types'
 import type { MeasurementKey } from '@/components/workspace/measurement/types'
@@ -48,30 +48,64 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
   const [supabase] = useState(() => createClient())
   const [packet, setPacket] = useState<ProductionPacket | null>(null)
   const [events, setEvents] = useState<ActivityEvent[]>([])
+  const [overrideAuditLog, setOverrideAuditLog] = useState<ProductionStageOverrideAuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [markingDelivered, setMarkingDelivered] = useState(false)
   const [deliveredError, setDeliveredError] = useState<string | null>(null)
+  const [overriding, setOverriding] = useState(false)
+  const [overrideError, setOverrideError] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
     setError(null)
     try {
-      const [packetResult, eventsResult] = await Promise.all([
+      const [packetResult, eventsResult, auditLogResult] = await Promise.all([
         getProductionPacket(supabase, orderId),
         supabase
           .from('business_events')
           .select('event_type, created_at')
           .eq('order_id', orderId)
           .order('created_at', { ascending: false }),
+        getProductionStageOverrideAuditLog(supabase, orderId),
       ])
       setPacket(packetResult)
       setEvents((eventsResult.data as ActivityEvent[]) || [])
+      setOverrideAuditLog(auditLogResult)
     } catch (err) {
       console.error('[command-center] load order detail failed', err)
       setError('Gagal memuat detail order.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Emergency Override — deliberately NOT a Business Rule (no toggle
+  // anywhere enables this; it's always available to Owner/Admin, same as
+  // Discount/KOL/Override in OrderCommercialSection below). Always scoped to
+  // this one order's current stage, always requires a reason, always logged
+  // to production_stage_override_audit_log — see emergency_override_stage()
+  // in 20260812000000_replace_skip_stage_with_emergency_override.sql.
+  async function handleEmergencyOverride() {
+    if (!currentRecord) return
+    const reason = window.prompt(
+      `Emergency Override tahap "${STAGE_LABELS[currentRecord.stage]}"? Masukkan alasan (wajib):`
+    )
+    if (reason === null) return
+    if (!reason.trim()) {
+      setOverrideError('Alasan Emergency Override wajib diisi.')
+      return
+    }
+    setOverriding(true)
+    setOverrideError(null)
+    try {
+      await emergencyOverrideStage(supabase, { orderId, stageRecordId: currentRecord.id, reason: reason.trim() })
+      await load()
+    } catch (err) {
+      console.error('[command-center] emergency override failed', err)
+      setOverrideError(err instanceof Error ? err.message : 'Gagal melakukan Emergency Override.')
+    } finally {
+      setOverriding(false)
     }
   }
 
@@ -185,6 +219,38 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
                   )
                 })}
               </div>
+              {currentRecord && (
+                <div className="mt-3">
+                  {overrideError && <p className="font-hanken text-xs text-[#c0392b] mb-2">{overrideError}</p>}
+                  <button
+                    type="button"
+                    onClick={handleEmergencyOverride}
+                    disabled={overriding}
+                    className="py-1.5 px-3 border border-[#c4c7c7] text-[#755b00] text-xs uppercase tracking-widest hover:border-[#755b00] transition-colors disabled:opacity-40"
+                  >
+                    {overriding ? 'Memproses...' : `Emergency Override Tahap "${STAGE_LABELS[currentRecord.stage]}"`}
+                  </button>
+                  <p className="font-hanken text-[10px] text-[#46464c] mt-1">
+                    Owner/Admin only · wajib alasan · berlaku untuk order ini saja · tercatat di audit log
+                  </p>
+                </div>
+              )}
+              {overrideAuditLog.length > 0 && (
+                <div className="mt-4">
+                  <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">
+                    Riwayat Emergency Override
+                  </p>
+                  <ul className="space-y-2">
+                    {overrideAuditLog.map(entry => (
+                      <li key={entry.id} className="bg-white border-[0.5px] border-[#c4c7c7] p-3">
+                        <p className="font-hanken text-xs text-[#161b29]">{STAGE_LABELS[entry.stage]}</p>
+                        <p className="font-hanken text-xs text-[#46464c]">{entry.reason}</p>
+                        <p className="font-hanken text-[10px] text-[#46464c] mt-1">{formatDate(entry.overridden_at)}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div>

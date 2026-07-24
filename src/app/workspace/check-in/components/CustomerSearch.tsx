@@ -20,11 +20,17 @@ const STATUS_LABELS: Record<string, string> = {
 interface CustomerSearchProps {
   onSelectCustomer: (customer: Customer) => void
   onNewCustomer: () => void
+  // UX Cleanup sprint: the middle panel next to this one only mounts once a
+  // customer/flow is selected — before that it was an empty gap in the
+  // layout. When it's not mounted, this panel grows to fill that space
+  // instead of leaving it blank.
+  expanded?: boolean
 }
 
 export function CustomerSearch({
   onSelectCustomer,
   onNewCustomer,
+  expanded = false,
 }: CustomerSearchProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -104,7 +110,9 @@ export function CustomerSearch({
   }
 
   return (
-    <section className="w-full lg:w-[30%] border-b lg:border-b-0 lg:border-r-[0.5px] border-[#c4c7c7] flex flex-col bg-white/40 lg:h-full">
+    <section
+      className={`w-full ${expanded ? 'lg:w-[75%]' : 'lg:w-[30%]'} border-b lg:border-b-0 lg:border-r-[0.5px] border-[#c4c7c7] flex flex-col bg-white/40 lg:h-full transition-[width] duration-200`}
+    >
       <div className="p-8 pb-4">
         <div className="relative group">
           <span className="absolute left-0 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#747878] transition-colors group-focus-within:text-[#775a19]">

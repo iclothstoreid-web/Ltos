@@ -73,7 +73,10 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
       setShowForm(false)
     } catch (err) {
       console.error('[order-created] record payment failed', err)
-      setError('Gagal mencatat pembayaran.')
+      // Commercial Rules (Minimal DP / Full Payment) reject with a specific,
+      // staff-actionable message — surface it instead of a generic failure.
+      const message = err instanceof Error ? err.message : null
+      setError(message || 'Gagal mencatat pembayaran.')
     } finally {
       setSaving(false)
     }
@@ -145,6 +148,10 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
               Status: {PAYMENT_STATUS_LABELS[invoice.payment_status]}
             </span>
           </div>
+
+          {invoice.invoice_notes && (
+            <p className="font-sans text-[10px] text-[#444748] italic mb-4">{invoice.invoice_notes}</p>
+          )}
 
           {invoice.payments.length > 0 && (
             <div className="mb-4 space-y-2">

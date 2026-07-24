@@ -4,7 +4,9 @@ import type {
   PatternTemplate,
   PendingAssignment,
   ProductionPacket,
+  ProductionRules,
   ProductionStage,
+  ProductionStageOverrideAuditLogEntry,
 } from './types'
 import type { MeasurementFields } from '@/components/workspace/measurement/types'
 
@@ -140,6 +142,73 @@ export async function completeStage(
     p_completed_at: params.completedAt ?? null,
   })
   if (error) throw error
+}
+
+// Production Rules (Runtime Configuration) — see
+// supabase/migrations/20260811000000_add_business_rules_runtime_config.sql
+// and 20260812000000_replace_skip_stage_with_emergency_override.sql.
+// get_production_rules() has no role gate (the anon kiosk workspace reads it
+// to decide whether the QR scan / QC checklist / courier+tracking gates
+// apply); set_production_rules() is admin/owner-gated inside the RPC itself.
+
+export async function getProductionRules(supabase: SupabaseClient): Promise<ProductionRules> {
+  const { data, error } = await supabase.rpc('get_production_rules')
+  if (error) throw error
+  return data as ProductionRules
+}
+
+export async function setProductionRules(
+  supabase: SupabaseClient,
+  rules: Pick<
+    ProductionRules,
+    | 'qr_required'
+    | 'qc_checklist_required'
+    | 'max_alter_attempts'
+    | 'alter_return_stage'
+    | 'delivery_confirmation_required'
+    | 'auto_close_after_delivered'
+  >
+): Promise<ProductionRules> {
+  const { data, error } = await supabase.rpc('set_production_rules', {
+    p_qr_required: rules.qr_required,
+    p_qc_checklist_required: rules.qc_checklist_required,
+    p_max_alter_attempts: rules.max_alter_attempts,
+    p_alter_return_stage: rules.alter_return_stage,
+    p_delivery_confirmation_required: rules.delivery_confirmation_required,
+    p_auto_close_after_delivered: rules.auto_close_after_delivered,
+  })
+  if (error) throw error
+  return data as ProductionRules
+}
+
+// Emergency Override — NOT a Business Rule (no toggle anywhere enables or
+// disables this). Owner/Admin-only and a mandatory reason are enforced
+// inside emergency_override_stage() itself, same defense-in-depth pattern
+// as every other write RPC in this app; every call is scoped to exactly one
+// order+stage and logged to production_stage_override_audit_log.
+export async function emergencyOverrideStage(
+  supabase: SupabaseClient,
+  params: { orderId: string; stageRecordId: string; reason: string }
+): Promise<void> {
+  const { error } = await supabase.rpc('emergency_override_stage', {
+    p_order_id: params.orderId,
+    p_stage_record_id: params.stageRecordId,
+    p_reason: params.reason,
+  })
+  if (error) throw error
+}
+
+export async function getProductionStageOverrideAuditLog(
+  supabase: SupabaseClient,
+  orderId: string
+): Promise<ProductionStageOverrideAuditLogEntry[]> {
+  const { data, error } = await supabase
+    .from('production_stage_override_audit_log')
+    .select('*')
+    .eq('order_id', orderId)
+    .order('overridden_at', { ascending: false })
+  if (error) throw error
+  return (data as ProductionStageOverrideAuditLogEntry[]) || []
 }
 
 export async function setShippingInfo(

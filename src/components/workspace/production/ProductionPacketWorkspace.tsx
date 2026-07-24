@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { Operator, ProductionPacket } from '@/lib/production/types'
+import type { Operator, ProductionPacket, ProductionRules } from '@/lib/production/types'
 import {
   STAGES_WITH_EVIDENCE,
   STAGE_LABELS,
@@ -47,6 +47,11 @@ interface ProductionPacketWorkspaceProps {
   initialMessages: CommunicationMessage[]
   customerPhotoUrl: string | null
   customerReferences: ConsultationDocument[]
+  // Production Rules (Runtime Configuration) — see
+  // supabase/migrations/20260811000000_add_business_rules_runtime_config.sql.
+  // Fetched once server-side (page.tsx); this kiosk workspace has no login
+  // session to refetch against mid-shift, same as every other packet field.
+  productionRules: ProductionRules
 }
 
 export function ProductionPacketWorkspace({
@@ -55,6 +60,7 @@ export function ProductionPacketWorkspace({
   initialMessages,
   customerPhotoUrl,
   customerReferences,
+  productionRules,
 }: ProductionPacketWorkspaceProps) {
   const [supabase] = useState(() => createClient())
   const [packet, setPacket] = useState(initialPacket)
@@ -110,7 +116,9 @@ export function ProductionPacketWorkspace({
   // Gates Evidence/Checklist/Setujui/Kembalikan behind a successful "Scan QR
   // Penyelesaian" — completedAtCaptured is the scan moment, used as Jam
   // Selesai instead of whenever Setujui/Kembalikan is eventually clicked.
-  const [completionScanned, setCompletionScanned] = useState(false)
+  // QR Wajib (Production Rules): when off, every stage starts as if already
+  // scanned, so the "Scan QR Penyelesaian" gate below never renders.
+  const [completionScanned, setCompletionScanned] = useState(!productionRules.qr_required)
   const [completedAtCaptured, setCompletedAtCaptured] = useState<string | null>(null)
   const [showCompletionScan, setShowCompletionScan] = useState(false)
 
@@ -126,7 +134,7 @@ export function ProductionPacketWorkspace({
     setAlterCategory('')
     setCourier('')
     setTrackingNumber('')
-    setCompletionScanned(false)
+    setCompletionScanned(!productionRules.qr_required)
     setCompletedAtCaptured(null)
     setEvidenceUploading(false)
     setEvidenceUploadError(null)
@@ -232,11 +240,20 @@ export function ProductionPacketWorkspace({
     .sort((a, b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime())
 
   const requiresEvidence = currentRecord ? STAGES_WITH_EVIDENCE.includes(currentRecord.stage) : false
-  const checklistComplete = Object.values(checklist).every(Boolean)
+  // QC Wajib (Production Rules): when off, QC's own checklist no longer
+  // blocks Approve — every other stage's checklist stays mandatory.
+  const checklistComplete =
+    isQc && !productionRules.qc_checklist_required
+      ? true
+      : Object.values(checklist).every(Boolean)
+  // Delivery wajib konfirmasi (Production Rules): when off, Pengiriman can
+  // be approved without courier/resi filled in.
   const canApprove =
     checklistComplete &&
     (!requiresEvidence || !!evidenceUrl) &&
-    (!isShipping || (!!courier && trackingNumber.trim().length > 0))
+    (!isShipping ||
+      !productionRules.delivery_confirmation_required ||
+      (!!courier && trackingNumber.trim().length > 0))
   // QC's "Kembalikan ke Penjahitan" additionally requires a Kategori Temuan
   // so the alter reason is never left blank.
   const canReturn = isQc

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PriceSnapshot } from '@/lib/designSpecification/types'
-import type { DiscountType, OrderInvoice, OrderPayment, PaymentMethod, PaymentType } from './types'
+import type { CommercialRules, DiscountType, OrderInvoice, OrderPayment, PaymentMethod, PaymentType } from './types'
 
 // Thin wrappers around the Commercial Engine RPC surface — see
 // supabase/migrations/20260804000002_add_commercial_engine.sql. Pricing
@@ -97,4 +97,43 @@ export async function getOrderInvoice(supabase: SupabaseClient, orderId: string)
   const { data, error } = await supabase.rpc('get_order_invoice', { p_order_id: orderId })
   if (error) throw error
   return data as OrderInvoice
+}
+
+// Commercial Rules (Runtime Configuration) — see
+// supabase/migrations/20260811000000_add_business_rules_runtime_config.sql.
+// get_commercial_rules() has no role gate (every Commercial Engine RPC above
+// reads it internally, some from the anon kiosk); set_commercial_rules() is
+// admin/owner-gated inside the RPC itself, same defense-in-depth pattern as
+// the rest of this app.
+
+export async function getCommercialRules(supabase: SupabaseClient): Promise<CommercialRules> {
+  const { data, error } = await supabase.rpc('get_commercial_rules')
+  if (error) throw error
+  return data as CommercialRules
+}
+
+export async function setCommercialRules(
+  supabase: SupabaseClient,
+  rules: Pick<
+    CommercialRules,
+    | 'min_dp_percent'
+    | 'max_discount_percent'
+    | 'full_payment_only'
+    | 'kol_max_discount_percent'
+    | 'owner_override_enabled'
+    | 'invoice_notes'
+    | 'price_rounding_nearest'
+  >
+): Promise<CommercialRules> {
+  const { data, error } = await supabase.rpc('set_commercial_rules', {
+    p_min_dp_percent: rules.min_dp_percent,
+    p_max_discount_percent: rules.max_discount_percent,
+    p_full_payment_only: rules.full_payment_only,
+    p_kol_max_discount_percent: rules.kol_max_discount_percent,
+    p_owner_override_enabled: rules.owner_override_enabled,
+    p_invoice_notes: rules.invoice_notes,
+    p_price_rounding_nearest: rules.price_rounding_nearest,
+  })
+  if (error) throw error
+  return data as CommercialRules
 }

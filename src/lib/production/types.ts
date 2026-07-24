@@ -54,7 +54,7 @@ export interface StageRecord {
   video_url: string | null
   courier: string | null
   tracking_number: string | null
-  decision: 'approved' | 'alter' | null
+  decision: 'approved' | 'alter' | 'skipped' | null
   alter_category: string | null
   notes: string | null
   // Set by assign_stage_operator (Owner's "Tugaskan" flow) — distinct from
@@ -122,4 +122,37 @@ export interface ProductionPacket {
   stage_records: StageRecord[]
   pattern_formulation: PatternFormulation | null
   progress: number
+}
+
+// Production Rules — Runtime Configuration read live by complete_stage and
+// the kiosk workspace itself. See
+// supabase/migrations/20260811000000_add_business_rules_runtime_config.sql
+// and 20260812000000_replace_skip_stage_with_emergency_override.sql. The
+// locked 8-stage order (ProductionStage above) never changes — these only
+// tune what's required/allowed at each step. There is deliberately no
+// "skip stage" toggle here: that would grant a standing, workflow-wide
+// capability rather than tune a parameter — see Emergency Override
+// (emergencyOverrideStage in lib/production/client.ts) for the per-order,
+// per-stage, always-audited replacement.
+export interface ProductionRules {
+  qr_required: boolean
+  qc_checklist_required: boolean
+  max_alter_attempts: number
+  alter_return_stage: ProductionStage
+  delivery_confirmation_required: boolean
+  auto_close_after_delivered: boolean
+  updated_at: string
+  updated_by: string | null
+}
+
+// One row of production_stage_override_audit_log — the append-only trail
+// for Emergency Override. Order-scoped by design (order_id), never global.
+export interface ProductionStageOverrideAuditLogEntry {
+  id: string
+  order_id: string
+  stage_record_id: string
+  stage: ProductionStage
+  reason: string
+  overridden_by: string | null
+  overridden_at: string
 }

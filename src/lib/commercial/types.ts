@@ -43,6 +43,23 @@ export interface OrderInvoice {
   balance_due: number
   payment_status: PaymentStatus
   payments: OrderPayment[]
+  invoice_notes: string
+}
+
+// Commercial Rules — Runtime Configuration read live by the Commercial
+// Engine RPCs (apply_order_discount/apply_order_kol/set_order_price_override/
+// record_order_payment/recompute_quotation_total/get_order_invoice). See
+// supabase/migrations/20260811000000_add_business_rules_runtime_config.sql.
+export interface CommercialRules {
+  min_dp_percent: number
+  max_discount_percent: number
+  full_payment_only: boolean
+  kol_max_discount_percent: number
+  owner_override_enabled: boolean
+  invoice_notes: string
+  price_rounding_nearest: number
+  updated_at: string
+  updated_by: string | null
 }
 
 export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {

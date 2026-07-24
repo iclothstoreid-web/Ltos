@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { canManageOperators } from '@/lib/operators/access'
-import { ComingSoonRule } from '@/components/business-rules/ComingSoonRule'
+import { getProductionRules } from '@/lib/production/client'
+import { ProductionRulesManager } from '@/components/business-rules/ProductionRulesManager'
 
 export default async function ProductionRulesPage() {
   const supabase = createClient()
@@ -14,5 +15,7 @@ export default async function ProductionRulesPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!canManageOperators(profile?.role)) redirect('/command-center')
 
-  return <ComingSoonRule title="Production Rules" description="Aturan alur produksi" />
+  const initialRules = await getProductionRules(supabase)
+
+  return <ProductionRulesManager initialRules={initialRules} />
 }

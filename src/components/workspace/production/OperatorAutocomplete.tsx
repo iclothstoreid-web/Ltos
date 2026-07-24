@@ -18,12 +18,17 @@ interface OperatorAutocompleteProps {
   // that divisi and a new inline operator defaults into it — never a hard
   // block, since legacy operators may still have divisi = null.
   divisiHint?: string | null
+  // UX Cleanup sprint: callers picking a specific role (e.g. check-in's
+  // Fitter picker) can override the generic "Nama Operator" label so the
+  // field reads as what it actually does. Defaults to the original label so
+  // every other caller is unaffected.
+  label?: string
 }
 
 // Mirrors check-in's CustomerSearch: search-as-you-type, and if nothing
 // matches, an explicit "+ Tambah operator baru" action — never a silent
 // auto-insert on every scan.
-export function OperatorAutocomplete({ supabase, value, onChange, onReset, divisiHint }: OperatorAutocompleteProps) {
+export function OperatorAutocomplete({ supabase, value, onChange, onReset, divisiHint, label = 'Nama Operator' }: OperatorAutocompleteProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Operator[]>([])
   const [showResults, setShowResults] = useState(false)
@@ -110,7 +115,7 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
       <div className="flex items-center justify-between border-b border-[#c6c6cc] py-3">
         <div>
           <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
-            Nama Operator
+            {label}
           </p>
           <p className="font-hanken text-sm text-[#161b29]">{value.nama}</p>
           {value.divisi && (
@@ -131,7 +136,7 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
   return (
     <div className="relative">
       <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
-        Nama Operator
+        {label}
       </label>
       <input
         type="text"

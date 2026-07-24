@@ -105,54 +105,58 @@ export default function CheckInPage() {
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden">
           <CustomerSearch
+            expanded={view === 'search'}
             onSelectCustomer={handleSelectCustomer}
             onNewCustomer={handleNewCustomer}
           />
 
-          <section className="w-full lg:w-[45%] overflow-visible lg:overflow-y-auto bg-[#FDFCF8]/50">
-            {error && (
-              <div className="mx-4 lg:mx-16 mt-8 p-4 rounded-lg bg-[#ffdad6] border border-[#ba1a1a]/30">
-                <p className="font-sans text-sm text-[#ba1a1a]">{error}</p>
-                <button
-                  onClick={() => setError(null)}
-                  className="font-sans text-xs text-[#ba1a1a] hover:underline mt-2"
-                >
-                  Tutup
-                </button>
-              </div>
-            )}
-
-            {view === 'profile' && selectedCustomer && (
-              <>
-                <CustomerProfile customer={selectedCustomer} />
-                <div className="px-4 lg:px-16 mt-4">
-                  <OperatorAutocomplete
-                    supabase={supabase}
-                    value={fitter}
-                    onChange={setFitter}
-                    onReset={() => setFitter(null)}
-                    divisiHint={FITTER_DIVISI}
-                  />
+          {view !== 'search' && (
+            <section className="w-full lg:w-[45%] overflow-visible lg:overflow-y-auto bg-[#FDFCF8]/50">
+              {error && (
+                <div className="mx-4 lg:mx-16 mt-8 p-4 rounded-lg bg-[#ffdad6] border border-[#ba1a1a]/30">
+                  <p className="font-sans text-sm text-[#ba1a1a]">{error}</p>
+                  <button
+                    onClick={() => setError(null)}
+                    className="font-sans text-xs text-[#ba1a1a] hover:underline mt-2"
+                  >
+                    Tutup
+                  </button>
                 </div>
-              </>
-            )}
+              )}
 
-            {view === 'new-customer' && (
-              <NewCustomerForm
-                onSuccess={handleNewCustomerSuccess}
-                onCancel={() => setView('search')}
-              />
-            )}
+              {view === 'profile' && selectedCustomer && (
+                <>
+                  <CustomerProfile customer={selectedCustomer} />
+                  <div className="px-4 lg:px-16 mt-4">
+                    <OperatorAutocomplete
+                      supabase={supabase}
+                      value={fitter}
+                      onChange={setFitter}
+                      onReset={() => setFitter(null)}
+                      divisiHint={FITTER_DIVISI}
+                      label="Pilih Fitter"
+                    />
+                  </div>
+                </>
+              )}
 
-            {view === 'success' && successData && (
-              <ConsultationSuccess
-                consultationId={successData.consultationId}
-                consultationNumber={successData.consultationNumber}
-                customerName={successData.customerName}
-                onBackToSearch={handleBackToSearch}
-              />
-            )}
-          </section>
+              {view === 'new-customer' && (
+                <NewCustomerForm
+                  onSuccess={handleNewCustomerSuccess}
+                  onCancel={() => setView('search')}
+                />
+              )}
+
+              {view === 'success' && successData && (
+                <ConsultationSuccess
+                  consultationId={successData.consultationId}
+                  consultationNumber={successData.consultationNumber}
+                  customerName={successData.customerName}
+                  onBackToSearch={handleBackToSearch}
+                />
+              )}
+            </section>
+          )}
 
           <ConsultationInsights />
         </div>

@@ -38,6 +38,13 @@ export function OrderCommercialSection({ orderId }: OrderCommercialSectionProps)
   const [overrideAmount, setOverrideAmount] = useState('')
   const [overrideReason, setOverrideReason] = useState('')
 
+  // Commercial Rules (Maksimal Diskon/KOL, Owner Override kill switch)
+  // reject with a specific, actionable message — surface it instead of a
+  // generic failure so the owner knows which rule blocked them.
+  function errorMessage(err: unknown, fallback: string): string {
+    return err instanceof Error ? err.message : fallback
+  }
+
   async function refresh() {
     try {
       setInvoice(await getOrderInvoice(supabase, orderId))
@@ -84,7 +91,7 @@ export function OrderCommercialSection({ orderId }: OrderCommercialSectionProps)
       await refresh()
     } catch (err) {
       console.error('[command-center] apply discount failed', err)
-      setError('Gagal menerapkan diskon.')
+      setError(errorMessage(err, 'Gagal menerapkan diskon.'))
     } finally {
       setSaving(false)
     }
@@ -105,7 +112,7 @@ export function OrderCommercialSection({ orderId }: OrderCommercialSectionProps)
       await refresh()
     } catch (err) {
       console.error('[command-center] apply KOL failed', err)
-      setError('Gagal menerapkan diskon KOL.')
+      setError(errorMessage(err, 'Gagal menerapkan diskon KOL.'))
     } finally {
       setSaving(false)
     }
@@ -126,7 +133,7 @@ export function OrderCommercialSection({ orderId }: OrderCommercialSectionProps)
       await refresh()
     } catch (err) {
       console.error('[command-center] set override failed', err)
-      setError('Gagal melakukan override harga.')
+      setError(errorMessage(err, 'Gagal melakukan override harga.'))
     } finally {
       setSaving(false)
     }
@@ -190,6 +197,10 @@ export function OrderCommercialSection({ orderId }: OrderCommercialSectionProps)
             <span className="text-[#46464c]">Status</span>
             <span className="text-right text-[#161b29]">{PAYMENT_STATUS_LABELS[invoice.payment_status]}</span>
           </div>
+
+          {invoice.invoice_notes && (
+            <p className="font-hanken text-[10px] text-[#46464c] italic mb-4">{invoice.invoice_notes}</p>
+          )}
 
           {invoice.payments.length > 0 && (
             <div className="mb-4 space-y-1">

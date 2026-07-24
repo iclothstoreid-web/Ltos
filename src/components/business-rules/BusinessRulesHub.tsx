@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Bell, Gauge, HeartHandshake, MessageSquare, Scissors, ScrollText } from 'lucide-react'
+import { Gauge, HeartHandshake, Scissors, ScrollText } from 'lucide-react'
 
 interface HubCard {
   label: string
@@ -10,16 +10,31 @@ interface HubCard {
   icon: typeof Gauge
 }
 
+// UX Cleanup sprint (Business Rules Simplification): only rule sets with
+// real, engine-enforced *operational parameters* are listed — never a
+// workflow toggle. Consultation Rules and Notification Rules were pure
+// "belum tersedia" placeholders with no engine ever reading them — deleted
+// outright (routes and all), not just unlinked. Commercial Rules and
+// Production Rules used to be the same kind of placeholder; both are now
+// real Runtime Configuration, read live by the Commercial Engine and
+// Production Engine RPCs respectively — see
+// supabase/migrations/20260811000000_add_business_rules_runtime_config.sql.
+// Production Rules originally also had a "Skip Stage" toggle; removed after
+// review — granting a standing capability to skip any order's stage is a
+// workflow change, not a parameter. That capability now lives as Emergency
+// Override on Owner OS's Detail Order screen instead: per order, per stage,
+// mandatory reason, always audited, never a global switch — see
+// 20260812000000_replace_skip_stage_with_emergency_override.sql.
 const CARDS: HubCard[] = [
   {
     label: 'Commercial Rules',
-    description: 'Aturan komersial (diskon, KOL, override) — belum tersedia.',
+    description: 'Minimal DP, Maksimal Diskon, Full Payment, KOL, Owner Override, Invoice Rules, Pembulatan Harga.',
     href: '/owner/business-rules/commercial',
     icon: HeartHandshake,
   },
   {
     label: 'Production Rules',
-    description: 'Aturan alur produksi — belum tersedia.',
+    description: 'QR Wajib, QC Wajib, Maksimum Alter, Alter Return Stage, Delivery Konfirmasi, Auto Close.',
     href: '/owner/business-rules/production',
     icon: Scissors,
   },
@@ -30,22 +45,10 @@ const CARDS: HubCard[] = [
     icon: Gauge,
   },
   {
-    label: 'Consultation Rules',
-    description: 'Aturan konsultasi & fitter — belum tersedia.',
-    href: '/owner/business-rules/consultation',
-    icon: MessageSquare,
-  },
-  {
     label: 'Service Rules',
     description: 'SLA — jumlah hari kerja per tingkat layanan.',
     href: '/owner/business-rules/service',
     icon: ScrollText,
-  },
-  {
-    label: 'Notification Rules',
-    description: 'Aturan notifikasi — belum tersedia.',
-    href: '/owner/business-rules/notification',
-    icon: Bell,
   },
 ]
 
