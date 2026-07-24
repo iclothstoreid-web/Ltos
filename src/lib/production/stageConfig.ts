@@ -154,6 +154,16 @@ export function checklistItemsForStage(stage: ProductionStage): string[] {
 // (the 8 stage labels), pre-selected to the current stage.
 export const DIVISION_OPTIONS: string[] = STAGE_ORDER.map(stage => STAGE_LABELS[stage])
 
+// Single source of truth for the Fitter divisi name — src/lib/fitter/client.ts
+// re-exports this rather than redeclaring the literal, so the check-in
+// Fitter picker's divisiHint and this options list can never drift apart.
+export const FITTER_DIVISI = 'Fitting'
+
+// Sprint K Operator Management's Divisi picker — the 8 production divisions
+// plus Fitting (consultation/Fitter role), so one Divisi vocabulary covers
+// every operator record, not just production-stage ones.
+export const OPERATOR_DIVISI_OPTIONS: string[] = [...DIVISION_OPTIONS, FITTER_DIVISI]
+
 export const PATTERN_TEMPLATE_LABELS: Record<PatternTemplate, string> = {
   slim_fit: 'Slim Fit',
   standar: 'Standar',

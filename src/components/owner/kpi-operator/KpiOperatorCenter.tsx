@@ -4,10 +4,13 @@ import { useState } from 'react'
 import { LeftSidebar } from '@/components/command-center/OwnerCommandCenter/LeftSidebar'
 import { OwnerTopBar } from '@/components/command-center/OwnerCommandCenter/OwnerTopBar'
 import type { BottleneckDashboard, CapacityDashboard, KpiDashboard, OperatorKpiRow } from '@/lib/kpi/types'
+import type { FitterKpiRow } from '@/lib/fitter/types'
 import { OperatorStatCard } from './OperatorStatCard'
 import { BottleneckSummary } from './BottleneckSummary'
 import { OperatorKpiTable } from './OperatorKpiTable'
 import { OperatorDetailModal } from './OperatorDetailModal'
+import { FitterKpiTable } from './FitterKpiTable'
+import { FitterDetailModal } from './FitterDetailModal'
 
 export type KpiOperatorCenterProps = {
   profileName: string
@@ -15,6 +18,7 @@ export type KpiOperatorCenterProps = {
   capacityDashboard: CapacityDashboard
   bottleneckDashboard: BottleneckDashboard
   operators: OperatorKpiRow[]
+  fitters: FitterKpiRow[]
 }
 
 // Owner OS's new "KPI Operator" page (Sprint G). Same chrome
@@ -28,9 +32,11 @@ export function KpiOperatorCenter({
   capacityDashboard,
   bottleneckDashboard,
   operators,
+  fitters,
 }: KpiOperatorCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null)
+  const [selectedFitterId, setSelectedFitterId] = useState<string | null>(null)
 
   return (
     <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
@@ -75,11 +81,16 @@ export function KpiOperatorCenter({
           <BottleneckSummary data={bottleneckDashboard} />
 
           <OperatorKpiTable operators={operators} onSelectOperator={setSelectedOperatorId} />
+
+          <FitterKpiTable fitters={fitters} onSelectFitter={setSelectedFitterId} />
         </main>
       </div>
 
       {selectedOperatorId && (
         <OperatorDetailModal operatorId={selectedOperatorId} onClose={() => setSelectedOperatorId(null)} />
+      )}
+      {selectedFitterId && (
+        <FitterDetailModal fitterId={selectedFitterId} onClose={() => setSelectedFitterId(null)} />
       )}
     </div>
   )

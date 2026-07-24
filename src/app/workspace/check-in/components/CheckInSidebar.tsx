@@ -83,10 +83,10 @@ export function CheckInSidebar() {
         ))}
         {showMasterData && (
           <a
-            href="/owner/master-data"
+            href="/owner/master-data-center"
             onClick={e => {
               e.preventDefault()
-              router.push('/owner/master-data')
+              router.push('/owner/master-data-center')
             }}
             className="flex items-center px-6 py-4 text-[#444748] hover:text-[#151c27] hover:bg-[#e2e8f8]/60 transition-all duration-200"
           >

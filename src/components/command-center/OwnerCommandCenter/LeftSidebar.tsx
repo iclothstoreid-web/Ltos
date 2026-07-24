@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   Settings,
+  Tag,
   Users,
   X,
 } from 'lucide-react'
@@ -31,6 +32,7 @@ const navItems = [
   { label: 'Decision Center', href: '/command-center/decision-center', icon: ClipboardList, implemented: true },
   { label: 'Komunikasi', href: '/owner/communications', icon: MessageSquare, implemented: true },
   { label: 'KPI Operator', href: '/command-center/kpi-operator', icon: Gauge, implemented: true },
+  { label: 'Master Data Center', href: '/owner/master-data-center', icon: Tag, implemented: true },
   { label: 'Monitoring Produksi', href: '/command-center', icon: Factory, implemented: false },
   { label: 'Monitoring Persediaan', href: '/inventory', icon: Boxes, implemented: true },
   { label: 'Monitoring Perjalanan Pelanggan', href: '/command-center', icon: Users, implemented: false },

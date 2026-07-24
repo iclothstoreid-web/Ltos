@@ -55,6 +55,22 @@ export async function getServiceSlaRules(supabase: SupabaseClient): Promise<Serv
   return (data as ServiceSlaRule[]) || []
 }
 
+// Sprint K Service Rules admin — set_service_sla_rule() existed since
+// Sprint C but had zero frontend caller until now (see
+// src/app/owner/service-rules). Owner/admin-gated at the DB/RLS level
+// already; this is just the missing write wrapper.
+export async function setServiceSlaRule(
+  supabase: SupabaseClient,
+  serviceLevel: ServiceLevel,
+  workingDays: number
+): Promise<void> {
+  const { error } = await supabase.rpc('set_service_sla_rule', {
+    p_service_level: serviceLevel,
+    p_working_days: workingDays,
+  })
+  if (error) throw error
+}
+
 // Live 🟢/🟡/🔴 preview -- callable before an order exists (Consultation
 // Review), unlike validate_service_selection which requires one.
 export async function previewServiceValidation(

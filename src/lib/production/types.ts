@@ -17,10 +17,16 @@ export type StageStatus = 'pending' | 'in_progress' | 'completed'
 
 export type PatternTemplate = 'slim_fit' | 'standar' | 'regular' | 'custom'
 
+export type OperatorStatus = 'aktif' | 'libur' | 'cuti' | 'nonaktif'
+
 export interface Operator {
   id: string
   nama: string
   is_active: boolean
+  divisi: string | null
+  status: OperatorStatus
+  deleted_at: string | null
+  max_concurrent_capacity: number
   created_at: string
   updated_at: string
 }

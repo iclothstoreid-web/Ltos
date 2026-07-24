@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { CustomerSearch } from './components/CustomerSearch'
 import { CustomerProfile } from './components/CustomerProfile'
 import { NewCustomerForm } from './components/NewCustomerForm'
@@ -10,6 +11,9 @@ import { CheckInSidebar } from './components/CheckInSidebar'
 import { CheckInHeader } from './components/CheckInHeader'
 import { ConsultationInsights } from './components/ConsultationInsights'
 import { SessionBar } from './components/SessionBar'
+import { OperatorAutocomplete } from '@/components/workspace/production/OperatorAutocomplete'
+import { FITTER_DIVISI } from '@/lib/fitter/client'
+import type { Operator } from '@/lib/production/types'
 import { createConsultationSession } from './actions'
 import type { Customer } from './types'
 
@@ -17,8 +21,10 @@ type ViewState = 'search' | 'profile' | 'new-customer' | 'success'
 
 export default function CheckInPage() {
   const router = useRouter()
+  const [supabase] = useState(() => createClient())
   const [view, setView] = useState<ViewState>('search')
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [fitter, setFitter] = useState<Operator | null>(null)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successData, setSuccessData] = useState<{
@@ -44,13 +50,13 @@ export default function CheckInPage() {
   }
 
   const handleCreateSession = async () => {
-    if (!selectedCustomer) return
+    if (!selectedCustomer || !fitter) return
 
     setCreating(true)
     setError(null)
 
     const { success, error: createError, consultationId, consultationNumber } =
-      await createConsultationSession(selectedCustomer.id)
+      await createConsultationSession(selectedCustomer.id, fitter.id)
 
     if (!success || !consultationId || !consultationNumber) {
       setError(createError)
@@ -70,6 +76,7 @@ export default function CheckInPage() {
   const handleBackToSearch = () => {
     setView('search')
     setSelectedCustomer(null)
+    setFitter(null)
     setSuccessData(null)
     setError(null)
   }
@@ -116,7 +123,18 @@ export default function CheckInPage() {
             )}
 
             {view === 'profile' && selectedCustomer && (
-              <CustomerProfile customer={selectedCustomer} />
+              <>
+                <CustomerProfile customer={selectedCustomer} />
+                <div className="px-4 lg:px-16 mt-4">
+                  <OperatorAutocomplete
+                    supabase={supabase}
+                    value={fitter}
+                    onChange={setFitter}
+                    onReset={() => setFitter(null)}
+                    divisiHint={FITTER_DIVISI}
+                  />
+                </div>
+              </>
             )}
 
             {view === 'new-customer' && (
@@ -142,11 +160,11 @@ export default function CheckInPage() {
         {view === 'profile' && selectedCustomer && (
           <SessionBar
             customerName={selectedCustomer.name}
-            sessionLabel="Belum ada sesi"
-            statusLabel={creating ? 'Membuat...' : 'Siap'}
+            sessionLabel={fitter ? `Fitter: ${fitter.nama}` : 'Pilih fitter dahulu'}
+            statusLabel={creating ? 'Membuat...' : fitter ? 'Siap' : 'Menunggu Fitter'}
             primaryLabel={creating ? 'Membuat sesi...' : 'Mulai Konsultasi Baru'}
             onPrimaryAction={handleCreateSession}
-            primaryDisabled={creating}
+            primaryDisabled={creating || !fitter}
           />
         )}
 

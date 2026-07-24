@@ -44,7 +44,7 @@ export function OrderCreatedWorkspace({
             isPreferred={snapshot.customer.isPreferredClient}
             orderNumber={order.order_number}
           />
-          <PaymentSummaryCard />
+          <PaymentSummaryCard orderId={order.id} priceSnapshot={snapshot.designSpecification?.priceSnapshot ?? null} />
         </aside>
 
         <div className="md:col-span-5 flex flex-col gap-8">

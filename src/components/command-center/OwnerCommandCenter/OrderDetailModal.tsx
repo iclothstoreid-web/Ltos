@@ -8,6 +8,7 @@ import type { ProductionPacket } from '@/lib/production/types'
 import { STAGE_ORDER, STAGE_LABELS, getCurrentStageRecord } from '@/lib/production/stageConfig'
 import { FIELD_LABELS, CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from '@/components/workspace/measurement/types'
 import type { MeasurementKey } from '@/components/workspace/measurement/types'
+import { OrderCommercialSection } from './OrderCommercialSection'
 
 interface OrderDetailModalProps {
   orderId: string
@@ -186,6 +187,8 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
                 {packet.consultation_notes || '—'}
               </p>
             </div>
+
+            <OrderCommercialSection orderId={orderId} />
 
             <div>
               <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">

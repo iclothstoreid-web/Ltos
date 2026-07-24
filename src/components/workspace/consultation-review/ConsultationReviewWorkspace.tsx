@@ -143,6 +143,11 @@ export function ConsultationReviewWorkspace({
   )
   const selections = { ...DEFAULT_SELECTIONS, ...decodeDesignNotes(consultation.notes) }
 
+  // Same frozen ID/price snapshot createOrderFromConsultation later carries
+  // into the Order — PriceSummaryCard displays it read-only here, before an
+  // Order (and therefore a persistable quotation) exists.
+  const liveDesignSpecification = decodeDesignSpecification(rawNotes)
+
   const readiness = {
     measurementComplete: filledCount === totalFields,
     designComplete: designMarkerPresent,
@@ -219,7 +224,7 @@ export function ConsultationReviewWorkspace({
         </article>
 
         <aside className="w-full md:w-[30%] flex flex-col gap-8">
-          <PriceSummaryCard />
+          <PriceSummaryCard priceSnapshot={liveDesignSpecification?.priceSnapshot ?? null} />
           <EstimationCard
             supabase={supabase}
             value={enhancements.estimasiPengerjaan}

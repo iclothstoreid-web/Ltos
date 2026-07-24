@@ -89,9 +89,11 @@ export default async function CommandCenterPage() {
       .select('id', { count: 'exact', head: true })
       .eq('current_state', 'follow_up'),
     supabase.from('customers').select('id, name').eq('is_preferred_client', true),
-    // Revenue source — quotations exists but is dormant (0 rows) until the
-    // pricing/quotation flow is actually used. Sums are honestly 0 until
-    // then, not a query bug.
+    // Revenue source — quotations.status flips to 'approved' the first time
+    // record_order_payment() is called (Sprint K Commercial Engine), and
+    // .amount tracks the same post-discount/override total as .total (kept
+    // in sync by recompute_quotation_total()). Sums are honestly 0 for any
+    // month with no recorded payments yet, not a query bug.
     supabase
       .from('quotations')
       .select('amount, approved_at')

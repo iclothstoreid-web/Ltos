@@ -310,6 +310,7 @@ export function ProductionPacketWorkspace({
                   value={operator}
                   onChange={setOperator}
                   onReset={() => setOperator(null)}
+                  divisiHint={STAGE_LABELS[currentRecord.stage]}
                 />
                 {isMaterialPrep ||
                 isPatternFormulation ||
@@ -368,6 +369,10 @@ export function ProductionPacketWorkspace({
                       id: currentRecord.operator_id || '',
                       nama: currentRecord.operator_name || '',
                       is_active: true,
+                      divisi: null,
+                      status: 'aktif',
+                      deleted_at: null,
+                      max_concurrent_capacity: 3,
                       created_at: '',
                       updated_at: '',
                     }}

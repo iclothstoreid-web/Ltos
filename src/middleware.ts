@@ -19,6 +19,15 @@ const ROUTE_RULES: RouteRule[] = [
   // canManageMasterData() (src/lib/design/masterData.ts), which the
   // CheckInSidebar/DesignStudioTopBar "Kelola Master Data" links depend on.
   { prefix: '/owner/master-data', roles: ['owner', 'admin', 'fitter'], loginPath: '/owner/login' },
+  // Sprint K hub — does NOT share a prefix with the rule above
+  // ('/owner/master-data-center' doesn't start with '/owner/master-data/'),
+  // so it needs its own exception or Fitter's CheckInSidebar "Master Data"
+  // link (which now points here) would 403 via the general /owner rule
+  // below before MasterDataCenterHub's own canManageMasterData() check ever
+  // runs. The hub itself hides Operator/Business Rules/Service Rules cards
+  // from Fitter client-side (canManageOperators), and those pages have
+  // their own stricter admin/owner gate — only the hub page needs Fitter in.
+  { prefix: '/owner/master-data-center', roles: ['owner', 'admin', 'fitter'], loginPath: '/owner/login' },
   { prefix: '/command-center', roles: ['owner', 'admin'], loginPath: '/owner/login' },
   { prefix: '/owner', roles: ['owner', 'admin'], loginPath: '/owner/login' },
   { prefix: '/workspace', roles: ['fitter', 'owner', 'admin'], loginPath: '/fitter/login' },

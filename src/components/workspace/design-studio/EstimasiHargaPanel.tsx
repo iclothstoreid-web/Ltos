@@ -2,6 +2,7 @@
 
 import type { PriceSnapshot } from '@/lib/designSpecification/types'
 import type { MasterDataCategory } from '@/lib/design/masterData'
+import { formatRupiah as rupiah } from '@/lib/format/money'
 
 interface EstimasiHargaPanelProps {
   priceSnapshot: PriceSnapshot
@@ -21,10 +22,6 @@ const CATEGORY_LABELS: Record<MasterDataCategory, string> = {
   aksesori: 'Kancing',
   bordir: 'Bordir',
   handmade_zigzag: 'Handmade Zig-Zag',
-}
-
-function rupiah(value: number): string {
-  return `Rp${value.toLocaleString('id-ID')}`
 }
 
 // Read-only display of the PriceSnapshot buildDesignSpecification() already

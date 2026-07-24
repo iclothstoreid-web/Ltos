@@ -7,6 +7,7 @@ import {
   getKpiDashboard,
   getOperatorKpiList,
 } from '@/lib/kpi/client'
+import { getFitterKpiList } from '@/lib/fitter/client'
 import { KpiOperatorCenter } from '@/components/owner/kpi-operator/KpiOperatorCenter'
 
 export const metadata: Metadata = {
@@ -36,11 +37,12 @@ export default async function KpiOperatorPage() {
 
   const { data: profile } = await supabase.from('profiles').select('id, name').eq('id', user.id).single()
 
-  const [kpiDashboard, capacityDashboard, bottleneckDashboard, operators] = await Promise.all([
+  const [kpiDashboard, capacityDashboard, bottleneckDashboard, operators, fitters] = await Promise.all([
     getKpiDashboard(supabase),
     getCapacityDashboard(supabase),
     getBottleneckDashboard(supabase),
     getOperatorKpiList(supabase),
+    getFitterKpiList(supabase),
   ])
 
   return (
@@ -50,6 +52,7 @@ export default async function KpiOperatorPage() {
       capacityDashboard={capacityDashboard}
       bottleneckDashboard={bottleneckDashboard}
       operators={operators}
+      fitters={fitters}
     />
   )
 }

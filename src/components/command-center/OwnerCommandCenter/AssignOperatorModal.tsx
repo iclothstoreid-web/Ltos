@@ -113,7 +113,12 @@ export function AssignOperatorModal({ orderId, orderNumber, onClose, onAssigned 
                           onChange={() => setSelectedOperatorId(op.id)}
                           className="accent-[#161b29]"
                         />
-                        <span className="font-hanken text-sm text-[#161b29]">{op.nama}</span>
+                        <span className="font-hanken text-sm text-[#161b29]">
+                          {op.nama}
+                          {op.divisi && (
+                            <span className="block font-hanken text-[10px] text-[#46464c]">{op.divisi}</span>
+                          )}
+                        </span>
                       </label>
                     </li>
                   ))}
