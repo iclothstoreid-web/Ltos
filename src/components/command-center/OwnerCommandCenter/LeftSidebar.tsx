@@ -2,47 +2,33 @@
 
 import Link from 'next/link'
 import {
-  Activity,
-  BarChart3,
   Boxes,
-  Calendar,
   ClipboardList,
-  Factory,
   Gauge,
   LayoutDashboard,
   MessageSquare,
-  Settings,
   Tag,
   TrendingUp,
-  Users,
   WalletCards,
   X,
 } from 'lucide-react'
 
 // Owner OS is monitoring/decision-making only — every operational workspace
 // (Check-In, Pengukuran, Design Studio, Review Konsultasi, Order Created,
-// Produksi, QC, Persediaan) lives in its own app now, not here. Dashboard,
-// Decision Center, Komunikasi, KPI Operator, KPI Fitter, and Monitoring
-// Persediaan are the only items with a real, distinct destination
-// (/command-center, /command-center/decision-center, /owner/communications,
-// /command-center/kpi-operator, /command-center/kpi-fitter, /inventory) —
-// the rest have no page of their own yet, so they're rendered disabled with
-// a "Segera Hadir" badge instead of silently re-navigating to Dashboard.
+// Produksi, QC, Persediaan) lives in its own app now, not here. Only items
+// with a real, distinct destination are shown here; not-yet-implemented
+// items (Hari Ini, Monitoring Produksi, Monitoring Operator, Aktivitas,
+// Analitik, Pengaturan) are removed from navigation entirely rather than
+// shown disabled — their routes/pages are untouched, just not linked here.
 const navItems = [
-  { label: 'Dashboard', href: '/command-center', icon: LayoutDashboard, implemented: true },
-  { label: 'Hari Ini', href: '/command-center', icon: Calendar, implemented: false },
-  { label: 'Decision Center', href: '/command-center/decision-center', icon: ClipboardList, implemented: true },
-  { label: 'Komunikasi', href: '/owner/communications', icon: MessageSquare, implemented: true },
-  { label: 'KPI Operator', href: '/command-center/kpi-operator', icon: Gauge, implemented: true },
-  { label: 'KPI Fitter', href: '/command-center/kpi-fitter', icon: TrendingUp, implemented: true },
-  { label: 'Commercial Center', href: '/command-center/commercial', icon: WalletCards, implemented: true },
-  { label: 'Master Data Center', href: '/owner/master-data-center', icon: Tag, implemented: true },
-  { label: 'Monitoring Produksi', href: '/command-center', icon: Factory, implemented: false },
-  { label: 'Monitoring Persediaan', href: '/inventory', icon: Boxes, implemented: true },
-  { label: 'Monitoring Perjalanan Pelanggan', href: '/command-center', icon: Users, implemented: false },
-  { label: 'Aktivitas Sistem', href: '/command-center', icon: Activity, implemented: false },
-  { label: 'Analitik', href: '/command-center', icon: BarChart3, implemented: false },
-  { label: 'Pengaturan', href: '/command-center', icon: Settings, implemented: false },
+  { label: 'Dashboard', href: '/command-center', icon: LayoutDashboard },
+  { label: 'Decision Center', href: '/command-center/decision-center', icon: ClipboardList },
+  { label: 'Komunikasi', href: '/owner/communications', icon: MessageSquare },
+  { label: 'KPI Operator', href: '/command-center/kpi-operator', icon: Gauge },
+  { label: 'KPI Fitter', href: '/command-center/kpi-fitter', icon: TrendingUp },
+  { label: 'Commercial Center', href: '/command-center/commercial', icon: WalletCards },
+  { label: 'Master Data Center', href: '/owner/master-data-center', icon: Tag },
+  { label: 'Monitoring Persediaan', href: '/inventory', icon: Boxes },
 ]
 
 // Shared between the always-visible desktop rail and the mobile/tablet
@@ -52,23 +38,6 @@ function NavItemList({ onNavigate }: { onNavigate?: () => void }) {
     <ul className="p-4 space-y-1">
       {navItems.map(item => {
         const Icon = item.icon
-
-        if (!item.implemented) {
-          return (
-            <li key={item.label}>
-              <div
-                aria-disabled="true"
-                className="flex items-center gap-3 px-3 py-2 rounded-[14px] text-body text-secondary/90 cursor-default opacity-50"
-              >
-                <Icon size={16} className="text-secondary/80" />
-                <span className="truncate">{item.label}</span>
-                <span className="ml-auto shrink-0 text-label text-secondary/80 uppercase tracking-widest border border-outline-variant/80 rounded-full px-2 py-0.5">
-                  Segera Hadir
-                </span>
-              </div>
-            </li>
-          )
-        }
 
         return (
           <li key={item.label}>
