@@ -16,9 +16,9 @@ export async function listAllOperators(supabase: SupabaseClient): Promise<Operat
 export async function createOperator(
   supabase: SupabaseClient,
   nama: string,
-  divisi: string | null
+  divisionId: string | null
 ): Promise<Operator> {
-  const { data, error } = await supabase.rpc('create_operator', { p_nama: nama, p_divisi: divisi })
+  const { data, error } = await supabase.rpc('create_operator', { p_nama: nama, p_division_id: divisionId })
   if (error) throw error
   return data as Operator
 }
@@ -27,12 +27,12 @@ export async function updateOperator(
   supabase: SupabaseClient,
   operatorId: string,
   nama: string,
-  divisi: string | null
+  divisionId: string | null
 ): Promise<Operator> {
   const { data, error } = await supabase.rpc('update_operator', {
     p_operator_id: operatorId,
     p_nama: nama,
-    p_divisi: divisi,
+    p_division_id: divisionId,
   })
   if (error) throw error
   return data as Operator

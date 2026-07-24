@@ -27,11 +27,11 @@ export async function getProductionPacket(
 export async function searchOperators(
   supabase: SupabaseClient,
   query: string,
-  divisi?: string | null
+  divisionId?: string | null
 ): Promise<Operator[]> {
   const { data, error } = await supabase.rpc('search_operators', {
     p_query: query,
-    p_divisi: divisi ?? null,
+    p_division_id: divisionId ?? null,
   })
   if (error) throw error
   return (data as Operator[]) || []
@@ -40,11 +40,11 @@ export async function searchOperators(
 export async function upsertOperator(
   supabase: SupabaseClient,
   nama: string,
-  divisi?: string | null
+  divisionId?: string | null
 ): Promise<string> {
   const { data, error } = await supabase.rpc('upsert_operator', {
     p_nama: nama,
-    p_divisi: divisi ?? null,
+    p_division_id: divisionId ?? null,
   })
   if (error) throw error
   return data as string
@@ -54,10 +54,10 @@ export async function upsertOperator(
 // flow) — unlike searchOperators, not capped at 10 and not query-driven.
 export async function listActiveOperators(
   supabase: SupabaseClient,
-  divisi?: string | null
+  divisionId?: string | null
 ): Promise<Operator[]> {
   const { data, error } = await supabase.rpc('list_active_operators', {
-    p_divisi: divisi ?? null,
+    p_division_id: divisionId ?? null,
   })
   if (error) throw error
   return (data as Operator[]) || []

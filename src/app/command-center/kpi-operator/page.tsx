@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import {
   getBottleneckDashboard,
   getCapacityDashboard,
+  getDivisiKpiList,
   getKpiDashboard,
   getOperatorKpiList,
 } from '@/lib/kpi/client'
@@ -24,8 +25,10 @@ export const metadata: Metadata = {
 // /owner/communications: any logged-in staff member, no role restriction.
 // Every number on this page comes from Sprint B-F's existing KPI Engine RPCs
 // (get_kpi_dashboard, get_capacity_dashboard, get_bottleneck_dashboard) plus
-// the two new Sprint G RPCs (get_operator_kpi_list here; get_operator_kpi_detail
-// is fetched client-side by OperatorDetailModal on row click) -- no new table.
+// the Sprint G RPCs (get_operator_kpi_list here; get_operator_kpi_detail is
+// fetched client-side by OperatorDetailModal on row click) and the audit-fix
+// get_divisi_kpi_list (SDM Produksi per Divisi breakdown -- replaces the old
+// undifferentiated "Total Operator Aktif" framing) -- no new table.
 // KPI Fitter moved to its own page (/command-center/kpi-fitter) per Sprint K
 // (LOCK V1) §9 -- this page now only links to it, doesn't fetch fitter data.
 export default async function KpiOperatorPage() {
@@ -38,10 +41,11 @@ export default async function KpiOperatorPage() {
 
   const { data: profile } = await supabase.from('profiles').select('id, name').eq('id', user.id).single()
 
-  const [kpiDashboard, capacityDashboard, bottleneckDashboard, operators] = await Promise.all([
+  const [kpiDashboard, capacityDashboard, bottleneckDashboard, divisiRows, operators] = await Promise.all([
     getKpiDashboard(supabase),
     getCapacityDashboard(supabase),
     getBottleneckDashboard(supabase),
+    getDivisiKpiList(supabase),
     getOperatorKpiList(supabase),
   ])
 
@@ -51,6 +55,7 @@ export default async function KpiOperatorPage() {
       kpiDashboard={kpiDashboard}
       capacityDashboard={capacityDashboard}
       bottleneckDashboard={bottleneckDashboard}
+      divisiRows={divisiRows}
       operators={operators}
     />
   )

@@ -23,7 +23,12 @@ export interface Operator {
   id: string
   nama: string
   is_active: boolean
+  // `divisi` is a read-only mirror of master_divisions.name, kept in sync by
+  // DB triggers off `division_id` (see 20260810000000_add_operator_division_id.sql)
+  // -- safe to display, never write directly. `division_id` is the real FK
+  // and the only thing that should ever be sent back to a write RPC.
   divisi: string | null
+  division_id: string | null
   status: OperatorStatus
   deleted_at: string | null
   max_concurrent_capacity: number

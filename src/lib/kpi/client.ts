@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   BottleneckDashboard,
   CapacityDashboard,
+  DivisiKpiRow,
   KpiDashboard,
   OperatorCapacityRow,
   OperatorKpiDetail,
@@ -46,6 +47,12 @@ export async function getOperatorKpiList(supabase: SupabaseClient): Promise<Oper
   const { data, error } = await supabase.rpc('get_operator_kpi_list')
   if (error) throw error
   return (data as OperatorKpiRow[]) || []
+}
+
+export async function getDivisiKpiList(supabase: SupabaseClient): Promise<DivisiKpiRow[]> {
+  const { data, error } = await supabase.rpc('get_divisi_kpi_list')
+  if (error) throw error
+  return (data as DivisiKpiRow[]) || []
 }
 
 export async function getOperatorKpiDetail(

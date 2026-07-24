@@ -36,12 +36,12 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
   const [error, setError] = useState<string | null>(null)
 
   const [newNama, setNewNama] = useState('')
-  const [newDivisi, setNewDivisi] = useState('')
+  const [newDivisionId, setNewDivisionId] = useState('')
   const [creating, setCreating] = useState(false)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editNama, setEditNama] = useState('')
-  const [editDivisi, setEditDivisi] = useState('')
+  const [editDivisionId, setEditDivisionId] = useState('')
 
   async function refresh() {
     setLoading(true)
@@ -60,9 +60,9 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
     setCreating(true)
     setError(null)
     try {
-      await createOperator(supabase, newNama, newDivisi || null)
+      await createOperator(supabase, newNama, newDivisionId || null)
       setNewNama('')
-      setNewDivisi('')
+      setNewDivisionId('')
       await refresh()
     } catch (err) {
       console.error('[operators] create failed', err)
@@ -75,7 +75,7 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
   function startEdit(op: Operator) {
     setEditingId(op.id)
     setEditNama(op.nama)
-    setEditDivisi(op.divisi || '')
+    setEditDivisionId(op.division_id || '')
   }
 
   async function handleSaveEdit() {
@@ -83,7 +83,7 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
     setLoading(true)
     setError(null)
     try {
-      await updateOperator(supabase, editingId, editNama, editDivisi || null)
+      await updateOperator(supabase, editingId, editNama, editDivisionId || null)
       setEditingId(null)
       await refresh()
     } catch (err) {
@@ -157,13 +157,13 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
               className="flex-1 py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
             />
             <select
-              value={newDivisi}
-              onChange={e => setNewDivisi(e.target.value)}
+              value={newDivisionId}
+              onChange={e => setNewDivisionId(e.target.value)}
               className="py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
             >
               <option value="">Divisi (opsional)</option>
               {divisions.map(d => (
-                <option key={d.id} value={d.name}>
+                <option key={d.id} value={d.id}>
                   {d.name}
                 </option>
               ))}
@@ -197,13 +197,13 @@ export function OperatorManager({ initialOperators, initialDivisions }: Operator
                     className="w-full py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
                   />
                   <select
-                    value={editDivisi}
-                    onChange={e => setEditDivisi(e.target.value)}
+                    value={editDivisionId}
+                    onChange={e => setEditDivisionId(e.target.value)}
                     className="w-full py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
                   >
                     <option value="">Divisi (opsional)</option>
                     {divisions.map(d => (
-                      <option key={d.id} value={d.name}>
+                      <option key={d.id} value={d.id}>
                         {d.name}
                       </option>
                     ))}

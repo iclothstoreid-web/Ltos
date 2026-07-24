@@ -28,7 +28,7 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
   const [results, setResults] = useState<Operator[]>([])
   const [showResults, setShowResults] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [newDivisi, setNewDivisi] = useState(divisiHint || '')
+  const [newDivisionId, setNewDivisionId] = useState('')
   const [divisions, setDivisions] = useState<MasterDivision[]>([])
 
   useEffect(() => {
@@ -43,6 +43,19 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
     }
   }, [supabase])
 
+  // divisiHint is a display-name hint (a stage label, or 'Fitting') from a
+  // separate, locked vocabulary (STAGE_LABELS) -- not itself a
+  // master_divisions id. Operator<->Division is now FK-based
+  // (production_operators.division_id), so the hint is resolved to an id
+  // here, best-effort, once divisions load; if master_divisions has since
+  // been renamed away from the hint text, nothing pre-selects and the owner
+  // just picks manually -- graceful degradation, not a broken write.
+  const divisiHintId = divisions.find(d => d.name === divisiHint)?.id ?? null
+
+  useEffect(() => {
+    if (divisiHintId) setNewDivisionId(prev => prev || divisiHintId)
+  }, [divisiHintId])
+
   async function handleSearch(q: string) {
     setQuery(q)
     if (q.length < 1) {
@@ -52,7 +65,7 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
     }
     setLoading(true)
     try {
-      const operators = await searchOperators(supabase, q, divisiHint ?? null)
+      const operators = await searchOperators(supabase, q, divisiHintId)
       setResults(operators)
       setShowResults(true)
     } finally {
@@ -63,12 +76,14 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
   async function handleCreateNew() {
     setLoading(true)
     try {
-      const id = await upsertOperator(supabase, query, newDivisi || divisiHint || null)
+      const divisionId = newDivisionId || divisiHintId || null
+      const id = await upsertOperator(supabase, query, divisionId)
       onChange({
         id,
         nama: query.trim(),
         is_active: true,
-        divisi: newDivisi || divisiHint || null,
+        divisi: divisions.find(d => d.id === divisionId)?.name ?? null,
+        division_id: divisionId,
         status: 'aktif',
         deleted_at: null,
         max_concurrent_capacity: 3,
@@ -151,13 +166,13 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
                 Divisi Operator Baru
               </label>
               <select
-                value={newDivisi}
-                onChange={e => setNewDivisi(e.target.value)}
+                value={newDivisionId}
+                onChange={e => setNewDivisionId(e.target.value)}
                 className="w-full py-1 mb-2 bg-transparent border-b border-[#c6c6cc] outline-none font-hanken text-sm text-[#161b29]"
               >
                 <option value="">Tidak ditentukan</option>
                 {divisions.map(d => (
-                  <option key={d.id} value={d.name}>
+                  <option key={d.id} value={d.id}>
                     {d.name}
                   </option>
                 ))}

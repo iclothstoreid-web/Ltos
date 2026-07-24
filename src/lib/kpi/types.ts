@@ -46,10 +46,33 @@ export interface OperatorCapacityRow {
   utilization_pct: number | null
 }
 
+// One row of get_divisi_kpi_list() -- SDM Produksi per Divisi (audit fix:
+// "Total Operator Aktif" used to be one flat count with no divisi
+// breakdown). Excludes Fitting -- same production-divisi boundary
+// compute_daily_capacity() already draws; Fitters have their own KPI
+// Fitter page.
+export interface DivisiKpiRow {
+  divisi: string
+  // Real FK (production_operators.division_id -> master_divisions.id), null
+  // only for the "Belum Terhubung ke Divisi" fallback bucket. The single
+  // source of truth for grouping -- use this, not `divisi` text, for
+  // matching/filtering (see 20260810000000_add_operator_division_id.sql).
+  division_id: string | null
+  jumlah_sdm: number
+  total_capacity: number
+  active_jobs: number
+  capacity_utilization_pct: number | null
+  avg_efficiency_pct: number | null
+  throughput_hari_ini: number
+  throughput_minggu_ini: number
+}
+
 // One row of get_operator_kpi_list() -- the Daftar Operator table.
 export interface OperatorKpiRow {
   operator_id: string
   nama: string
+  divisi: string | null
+  division_id: string | null
   is_active: boolean
   order_dikerjakan: number
   order_selesai: number

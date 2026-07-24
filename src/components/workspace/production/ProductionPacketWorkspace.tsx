@@ -370,6 +370,7 @@ export function ProductionPacketWorkspace({
                       nama: currentRecord.operator_name || '',
                       is_active: true,
                       divisi: null,
+                      division_id: null,
                       status: 'aktif',
                       deleted_at: null,
                       max_concurrent_capacity: 3,

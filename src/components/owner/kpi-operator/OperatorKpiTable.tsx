@@ -21,14 +21,16 @@ function formatPct(pct: number | null): string {
 export function OperatorKpiTable({
   operators,
   onSelectOperator,
+  title = 'Daftar Operator',
 }: {
   operators: OperatorKpiRow[]
   onSelectOperator: (operatorId: string) => void
+  title?: string
 }) {
   return (
     <section>
       <div className="flex items-end justify-between gap-4 mb-3">
-        <h2 className="text-label text-secondary uppercase tracking-[0.24em]">Daftar Operator</h2>
+        <h2 className="text-label text-secondary uppercase tracking-[0.24em]">{title}</h2>
         <p className="text-body text-secondary">Klik baris untuk detail</p>
       </div>
 
