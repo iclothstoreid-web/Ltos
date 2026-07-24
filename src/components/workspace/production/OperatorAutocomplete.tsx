@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Operator } from '@/lib/production/types'
 import { searchOperators, upsertOperator } from '@/lib/production/client'
-import { OPERATOR_DIVISI_OPTIONS } from '@/lib/production/stageConfig'
+import { getActiveDivisions } from '@/lib/divisions/client'
+import type { MasterDivision } from '@/lib/divisions/types'
 
 interface OperatorAutocompleteProps {
   supabase: SupabaseClient
@@ -28,6 +29,19 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
   const [showResults, setShowResults] = useState(false)
   const [loading, setLoading] = useState(false)
   const [newDivisi, setNewDivisi] = useState(divisiHint || '')
+  const [divisions, setDivisions] = useState<MasterDivision[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    getActiveDivisions(supabase)
+      .then(rows => {
+        if (!cancelled) setDivisions(rows)
+      })
+      .catch(err => console.error('[OperatorAutocomplete] load divisions failed', err))
+    return () => {
+      cancelled = true
+    }
+  }, [supabase])
 
   async function handleSearch(q: string) {
     setQuery(q)
@@ -142,9 +156,9 @@ export function OperatorAutocomplete({ supabase, value, onChange, onReset, divis
                 className="w-full py-1 mb-2 bg-transparent border-b border-[#c6c6cc] outline-none font-hanken text-sm text-[#161b29]"
               >
                 <option value="">Tidak ditentukan</option>
-                {OPERATOR_DIVISI_OPTIONS.map(d => (
-                  <option key={d} value={d}>
-                    {d}
+                {divisions.map(d => (
+                  <option key={d.id} value={d.name}>
+                    {d.name}
                   </option>
                 ))}
               </select>

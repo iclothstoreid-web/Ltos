@@ -8,6 +8,7 @@ import type { ProductionPacket } from '@/lib/production/types'
 import { STAGE_ORDER, STAGE_LABELS, getCurrentStageRecord } from '@/lib/production/stageConfig'
 import { FIELD_LABELS, CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from '@/components/workspace/measurement/types'
 import type { MeasurementKey } from '@/components/workspace/measurement/types'
+import { markOrderDelivered } from '@/lib/order/delivery'
 import { OrderCommercialSection } from './OrderCommercialSection'
 
 interface OrderDetailModalProps {
@@ -49,36 +50,49 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
   const [events, setEvents] = useState<ActivityEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [markingDelivered, setMarkingDelivered] = useState(false)
+  const [deliveredError, setDeliveredError] = useState<string | null>(null)
+
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const [packetResult, eventsResult] = await Promise.all([
+        getProductionPacket(supabase, orderId),
+        supabase
+          .from('business_events')
+          .select('event_type, created_at')
+          .eq('order_id', orderId)
+          .order('created_at', { ascending: false }),
+      ])
+      setPacket(packetResult)
+      setEvents((eventsResult.data as ActivityEvent[]) || [])
+    } catch (err) {
+      console.error('[command-center] load order detail failed', err)
+      setError('Gagal memuat detail order.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    let cancelled = false
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const [packetResult, eventsResult] = await Promise.all([
-          getProductionPacket(supabase, orderId),
-          supabase
-            .from('business_events')
-            .select('event_type, created_at')
-            .eq('order_id', orderId)
-            .order('created_at', { ascending: false }),
-        ])
-        if (cancelled) return
-        setPacket(packetResult)
-        setEvents((eventsResult.data as ActivityEvent[]) || [])
-      } catch (err) {
-        console.error('[command-center] load order detail failed', err)
-        if (!cancelled) setError('Gagal memuat detail order.')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
     load()
-    return () => {
-      cancelled = true
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, orderId])
+
+  async function handleMarkDelivered() {
+    setMarkingDelivered(true)
+    setDeliveredError(null)
+    try {
+      await markOrderDelivered(supabase, orderId)
+      await load()
+    } catch (err) {
+      console.error('[command-center] mark delivered failed', err)
+      setDeliveredError('Gagal menandai order Delivered. Pastikan tahap Pengiriman sudah selesai.')
+    } finally {
+      setMarkingDelivered(false)
+    }
+  }
 
   const currentRecord = packet ? getCurrentStageRecord(packet.stage_records) : null
   const statusLabel = !packet
@@ -90,6 +104,10 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
         : 'Belum Dimulai'
 
   const measurements = packet?.locked_measurements
+  const shippingCompleted = !!packet?.stage_records.some(
+    r => r.stage === 'shipping' && r.status === 'completed'
+  )
+  const isDelivered = packet?.current_state === 'follow_up'
 
   return (
     <div className="fixed inset-0 z-[90] bg-black/50 flex items-center justify-center p-4">
@@ -123,6 +141,29 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
                 <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Estimasi Selesai</p>
                 <p className="font-hanken text-sm text-[#161b29]">{formatDate(packet.estimated_completion)}</p>
               </div>
+            </div>
+
+            <div>
+              <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">
+                Status Pengiriman
+              </p>
+              {deliveredError && <p className="font-hanken text-xs text-[#c0392b] mb-2">{deliveredError}</p>}
+              {isDelivered ? (
+                <p className="font-hanken text-sm text-[#1f6b2c] font-semibold">Delivered — sudah diterima customer</p>
+              ) : shippingCompleted ? (
+                <button
+                  type="button"
+                  onClick={handleMarkDelivered}
+                  disabled={markingDelivered}
+                  className="py-2 px-4 bg-[#161b29] text-white text-xs uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-40"
+                >
+                  {markingDelivered ? 'Menandai...' : 'Tandai Sudah Diterima Customer'}
+                </button>
+              ) : (
+                <p className="font-hanken text-xs text-[#46464c]">
+                  Tahap Pengiriman belum selesai — belum dapat ditandai Delivered.
+                </p>
+              )}
             </div>
 
             <div>

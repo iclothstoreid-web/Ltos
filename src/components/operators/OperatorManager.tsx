@@ -6,10 +6,11 @@ import { createClient } from '@/lib/supabase/client'
 import type { Operator, OperatorStatus } from '@/lib/production/types'
 import { OPERATOR_STATUS_LABELS, OPERATOR_STATUS_OPTIONS } from '@/lib/operators/types'
 import { createOperator, listAllOperators, setOperatorStatus, softDeleteOperator, updateOperator } from '@/lib/operators/client'
-import { OPERATOR_DIVISI_OPTIONS } from '@/lib/production/stageConfig'
+import type { MasterDivision } from '@/lib/divisions/types'
 
 interface OperatorManagerProps {
   initialOperators: Operator[]
+  initialDivisions: MasterDivision[]
 }
 
 const STATUS_BADGE: Record<OperatorStatus, string> = {
@@ -26,10 +27,11 @@ const STATUS_BADGE: Record<OperatorStatus, string> = {
 // marking someone Libur/Cuti/Nonaktif here automatically removes them from
 // every existing capacity/KPI/picker query without touching that code
 // (Capacity Integration requirement).
-export function OperatorManager({ initialOperators }: OperatorManagerProps) {
+export function OperatorManager({ initialOperators, initialDivisions }: OperatorManagerProps) {
   const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [operators, setOperators] = useState(initialOperators)
+  const [divisions] = useState(initialDivisions)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -160,9 +162,9 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
               className="py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
             >
               <option value="">Divisi (opsional)</option>
-              {OPERATOR_DIVISI_OPTIONS.map(d => (
-                <option key={d} value={d}>
-                  {d}
+              {divisions.map(d => (
+                <option key={d.id} value={d.name}>
+                  {d.name}
                 </option>
               ))}
             </select>
@@ -200,9 +202,9 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
                     className="w-full py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
                   >
                     <option value="">Divisi (opsional)</option>
-                    {OPERATOR_DIVISI_OPTIONS.map(d => (
-                      <option key={d} value={d}>
-                        {d}
+                    {divisions.map(d => (
+                      <option key={d.id} value={d.name}>
+                        {d.name}
                       </option>
                     ))}
                   </select>

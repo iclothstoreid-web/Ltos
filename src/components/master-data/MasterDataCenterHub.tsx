@@ -5,6 +5,7 @@ import {
   Boxes,
   ClipboardList,
   Gauge,
+  Network,
   Package,
   ScrollText,
   Sparkles,
@@ -50,6 +51,13 @@ const CARDS: HubCard[] = [
     description: 'CRUD Operator, Divisi, status Aktif/Libur/Cuti/Nonaktif.',
     href: '/owner/operators',
     icon: Users,
+    ownerOnly: true,
+  },
+  {
+    label: 'Master Division',
+    description: 'Tambah/Ubah/Nonaktifkan Divisi & urutan tampilan — sumber semua dropdown Divisi.',
+    href: '/owner/master-division',
+    icon: Network,
     ownerOnly: true,
   },
   {

@@ -92,6 +92,11 @@ export interface ProductionPacket {
   order_id: string
   order_number: string
   created_at: string
+  // Delivery hotfix -- 'follow_up' is the only value meaning the order has
+  // actually been marked Delivered (see resolveDeliveryState in
+  // src/lib/journey/milestone.ts). Everything else (lead/order/production/
+  // etc.) reads as "not yet delivered" for this purpose.
+  current_state: string
   // Service Engine: null for pre-Sprint-C orders (no service selected yet),
   // in which case estimated_completion below falls back to created_at + 14
   // days instead of Hari D + SLA -- see get_production_packet.
