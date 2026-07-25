@@ -1,7 +1,9 @@
 # LTOS — CHANGELOG V1
 
-**Release:** v1.0.0 — LTOS V1 Golden Release
+**Release:** v1.1.0 — LTOS V1 Golden Release
 **Date:** 2026-07-25
+
+> **Note on version number:** `v1.0.0` was already tagged and pushed earlier (2026-07-24, commit `baaf668`, "LTOS V1 baseline" — Sprint A–K plus the Delivery workflow hotfix). That tag is left untouched. This document and its corresponding `v1.1.0` tag represent the actual V1 Golden Release — everything through Sprint N.2, with the full sprint/ADR/architecture history below (which subsumes the earlier baseline).
 **Basis:** Git history (`main`), `ARCHITECTURE_LOCK_V1.md`, `OWNER_INTELLIGENCE_DISCOVERY.md`, `MATERIAL_ENGINEERING_BLUEPRINT.md`, `ESTIMATION_ENGINEERING_BLUEPRINT.md`, production Supabase project `ltos-v1`
 
 ---
