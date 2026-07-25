@@ -49,6 +49,26 @@ export function InventoryAlertCard({ data }: InventoryAlertCardProps) {
           </span>
         </div>
 
+        {/* Material Paling Kritis */}
+        {data.mostCriticalItem && (
+          <div className="px-6 py-4">
+            <p className="text-body font-medium text-on-surface">Material Paling Kritis</p>
+            <Link
+              href={`/inventory/material?material=${data.mostCriticalItem.materialId}`}
+              className="mt-2 flex items-center justify-between rounded-[10px] border border-[#1f6b2c]/30 bg-[#1f6b2c]/5 px-4 py-3 hover:bg-[#1f6b2c]/10 transition-colors focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
+            >
+              <div className="min-w-0">
+                <p className="text-body font-medium text-on-surface truncate">{data.mostCriticalItem.name}</p>
+                <p className="text-label text-secondary">
+                  Stok: {data.mostCriticalItem.available.toLocaleString('id-ID')} {data.mostCriticalItem.unit} · Min:{' '}
+                  {data.mostCriticalItem.minStock} {data.mostCriticalItem.unit}
+                </p>
+              </div>
+              <ArrowUpRight size={16} className="text-secondary shrink-0 ml-3" aria-hidden="true" />
+            </Link>
+          </div>
+        )}
+
         {/* Rekomendasi Reorder */}
         <div className="px-6 py-4">
           <p className="text-body font-medium text-on-surface">Rekomendasi Reorder</p>
@@ -56,17 +76,22 @@ export function InventoryAlertCard({ data }: InventoryAlertCardProps) {
             <p className="text-body text-secondary mt-1">Semua material dalam kondisi stok aman</p>
           ) : (
             <ul className="mt-2 space-y-2">
-              {data.topReorderItems.slice(0, 5).map(item => (
-                <li key={item.name} className="flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-body text-secondary truncate">{item.name}</p>
-                    <p className="text-label text-secondary">
-                      Stok: {item.available.toLocaleString('id-ID')} {item.unit} · Min: {item.minStock} {item.unit}
-                    </p>
-                  </div>
-                  <span className="text-label text-primary shrink-0 ml-3 tabular-nums">
-                    +{item.reorderQty.toLocaleString('id-ID')} {item.unit}
-                  </span>
+              {data.topReorderItems.map(item => (
+                <li key={item.materialId}>
+                  <Link
+                    href={`/inventory/material?material=${item.materialId}`}
+                    className="flex items-center justify-between rounded-[8px] px-2 py-1.5 -mx-2 hover:bg-on-surface/5 transition-colors focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-body text-secondary truncate">{item.name}</p>
+                      <p className="text-label text-secondary">
+                        Stok: {item.available.toLocaleString('id-ID')} {item.unit} · Min: {item.minStock} {item.unit}
+                      </p>
+                    </div>
+                    <span className="text-label text-primary shrink-0 ml-3 tabular-nums">
+                      +{item.reorderQty.toLocaleString('id-ID')} {item.unit}
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>

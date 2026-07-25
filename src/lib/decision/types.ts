@@ -125,12 +125,37 @@ export interface DecisionAlert {
   linkHref?: string
 }
 
+// ─── Sprint N.2 — Actionable Decision Layer V1 ───────────────────
+// Insight -> Recommendation -> Action. Every item below carries a reason,
+// a recommended action, and (where the underlying row is order/material
+// scoped) an id for the deep link -- still zero new RPC/table, every field
+// is either already returned by an existing RPC/query or is a client-side
+// label/derivation over one (see command-center/page.tsx call sites).
+
+export interface OperationalDecisionItem {
+  orderId: string
+  orderNumber: string
+  customerName: string | null
+  reason: string
+  action: string
+}
+
 export interface OperationalAlertCardData {
   ordersOverSla: number
   ordersNearSla: number
   bottleneckStage: string | null
   bottleneckCount: number | null
   operatorOverload: OperatorOverload[]
+  overSlaItems: OperationalDecisionItem[]
+  nearSlaItems: OperationalDecisionItem[]
+}
+
+export interface CommercialDecisionItem {
+  orderId: string
+  orderNumber: string
+  customerName: string
+  amount: number
+  reason: string
 }
 
 export interface CommercialAlertCardData {
@@ -139,18 +164,26 @@ export interface CommercialAlertCardData {
   overdueCount: number
   highDiscountCount: number
   highOverrideCount: number
+  overdueItems: CommercialDecisionItem[]
+  outstandingItems: CommercialDecisionItem[]
+  highDiscountItems: CommercialDecisionItem[]
+  highOverrideItems: CommercialDecisionItem[]
+}
+
+export interface InventoryDecisionItem {
+  materialId: string
+  name: string
+  available: number
+  minStock: number
+  unit: string
+  reorderQty: number
 }
 
 export interface InventoryAlertCardData {
   lowStockCount: number
   outOfStockCount: number
-  topReorderItems: Array<{
-    name: string
-    available: number
-    minStock: number
-    unit: string
-    reorderQty: number
-  }>
+  topReorderItems: InventoryDecisionItem[]
+  mostCriticalItem: InventoryDecisionItem | null
 }
 
 export interface BusinessInsightCardData {
@@ -160,4 +193,6 @@ export interface BusinessInsightCardData {
   throughputMingguIni: number
   activeOrders: number
   completedOrders: number
+  topActions: TodaysAction[]
+  workspaceHref: string
 }

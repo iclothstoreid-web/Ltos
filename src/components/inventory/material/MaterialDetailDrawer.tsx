@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Barcode, Layers, Pencil, QrCode, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { fetchMaterialMovements, fetchMaterialUsage } from '@/lib/inventory/materials'
-import type { Material, MaterialUsage, StockMovement } from '@/lib/inventory/types'
+import { fetchMaterialMovements, fetchMaterialOrderHistory } from '@/lib/inventory/materials'
+import type { Material, MaterialOrderUsage, StockMovement } from '@/lib/inventory/types'
 import { materialStockStatus, MOVEMENT_TYPE_LABEL, STOCK_STATUS_LABEL } from '@/lib/inventory/types'
 
 interface MaterialDetailDrawerProps {
@@ -23,15 +23,27 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'riwayat', label: 'Riwayat' },
 ]
 
+const USAGE_STATUS_LABEL: Record<MaterialOrderUsage['status'], string> = {
+  reserved: 'Reserved',
+  partial: 'Sebagian Released',
+  released: 'Released',
+}
+
+const USAGE_STATUS_STYLE: Record<MaterialOrderUsage['status'], string> = {
+  reserved: 'bg-warm-gold/10 text-warm-gold border-warm-gold/20',
+  partial: 'bg-secondary/10 text-secondary border-secondary/20',
+  released: 'bg-primary/5 text-primary border-primary/10',
+}
+
 export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onStockOut }: MaterialDetailDrawerProps) {
   const supabase = createClient()
   const [tab, setTab] = useState<Tab>('overview')
-  const [usage, setUsage] = useState<MaterialUsage[]>([])
+  const [usage, setUsage] = useState<MaterialOrderUsage[]>([])
   const [movements, setMovements] = useState<StockMovement[]>([])
 
   useEffect(() => {
     let cancelled = false
-    fetchMaterialUsage(supabase, material.id).then(rows => {
+    fetchMaterialOrderHistory(supabase, material.id).then(rows => {
       if (!cancelled) setUsage(rows)
     })
     fetchMaterialMovements(supabase, material.id).then(rows => {
@@ -44,6 +56,7 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
   }, [material.id])
 
   const status = materialStockStatus(material)
+  const totalUsage = usage.reduce((sum, u) => sum + u.releasedQty, 0)
 
   return (
     <>
@@ -165,9 +178,16 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
               </div>
 
               <div className="mb-6">
-                <h4 className="font-bold text-on-surface text-[11px] uppercase tracking-widest mb-4">Sedang Digunakan Oleh Order</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bold text-on-surface text-[11px] uppercase tracking-widest">Dipakai Oleh Order</h4>
+                  {usage.length > 0 && (
+                    <p className="text-label text-secondary">
+                      Total Penggunaan: <span className="font-bold text-on-surface">{totalUsage.toLocaleString('id-ID')} {material.unit}</span>
+                    </p>
+                  )}
+                </div>
                 {usage.length === 0 ? (
-                  <p className="text-label text-secondary/70">Tidak ada order aktif yang menggunakan material ini.</p>
+                  <p className="text-label text-secondary/70">Belum ada order yang menggunakan material ini.</p>
                 ) : (
                   <div className="space-y-3">
                     {usage.map(u => (
@@ -178,8 +198,13 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <p className="text-[10px] text-secondary/60 uppercase font-bold">Qty</p>
-                            <p className="text-body font-bold text-on-surface">{u.quantity} <span className="text-label font-normal">{material.unit}</span></p>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${USAGE_STATUS_STYLE[u.status]}`}>
+                              {USAGE_STATUS_LABEL[u.status]}
+                            </span>
+                            <p className="text-body font-bold text-on-surface mt-1">
+                              {(u.status === 'reserved' ? u.reservedQty : u.releasedQty).toLocaleString('id-ID')}{' '}
+                              <span className="text-label font-normal">{material.unit}</span>
+                            </p>
                           </div>
                           <Link
                             href={`/workspace/order-created/${u.orderId}`}

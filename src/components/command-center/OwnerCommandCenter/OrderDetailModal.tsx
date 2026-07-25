@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { emergencyOverrideStage, getProductionPacket, getProductionStageOverrideAuditLog } from '@/lib/production/client'
@@ -9,6 +11,8 @@ import { STAGE_ORDER, STAGE_LABELS, getCurrentStageRecord } from '@/lib/producti
 import { FIELD_LABELS, CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from '@/components/workspace/measurement/types'
 import type { MeasurementKey } from '@/components/workspace/measurement/types'
 import { markOrderDelivered } from '@/lib/order/delivery'
+import { fetchMaterialStockByName, fetchOrderMaterialUsage } from '@/lib/inventory/materials'
+import type { Material, MaterialUsageStatus, OrderMaterialUsage } from '@/lib/inventory/types'
 import { OrderCommercialSection } from './OrderCommercialSection'
 
 interface OrderDetailModalProps {
@@ -25,6 +29,14 @@ const STAGE_STATUS_DOT: Record<string, string> = {
   completed: 'bg-[#161b29]',
   in_progress: 'bg-[#775a19] animate-pulse',
   pending: 'bg-[#dce2f3] border border-[#c4c7c7]',
+}
+
+// Sprint I.2 — same status vocabulary as MaterialDetailDrawer's usage list,
+// kept local here since that component doesn't export it.
+const USAGE_STATUS_LABEL: Record<MaterialUsageStatus, string> = {
+  reserved: 'Reserved',
+  partial: 'Sebagian Released',
+  released: 'Released',
 }
 
 function humanizeEventType(eventType: string): string {
@@ -45,10 +57,13 @@ function formatDate(iso: string | null): string {
 // aktivitas is a separate business_events read, same source
 // ProductionJourneyTimeline uses elsewhere for the pre-production journey.
 export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
+  const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [packet, setPacket] = useState<ProductionPacket | null>(null)
   const [events, setEvents] = useState<ActivityEvent[]>([])
   const [overrideAuditLog, setOverrideAuditLog] = useState<ProductionStageOverrideAuditLogEntry[]>([])
+  const [materialUsage, setMaterialUsage] = useState<OrderMaterialUsage[]>([])
+  const [fabricStock, setFabricStock] = useState<Pick<Material, 'available_stock' | 'min_stock' | 'unit'> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [markingDelivered, setMarkingDelivered] = useState(false)
@@ -60,7 +75,7 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
     setLoading(true)
     setError(null)
     try {
-      const [packetResult, eventsResult, auditLogResult] = await Promise.all([
+      const [packetResult, eventsResult, auditLogResult, materialUsageResult] = await Promise.all([
         getProductionPacket(supabase, orderId),
         supabase
           .from('business_events')
@@ -68,10 +83,19 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
           .eq('order_id', orderId)
           .order('created_at', { ascending: false }),
         getProductionStageOverrideAuditLog(supabase, orderId),
+        fetchOrderMaterialUsage(supabase, orderId),
       ])
       setPacket(packetResult)
       setEvents((eventsResult.data as ActivityEvent[]) || [])
       setOverrideAuditLog(auditLogResult)
+      setMaterialUsage(materialUsageResult)
+
+      if (packetResult?.design?.fabric) {
+        const stockByName = await fetchMaterialStockByName(supabase, [packetResult.design.fabric])
+        setFabricStock(stockByName.get(packetResult.design.fabric) ?? null)
+      } else {
+        setFabricStock(null)
+      }
     } catch (err) {
       console.error('[command-center] load order detail failed', err)
       setError('Gagal memuat detail order.')
@@ -101,6 +125,7 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
     try {
       await emergencyOverrideStage(supabase, { orderId, stageRecordId: currentRecord.id, reason: reason.trim() })
       await load()
+      router.refresh()
     } catch (err) {
       console.error('[command-center] emergency override failed', err)
       setOverrideError(err instanceof Error ? err.message : 'Gagal melakukan Emergency Override.')
@@ -120,6 +145,7 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
     try {
       await markOrderDelivered(supabase, orderId)
       await load()
+      router.refresh()
     } catch (err) {
       console.error('[command-center] mark delivered failed', err)
       setDeliveredError('Gagal menandai order Delivered. Pastikan tahap Pengiriman sudah selesai.')
@@ -250,6 +276,63 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
                     ))}
                   </ul>
                 </div>
+              )}
+            </div>
+
+            <div>
+              <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">
+                Material Digunakan
+              </p>
+              {packet.design?.fabric ? (
+                <div className="bg-white border-[0.5px] border-[#c4c7c7] p-3 flex items-center justify-between gap-3 mb-2">
+                  <div className="min-w-0">
+                    <p className="font-hanken text-sm text-[#161b29] truncate">
+                      {packet.design.fabric} · {packet.design.color}
+                    </p>
+                    {fabricStock && (
+                      <p className="font-hanken text-[10px] text-[#46464c] mt-0.5">
+                        Stok tersedia: {fabricStock.available_stock.toLocaleString('id-ID')} {fabricStock.unit}
+                      </p>
+                    )}
+                  </div>
+                  <Link
+                    href={`/inventory/material?q=${encodeURIComponent(packet.design.fabric)}`}
+                    className="font-hanken text-[10px] text-[#775a19] uppercase tracking-wider hover:underline whitespace-nowrap"
+                  >
+                    Lihat Material
+                  </Link>
+                </div>
+              ) : (
+                <p className="font-hanken text-xs text-[#46464c] mb-2">Belum ada data desain.</p>
+              )}
+              {materialUsage.length === 0 ? (
+                <p className="font-hanken text-xs text-[#46464c]">
+                  Belum ada data reservasi material untuk order ini.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {materialUsage.map(m => (
+                    <li key={m.materialId} className="bg-white border-[0.5px] border-[#c4c7c7] p-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-hanken text-sm text-[#161b29] truncate">{m.name}</p>
+                        <p className="font-hanken text-[10px] text-[#46464c] uppercase tracking-wider mt-0.5">
+                          {USAGE_STATUS_LABEL[m.status]}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <p className="font-hanken text-sm text-[#161b29]">
+                          {(m.status === 'reserved' ? m.reservedQty : m.releasedQty).toLocaleString('id-ID')} {m.unit}
+                        </p>
+                        <Link
+                          href={`/inventory/material?material=${m.materialId}`}
+                          className="font-hanken text-[10px] text-[#775a19] uppercase tracking-wider hover:underline whitespace-nowrap"
+                        >
+                          Lihat Material
+                        </Link>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 

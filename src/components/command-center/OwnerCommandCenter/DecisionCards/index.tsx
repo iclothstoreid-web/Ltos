@@ -6,7 +6,6 @@ import type {
   InventoryAlertCardData,
   BusinessInsightCardData,
 } from '@/lib/decision/types'
-import type { SlaRiskOrder } from '@/lib/decision/types'
 import { OperationalAlertCard } from './OperationalAlertCard'
 import { CommercialAlertCard } from './CommercialAlertCard'
 import { InventoryAlertCard } from './InventoryAlertCard'
@@ -17,20 +16,20 @@ export interface DecisionCardsSectionProps {
   commercialAlert: CommercialAlertCardData
   inventoryAlert: InventoryAlertCardData
   businessInsight: BusinessInsightCardData
-  slaRiskOrders: SlaRiskOrder[]
   onSelectOrder: (orderId: string) => void
 }
 
-// Sprint N.1 — Owner Decision Layer V1
+// Sprint N.1/N.2 — Actionable Decision Layer V1
 // Four Decision Cards that answer "Apa yang harus saya lakukan hari ini?"
-// Every card reuses data from existing RPCs only — no new engine, no new
-// RPC, no new dashboard.
+// with a reason, a recommended action, and a deep link per item. Every
+// card reuses data from existing RPCs only — no new engine, no new RPC,
+// no new dashboard. onSelectOrder opens the same OrderDetailModal
+// BottleneckPanel/Decision Center already use (owned by OwnerCommandCenter).
 export function DecisionCardsSection({
   operationalAlert,
   commercialAlert,
   inventoryAlert,
   businessInsight,
-  slaRiskOrders,
   onSelectOrder,
 }: DecisionCardsSectionProps) {
   return (
@@ -45,28 +44,9 @@ export function DecisionCardsSection({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <OperationalAlertCard
-          data={operationalAlert}
-          onViewOrdersOverSla={() => {
-            const overSla = slaRiskOrders.find(o => o.risk_level === 'over_sla')
-            if (overSla) onSelectOrder(overSla.order_id)
-          }}
-          onViewOrdersNearSla={() => {
-            const nearSla = slaRiskOrders.find(o => o.risk_level === 'risk')
-            if (nearSla) onSelectOrder(nearSla.order_id)
-          }}
-        />
+        <OperationalAlertCard data={operationalAlert} onSelectOrder={onSelectOrder} />
 
-        <CommercialAlertCard
-          data={commercialAlert}
-          onViewOutstanding={() => {
-            // Opens first outstanding order detail
-            onSelectOrder(slaRiskOrders[0]?.order_id || '')
-          }}
-          onViewDiscounts={() => {
-            onSelectOrder(slaRiskOrders[0]?.order_id || '')
-          }}
-        />
+        <CommercialAlertCard data={commercialAlert} onSelectOrder={onSelectOrder} />
 
         <InventoryAlertCard data={inventoryAlert} />
 

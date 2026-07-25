@@ -13,12 +13,12 @@ import { AgendaPanel, AgendaItem } from './AgendaPanel'
 import { ClockCalendar } from './widgets/ClockCalendar'
 import { EngineOverviewSection, type EngineOverviewSectionProps } from './EngineOverviewSection'
 import { DecisionCardsSection } from './DecisionCards'
+import { OrderDetailModal } from './OrderDetailModal'
 import type {
   OperationalAlertCardData,
   CommercialAlertCardData,
   InventoryAlertCardData,
   BusinessInsightCardData,
-  SlaRiskOrder,
 } from '@/lib/decision/types'
 
 export type OwnerCommandCenterProps = {
@@ -68,7 +68,6 @@ export type OwnerCommandCenterProps = {
     inventoryAlert: InventoryAlertCardData
     businessInsight: BusinessInsightCardData
   }
-  slaRiskOrders: SlaRiskOrder[]
 }
 
 export function OwnerCommandCenter({
@@ -83,9 +82,13 @@ export function OwnerCommandCenter({
   artisanCards,
   agendaItems,
   decisionCards,
-  slaRiskOrders,
 }: OwnerCommandCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  // Sprint N.2 — same OrderDetailModal instance BottleneckPanel/Decision
+  // Center already each own locally; Decision Cards get their own here so
+  // "deep link ke order terkait" opens the existing Detail Order overlay
+  // instead of a new one.
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
 
   return (
       <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
@@ -126,10 +129,7 @@ export function OwnerCommandCenter({
             commercialAlert={decisionCards.commercialAlert}
             inventoryAlert={decisionCards.inventoryAlert}
             businessInsight={decisionCards.businessInsight}
-            slaRiskOrders={slaRiskOrders}
-            onSelectOrder={() => {
-              /* order detail modal opens via OrderDetailModal in BottleneckPanel */
-            }}
+            onSelectOrder={setSelectedOrderId}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -152,6 +152,10 @@ export function OwnerCommandCenter({
           </div>
         </main>
       </div>
+
+      {selectedOrderId && (
+        <OrderDetailModal orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { assignStageOperator, getProductionPacket, listActiveOperators } from '@/lib/production/client'
@@ -22,6 +23,7 @@ interface AssignOperatorModalProps {
 // record to attach the assignment to, even for an order that hasn't been
 // opened in the Production kiosk yet.
 export function AssignOperatorModal({ orderId, orderNumber, onClose, onAssigned }: AssignOperatorModalProps) {
+  const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [operators, setOperators] = useState<Operator[]>([])
   const [capacityByOperator, setCapacityByOperator] = useState<Map<string, OperatorCapacityRow>>(new Map())
@@ -72,6 +74,7 @@ export function AssignOperatorModal({ orderId, orderNumber, onClose, onAssigned 
     setError(null)
     try {
       await assignStageOperator(supabase, { orderId, stageRecordId, operatorId: selectedOperatorId })
+      router.refresh()
       onAssigned()
       onClose()
     } catch (err) {

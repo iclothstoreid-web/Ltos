@@ -1,5 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Material, MaterialCategory, MaterialUsage, StockMovement } from './types'
+import type {
+  Material,
+  MaterialAttentionItem,
+  MaterialCategory,
+  MaterialOrderUsage,
+  MaterialUsageRanking,
+  MaterialUsageStatus,
+  OrderMaterialUsage,
+  StockMovement,
+} from './types'
+import { materialStockStatus } from './types'
 
 export async function fetchCategories(supabase: SupabaseClient): Promise<MaterialCategory[]> {
   const { data, error } = await supabase
@@ -162,12 +172,18 @@ export async function fetchMaterialMovements(supabase: SupabaseClient, materialI
   return (data ?? []) as StockMovement[]
 }
 
-// "Digunakan oleh" — reservation movements for this material that haven't
-// been fully released yet, joined out to the order/customer they belong
-// to. Aggregated client-side (reservation minus release, per order) rather
-// than a SQL view, since the ledger is small per material and this is
-// read-only display data for the drawer, not a hot path.
-export async function fetchMaterialUsage(supabase: SupabaseClient, materialId: string): Promise<MaterialUsage[]> {
+function usageStatus(reserved: number, released: number): MaterialUsageStatus {
+  if (released <= 0) return 'reserved'
+  return released >= reserved ? 'released' : 'partial'
+}
+
+// Sprint I.2 — "dipakai order apa saja, status order, total penggunaan" for
+// Material Detail. Reads the full order history for this material (not just
+// currently-active reservations), netting reservation/release per order from
+// the same ledger fetchMaterialMovements already reads for Riwayat Stok.
+// Aggregated client-side rather than a SQL view for the same reason as
+// before: the ledger is small per material, this is read-only display data.
+export async function fetchMaterialOrderHistory(supabase: SupabaseClient, materialId: string): Promise<MaterialOrderUsage[]> {
   const { data: movements, error } = await supabase
     .from('material_stock_movements')
     .select('order_id, movement_type, quantity')
@@ -177,33 +193,72 @@ export async function fetchMaterialUsage(supabase: SupabaseClient, materialId: s
 
   if (error) throw error
 
-  const netByOrder = new Map<string, number>()
+  const byOrder = new Map<string, { reserved: number; released: number }>()
   for (const m of movements ?? []) {
     const orderId = m.order_id as string
-    const delta = m.movement_type === 'reservation' ? m.quantity : -m.quantity
-    netByOrder.set(orderId, (netByOrder.get(orderId) ?? 0) + delta)
+    const entry = byOrder.get(orderId) ?? { reserved: 0, released: 0 }
+    if (m.movement_type === 'reservation') entry.reserved += m.quantity
+    else entry.released += m.quantity
+    byOrder.set(orderId, entry)
   }
 
-  const activeOrderIds = Array.from(netByOrder.entries()).filter(([, qty]) => qty > 0).map(([orderId]) => orderId)
-  if (activeOrderIds.length === 0) return []
+  const orderIds = Array.from(byOrder.keys())
+  if (orderIds.length === 0) return []
 
   const { data: orders, error: ordersError } = await supabase
     .from('orders')
     .select('id, order_number, current_state, customers(name)')
-    .in('id', activeOrderIds)
+    .in('id', orderIds)
 
   if (ordersError) throw ordersError
 
   return (orders ?? []).map(o => {
     const customer = Array.isArray(o.customers) ? o.customers[0] : o.customers
+    const entry = byOrder.get(o.id)!
     return {
       orderId: o.id,
       orderNumber: o.order_number,
       customerName: customer?.name || 'Unknown',
-      quantity: netByOrder.get(o.id) ?? 0,
       currentState: o.current_state,
+      reservedQty: entry.reserved,
+      releasedQty: entry.released,
+      netQty: Math.max(entry.reserved - entry.released, 0),
+      status: usageStatus(entry.reserved, entry.released),
     }
   })
+}
+
+// Sprint I.2 — reverse direction: "material yang dipakai, jumlah, status"
+// for Order Detail. Same ledger, filtered by order_id instead of
+// material_id, joined out to the materials it touched.
+export async function fetchOrderMaterialUsage(supabase: SupabaseClient, orderId: string): Promise<OrderMaterialUsage[]> {
+  const { data, error } = await supabase
+    .from('material_stock_movements')
+    .select('material_id, movement_type, quantity, materials(name, unit)')
+    .eq('order_id', orderId)
+    .in('movement_type', ['reservation', 'release'])
+
+  if (error) throw error
+
+  const byMaterial = new Map<string, { name: string; unit: string; reserved: number; released: number }>()
+  for (const row of data ?? []) {
+    const material = Array.isArray(row.materials) ? row.materials[0] : row.materials
+    const materialId = row.material_id as string
+    const entry = byMaterial.get(materialId) ?? { name: material?.name ?? 'Material', unit: material?.unit ?? '', reserved: 0, released: 0 }
+    if (row.movement_type === 'reservation') entry.reserved += row.quantity
+    else entry.released += row.quantity
+    byMaterial.set(materialId, entry)
+  }
+
+  return Array.from(byMaterial.entries()).map(([materialId, entry]) => ({
+    materialId,
+    name: entry.name,
+    unit: entry.unit,
+    reservedQty: entry.reserved,
+    releasedQty: entry.released,
+    netQty: Math.max(entry.reserved - entry.released, 0),
+    status: usageStatus(entry.reserved, entry.released),
+  }))
 }
 
 // "Digunakan di Fitter App" badge (Material Workspace card) — which
@@ -219,6 +274,69 @@ export async function fetchMaterialIdsUsedInDesign(supabase: SupabaseClient): Pr
 
   if (error) throw error
   return new Set((data ?? []).map(row => row.material_id as string))
+}
+
+// Material Intelligence (Sprint I.1) — "perlu perhatian" list. Reuses
+// materialStockStatus() for classification and the same reorder-qty
+// heuristic (min_stock * 2 - available, floored at 1) Command Center's
+// page.tsx already computes inline for the Inventory Alert Decision Card —
+// extracted here as a pure function over an already-fetched materials array
+// (no new query) so both surfaces can share one definition instead of
+// re-deriving it. Sorted by available/minStock ascending (lowest ratio =
+// most critical first), same as Command Center's "most critical" sort.
+export function getMaterialAttentionList(
+  materials: Pick<Material, 'id' | 'name' | 'unit' | 'available_stock' | 'min_stock' | 'is_active'>[]
+): MaterialAttentionItem[] {
+  return materials
+    .filter(m => m.is_active && materialStockStatus(m) !== 'aman')
+    .map(m => ({
+      materialId: m.id,
+      name: m.name,
+      unit: m.unit,
+      availableStock: m.available_stock,
+      minStock: m.min_stock,
+      status: materialStockStatus(m),
+      reorderQty: Math.max(m.min_stock * 2 - m.available_stock, 1),
+    }))
+    .sort((a, b) => a.availableStock / (a.minStock || 1) - b.availableStock / (b.minStock || 1))
+}
+
+// "Material paling banyak dipakai" — sums real physical consumption from the
+// existing stock ledger. Only 'release' (physical_stock actually decremented
+// at Persiapan Material, see release_material_reservation) and 'stock_out'
+// (manual removal via inventory_adjust_stock) count as consumption;
+// 'reservation' is just a hold (physical_stock untouched) and 'adjustment'
+// is a correction, not usage, so both are excluded. All-time, no new table
+// or RPC — read-only aggregation over material_stock_movements.
+export async function fetchMostUsedMaterials(supabase: SupabaseClient, limit = 5): Promise<MaterialUsageRanking[]> {
+  const { data, error } = await supabase
+    .from('material_stock_movements')
+    .select('material_id, quantity, materials(name, unit, is_active)')
+    .in('movement_type', ['release', 'stock_out'])
+
+  if (error) throw error
+
+  const totals = new Map<string, MaterialUsageRanking>()
+  for (const row of data ?? []) {
+    const material = Array.isArray(row.materials) ? row.materials[0] : row.materials
+    if (!material?.is_active) continue
+    const materialId = row.material_id as string
+    const existing = totals.get(materialId)
+    if (existing) {
+      existing.totalConsumed += row.quantity
+    } else {
+      totals.set(materialId, {
+        materialId,
+        name: material.name,
+        unit: material.unit,
+        totalConsumed: row.quantity,
+      })
+    }
+  }
+
+  return Array.from(totals.values())
+    .sort((a, b) => b.totalConsumed - a.totalConsumed)
+    .slice(0, limit)
 }
 
 // Fitter's live-stock read path (FabricSelector) — a simple name match

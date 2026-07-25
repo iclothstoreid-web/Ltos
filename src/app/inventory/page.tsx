@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { InventoryShell } from '@/components/inventory/InventoryShell'
 import { InventoryDashboard } from '@/components/inventory/dashboard/InventoryDashboard'
 import { canManageInventory } from '@/lib/inventory/access'
+import { fetchMostUsedMaterials, getMaterialAttentionList } from '@/lib/inventory/materials'
 import type { ActivityItem } from '@/components/inventory/dashboard/ActivityTimeline'
 
 // Same auth-then-role-gate pattern as src/app/command-center/page.tsx and
@@ -25,19 +26,21 @@ export default async function InventoryDashboardPage() {
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
 
-  const [{ data: categories }, { data: materials }, { data: todayMovements }] = await Promise.all([
+  const [{ data: categories }, { data: materials }, { data: todayMovements }, mostUsedMaterials] = await Promise.all([
     supabase.from('material_categories').select('id'),
-    supabase.from('materials').select('id, name, unit, reserved_stock, available_stock, min_stock'),
+    supabase.from('materials').select('id, name, unit, reserved_stock, available_stock, min_stock, is_active'),
     supabase
       .from('material_stock_movements')
       .select('id, movement_type, quantity, order_id, created_at, materials(name, unit), profiles(name)')
       .gte('created_at', todayStart.toISOString())
       .order('created_at', { ascending: false }),
+    fetchMostUsedMaterials(supabase, 5),
   ])
 
   const materialRows = materials ?? []
   const stokMenipisCount = materialRows.filter(m => m.available_stock <= m.min_stock).length
   const reservedTotal = materialRows.reduce((sum, m) => sum + (m.reserved_stock || 0), 0)
+  const attentionList = getMaterialAttentionList(materialRows).slice(0, 5)
 
   const { data: reservationMovements } = await supabase
     .from('material_stock_movements')
@@ -76,6 +79,8 @@ export default async function InventoryDashboardPage() {
         reservedTotal={reservedTotal}
         reservedOrderCount={reservedOrderCount}
         activityItems={activityItems}
+        attentionList={attentionList}
+        mostUsedMaterials={mostUsedMaterials}
       />
     </InventoryShell>
   )

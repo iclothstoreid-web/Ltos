@@ -63,12 +63,59 @@ export interface StockMovement {
   profiles?: { name: string } | null
 }
 
-export interface MaterialUsage {
+// Sprint I.2 Material Usage Intelligence — reservation/release status for one
+// order-material pair, netted from material_stock_movements. 'reserved' =
+// only reservation movements exist yet (still held, not released to
+// production); 'released' = fully released (>= reserved qty released);
+// 'partial' = some released, some still held.
+export type MaterialUsageStatus = 'reserved' | 'partial' | 'released'
+
+// Material Detail -> "order apa saja pakai material ini". Supersedes the old
+// MaterialUsage (which only showed currently-active net>0 reservations) with
+// full history + status + totals, per Sprint I.2.
+export interface MaterialOrderUsage {
   orderId: string
   orderNumber: string
   customerName: string
-  quantity: number
   currentState: string
+  reservedQty: number
+  releasedQty: number
+  netQty: number
+  status: MaterialUsageStatus
+}
+
+// Order Detail -> "material apa saja dipakai order ini". Mirror of
+// MaterialOrderUsage for the reverse direction.
+export interface OrderMaterialUsage {
+  materialId: string
+  name: string
+  unit: string
+  reservedQty: number
+  releasedQty: number
+  netQty: number
+  status: MaterialUsageStatus
+}
+
+// Material Intelligence (Sprint I.1) — "perlu perhatian" list. Same
+// ratio/reorder-qty shape Command Center's page.tsx composes inline for the
+// Inventory Alert Decision Card, extracted so both can share one definition.
+export interface MaterialAttentionItem {
+  materialId: string
+  name: string
+  unit: string
+  availableStock: number
+  minStock: number
+  status: StockStatus
+  reorderQty: number
+}
+
+// "Material paling banyak dipakai" — ranked by total quantity physically
+// consumed (release + stock_out movements), all-time.
+export interface MaterialUsageRanking {
+  materialId: string
+  name: string
+  unit: string
+  totalConsumed: number
 }
 
 export const MOVEMENT_TYPE_LABEL: Record<MovementType, string> = {

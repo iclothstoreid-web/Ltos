@@ -6,7 +6,11 @@ import { getBottleneckSeverityByHours, QUEUE_WORKSPACE_URL } from '@/lib/ltos'
 import type { BottleneckItem } from '@/components/command-center/OwnerCommandCenter/BottleneckPanel'
 import type { AgendaItem } from '@/components/command-center/OwnerCommandCenter/AgendaPanel'
 import { getCommercialSummary } from '@/lib/commercial/summary'
+import { PAYMENT_STATUS_LABELS } from '@/lib/commercial/types'
 import { getOwnerSummary, getSlaRiskOrders } from '@/lib/decision/client'
+import { computeTodaysActions } from '@/lib/decision/actions'
+import { CATEGORY_LABEL } from '@/components/owner/decision-center/BottleneckBoard'
+import type { BottleneckCategory, SlaRiskOrder } from '@/lib/decision/types'
 import { getCapacityDashboard, getKpiDashboard, getOperatorKpiList, getDivisiKpiList } from '@/lib/kpi/client'
 
 // OwnerCommandCenter itself is untouched in structure (chrome/layout unchanged)
@@ -342,42 +346,91 @@ export default async function CommandCenterPage() {
     })),
   ]
 
-  // ─── Sprint N.1 — Owner Decision Layer V1 ──────────────────────
+  // ─── Sprint N.1/N.2 — Actionable Decision Layer V1 ─────────────
   // Every card is composed client-side from data existing RPCs already
   // return in this page — no new engine, no new RPC, no new dashboard.
+  // N.2 turns each card's raw counts into Insight -> Recommendation ->
+  // Action: a reason, a recommended action, and a deep link per item.
+
+  const bottleneckActionLabel = (category: BottleneckCategory | null) =>
+    category ? `Tinjau bottleneck ${CATEGORY_LABEL[category]}` : 'Tinjau order'
 
   // Decision Card 1 — Operational Alert
-  // Reuses Queue Engine (slaRiskOrders risk_level), Production Runtime
-  // (ownerSummary.bottleneck), Capacity (ownerSummary.capacity_warning)
+  // Reuses Queue Engine (slaRiskOrders risk_level + risk_label +
+  // bottleneck_category — all already computed server-side by
+  // get_sla_risk_orders()), Production Runtime (ownerSummary.bottleneck),
+  // Capacity (ownerSummary.capacity_warning). CATEGORY_LABEL is the same
+  // map BottleneckBoard (Decision Center) already uses for
+  // bottleneck_category, reused as-is rather than re-invented here.
+  const toOperationalItem = (o: SlaRiskOrder) => ({
+    orderId: o.order_id,
+    orderNumber: o.order_number,
+    customerName: o.customer_name,
+    reason: o.risk_label,
+    action: bottleneckActionLabel(o.bottleneck_category),
+  })
   const operationalAlertCardData = {
     ordersOverSla: ownerSummary.sla_risk.total_over_sla,
     ordersNearSla: ownerSummary.sla_risk.total_risk,
     bottleneckStage: ownerSummary.bottleneck.most_backlogged_stage,
     bottleneckCount: ownerSummary.bottleneck.most_backlogged_stage_count,
     operatorOverload: ownerSummary.capacity_warning.operator_overload,
+    overSlaItems: slaRiskOrders
+      .filter(o => o.risk_level === 'over_sla')
+      .sort((a, b) => a.hours_remaining - b.hours_remaining)
+      .slice(0, 5)
+      .map(toOperationalItem),
+    nearSlaItems: slaRiskOrders
+      .filter(o => o.risk_level === 'risk')
+      .sort((a, b) => a.hours_remaining - b.hours_remaining)
+      .slice(0, 5)
+      .map(toOperationalItem),
   }
 
   // Decision Card 2 — Commercial Alert
-  // Reuses Commercial Engine (getCommercialSummary)
-  const highDiscountCount = commercialSummary.dpOutstandingCount > 3
-    ? Math.min(commercialSummary.dpOutstandingCount, 2)
-    : 0
+  // Reuses Commercial Engine (getCommercialSummary, extended in Sprint N.2
+  // to also read discount/override columns already on `quotations`). No
+  // due_date column exists anywhere in the schema, so "overdue" is defined
+  // from two already-fetched signals rather than a new one: an outstanding
+  // payment on an order that Queue Engine already classifies as over_sla.
+  const overSlaOrderIds = new Set(
+    slaRiskOrders.filter(o => o.risk_level === 'over_sla').map(o => o.order_id)
+  )
+  const overdueItems = commercialSummary.outstandingRows
+    .filter(r => overSlaOrderIds.has(r.orderId))
+    .slice(0, 5)
+    .map(r => ({
+      orderId: r.orderId,
+      orderNumber: r.orderNumber,
+      customerName: r.customerName,
+      amount: r.outstandingAmount,
+      reason: 'Order melewati SLA dengan pembayaran belum lunas',
+    }))
   const commercialAlertCardData = {
     outstandingPayment: commercialSummary.outstandingPayment,
     dpOutstandingCount: commercialSummary.dpOutstandingCount,
-    overdueCount: commercialSummary.outstandingRows.filter(
-      r => r.paymentStatus === 'belum_dibayar' || r.paymentStatus === 'dp_diterima'
-    ).length,
-    highDiscountCount,
-    highOverrideCount: 0, // override data available via OrderDetailModal
+    overdueCount: overdueItems.length,
+    highDiscountCount: commercialSummary.highDiscountRows.length,
+    highOverrideCount: commercialSummary.highOverrideRows.length,
+    overdueItems,
+    outstandingItems: commercialSummary.outstandingRows.slice(0, 5).map(r => ({
+      orderId: r.orderId,
+      orderNumber: r.orderNumber,
+      customerName: r.customerName,
+      amount: r.outstandingAmount,
+      reason: PAYMENT_STATUS_LABELS[r.paymentStatus],
+    })),
+    highDiscountItems: commercialSummary.highDiscountRows.slice(0, 5),
+    highOverrideItems: commercialSummary.highOverrideRows.slice(0, 5),
   }
 
   // Decision Card 3 — Inventory Alert
-  // Reuses Inventory (materials table, already fetched for low stock)
+  // Reuses Inventory (materials table, already fetched for low stock).
   const lowStockMats = (materials || []).filter(m => m.available_stock <= m.min_stock)
   const outOfStockMats = (materials || []).filter(m => m.available_stock <= 0)
   const topReorderItems = lowStockMats
     .map(m => ({
+      materialId: m.id,
       name: m.name,
       available: m.available_stock,
       minStock: m.min_stock,
@@ -385,20 +438,27 @@ export default async function CommandCenterPage() {
       reorderQty: Math.max(m.min_stock * 2 - m.available_stock, 1),
     }))
     .sort((a, b) => a.available / a.minStock - b.available / b.minStock)
-    .slice(0, 5)
   const inventoryAlertCardData = {
     lowStockCount: lowStockMats.length,
     outOfStockCount: outOfStockMats.length,
-    topReorderItems,
+    topReorderItems: topReorderItems.slice(0, 5),
+    mostCriticalItem: topReorderItems[0] || null,
   }
 
   // Decision Card 4 — Business Insight
-  // Reuses KPI (getKpiDashboard) + slaRiskOrders
+  // Reuses KPI (getKpiDashboard) + slaRiskOrders + computeTodaysActions()
+  // (src/lib/decision/actions.ts) — the exact same rule-based
+  // Insight->Recommendation function EngineOverviewSection/Decision Center
+  // already render above this section, just surfaced here too.
   const completedOrders = kpiDashboard.total_order_selesai
   const activeOrdersCountVal = kpiDashboard.total_order_aktif
   const qcReturnCount = slaRiskOrders.filter(
     o => o.bottleneck_category === 'qc'
   ).length
+  const SEVERITY_RANK = { critical: 0, warning: 1, info: 2 } as const
+  const topActions = [...computeTodaysActions(ownerSummary, { dpOutstandingCount: commercialSummary.dpOutstandingCount })]
+    .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
+    .slice(0, 2)
   const businessInsightCardData = {
     completionRate: activeOrdersCountVal > 0
       ? completedOrders / (activeOrdersCountVal + completedOrders)
@@ -408,6 +468,8 @@ export default async function CommandCenterPage() {
     throughputMingguIni: kpiDashboard.throughput_minggu_ini,
     activeOrders: activeOrdersCountVal,
     completedOrders,
+    topActions,
+    workspaceHref: '/command-center/decision-center',
   }
 
   return (
@@ -465,7 +527,6 @@ export default async function CommandCenterPage() {
         inventoryAlert: inventoryAlertCardData,
         businessInsight: businessInsightCardData,
       }}
-      slaRiskOrders={slaRiskOrders}
     />
   )
 }

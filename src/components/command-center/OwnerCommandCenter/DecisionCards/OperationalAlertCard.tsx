@@ -1,24 +1,49 @@
 'use client'
 
-import type { OperationalAlertCardData } from '@/lib/decision/types'
+import type { OperationalAlertCardData, OperationalDecisionItem } from '@/lib/decision/types'
 import { STAGE_LABELS } from '@/lib/production/stageConfig'
 import type { ProductionStage } from '@/lib/production/types'
 
+function OperationalItemList({
+  items,
+  onSelectOrder,
+}: {
+  items: OperationalDecisionItem[]
+  onSelectOrder: (orderId: string) => void
+}) {
+  return (
+    <ul className="mt-2 space-y-1.5">
+      {items.map(item => (
+        <li key={item.orderId}>
+          <button
+            type="button"
+            onClick={() => onSelectOrder(item.orderId)}
+            className="w-full text-left rounded-[8px] px-2 py-1.5 -mx-2 hover:bg-on-surface/5 transition-colors focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-body font-medium text-on-surface truncate">
+                {item.orderNumber} · {item.customerName || 'Unknown'}
+              </span>
+            </div>
+            <p className="text-label text-secondary mt-0.5">{item.reason}</p>
+            <p className="text-label text-primary mt-0.5">{item.action}</p>
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 interface OperationalAlertCardProps {
   data: OperationalAlertCardData
-  onViewOrdersOverSla: () => void
-  onViewOrdersNearSla: () => void
+  onSelectOrder: (orderId: string) => void
 }
 
 // Decision Card 1 — Operational Alert
 // Reuses Queue Engine (SLA risk), Production Runtime (bottleneck), Capacity
 // (operator overload). All data is composed client-side from existing RPC
 // responses — no new engine, no new RPC, no new dashboard.
-export function OperationalAlertCard({
-  data,
-  onViewOrdersOverSla,
-  onViewOrdersNearSla,
-}: OperationalAlertCardProps) {
+export function OperationalAlertCard({ data, onSelectOrder }: OperationalAlertCardProps) {
   const bottleneckLabel = data.bottleneckStage
     ? STAGE_LABELS[data.bottleneckStage as ProductionStage] || data.bottleneckStage
     : null
@@ -39,47 +64,35 @@ export function OperationalAlertCard({
 
       <div className="relative divide-y divide-outline-variant/60">
         {/* Orders over SLA */}
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-body font-medium text-on-surface">Order Melewati SLA</p>
-            <p className="text-label text-secondary">Perlu tindakan segera</p>
-          </div>
-          <div className="flex items-center gap-3">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-body font-medium text-on-surface">Order Melewati SLA</p>
+              <p className="text-label text-secondary">Perlu tindakan segera</p>
+            </div>
             <span className="font-serif text-title text-[28px] leading-none text-[#c0392b]">
               {data.ordersOverSla}
             </span>
-            {data.ordersOverSla > 0 && (
-              <button
-                type="button"
-                onClick={onViewOrdersOverSla}
-                className="text-label text-primary hover:text-on-surface uppercase tracking-widest transition-colors focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
-              >
-                Lihat
-              </button>
-            )}
           </div>
+          {data.overSlaItems.length > 0 && (
+            <OperationalItemList items={data.overSlaItems} onSelectOrder={onSelectOrder} />
+          )}
         </div>
 
         {/* Orders near SLA */}
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-body font-medium text-on-surface">Order Mendekati SLA</p>
-            <p className="text-label text-secondary">Perlu dipantau</p>
-          </div>
-          <div className="flex items-center gap-3">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-body font-medium text-on-surface">Order Mendekati SLA</p>
+              <p className="text-label text-secondary">Perlu dipantau</p>
+            </div>
             <span className="font-serif text-title text-[28px] leading-none text-[#b8860b]">
               {data.ordersNearSla}
             </span>
-            {data.ordersNearSla > 0 && (
-              <button
-                type="button"
-                onClick={onViewOrdersNearSla}
-                className="text-label text-primary hover:text-on-surface uppercase tracking-widest transition-colors focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
-              >
-                Lihat
-              </button>
-            )}
           </div>
+          {data.nearSlaItems.length > 0 && (
+            <OperationalItemList items={data.nearSlaItems} onSelectOrder={onSelectOrder} />
+          )}
         </div>
 
         {/* Bottleneck */}

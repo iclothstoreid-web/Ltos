@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatRupiah } from '@/lib/format/money'
 import {
@@ -25,6 +26,7 @@ interface OrderCommercialSectionProps {
 // OrderDetailModal — everything a Fitter can already see on
 // PaymentSummaryCard, plus the controls only an owner should have.
 export function OrderCommercialSection({ orderId, productionStarted = false, deliveryCompleted = false }: OrderCommercialSectionProps) {
+  const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [invoice, setInvoice] = useState<OrderInvoice | null>(null)
   const [loading, setLoading] = useState(true)
@@ -92,6 +94,7 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
       setDiscountValue('')
       setDiscountReason('')
       await refresh()
+      router.refresh()
     } catch (err) {
       console.error('[command-center] apply discount failed', err)
       setError(errorMessage(err, 'Gagal menerapkan diskon.'))
@@ -113,6 +116,7 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
       setKolCode('')
       setKolAmount('')
       await refresh()
+      router.refresh()
     } catch (err) {
       console.error('[command-center] apply KOL failed', err)
       setError(errorMessage(err, 'Gagal menerapkan diskon KOL.'))
@@ -134,6 +138,7 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
       setOverrideAmount('')
       setOverrideReason('')
       await refresh()
+      router.refresh()
     } catch (err) {
       console.error('[command-center] set override failed', err)
       setError(errorMessage(err, 'Gagal melakukan override harga.'))
@@ -148,6 +153,7 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
     try {
       await clearOrderPriceOverride(supabase, orderId)
       await refresh()
+      router.refresh()
     } catch (err) {
       console.error('[command-center] clear override failed', err)
       setError('Gagal membatalkan override.')

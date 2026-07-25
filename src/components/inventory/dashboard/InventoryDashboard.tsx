@@ -2,6 +2,8 @@ import { SummaryCards } from './SummaryCards'
 import { LowStockNotice } from './LowStockNotice'
 import { ReservedNotice } from './ReservedNotice'
 import { ActivityTimeline, type ActivityItem } from './ActivityTimeline'
+import { MaterialIntelligencePanel } from './MaterialIntelligencePanel'
+import type { MaterialAttentionItem, MaterialUsageRanking } from '@/lib/inventory/types'
 
 export interface InventoryDashboardProps {
   totalMaterial: number
@@ -10,6 +12,8 @@ export interface InventoryDashboardProps {
   reservedTotal: number
   reservedOrderCount: number
   activityItems: ActivityItem[]
+  attentionList: MaterialAttentionItem[]
+  mostUsedMaterials: MaterialUsageRanking[]
 }
 
 export function InventoryDashboard({
@@ -19,6 +23,8 @@ export function InventoryDashboard({
   reservedTotal,
   reservedOrderCount,
   activityItems,
+  attentionList,
+  mostUsedMaterials,
 }: InventoryDashboardProps) {
   return (
     <div className="space-y-10">
@@ -38,6 +44,8 @@ export function InventoryDashboard({
         stokMenipis={stokMenipisCount}
         reservedMaterial={reservedTotal}
       />
+
+      <MaterialIntelligencePanel attentionList={attentionList} mostUsedMaterials={mostUsedMaterials} />
 
       <ActivityTimeline items={activityItems} />
     </div>

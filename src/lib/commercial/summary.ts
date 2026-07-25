@@ -10,6 +10,18 @@ export interface OutstandingPaymentRow {
   paymentStatus: PaymentStatus
 }
 
+// Sprint N.2 Task 2 (Commercial Decision) -- same row shape reused for both
+// abnormal-discount and abnormal-override rows, just with `amount`/`reason`
+// meaning different things per caller (discount % over the rules ceiling,
+// or the free-text override reason recorded by set_order_price_override()).
+export interface AbnormalCommercialRow {
+  orderId: string
+  orderNumber: string
+  customerName: string
+  amount: number
+  reason: string
+}
+
 export interface CommercialSummary {
   sales: number
   cashCollected: number
@@ -18,12 +30,18 @@ export interface CommercialSummary {
   minDpPercent: number
   fullPaymentOnly: boolean
   outstandingRows: OutstandingPaymentRow[]
+  highDiscountRows: AbnormalCommercialRow[]
+  highOverrideRows: AbnormalCommercialRow[]
 }
 
 type QuotationRow = {
   id: string
   order_id: string
   total: number | null
+  subtotal: number | null
+  discount_amount: number | null
+  override_amount: number | null
+  override_reason: string | null
   orders: {
     order_number: string
     customers: { name: string | null } | Array<{ name: string | null }> | null
@@ -58,7 +76,9 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
     await Promise.all([
       supabase
         .from('quotations')
-        .select('id, order_id, total, orders!inner(order_number, customers(name))')
+        .select(
+          'id, order_id, total, subtotal, discount_amount, override_amount, override_reason, orders!inner(order_number, customers(name))'
+        )
         .order('created_at', { ascending: false }),
       supabase.from('order_payments').select('quotation_id, amount'),
       getCommercialRules(supabase),
@@ -81,6 +101,9 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
   let outstandingPayment = 0
   let dpOutstandingCount = 0
   const outstandingRows: OutstandingPaymentRow[] = []
+  const highDiscountRows: AbnormalCommercialRow[] = []
+  const highOverrideRows: AbnormalCommercialRow[] = []
+  const maxDiscountPercent = Number(rules.max_discount_percent)
 
   for (const quotation of (quotations || []) as QuotationRow[]) {
     const total = Number(quotation.total || 0)
@@ -89,6 +112,9 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
     const order = first(quotation.orders)
     const customer = first(order?.customers || null)
     const requiredPayment = rules.full_payment_only ? total : total * (Number(rules.min_dp_percent) / 100)
+    const orderId = quotation.order_id
+    const orderNumber = order?.order_number || 'Order'
+    const customerName = customer?.name || 'Customer'
 
     sales += total
     cashCollected += paid
@@ -97,16 +123,45 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
 
     if (outstanding > 0) {
       outstandingRows.push({
-        orderId: quotation.order_id,
-        orderNumber: order?.order_number || 'Order',
-        customerName: customer?.name || 'Customer',
+        orderId,
+        orderNumber,
+        customerName,
         outstandingAmount: outstanding,
         paymentStatus: getPaymentStatus(total, paid),
+      })
+    }
+
+    // Discount is "abnormal" relative to Commercial Rules' own ceiling
+    // (max_discount_percent) -- normalized to % of subtotal so it applies
+    // the same way regardless of discount_type (percentage or fixed).
+    const subtotal = Number(quotation.subtotal || 0)
+    const discountAmount = Number(quotation.discount_amount || 0)
+    if (subtotal > 0 && discountAmount > 0) {
+      const discountPct = (discountAmount / subtotal) * 100
+      if (discountPct > maxDiscountPercent) {
+        highDiscountRows.push({
+          orderId,
+          orderNumber,
+          customerName,
+          amount: discountAmount,
+          reason: `Diskon ${discountPct.toFixed(1)}% (batas ${maxDiscountPercent}%)`,
+        })
+      }
+    }
+
+    if (quotation.override_amount != null) {
+      highOverrideRows.push({
+        orderId,
+        orderNumber,
+        customerName,
+        amount: Number(quotation.override_amount),
+        reason: quotation.override_reason || 'Tanpa alasan tercatat',
       })
     }
   }
 
   outstandingRows.sort((a, b) => b.outstandingAmount - a.outstandingAmount)
+  highDiscountRows.sort((a, b) => b.amount - a.amount)
 
   return {
     sales,
@@ -116,5 +171,7 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
     minDpPercent: Number(rules.min_dp_percent),
     fullPaymentOnly: rules.full_payment_only,
     outstandingRows,
+    highDiscountRows,
+    highOverrideRows,
   }
 }

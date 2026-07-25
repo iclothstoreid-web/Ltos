@@ -1,9 +1,17 @@
 'use client'
 
-import type { BusinessInsightCardData } from '@/lib/decision/types'
+import Link from 'next/link'
+import { ArrowUpRight } from 'lucide-react'
+import type { BusinessInsightCardData, TodaysAction } from '@/lib/decision/types'
 
 interface BusinessInsightCardProps {
   data: BusinessInsightCardData
+}
+
+const SEVERITY_BORDER: Record<TodaysAction['severity'], string> = {
+  critical: 'border-l-[#8a2c22]',
+  warning: 'border-l-[#7a5a12]',
+  info: 'border-l-outline-variant',
 }
 
 // Decision Card 4 — Business Insight
@@ -91,6 +99,29 @@ export function BusinessInsightCard({ data }: BusinessInsightCardProps) {
             </span>
           </div>
         </div>
+
+        {/* Penyebab Utama & Rekomendasi -- top-ranked computeTodaysActions() */}
+        {data.topActions.length > 0 && (
+          <div className="px-6 py-4">
+            <p className="text-body font-medium text-on-surface">Penyebab Utama & Rekomendasi</p>
+            <ul className="mt-2 space-y-2">
+              {data.topActions.map(action => (
+                <li
+                  key={action.id}
+                  className={`border-l-2 pl-3 py-0.5 ${SEVERITY_BORDER[action.severity]}`}
+                >
+                  <p className="text-body text-secondary">{action.text}</p>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href={data.workspaceHref}
+              className="mt-3 inline-flex items-center gap-1 text-body text-primary hover:text-on-surface focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
+            >
+              Lihat Decision Center <ArrowUpRight size={14} aria-hidden="true" />
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
