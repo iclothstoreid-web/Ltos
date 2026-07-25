@@ -12,6 +12,14 @@ import { ArtisanPerformanceGrid } from './ArtisanPerformanceGrid'
 import { AgendaPanel, AgendaItem } from './AgendaPanel'
 import { ClockCalendar } from './widgets/ClockCalendar'
 import { EngineOverviewSection, type EngineOverviewSectionProps } from './EngineOverviewSection'
+import { DecisionCardsSection } from './DecisionCards'
+import type {
+  OperationalAlertCardData,
+  CommercialAlertCardData,
+  InventoryAlertCardData,
+  BusinessInsightCardData,
+  SlaRiskOrder,
+} from '@/lib/decision/types'
 
 export type OwnerCommandCenterProps = {
   profileName: string
@@ -53,6 +61,14 @@ export type OwnerCommandCenterProps = {
     qualityScore: string
   }>
   agendaItems: AgendaItem[]
+  // Sprint N.1 — Owner Decision Layer V1
+  decisionCards: {
+    operationalAlert: OperationalAlertCardData
+    commercialAlert: CommercialAlertCardData
+    inventoryAlert: InventoryAlertCardData
+    businessInsight: BusinessInsightCardData
+  }
+  slaRiskOrders: SlaRiskOrder[]
 }
 
 export function OwnerCommandCenter({
@@ -66,6 +82,8 @@ export function OwnerCommandCenter({
   productionColumns,
   artisanCards,
   agendaItems,
+  decisionCards,
+  slaRiskOrders,
 }: OwnerCommandCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
@@ -102,6 +120,17 @@ export function OwnerCommandCenter({
           <section className="mb-10">
             <CrmSnapshot {...crmSnapshot} />
           </section>
+
+          <DecisionCardsSection
+            operationalAlert={decisionCards.operationalAlert}
+            commercialAlert={decisionCards.commercialAlert}
+            inventoryAlert={decisionCards.inventoryAlert}
+            businessInsight={decisionCards.businessInsight}
+            slaRiskOrders={slaRiskOrders}
+            onSelectOrder={() => {
+              /* order detail modal opens via OrderDetailModal in BottleneckPanel */
+            }}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <section className="lg:col-span-7 space-y-10">

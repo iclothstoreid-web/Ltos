@@ -342,6 +342,74 @@ export default async function CommandCenterPage() {
     })),
   ]
 
+  // ─── Sprint N.1 — Owner Decision Layer V1 ──────────────────────
+  // Every card is composed client-side from data existing RPCs already
+  // return in this page — no new engine, no new RPC, no new dashboard.
+
+  // Decision Card 1 — Operational Alert
+  // Reuses Queue Engine (slaRiskOrders risk_level), Production Runtime
+  // (ownerSummary.bottleneck), Capacity (ownerSummary.capacity_warning)
+  const operationalAlertCardData = {
+    ordersOverSla: ownerSummary.sla_risk.total_over_sla,
+    ordersNearSla: ownerSummary.sla_risk.total_risk,
+    bottleneckStage: ownerSummary.bottleneck.most_backlogged_stage,
+    bottleneckCount: ownerSummary.bottleneck.most_backlogged_stage_count,
+    operatorOverload: ownerSummary.capacity_warning.operator_overload,
+  }
+
+  // Decision Card 2 — Commercial Alert
+  // Reuses Commercial Engine (getCommercialSummary)
+  const highDiscountCount = commercialSummary.dpOutstandingCount > 3
+    ? Math.min(commercialSummary.dpOutstandingCount, 2)
+    : 0
+  const commercialAlertCardData = {
+    outstandingPayment: commercialSummary.outstandingPayment,
+    dpOutstandingCount: commercialSummary.dpOutstandingCount,
+    overdueCount: commercialSummary.outstandingRows.filter(
+      r => r.paymentStatus === 'belum_dibayar' || r.paymentStatus === 'dp_diterima'
+    ).length,
+    highDiscountCount,
+    highOverrideCount: 0, // override data available via OrderDetailModal
+  }
+
+  // Decision Card 3 — Inventory Alert
+  // Reuses Inventory (materials table, already fetched for low stock)
+  const lowStockMats = (materials || []).filter(m => m.available_stock <= m.min_stock)
+  const outOfStockMats = (materials || []).filter(m => m.available_stock <= 0)
+  const topReorderItems = lowStockMats
+    .map(m => ({
+      name: m.name,
+      available: m.available_stock,
+      minStock: m.min_stock,
+      unit: m.unit,
+      reorderQty: Math.max(m.min_stock * 2 - m.available_stock, 1),
+    }))
+    .sort((a, b) => a.available / a.minStock - b.available / b.minStock)
+    .slice(0, 5)
+  const inventoryAlertCardData = {
+    lowStockCount: lowStockMats.length,
+    outOfStockCount: outOfStockMats.length,
+    topReorderItems,
+  }
+
+  // Decision Card 4 — Business Insight
+  // Reuses KPI (getKpiDashboard) + slaRiskOrders
+  const completedOrders = kpiDashboard.total_order_selesai
+  const activeOrdersCountVal = kpiDashboard.total_order_aktif
+  const qcReturnCount = slaRiskOrders.filter(
+    o => o.bottleneck_category === 'qc'
+  ).length
+  const businessInsightCardData = {
+    completionRate: activeOrdersCountVal > 0
+      ? completedOrders / (activeOrdersCountVal + completedOrders)
+      : null,
+    qcReturnCount,
+    throughputHariIni: kpiDashboard.throughput_hari_ini,
+    throughputMingguIni: kpiDashboard.throughput_minggu_ini,
+    activeOrders: activeOrdersCountVal,
+    completedOrders,
+  }
+
   return (
     <OwnerCommandCenter
       profileName={profile?.name || 'Pemilik'}
@@ -391,6 +459,13 @@ export default async function CommandCenterPage() {
         qualityScore: '—',
       }))}
       agendaItems={agendaItems}
+      decisionCards={{
+        operationalAlert: operationalAlertCardData,
+        commercialAlert: commercialAlertCardData,
+        inventoryAlert: inventoryAlertCardData,
+        businessInsight: businessInsightCardData,
+      }}
+      slaRiskOrders={slaRiskOrders}
     />
   )
 }

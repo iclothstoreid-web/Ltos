@@ -111,3 +111,53 @@ export interface TodaysAction {
   severity: 'critical' | 'warning' | 'info'
   text: string
 }
+
+// ─── Sprint N.1 — Owner Decision Layer V1 ────────────────────────
+// Decision Card types. Every card is composed client-side from data
+// existing RPCs already return — no new engine, no new RPC, no new
+// dashboard.
+
+export interface DecisionAlert {
+  id: string
+  severity: 'critical' | 'warning' | 'info'
+  label: string
+  detail: string
+  linkHref?: string
+}
+
+export interface OperationalAlertCardData {
+  ordersOverSla: number
+  ordersNearSla: number
+  bottleneckStage: string | null
+  bottleneckCount: number | null
+  operatorOverload: OperatorOverload[]
+}
+
+export interface CommercialAlertCardData {
+  outstandingPayment: number
+  dpOutstandingCount: number
+  overdueCount: number
+  highDiscountCount: number
+  highOverrideCount: number
+}
+
+export interface InventoryAlertCardData {
+  lowStockCount: number
+  outOfStockCount: number
+  topReorderItems: Array<{
+    name: string
+    available: number
+    minStock: number
+    unit: string
+    reorderQty: number
+  }>
+}
+
+export interface BusinessInsightCardData {
+  completionRate: number | null
+  qcReturnCount: number
+  throughputHariIni: number
+  throughputMingguIni: number
+  activeOrders: number
+  completedOrders: number
+}
