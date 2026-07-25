@@ -37,6 +37,7 @@ export type EstimationVerdict = 'SAFE' | 'RISK' | 'IMPOSSIBLE'
 export interface SlaRiskOrder {
   order_id: string
   order_number: string
+  customer_name: string | null
   service_level: ServiceLevel | null
   hari_d: string | null
   estimated_completion: string

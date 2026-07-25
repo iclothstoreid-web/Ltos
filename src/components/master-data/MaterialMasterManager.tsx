@@ -4,7 +4,15 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Material, MaterialCategory } from '@/lib/inventory/types'
-import { createMaterial, fetchMaterials, updateMaterial } from '@/lib/inventory/materials'
+import {
+  createCategory,
+  createMaterial,
+  deleteCategory,
+  fetchCategories,
+  fetchMaterials,
+  updateCategory,
+  updateMaterial,
+} from '@/lib/inventory/materials'
 import { formatRupiah } from '@/lib/format/money'
 
 interface MaterialMasterManagerProps {
@@ -36,10 +44,11 @@ const EMPTY_FORM: IdentityFormState = {
 // name/category_id/supplier/price/default_color/sku/is_active, passing
 // through the material's existing unit/min_stock/location/photo_url
 // unchanged on every save so Inventory's stock data is never disturbed.
-export function MaterialMasterManager({ initialMaterials, categories }: MaterialMasterManagerProps) {
+export function MaterialMasterManager({ initialMaterials, categories: initialCategories }: MaterialMasterManagerProps) {
   const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [materials, setMaterials] = useState(initialMaterials)
+  const [categories, setCategories] = useState(initialCategories)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -48,6 +57,11 @@ export function MaterialMasterManager({ initialMaterials, categories }: Material
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<IdentityFormState>(EMPTY_FORM)
+
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [editCategoryName, setEditCategoryName] = useState('')
 
   async function refresh() {
     setLoading(true)
@@ -58,6 +72,60 @@ export function MaterialMasterManager({ initialMaterials, categories }: Material
       setError('Gagal memuat data material.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function refreshCategories() {
+    try {
+      setCategories(await fetchCategories(supabase))
+    } catch (err) {
+      console.error('[material-master] refresh categories failed', err)
+      setError('Gagal memuat data kategori.')
+    }
+  }
+
+  async function handleCreateCategory() {
+    if (!newCategoryName.trim()) return
+    setCreatingCategory(true)
+    setError(null)
+    try {
+      await createCategory(supabase, newCategoryName)
+      setNewCategoryName('')
+      await refreshCategories()
+    } catch (err) {
+      console.error('[material-master] create category failed', err)
+      setError('Gagal menambah kategori.')
+    } finally {
+      setCreatingCategory(false)
+    }
+  }
+
+  function startEditCategory(c: MaterialCategory) {
+    setEditingCategoryId(c.id)
+    setEditCategoryName(c.name)
+  }
+
+  async function handleSaveEditCategory() {
+    if (!editingCategoryId || !editCategoryName.trim()) return
+    setError(null)
+    try {
+      await updateCategory(supabase, editingCategoryId, editCategoryName)
+      setEditingCategoryId(null)
+      await refreshCategories()
+    } catch (err) {
+      console.error('[material-master] update category failed', err)
+      setError('Gagal mengubah kategori.')
+    }
+  }
+
+  async function handleDeleteCategory(c: MaterialCategory) {
+    setError(null)
+    try {
+      await deleteCategory(supabase, c.id)
+      await refreshCategories()
+    } catch (err) {
+      console.error('[material-master] delete category failed', err)
+      setError(err instanceof Error ? err.message : 'Gagal menghapus kategori.')
     }
   }
 
@@ -181,6 +249,81 @@ export function MaterialMasterManager({ initialMaterials, categories }: Material
             {error}
           </div>
         )}
+
+        <section className="bg-white border-[0.5px] border-[#c4c7c7] p-4 space-y-3">
+          <h2 className="text-xs uppercase tracking-widest text-[#444748] font-bold">Kategori Material</h2>
+          <div className="space-y-2">
+            {categories.map(c => (
+              <div key={c.id} className="flex items-center justify-between gap-3">
+                {editingCategoryId === c.id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editCategoryName}
+                      onChange={e => setEditCategoryName(e.target.value)}
+                      className="flex-1 py-1.5 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
+                    />
+                    <div className="flex gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleSaveEditCategory}
+                        className="text-xs text-[#755b00] hover:underline"
+                      >
+                        Simpan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingCategoryId(null)}
+                        className="text-xs text-[#444748] hover:underline"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">{c.name}</span>
+                    <div className="flex gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => startEditCategory(c)}
+                        className="text-xs text-[#755b00] hover:underline"
+                      >
+                        Ubah
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Hapus kategori "${c.name}"?`)) handleDeleteCategory(c)
+                        }}
+                        className="text-xs text-[#ba1a1a] hover:underline"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2 pt-2 border-t-[0.5px] border-[#c4c7c7]">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={e => setNewCategoryName(e.target.value)}
+              placeholder="Nama kategori baru"
+              className="flex-1 py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
+            />
+            <button
+              type="button"
+              onClick={handleCreateCategory}
+              disabled={creatingCategory || !newCategoryName.trim()}
+              className="py-2 px-4 bg-[#161b29] text-white text-xs uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-40 whitespace-nowrap"
+            >
+              + Tambah Kategori
+            </button>
+          </div>
+        </section>
 
         <section className="bg-white border-[0.5px] border-[#c4c7c7] p-4 space-y-3">
           <h2 className="text-xs uppercase tracking-widest text-[#444748] font-bold">Tambah Material</h2>

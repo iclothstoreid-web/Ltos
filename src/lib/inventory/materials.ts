@@ -26,6 +26,35 @@ export async function createCategory(supabase: SupabaseClient, name: string): Pr
   if (error) throw error
 }
 
+export async function updateCategory(supabase: SupabaseClient, id: string, name: string): Promise<void> {
+  const { error } = await supabase
+    .from('material_categories')
+    .update({ name: name.trim() })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+// materials.category_id is `not null references material_categories(id)`
+// with no ON DELETE clause (default RESTRICT) -- deleting a category still
+// referenced by a material would surface as a raw foreign-key violation.
+// Checked up front so the caller gets a message it can show directly
+// instead of a Postgres error code.
+export async function deleteCategory(supabase: SupabaseClient, id: string): Promise<void> {
+  const { count, error: countError } = await supabase
+    .from('materials')
+    .select('id', { count: 'exact', head: true })
+    .eq('category_id', id)
+
+  if (countError) throw countError
+  if ((count ?? 0) > 0) {
+    throw new Error('Kategori masih digunakan oleh material — pindahkan material ke kategori lain terlebih dahulu.')
+  }
+
+  const { error } = await supabase.from('material_categories').delete().eq('id', id)
+  if (error) throw error
+}
+
 export async function fetchMaterials(supabase: SupabaseClient): Promise<Material[]> {
   const { data, error } = await supabase
     .from('materials')

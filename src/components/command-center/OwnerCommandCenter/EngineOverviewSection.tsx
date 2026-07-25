@@ -115,11 +115,14 @@ export function EngineOverviewSection({
         <div>
           <PillarHeader title="Capacity" href="/owner/business-rules/capacity" linkLabel="Capacity Calendar" />
           <div className="grid grid-cols-2 gap-4">
-            <OperatorStatCard label="Total Capacity" value={capacityDashboard.total_capacity} />
+            <OperatorStatCard label="Operator Capacity (Total)" value={capacityDashboard.total_capacity} />
             <OperatorStatCard label="Used" value={capacityDashboard.capacity_used} />
             <OperatorStatCard label="Remaining" value={capacityDashboard.remaining_capacity} />
             <OperatorStatCard label="Utilization" value={capacityDashboard.capacity_utilization_pct} suffix="%" />
           </div>
+          <p className="text-label text-secondary mt-2">
+            Total kapasitas seluruh operator aktif (semua divisi) — angka berbeda dari &quot;Computed&quot; di Capacity Calendar, yang khusus menghitung slot order baru per hari.
+          </p>
         </div>
 
         <div>

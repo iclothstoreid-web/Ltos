@@ -65,7 +65,10 @@ export function PriorityTodaySection({
                         onClick={() => onSelectOrder(order.order_id)}
                         className="w-full text-left px-5 py-3 hover:bg-on-surface/5 transition-colors focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
                       >
-                        <p className="text-body font-medium text-on-surface truncate">{order.order_number}</p>
+                        <p className="text-body font-medium text-on-surface truncate">
+                          {order.customer_name || 'Tanpa Nama'}
+                        </p>
+                        <p className="text-label text-secondary truncate">{order.order_number}</p>
                         <p className="text-body text-secondary mt-0.5">{formatRemaining(order.hours_remaining)}</p>
                       </button>
                     </li>
