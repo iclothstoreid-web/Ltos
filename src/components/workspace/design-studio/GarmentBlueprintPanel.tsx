@@ -7,6 +7,7 @@ import { Accordion } from './Accordion'
 import { ModelSelector } from './ModelSelector'
 import { LookCuttingSelector } from './LookCuttingSelector'
 import { FabricSelector } from './FabricSelector'
+import { FabricQuantityField } from './FabricQuantityField'
 import { ColorSelector } from './ColorSelector'
 import { CollarCuffSelector } from './CollarCuffSelector'
 import { PocketPlaketSelector } from './PocketPlaketSelector'
@@ -28,6 +29,8 @@ interface GarmentBlueprintPanelProps {
   onChange: (key: keyof DesignSelections, value: string) => void
   notes: string
   onNotesChange: (value: string) => void
+  fabricQuantityMeters: number | null
+  onFabricQuantityChange: (value: number | null) => void
 }
 
 export function GarmentBlueprintPanel({
@@ -37,6 +40,8 @@ export function GarmentBlueprintPanel({
   onChange,
   notes,
   onNotesChange,
+  fabricQuantityMeters,
+  onFabricQuantityChange,
 }: GarmentBlueprintPanelProps) {
   // "Lihat Spesifikasi" state lives here, local to the picker panel — purely
   // additive on top of the existing selection workflow, doesn't touch
@@ -78,6 +83,7 @@ export function GarmentBlueprintPanel({
             onSelect={v => onChange('fabric', v)}
             onViewSpec={setSpecOption}
           />
+          <FabricQuantityField value={fabricQuantityMeters} onChange={onFabricQuantityChange} />
         </Accordion>
 
         <Accordion index={4} title="Warna Bahan">

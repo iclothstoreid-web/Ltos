@@ -29,6 +29,10 @@ interface CreateOrderParams {
   designSpecification?: DesignSpecification | null
   eventInformation?: EventInformation | null
   estimationValidation?: EstimationValidationResult | null
+  // Sprint V1.2.1 (Fabric Quantity Input) — the Fitter's manual meters entry
+  // from Design Studio, finally giving reserveInventory() a real quantity
+  // instead of the hardcoded null every earlier order carried (ADR-020).
+  fabricQuantityMeters?: number | null
   userId: string
 }
 
@@ -73,6 +77,7 @@ export async function createOrderFromConsultation({
   designSpecification = null,
   eventInformation = null,
   estimationValidation = null,
+  fabricQuantityMeters = null,
   userId,
 }: CreateOrderParams): Promise<CreateOrderResult> {
   // Root cause of "Create Order gagal tanpa alasan": order_number is
@@ -193,16 +198,17 @@ export async function createOrderFromConsultation({
     created_by: userId,
   })
 
-  // Reservation is wired to the Inventory schema (see reserveInventory) but
-  // quantityMeters stays null — no fabric-usage calculator exists yet (same
-  // gap noted on InventoryReservationRequest), so it no-ops until one does.
+  // Reservation is wired to the Inventory schema (see reserveInventory).
+  // quantityMeters now carries the Fitter's real Design Studio input
+  // (Sprint V1.2.1) instead of the hardcoded null every earlier order
+  // carried (ADR-020) — reserveInventory still no-ops if it was left blank.
   // notifyOrderCreated is still an intentional no-op — no WhatsApp/messaging
   // integration exists in this repo.
   await reserveInventory(supabase, {
     orderId: order.id,
     fabricName: selections.fabric,
     colorName: selections.color,
-    quantityMeters: null,
+    quantityMeters: fabricQuantityMeters,
   })
   notifyOrderCreated({
     orderId: order.id,

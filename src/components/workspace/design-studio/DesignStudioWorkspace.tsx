@@ -13,6 +13,7 @@ import { DesignStudioFooter } from './DesignStudioFooter'
 import { DEFAULT_SELECTIONS, CATEGORY_BY_FIELD } from './types'
 import type { DesignSelections } from './types'
 import { encodeDesignNotes, decodeDesignNotes } from './notesCodec'
+import { encodeFabricQuantity, decodeFabricQuantity } from './fabricQuantityCodec'
 import { firstActiveOptionName } from '@/lib/design/masterData'
 import type { MasterOptionsByCategory } from '@/lib/design/masterData'
 import { buildDesignSpecification } from '@/lib/designSpecification/buildSpecification'
@@ -64,6 +65,12 @@ export function DesignStudioWorkspace({
     buildInitialSelections(consultation.notes, masterOptions)
   )
   const [notes, setNotes] = useState<string>(() => decodeDesignSpecification(consultation.notes)?.notes ?? '')
+  // Sprint V1.2.1 (Fabric Quantity Input) — the manual value that finally
+  // lets reserveInventory() reserve something real at Create Order, instead
+  // of the always-null quantityMeters every earlier order carried (ADR-020).
+  const [fabricQuantityMeters, setFabricQuantityMeters] = useState<number | null>(
+    () => decodeFabricQuantity(consultation.notes).quantityMeters
+  )
   const [loading, setLoading] = useState(false)
   // Last RenderContext built by "Generate Final Preview" — kept here (not
   // persisted) so a future AI Render sprint can diff
@@ -117,6 +124,7 @@ export function DesignStudioWorkspace({
       // shows, so what's on screen and what gets saved are guaranteed
       // identical.
       notesToSave = encodeDesignSpecification(notesToSave, liveSpecification)
+      notesToSave = encodeFabricQuantity(notesToSave, { quantityMeters: fabricQuantityMeters })
 
       await supabase
         .from('consultations')
@@ -157,6 +165,8 @@ export function DesignStudioWorkspace({
           onChange={handleChange}
           notes={notes}
           onNotesChange={setNotes}
+          fabricQuantityMeters={fabricQuantityMeters}
+          onFabricQuantityChange={setFabricQuantityMeters}
         />
         <AIPreviewPanel
           customerDigitalProfile={customerDigitalProfile}

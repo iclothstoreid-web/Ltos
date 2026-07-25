@@ -41,10 +41,11 @@ export interface OrderSnapshot {
   estimationValidation?: EstimationValidationResult | null
 }
 
-// Prepared for future wiring — no inventory table exists yet, and the
-// brief explicitly says not to fabricate a reservation. quantityMeters is
-// null because no fabric-usage calculator exists either (same reasoning
-// used in Design Studio's Production Metrics card).
+// Wired to the Inventory schema's reserve_material_for_order RPC.
+// quantityMeters is the Fitter's manual Design Studio input (Sprint V1.2.1,
+// FabricQuantityField) — still nullable because that field is optional; a
+// null here means "not entered", not "not supported", and reserveInventory
+// no-ops accordingly.
 export interface InventoryReservationRequest {
   orderId: string
   fabricName: string

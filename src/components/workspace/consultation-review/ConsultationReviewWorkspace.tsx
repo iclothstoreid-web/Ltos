@@ -9,6 +9,7 @@ import { decodeNotes as decodeMeasurementNotes } from '@/components/workspace/me
 import { EMPTY_FIELDS } from '@/components/workspace/measurement/types'
 import { decodeDesignNotes } from '@/components/workspace/design-studio/notesCodec'
 import { DEFAULT_SELECTIONS } from '@/components/workspace/design-studio/types'
+import { decodeFabricQuantity } from '@/components/workspace/design-studio/fabricQuantityCodec'
 import { createOrderFromConsultation, OrderValidationError } from '@/lib/order/createOrder'
 import { TopNavBar } from './TopNavBar'
 import { CustomerSummaryCard } from './CustomerSummaryCard'
@@ -180,6 +181,11 @@ export function ConsultationReviewWorkspace({
   )
   const selections = { ...DEFAULT_SELECTIONS, ...decodeDesignNotes(consultation.notes) }
 
+  // Sprint V1.2.1 (Fabric Quantity Input) — read-only reuse of Design
+  // Studio's decoder, same technique as `selections` above. Feeds
+  // reserveInventory() via createOrderFromConsultation below.
+  const fabricQuantityMeters = decodeFabricQuantity(consultation.notes).quantityMeters
+
   // Same frozen ID/price snapshot createOrderFromConsultation later carries
   // into the Order — PriceSummaryCard displays it read-only here, before an
   // Order (and therefore a persistable quotation) exists.
@@ -233,6 +239,7 @@ export function ConsultationReviewWorkspace({
         designSpecification: decodeDesignSpecification(rawNotes),
         eventInformation: eventInfo,
         estimationValidation: estimationValidationResult,
+        fabricQuantityMeters,
         userId,
       })
 
