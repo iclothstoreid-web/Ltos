@@ -39,9 +39,6 @@ export default async function CommandCenterPage() {
 
   const [
     { data: ordersAwaiting },
-    { data: ordersInProduction },
-    { data: ordersInQc },
-    { data: ordersReady },
     { data: ordersInQuotation },
     { data: ordersInAppointment },
     { data: consultationsInReview },
@@ -56,19 +53,6 @@ export default async function CommandCenterPage() {
       .select('id, order_number, created_at, customers(name)')
       .eq('current_state', 'order')
       .order('created_at', { ascending: true }),
-    supabase
-      .from('orders')
-      .select('id, order_number, created_at, customers(name)')
-      .eq('current_state', 'production'),
-    supabase
-      .from('orders')
-      .select('id, order_number, created_at, customers(name)')
-      .eq('current_state', 'qc')
-      .order('created_at', { ascending: true }),
-    supabase
-      .from('orders')
-      .select('id, order_number, created_at, customers(name)')
-      .eq('current_state', 'delivery'),
     supabase
       .from('orders')
       .select('id, order_number, created_at, customers(name)')
@@ -120,13 +104,17 @@ export default async function CommandCenterPage() {
     ])
 
   // Internal 8-stage production workflow now populates production_stage_records
-  // (readable here via the staff RLS policy) — cutting/sewing are not
-  // honestly empty, they reflect whichever orders are actively in that stage.
+  // — this is the real runtime source of truth for where an order currently
+  // sits (orders.current_state only ever reaches 'order'/'follow_up', see
+  // the file header note above; Sprint M.2 moved the Production/QC/Ready
+  // buckets below off the dead current_state values they used to read).
+  // One broad fetch (every stage, anything not yet completed) feeds
+  // cutting/sewing (narrowed to in_progress below, unchanged from before),
+  // QC, and the shipping-ready bucket, plus the productionToday count.
   const { data: activeStageRecords } = await supabase
     .from('production_stage_records')
-    .select('order_id, stage, started_at, orders(order_number, customers(name))')
-    .in('stage', ['cutting', 'sewing'])
-    .eq('status', 'in_progress')
+    .select('order_id, stage, status, started_at, created_at, orders(order_number, customers(name))')
+    .neq('status', 'completed')
 
   // Low Stock notice (Cross Application Integration, LOCKED): Inventory is
   // now real (see src/lib/inventory) — materials at/under their Minimum
@@ -177,8 +165,10 @@ export default async function CommandCenterPage() {
   // production_stage_records -> orders -> customers.
   type StageRecordRow = {
     order_id: string
-    stage: 'cutting' | 'sewing'
+    stage: 'cutting' | 'sewing' | 'qc' | 'shipping'
+    status: 'pending' | 'in_progress' | 'completed'
     started_at: string | null
+    created_at: string
     orders:
       | { order_number: string; customers: { name: string } | { name: string }[] | null }
       | { order_number: string; customers: { name: string } | { name: string }[] | null }[]
@@ -188,14 +178,29 @@ export default async function CommandCenterPage() {
     const order = Array.isArray(row.orders) ? row.orders[0] : row.orders
     const customers = order?.customers
     const c = Array.isArray(customers) ? customers[0] : customers
-    return { id: row.order_id, order: order?.order_number || '—', customer: c?.name || 'Unknown' }
+    return {
+      id: row.order_id,
+      order: order?.order_number || '—',
+      customer: c?.name || 'Unknown',
+      waitingSince: row.started_at || row.created_at,
+    }
   }
   const cuttingOrders = (activeStageRecords || [])
-    .filter(r => r.stage === 'cutting')
+    .filter(r => r.stage === 'cutting' && r.status === 'in_progress')
     .map(stageRecordCard)
   const sewingOrders = (activeStageRecords || [])
-    .filter(r => r.stage === 'sewing')
+    .filter(r => r.stage === 'sewing' && r.status === 'in_progress')
     .map(stageRecordCard)
+  // QC "menumpuk" and shipping "siap dikirim" mean waiting-at-the-gate, not
+  // necessarily already picked up by an operator — pending and in_progress
+  // both count, unlike cutting/sewing above which only show active work.
+  const qcRecords = (activeStageRecords || [])
+    .filter(r => r.stage === 'qc')
+    .map(stageRecordCard)
+  const shippingReadyRecords = (activeStageRecords || [])
+    .filter(r => r.stage === 'shipping')
+    .map(stageRecordCard)
+  const productionTodayCount = new Set((activeStageRecords || []).map(r => r.order_id)).size
 
   const hoursWaiting = (createdAt: string) =>
     (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60)
@@ -235,15 +240,15 @@ export default async function CommandCenterPage() {
       suggestedAction: 'Review Quotation',
       workspaceUrl: `/workspace/quotation/${o.id}`,
     })),
-    ...(ordersInQc || []).map(o => ({
-      id: `qc-${o.id}`,
-      orderId: o.id,
-      severity: getBottleneckSeverityByHours(hoursWaiting(o.created_at)),
-      customer: customerName(o),
-      order: o.order_number,
+    ...qcRecords.map(r => ({
+      id: `qc-${r.id}`,
+      orderId: r.id,
+      severity: getBottleneckSeverityByHours(hoursWaiting(r.waitingSince)),
+      customer: r.customer,
+      order: r.order,
       reason: 'QC menumpuk, order menunggu inspeksi',
       suggestedAction: 'Proses QC',
-      workspaceUrl: `/workspace/qc/${o.id}`,
+      workspaceUrl: `/workspace/qc/${r.id}`,
     })),
     ...(vipOrdersWaiting || []).map(o => ({
       id: `vip-${o.id}`,
@@ -270,8 +275,7 @@ export default async function CommandCenterPage() {
   ]
 
   const ordersWaitingCount = ordersAwaiting?.length || 0
-  const productionTodayCount = ordersInProduction?.length || 0
-  const qcTodayCount = ordersInQc?.length || 0
+  const qcTodayCount = qcRecords.length
 
   const revenueThisMonth = (quotationsApprovedThisMonth || []).reduce(
     (sum, q) => sum + (q.amount || 0),
@@ -324,17 +328,17 @@ export default async function CommandCenterPage() {
           },
         ]
       : []),
-    ...(ordersInQc || []).map(o => ({
-      id: `review-${o.id}`,
+    ...qcRecords.map(r => ({
+      id: `review-${r.id}`,
       type: 'Review Produksi' as const,
-      customer: customerName(o),
-      label: `Order ${o.order_number} menunggu keputusan QC`,
+      customer: r.customer,
+      label: `Order ${r.order} menunggu keputusan QC`,
     })),
-    ...(ordersReady || []).map(o => ({
-      id: `delivery-${o.id}`,
+    ...shippingReadyRecords.map(r => ({
+      id: `delivery-${r.id}`,
       type: 'Pengiriman' as const,
-      customer: customerName(o),
-      label: `Order ${o.order_number} siap dikirim`,
+      customer: r.customer,
+      label: `Order ${r.order} siap dikirim`,
     })),
   ]
 
@@ -375,8 +379,8 @@ export default async function CommandCenterPage() {
         waiting: (ordersAwaiting || []).map(o => ({ id: o.id, order: o.order_number, customer: customerName(o) })),
         cutting: cuttingOrders,
         sewing: sewingOrders,
-        qc: (ordersInQc || []).map(o => ({ id: o.id, order: o.order_number, customer: customerName(o) })),
-        ready: (ordersReady || []).map(o => ({ id: o.id, order: o.order_number, customer: customerName(o) })),
+        qc: qcRecords.map(({ id, order, customer }) => ({ id, order, customer })),
+        ready: shippingReadyRecords.map(({ id, order, customer }) => ({ id, order, customer })),
       }}
       artisanCards={(artisans || []).map(a => ({
         id: a.id,
