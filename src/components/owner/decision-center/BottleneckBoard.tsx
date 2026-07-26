@@ -1,28 +1,9 @@
 'use client'
 
-import type { BottleneckCategory, SlaRiskOrder } from '@/lib/decision/types'
+import type { SlaRiskOrder } from '@/lib/decision/types'
+import { CATEGORY_ORDER, CATEGORY_LABEL } from '@/lib/decision/types'
 
-export const CATEGORY_ORDER: BottleneckCategory[] = [
-  'material',
-  'capacity',
-  'operator',
-  'supplier',
-  'approval',
-  'qc',
-  'finishing',
-  'packing',
-]
-
-export const CATEGORY_LABEL: Record<BottleneckCategory, string> = {
-  material: 'Material',
-  capacity: 'Capacity',
-  operator: 'Operator',
-  supplier: 'Supplier',
-  approval: 'Approval',
-  qc: 'QC',
-  finishing: 'Finishing',
-  packing: 'Packing',
-}
+export { CATEGORY_ORDER, CATEGORY_LABEL }
 
 // Milestone 4 (Priority & Capacity Engine), Section "Bottleneck" -- a third,
 // distinct signal from Status SLA and Business Priority above (see the

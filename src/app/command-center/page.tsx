@@ -9,8 +9,8 @@ import { getCommercialSummary } from '@/lib/commercial/summary'
 import { PAYMENT_STATUS_LABELS } from '@/lib/commercial/types'
 import { getOwnerSummary, getSlaRiskOrders } from '@/lib/decision/client'
 import { computeTodaysActions } from '@/lib/decision/actions'
-import { CATEGORY_LABEL } from '@/components/owner/decision-center/BottleneckBoard'
 import type { BottleneckCategory, SlaRiskOrder } from '@/lib/decision/types'
+import { CATEGORY_LABEL } from '@/lib/decision/types'
 import { getCapacityDashboard, getKpiDashboard, getOperatorKpiList, getDivisiKpiList } from '@/lib/kpi/client'
 
 // OwnerCommandCenter itself is untouched in structure (chrome/layout unchanged)

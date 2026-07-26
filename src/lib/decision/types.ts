@@ -27,6 +27,33 @@ export type BottleneckCategory =
   | 'finishing'
   | 'packing'
 
+// Server-safe constants (no 'use client') so Server Components can read them
+// directly instead of importing from BottleneckBoard.tsx, which is a Client
+// Component — indexing into a client-module export from a Server Component
+// throws "Cannot access ... on the server. You cannot dot into a client
+// module from a server component."
+export const CATEGORY_ORDER: BottleneckCategory[] = [
+  'material',
+  'capacity',
+  'operator',
+  'supplier',
+  'approval',
+  'qc',
+  'finishing',
+  'packing',
+]
+
+export const CATEGORY_LABEL: Record<BottleneckCategory, string> = {
+  material: 'Material',
+  capacity: 'Capacity',
+  operator: 'Operator',
+  supplier: 'Supplier',
+  approval: 'Approval',
+  qc: 'QC',
+  finishing: 'Finishing',
+  packing: 'Packing',
+}
+
 export type EstimationVerdict = 'SAFE' | 'RISK' | 'IMPOSSIBLE'
 
 // One row of get_sla_risk_orders() -- every non-completed order classified
