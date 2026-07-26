@@ -60,8 +60,8 @@ export function InventoryAlertCard({ data }: InventoryAlertCardProps) {
               <div className="min-w-0">
                 <p className="text-body font-medium text-on-surface truncate">{data.mostCriticalItem.name}</p>
                 <p className="text-label text-secondary">
-                  Stok: {data.mostCriticalItem.available.toLocaleString('id-ID')} {data.mostCriticalItem.unit} · Min:{' '}
-                  {data.mostCriticalItem.minStock} {data.mostCriticalItem.unit}
+                  Stok: {(data.mostCriticalItem.available ?? 0).toLocaleString('id-ID')} {data.mostCriticalItem.unit} · Min:{' '}
+                  {data.mostCriticalItem.minStock ?? 0} {data.mostCriticalItem.unit}
                 </p>
               </div>
               <ArrowUpRight size={16} className="text-secondary shrink-0 ml-3" aria-hidden="true" />
@@ -85,11 +85,11 @@ export function InventoryAlertCard({ data }: InventoryAlertCardProps) {
                     <div className="min-w-0 flex-1">
                       <p className="text-body text-secondary truncate">{item.name}</p>
                       <p className="text-label text-secondary">
-                        Stok: {item.available.toLocaleString('id-ID')} {item.unit} · Min: {item.minStock} {item.unit}
+                        Stok: {(item.available ?? 0).toLocaleString('id-ID')} {item.unit} · Min: {item.minStock ?? 0} {item.unit}
                       </p>
                     </div>
                     <span className="text-label text-primary shrink-0 ml-3 tabular-nums">
-                      +{item.reorderQty.toLocaleString('id-ID')} {item.unit}
+                      +{(item.reorderQty ?? 0).toLocaleString('id-ID')} {item.unit}
                     </span>
                   </Link>
                 </li>

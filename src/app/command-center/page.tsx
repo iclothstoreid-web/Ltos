@@ -437,7 +437,7 @@ export default async function CommandCenterPage() {
       unit: m.unit,
       reorderQty: Math.max(m.min_stock * 2 - m.available_stock, 1),
     }))
-    .sort((a, b) => a.available / a.minStock - b.available / b.minStock)
+    .sort((a, b) => (a.available / (a.minStock || 1)) - (b.available / (b.minStock || 1)))
   const inventoryAlertCardData = {
     lowStockCount: lowStockMats.length,
     outOfStockCount: outOfStockMats.length,

@@ -4,13 +4,14 @@ export function KpiCard({
   format = 'number',
 }: {
   label: string
-  value: number
+  value: number | null | undefined
   format?: 'number' | 'currency'
 }) {
+  const safeValue = value ?? 0
   const displayValue =
     format === 'currency'
-      ? `Rp ${value.toLocaleString('id-ID')}`
-      : value.toLocaleString('id-ID')
+      ? `Rp ${safeValue.toLocaleString('id-ID')}`
+      : safeValue.toLocaleString('id-ID')
 
   return (
     <div className="rounded-[14px] border border-outline-variant/85 bg-surface/45 px-6 py-5 elev-1 hover:-translate-y-[1px] transition-all duration-200 relative overflow-hidden">
