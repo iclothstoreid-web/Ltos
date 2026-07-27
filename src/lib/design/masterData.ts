@@ -271,6 +271,22 @@ const DESIGN_FIELD_BY_CATEGORY: Partial<Record<MasterDataCategory, string>> = {
   handmade_zigzag: 'handmadeZigzag',
 }
 
+/**
+ * Get repository category from design specification field name.
+ * Inverse lookup: field (e.g. 'collar') → category (e.g. 'kerah')
+ *
+ * Used by RenderService to convert DesignSpecification keys to API payload componentTypes.
+ * Single source of truth: DESIGN_FIELD_BY_CATEGORY above.
+ */
+export function getCategoryByDesignField(field: string): MasterDataCategory | null {
+  for (const [category, designField] of Object.entries(DESIGN_FIELD_BY_CATEGORY)) {
+    if (designField === field) {
+      return category as MasterDataCategory
+    }
+  }
+  return null
+}
+
 export const MASTER_DATA_IN_USE_MESSAGE =
   'Data ini sudah pernah digunakan sehingga tidak dapat dihapus. Silakan gunakan Nonaktifkan apabila sudah tidak digunakan.'
 

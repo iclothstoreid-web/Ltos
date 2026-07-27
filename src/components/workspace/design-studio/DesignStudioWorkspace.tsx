@@ -20,6 +20,8 @@ import { buildDesignSpecification } from '@/lib/designSpecification/buildSpecifi
 import { encodeDesignSpecification, decodeDesignSpecification } from '@/lib/designSpecification/codec'
 import { decodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
 import type { RenderContext } from '@/lib/customerProfile/renderContext'
+import type { RenderResult } from '@/lib/types/render'
+import { renderDesign } from '@/lib/services/renderService'
 
 interface MaterialStockInfo {
   available_stock: number
@@ -77,6 +79,10 @@ export function DesignStudioWorkspace({
   // `renderContext.designSpecification.lastUpdated` against the live
   // specification below to flag "Preview Outdated" without any new state.
   const [renderContext, setRenderContext] = useState<RenderContext | null>(null)
+
+  // Render result from AI Render Engine — holds image URL, tokens, error state
+  // Updated by handleRenderGenerate; passed to AIPreviewPanel for display
+  const [renderResult, setRenderResult] = useState<RenderResult>({ status: 'idle' })
 
   // Read-only decode of the profile Measurement already built — Design
   // Studio never writes to it, only reads it for the Generate Final Preview
@@ -150,6 +156,12 @@ export function DesignStudioWorkspace({
     }
   }
 
+  async function handleRenderGenerate(context: RenderContext) {
+    setRenderResult({ status: 'loading' })
+    const result = await renderDesign(context)
+    setRenderResult(result)
+  }
+
   return (
     <div className="min-h-screen bg-[#f9f9ff] font-sans text-[#151c27] selection:bg-[#ffdea5] selection:text-[#261900]">
       <DesignStudioTopBar
@@ -172,7 +184,8 @@ export function DesignStudioWorkspace({
           customerDigitalProfile={customerDigitalProfile}
           designSpecification={liveSpecification}
           renderContext={renderContext}
-          onGenerate={setRenderContext}
+          onGenerate={handleRenderGenerate}
+          renderResult={renderResult}
         />
         <DesignSummaryPanel specification={liveSpecification} />
       </main>
