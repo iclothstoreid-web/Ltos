@@ -17,6 +17,13 @@ export interface GenerateImageInput {
   instruction: RenderInstruction;
   model?: string;
   timeoutMs?: number;
+  // Added 2026-07-27 (DNA Resolver / render-pipeline integration) — lets a
+  // caller that already ran its own token-budgeted compression (see
+  // promptBuilder/compression.ts) hand this service a final prompt string
+  // directly, instead of the service re-deriving one from `instruction` via
+  // serializeOpenAI. Optional and additive: every existing caller keeps
+  // getting the full uncompressed serialization exactly as before.
+  promptOverride?: string;
 }
 
 export interface GeneratedImage {
@@ -30,7 +37,7 @@ export type GenerateImageResult =
   | { ok: false; error: string };
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageResult> {
-  const prompt = serializeOpenAI({ instruction: input.instruction });
+  const prompt = input.promptOverride ?? serializeOpenAI({ instruction: input.instruction });
 
   if (!prompt) {
     return {

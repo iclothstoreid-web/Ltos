@@ -89,18 +89,11 @@ function stringifyRecord(record: Record<string, unknown>): string {
 // Maps a compiled RenderInstruction onto the 4 buckets of the Prompt
 // Compression Strategy (Anchor/Material/Other/Negatives, ~270 tokens total).
 //
-// Two known gaps, both pre-existing in the pipeline (not introduced here):
-// - RenderInstruction has no dedicated Color field — nothing between AI
-//   Design DNA and Prompt Builder carries a "color" concept of its own
-//   (warna_bahan content ends up wherever that item's own Render Recipe
-//   happened to put it). The strategy's 10-token Color budget is folded
-//   into Other rather than inventing a Color source that doesn't exist.
-// - `garment` (and `stitching`/`embroidery`) are always `{}` today because
-//   buildRenderInstruction (promptBuilder/builder.ts) hardcodes them empty
-//   and never reads MasterRenderRecipe.garment/.fabricIdentity/.stitching/
-//   .embroidery — see the DNA Resolver integration report. Anchor will be
-//   empty until that's fixed; not something this module can work around
-//   without editing builder.ts.
+// Known gap: RenderInstruction has no dedicated Color field — nothing
+// between AI Design DNA and Prompt Builder carries a "color" concept of its
+// own (warna_bahan content ends up wherever that item's own Render Recipe
+// happened to put it). The strategy's 10-token Color budget is folded into
+// Other rather than inventing a Color source that doesn't exist.
 export function buildCompressedSections(instruction: RenderInstruction): PromptSection[] {
   return [
     {

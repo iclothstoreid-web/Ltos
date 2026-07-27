@@ -128,12 +128,12 @@ export async function POST(req: NextRequest) {
     (url): url is string => !!url,
   )
 
-  // Diagnostic only for now — see the integration report: Image Service
-  // still serializes `instruction` itself via serializeOpenAI internally,
-  // so this compressed string is NOT yet what actually reaches OpenAI.
-  const promptCompressionPreview = compressPrompt(buildCompressedSections(instruction))
+  // Per the Prompt Compression Strategy (~270 tokens total) — this compressed
+  // string is what actually reaches OpenAI (passed as `promptOverride` below),
+  // not the full uncompressed serializeOpenAI() output.
+  const promptCompression = compressPrompt(buildCompressedSections(instruction))
 
-  const result = await generateImage({ instruction, referenceImageUrls })
+  const result = await generateImage({ instruction, referenceImageUrls, promptOverride: promptCompression.compressed })
 
   if (!result.ok) {
     return NextResponse.json({ success: false, error: result.error }, { status: 502 })
@@ -142,8 +142,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     success: true,
     renderedImageUrl: result.images[0]?.url ?? null,
-    promptUsed: serializeOpenAI({ instruction }),
-    promptCompressionPreview,
+    promptUsed: promptCompression.compressed,
+    promptCompression,
+    promptUncompressed: serializeOpenAI({ instruction }),
     componentsUsed: resolved.map(({ option }) => ({ id: option.id, name: option.name, category: option.category })),
     componentsMissing,
   })

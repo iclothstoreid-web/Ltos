@@ -25,16 +25,19 @@ import type { RenderInstruction, RenderInstructionValidation } from './types'
 //   negativeRules              ->  negativeRules     (direct)
 //   pose                       ->  subject           (pose describes the subject)
 //   visibilityRules             ->  body              (what's visible on the body)
-//   fabricBehavior               ->  fabric            (direct rename)
+//   garment                     ->  garment           (direct)
+//   fabricIdentity, fabricBehavior -> fabric          (identity + behavior share the one section)
+//   stitching                   ->  stitching         (direct)
+//   embroidery                  ->  embroidery        (direct)
 //
-// MasterRenderRecipe has no field describing garment identity, stitching,
-// or embroidery — Recipe Composer / Render Recipe never captured those
-// concepts (see recipeComposer/types.ts, renderRecipe/types.ts). Builder
-// does not invent them: `garment`, `stitching`, and `embroidery` are
-// always `{}` until an upstream sprint adds real source data for them.
-// `sources`/`composedAt` are provenance metadata, not renderable content —
-// RenderInstruction has no equivalent field, and none is invented; they
-// are simply not carried forward.
+// garment/fabricIdentity/stitching/embroidery were added to MasterRenderRecipe
+// by Recipe Composer (Sprint AI-07, after this Builder was first written) —
+// this mapping was updated 2026-07-27 (DNA Resolver integration) to actually
+// read them; they used to be hardcoded `{}` here, which silently dropped
+// every Component/AI Design DNA-derived garment field before it ever reached
+// a prompt. `sources`/`composedAt` are provenance metadata, not renderable
+// content — RenderInstruction has no equivalent field, and none is invented;
+// they are simply not carried forward.
 export function buildRenderInstruction(recipe: MasterRenderRecipe | null): RenderInstruction | null {
   if (!recipe) {
     return null
@@ -43,14 +46,14 @@ export function buildRenderInstruction(recipe: MasterRenderRecipe | null): Rende
   return {
     subject: { ...recipe.pose },
     body: { ...recipe.visibilityRules },
-    garment: {},
+    garment: { ...recipe.garment },
     camera: { ...recipe.camera },
     lighting: { ...recipe.lighting },
     composition: { ...recipe.composition, focus: recipe.focus },
     background: { ...recipe.background },
-    fabric: { ...recipe.fabricBehavior },
-    stitching: {},
-    embroidery: {},
+    fabric: { ...recipe.fabricIdentity, ...recipe.fabricBehavior },
+    stitching: { ...recipe.stitching },
+    embroidery: { ...recipe.embroidery },
     quality: { ...recipe.quality, style: recipe.style },
     negativeRules: [...recipe.negativeRules],
   }
