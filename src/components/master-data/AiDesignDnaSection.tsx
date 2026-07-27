@@ -13,11 +13,13 @@ function formatTimestamp(value: string | null): string {
   return value ? new Date(value).toLocaleString('id-ID') : '—'
 }
 
-// Read-only recap of a Master Item's permanent AI Design DNA lifecycle —
-// this sprint builds structure only, no AI/OpenAI/Prompt/Vision. Status
-// itself is never user-editable here; it only ever moves via
-// markDnaNeedsRegeneration (Hero Image replaced) or, in a later sprint,
-// actual generation/approval.
+// Read-only recap of a Master Item's permanent AI Design DNA lifecycle.
+// Status is never directly editable here; it only ever moves via
+// markDnaNeedsRegeneration (Hero Image replaced) or markDnaGenerated
+// (Generate Quick DNA below, which also freezes the Official Reference
+// Image — see MasterDataManager's handleGenerateQuickDna). Advanced/Expert
+// DNA (real geometry/construction/appearance extraction) remain future
+// AI Vision Integration work — untouched by this pipeline.
 export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQuickDna }: AiDesignDnaSectionProps) {
   return (
     <div className="border-t border-[#c4c7c7]/30 pt-5 mt-2">

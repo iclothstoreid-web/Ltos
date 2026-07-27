@@ -1,6 +1,8 @@
 import OpenAI, { APIConnectionTimeoutError, APIError } from "openai";
 import type { RenderInstruction } from "@/lib/design/promptBuilder/types";
 import { serializeOpenAI } from "@/lib/design/promptBuilder/serializer";
+import type { CustomerDigitalProfile } from "@/lib/customerProfile/types";
+import type { MasterDataOption } from "@/lib/design/masterData";
 import { getOpenAIClient } from "../client";
 
 // Image Generation Service — the ONLY door from LTOS domain code into an AI
@@ -17,6 +19,13 @@ export interface GenerateImageInput {
   instruction: RenderInstruction;
   model?: string;
   timeoutMs?: number;
+  // Design Knowledge Pipeline V1 (decision 6-8) — optional visual
+  // references (Customer Photo + Official Garment Reference Image) sent
+  // alongside the text prompt. Empty/omitted keeps the existing
+  // text-to-image call exactly as before (decision 7). Recipe Composer and
+  // Prompt Builder never populate or read this — it is Image Service's own
+  // concern only (decision 12), assembled by buildReferenceImageUrls below.
+  referenceImageUrls?: string[];
   // Added 2026-07-27 (DNA Resolver / render-pipeline integration) — lets a
   // caller that already ran its own token-budgeted compression (see
   // promptBuilder/compression.ts) hand this service a final prompt string
@@ -53,14 +62,29 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
     return { ok: false, error: error instanceof Error ? error.message : "OpenAI client unavailable." };
   }
 
+  const referenceImageUrls = input.referenceImageUrls ?? [];
+
   try {
-    const response = await client.images.generate(
-      {
-        model: input.model ?? DEFAULT_MODEL,
-        prompt,
-      },
-      { timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS },
-    );
+    // decision 8: reference images present -> the image-input-capable
+    // endpoint (images.edit); decision 7: none -> the existing
+    // text-to-image call (images.generate), unchanged.
+    const response =
+      referenceImageUrls.length > 0
+        ? await client.images.edit(
+            {
+              model: input.model ?? DEFAULT_MODEL,
+              prompt,
+              image: await Promise.all(referenceImageUrls.map((url) => fetch(url))),
+            },
+            { timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS },
+          )
+        : await client.images.generate(
+            {
+              model: input.model ?? DEFAULT_MODEL,
+              prompt,
+            },
+            { timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS },
+          );
 
     if (!response.data || response.data.length === 0) {
       return { ok: false, error: "OpenAI returned an empty image response." };
@@ -86,4 +110,27 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
 
     return { ok: false, error: error instanceof Error ? error.message : "Unknown error generating image." };
   }
+}
+
+// Design Knowledge Pipeline V1 (decision 9-10) — the ONLY two visual
+// references GPT Image ever receives: the Customer Photo and the Model
+// Thobe's frozen Official Reference Image (`ai_dna.metadata.sourceImage`,
+// set by markDnaGenerated). Every other category — Collar, Cuff, Plaket,
+// Pocket, Button, Embroidery, Fabric, Color — is deliberately excluded here;
+// those are described through Render Recipe -> Prompt Builder -> Prompt
+// text only, never as an image input. Caller must pass the Model Thobe
+// MasterDataOption specifically (not any other category) as `modelThobe`.
+export function buildReferenceImageUrls(params: {
+  customerDigitalProfile: CustomerDigitalProfile | null;
+  modelThobe: MasterDataOption | null;
+}): string[] {
+  const urls: string[] = [];
+
+  const customerPhotoUrl = params.customerDigitalProfile?.customerPhoto?.url;
+  if (customerPhotoUrl) urls.push(customerPhotoUrl);
+
+  const officialReferenceImage = params.modelThobe?.ai_dna.metadata.sourceImage;
+  if (officialReferenceImage) urls.push(officialReferenceImage);
+
+  return urls;
 }

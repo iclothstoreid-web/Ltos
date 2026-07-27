@@ -66,3 +66,19 @@ export function markDnaNeedsRegeneration(dna: AiDesignDna): AiDesignDna {
   if (dna.status !== 'draft' && dna.status !== 'approved') return dna
   return { ...dna, status: 'needs_regeneration' }
 }
+
+// AI DNA generated/approved — freezes the Hero Image (`photo_url`) of that
+// moment into `metadata.sourceImage` as the Official Reference Image
+// (Design Knowledge Pipeline V1, decision 14). This is a snapshot, not a
+// live pointer: `photo_url` may keep changing afterwards (decision 4), but
+// `sourceImage` only moves the next time this function runs — i.e. the next
+// generate/approve — and Hero Image changing in between instead routes
+// through markDnaNeedsRegeneration above, never through here.
+export function markDnaGenerated(dna: AiDesignDna, photoUrl: string | null): AiDesignDna {
+  const now = new Date().toISOString()
+  return {
+    ...dna,
+    status: 'draft',
+    metadata: { ...dna.metadata, generatedAt: now, sourceImage: photoUrl },
+  }
+}

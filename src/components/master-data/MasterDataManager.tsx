@@ -17,7 +17,7 @@ import {
 } from '@/lib/design/masterData'
 import type { MasterOptionsByCategory, MasterDataOption, MasterDataCategory } from '@/lib/design/masterData'
 import { AiDesignDnaSection } from './AiDesignDnaSection'
-import { markDnaNeedsRegeneration } from '@/lib/design/aiDna/types'
+import { markDnaGenerated, markDnaNeedsRegeneration } from '@/lib/design/aiDna/types'
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
 import { RenderRecipeSection } from './RenderRecipeSection'
 
@@ -174,6 +174,16 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     } finally {
       setUploadingPhoto(false)
     }
+  }
+
+  // Generate Quick DNA — freezes the Hero Image currently shown in this
+  // edit session (`editingPhotoUrl`) into `ai_dna.metadata.sourceImage` as
+  // the Official Reference Image (decision 14). Session-local only, same as
+  // every other editing* field here — persisted when handleSaveEdit calls
+  // updateMasterDataOption below.
+  function handleGenerateQuickDna() {
+    setEditingAiDna(prev => (prev ? markDnaGenerated(prev, editingPhotoUrl) : prev))
+    setShowQuickDnaPlaceholder(true)
   }
 
   async function handleSaveEdit() {
@@ -507,7 +517,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                   <AiDesignDnaSection
                     dna={editingAiDna}
                     showQuickDnaPlaceholder={showQuickDnaPlaceholder}
-                    onGenerateQuickDna={() => setShowQuickDnaPlaceholder(true)}
+                    onGenerateQuickDna={handleGenerateQuickDna}
                   />
                 )}
 

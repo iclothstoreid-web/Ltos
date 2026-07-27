@@ -674,6 +674,10 @@ export function ProductionPacketWorkspace({
           <PatternFormulationCard
             patternFormulation={packet.pattern_formulation}
             stageRecords={packet.stage_records}
+            orderNumber={packet.order_number}
+            customerName={packet.customer_name}
+            design={packet.design}
+            customerPhotoUrl={customerPhotoUrl}
           />
         )}
 
