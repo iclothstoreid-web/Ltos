@@ -52,6 +52,12 @@ export function validateRenderContextReadiness(
 
   if (!customerDigitalProfile) {
     missing.push('Customer Digital Profile belum tersedia — selesaikan Measurement terlebih dahulu.')
+  } else if (!customerDigitalProfile.customerPhoto) {
+    // Catches consultations that reached Design Studio before this photo
+    // gate existed (see MeasurementWorkspace's hasCommittedCustomerPhoto) —
+    // surfaces here as a clear "Belum Lengkap" message instead of letting
+    // renderService's mapContextToPayload throw a raw exception later.
+    missing.push('Foto pelanggan belum tersedia. Silakan kembali ke Measurement dan ambil foto pelanggan terlebih dahulu.')
   }
 
   if (!designSpecification) {

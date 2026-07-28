@@ -62,6 +62,10 @@ export function MeasurementWorkspace({
   const [focusedField, setFocusedField] = useState<MeasurementKey | null>(null)
   const [loading, setLoading] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  // True only while PhotoUploader's upload+commit round-trip is in flight
+  // (see onUploadStateChange below) — gates "Lanjut ke Design Studio" so a
+  // fitter can't click through mid-upload.
+  const [photoUploading, setPhotoUploading] = useState(false)
 
   // Restricted to the 12 canonical measurement keys (not cuttingModel /
   // wristFinishing, which live on the same `fields` object but represent a
@@ -71,9 +75,16 @@ export function MeasurementWorkspace({
   const filledCount = (Object.keys(EMPTY_FIELDS) as MeasurementKey[]).filter(
     k => fields[k]
   ).length
+  // Read from `rawNotes` (the committed, post-DB-write state — see
+  // handlePhotoUploaded), never from PhotoUploader's own local
+  // preview/capturedFrame state, so this reflects a photo that has actually
+  // reached the source of truth (consultations.notes), not just one the
+  // fitter has picked/captured on screen.
+  const hasCommittedCustomerPhoto = Boolean(decodeCustomerDigitalProfile(rawNotes)?.customerPhoto)
   const isFormValid = Boolean(
     fields.chest && fields.shoulder && fields.sleeve && fields.length &&
-    fields.cuttingModel && fields.wristFinishing
+    fields.cuttingModel && fields.wristFinishing &&
+    hasCommittedCustomerPhoto && !photoUploading
   )
 
   // Body Map is the source of truth for which part(s) glow — see
@@ -270,6 +281,7 @@ export function MeasurementWorkspace({
               consultationId={consultation.id}
               initialPhotoUrl={decodeCustomerDigitalProfile(rawNotes)?.customerPhoto?.url ?? null}
               onUploaded={handlePhotoUploaded}
+              onUploadStateChange={setPhotoUploading}
             />
 
             <div>
@@ -295,6 +307,7 @@ export function MeasurementWorkspace({
         statusLabel={filledCount === totalFields ? 'Siap untuk Desain' : 'Sedang Berlangsung'}
         primaryDisabled={!isFormValid}
         loading={loading}
+        photoUploading={photoUploading}
         onContinue={() => handleDecision('valid')}
         onRemeasure={() => handleDecision('remeasure')}
       />

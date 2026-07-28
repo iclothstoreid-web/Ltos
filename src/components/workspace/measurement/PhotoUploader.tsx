@@ -11,7 +11,15 @@ const UPLOAD_ERROR_MESSAGE = 'Gagal mengunggah foto. Silakan coba lagi.'
 interface PhotoUploaderProps {
   consultationId: string
   initialPhotoUrl?: string | null
-  onUploaded: (url: string) => void
+  // May return a Promise (MeasurementWorkspace's handler awaits its own DB
+  // commit) — uploadPhoto below awaits it too, so `uploading` (and
+  // onUploadStateChange) only clears once the photo is actually committed
+  // to consultations.notes, not just once Storage accepted the file.
+  onUploaded: (url: string) => void | Promise<void>
+  // Lets the parent gate "Lanjut ke Design Studio" on the actual in-flight
+  // upload, not just its own post-commit state — closes the window where a
+  // fitter could click Lanjut while a photo is still uploading.
+  onUploadStateChange?: (uploading: boolean) => void
 }
 
 // Foto Pelanggan is captured/selected here, then uploaded straight to the
@@ -19,7 +27,7 @@ interface PhotoUploaderProps {
 // used to write to — Measurement is now the single source of truth for this
 // photo (see CustomerDigitalProfile), so it always uploads under the
 // 'front' slot regardless of camera vs. gallery origin.
-export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded }: PhotoUploaderProps) {
+export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onUploadStateChange }: PhotoUploaderProps) {
   const [supabase] = useState(() => createClient())
   const [preview, setPreview] = useState<string | null>(initialPhotoUrl ?? null)
   const [capturedFrame, setCapturedFrame] = useState<string | null>(null)
@@ -92,15 +100,17 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded }: P
 
   async function uploadPhoto(file: File) {
     setUploading(true)
+    onUploadStateChange?.(true)
     setUploadError(null)
     try {
       const url = await uploadConsultationPhoto(supabase, { consultationId, slot: 'front', file })
       setPreview(url)
-      onUploaded(url)
+      await onUploaded(url)
     } catch {
       setUploadError(UPLOAD_ERROR_MESSAGE)
     } finally {
       setUploading(false)
+      onUploadStateChange?.(false)
     }
   }
 

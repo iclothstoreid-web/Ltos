@@ -8,6 +8,10 @@ interface WorkflowFooterProps {
   statusLabel: string
   primaryDisabled: boolean
   loading: boolean
+  // True while the customer photo upload+commit round-trip is in flight —
+  // separate from `loading` (which only covers handleDecision) so the
+  // button can say something more specific than a generic disabled state.
+  photoUploading: boolean
   onContinue: () => void
   onRemeasure: () => void
 }
@@ -24,6 +28,7 @@ export function WorkflowFooter({
   statusLabel,
   primaryDisabled,
   loading,
+  photoUploading,
   onContinue,
   onRemeasure,
 }: WorkflowFooterProps) {
@@ -79,7 +84,7 @@ export function WorkflowFooter({
                        font-bold tracking-wider hover:bg-[#775a19] transition-all duration-300 group
                        disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {loading ? 'MENYIMPAN...' : 'LANJUT KE DESIGN STUDIO'}
+            {loading ? 'MENYIMPAN...' : photoUploading ? 'MENYIMPAN FOTO...' : 'LANJUT KE DESIGN STUDIO'}
             <span className="material-symbols-outlined transition-transform duration-300 group-hover:translate-x-2">
               arrow_right_alt
             </span>
