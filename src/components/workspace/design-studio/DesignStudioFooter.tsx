@@ -1,6 +1,7 @@
 'use client'
 
 import type { DesignSelections } from './types'
+import { displaySelection } from './types'
 import type { MasterDataOption } from '@/lib/design/masterData'
 
 interface DesignStudioFooterProps {
@@ -25,7 +26,7 @@ export function DesignStudioFooter({
       <div className="flex-1 flex items-center gap-4 sm:gap-8 flex-wrap min-w-0">
         <div className="flex flex-col min-w-0">
           <span className="text-[10px] uppercase text-[#858383] tracking-widest">Model</span>
-          <span className="font-sans text-sm truncate">{selections.model}</span>
+          <span className="font-sans text-sm truncate">{displaySelection(selections.model)}</span>
         </div>
         <div className="hidden sm:block w-px h-8 bg-white/20" />
         <div className="hidden sm:flex flex-col min-w-0">

@@ -54,3 +54,43 @@ export const DEFAULT_SELECTIONS: DesignSelections = {
   embroidery: '',
   handmadeZigzag: '',
 }
+
+// Domain-level sentinel for "customer explicitly chose not to use this
+// component" — NOT a master data row (per the Support Optional Selection
+// brief: "Sebisa mungkin tidak membuat record dummy '(None)' di database").
+// Stored in DesignSelections/consultations.notes exactly like a real option
+// name would be, but resolveOption() (buildSpecification.ts) recognizes it
+// and resolves straight to `null` without a catalog lookup — the same
+// `null` every other unresolved/skipped field already produces, so every
+// downstream stage (Price Snapshot, renderService's componentSelections
+// filter, DNA Resolver, Recipe Composer, Prompt Builder) skips it for free,
+// with zero changes needed in any of those layers.
+export const NONE_SELECTION = '__none__'
+
+export function isNoneSelection(value: string): boolean {
+  return value === NONE_SELECTION
+}
+
+// Real tailoring logic (see Support Optional Selection audit): a pilihan may
+// only offer "(None)" when skipping it is a genuine, common design choice
+// ("Modelnya bebas", "Tidak pakai plaket", "Tidak ada saku") — never for a
+// component every garment must structurally have SOME resolution for
+// (Bahan/Warna Bahan can't render without a material+color; Kerah/Manset
+// must always be a real catalog item, even a "Tanpa Kerah" one, because
+// "no neckline decision at all" isn't a renderable state).
+export const OPTIONAL_FIELDS: ReadonlySet<keyof DesignSelections> = new Set<keyof DesignSelections>([
+  'model',
+  'lookCutting',
+  'plaket',
+  'pocket',
+  'button',
+  'embroidery',
+  'handmadeZigzag',
+])
+
+// Human label for the sentinel wherever a raw DesignSelections value (not a
+// resolved DesignSpecOptionRef) is displayed directly — footer/summary
+// panels must never leak the literal `__none__` string to a screen.
+export function displaySelection(value: string): string {
+  return isNoneSelection(value) ? '(None)' : value
+}

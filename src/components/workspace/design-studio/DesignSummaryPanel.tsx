@@ -1,10 +1,13 @@
 'use client'
 
 import type { DesignSpecification, DesignSpecOptionRef } from '@/lib/designSpecification/types'
+import type { DesignSelections } from './types'
+import { isNoneSelection } from './types'
 import { EstimasiHargaPanel } from './EstimasiHargaPanel'
 
 interface DesignSummaryPanelProps {
   specification: DesignSpecification
+  selections: DesignSelections
 }
 
 const OPTION_ROWS: Array<{ label: string; key: keyof DesignSpecification }> = [
@@ -25,7 +28,7 @@ const OPTION_ROWS: Array<{ label: string; key: keyof DesignSpecification }> = [
 // Sourced directly from the same DesignSpecification object DesignStudio-
 // Workspace persists, so this is always in sync with what gets saved; it
 // never has its own separate copy of the selections.
-export function DesignSummaryPanel({ specification }: DesignSummaryPanelProps) {
+export function DesignSummaryPanel({ specification, selections }: DesignSummaryPanelProps) {
   return (
     <aside className="w-full lg:w-[25%] lg:h-full bg-white border-t-[0.5px] lg:border-t-0 lg:border-l-[0.5px] border-[#c4c7c7] flex flex-col">
       {/* Capped and independently scrollable so a long price breakdown can
@@ -43,12 +46,19 @@ export function DesignSummaryPanel({ specification }: DesignSummaryPanelProps) {
       <div className="lg:flex-1 lg:min-h-0 p-4 sm:p-6 space-y-4 lg:overflow-y-auto">
         {OPTION_ROWS.map(row => {
           const ref = specification[row.key] as DesignSpecOptionRef | null
+          // A resolved-null ref is ambiguous on its own (never chosen vs.
+          // explicitly (None) both land there — see resolveOption in
+          // buildSpecification.ts). Reading the raw selection here
+          // disambiguates so an explicit (None) reads as a deliberate
+          // pilihan, not as "belum dipilih".
+          const rawSelection = selections[row.key as keyof DesignSelections]
+          const display = ref?.name ?? (isNoneSelection(rawSelection) ? '(None)' : '—')
           return (
             <div key={row.label} className="flex justify-between items-start gap-3 border-b border-[#c4c7c7]/20 pb-3">
               <span className="font-sans text-xs text-[#444748] uppercase tracking-wide whitespace-nowrap">
                 {row.label}
               </span>
-              <span className="font-sans text-sm text-[#151c27] text-right">{ref?.name ?? '—'}</span>
+              <span className="font-sans text-sm text-[#151c27] text-right">{display}</span>
             </div>
           )
         })}

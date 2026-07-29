@@ -26,8 +26,8 @@ export function PocketPlaketSelector({
 }: PocketPlaketSelectorProps) {
   return (
     <div className="space-y-5">
-      <OptionGroup label="Saku" options={pocketOptions} selected={pocket} onSelect={onSelectPocket} onViewSpec={onViewSpec} />
-      <OptionGroup label="Plaket" options={plaketOptions} selected={plaket} onSelect={onSelectPlaket} onViewSpec={onViewSpec} />
+      <OptionGroup label="Saku" options={pocketOptions} selected={pocket} onSelect={onSelectPocket} onViewSpec={onViewSpec} allowNone />
+      <OptionGroup label="Plaket" options={plaketOptions} selected={plaket} onSelect={onSelectPlaket} onViewSpec={onViewSpec} allowNone />
     </div>
   )
 }

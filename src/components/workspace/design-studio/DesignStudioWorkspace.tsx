@@ -10,7 +10,7 @@ import { GarmentBlueprintPanel } from './GarmentBlueprintPanel'
 import { AIPreviewPanel } from './AIPreviewPanel'
 import { DesignSummaryPanel } from './DesignSummaryPanel'
 import { DesignStudioFooter } from './DesignStudioFooter'
-import { DEFAULT_SELECTIONS, CATEGORY_BY_FIELD } from './types'
+import { DEFAULT_SELECTIONS, CATEGORY_BY_FIELD, OPTIONAL_FIELDS, NONE_SELECTION } from './types'
 import type { DesignSelections } from './types'
 import { encodeDesignNotes, decodeDesignNotes } from './notesCodec'
 import { encodeFabricQuantity, decodeFabricQuantity } from './fabricQuantityCodec'
@@ -38,9 +38,12 @@ interface DesignStudioWorkspaceProps {
   userId: string
 }
 
-// For any field with no saved value yet (new consultation), default to the
-// first active option of its master data category rather than a hardcoded
-// label — keeps the DB the single source of truth for pilihan values.
+// For any field with no saved value yet (new consultation), default
+// mandatory fields to the first active option of their master data category
+// (keeps the DB the single source of truth for pilihan values); optional
+// fields (see OPTIONAL_FIELDS) default to the (None) sentinel instead —
+// "None" is a deliberate customer choice, never something to pre-pick a
+// priced option for on their behalf.
 function buildInitialSelections(
   savedNotes: string | null,
   masterOptions: MasterOptionsByCategory
@@ -48,7 +51,9 @@ function buildInitialSelections(
   const decoded = decodeDesignNotes(savedNotes)
   const fallback = { ...DEFAULT_SELECTIONS }
   ;(Object.keys(fallback) as Array<keyof DesignSelections>).forEach(field => {
-    fallback[field] = firstActiveOptionName(masterOptions[CATEGORY_BY_FIELD[field]])
+    fallback[field] = OPTIONAL_FIELDS.has(field)
+      ? NONE_SELECTION
+      : firstActiveOptionName(masterOptions[CATEGORY_BY_FIELD[field]])
   })
   return { ...fallback, ...decoded }
 }
@@ -187,7 +192,7 @@ export function DesignStudioWorkspace({
           onGenerate={handleRenderGenerate}
           renderResult={renderResult}
         />
-        <DesignSummaryPanel specification={liveSpecification} />
+        <DesignSummaryPanel specification={liveSpecification} selections={selections} />
       </main>
 
       <DesignStudioFooter

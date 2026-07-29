@@ -1,4 +1,4 @@
-import { CATEGORY_BY_FIELD } from '@/components/workspace/design-studio/types'
+import { CATEGORY_BY_FIELD, isNoneSelection } from '@/components/workspace/design-studio/types'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 import type { MasterOptionsByCategory, MasterDataOption } from '@/lib/design/masterData'
 import type { EstimasiPengerjaan } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
@@ -19,8 +19,13 @@ interface BuildDesignSpecificationParams {
   existingSpecification?: DesignSpecification | null
 }
 
+// "(None)" resolves to null exactly like an unanswered field does — the
+// pilihan simply isn't included in the Price Snapshot / RenderContext /
+// downstream render pipeline (see NONE_SELECTION's doc comment). Checked
+// before the catalog lookup so it never depends on a "None" row existing in
+// design_master_options.
 function resolveOption(options: MasterDataOption[] | undefined, name: string): MasterDataOption | null {
-  if (!name) return null
+  if (!name || isNoneSelection(name)) return null
   return options?.find(option => option.name === name) ?? null
 }
 

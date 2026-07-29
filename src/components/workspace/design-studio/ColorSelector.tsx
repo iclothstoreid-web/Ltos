@@ -1,6 +1,7 @@
 'use client'
 
 import type { MasterDataOption } from '@/lib/design/masterData'
+import { EmptyOptionsState } from './EmptyOptionsState'
 
 interface ColorSelectorProps {
   options: MasterDataOption[]
@@ -12,6 +13,10 @@ interface ColorSelectorProps {
 // Options come from the 'warna_bahan' master data category; the swatch hex
 // lives in each option's `metadata.hex` instead of a hardcoded name->hex map.
 export function ColorSelector({ options, selected, onSelect, onViewSpec }: ColorSelectorProps) {
+  if (options.length === 0) {
+    return <EmptyOptionsState label="Warna Bahan" />
+  }
+
   return (
     <div className="grid grid-cols-4 gap-3">
       {options.map(option => {

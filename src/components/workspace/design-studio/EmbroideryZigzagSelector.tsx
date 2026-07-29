@@ -27,13 +27,21 @@ export function EmbroideryZigzagSelector({
 }: EmbroideryZigzagSelectorProps) {
   return (
     <div className="space-y-5">
-      <OptionGroup label="Bordir" options={embroideryOptions} selected={embroidery} onSelect={onSelectEmbroidery} onViewSpec={onViewSpec} />
+      <OptionGroup
+        label="Bordir"
+        options={embroideryOptions}
+        selected={embroidery}
+        onSelect={onSelectEmbroidery}
+        onViewSpec={onViewSpec}
+        allowNone
+      />
       <OptionGroup
         label="Handmade Zig-Zag"
         options={zigzagOptions}
         selected={handmadeZigzag}
         onSelect={onSelectHandmadeZigzag}
         onViewSpec={onViewSpec}
+        allowNone
       />
     </div>
   )

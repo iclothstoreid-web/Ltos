@@ -26,18 +26,18 @@ export interface RenderContextValidation {
 }
 
 // The pilihan that must be resolved (non-null option ref) before a
-// RenderContext is considered complete — Bordir/Handmade Zig-Zag are
-// decorative add-ons, so they're deliberately not required here.
+// RenderContext is considered complete — per the Support Optional Selection
+// audit, only components a garment structurally can't be rendered/produced
+// without (material, its color, and the two neckline/sleeve-end finishes
+// that always require a real catalog decision) are required. Model,
+// Cutting, Plaket, Pocket, Button and Bordir/Handmade Zig-Zag all support an
+// explicit "(None)" pilihan (see OPTIONAL_FIELDS in design-studio/types.ts)
+// and are deliberately not required here.
 const REQUIRED_SPEC_FIELDS: Array<{ key: keyof DesignSpecification; label: string }> = [
-  { key: 'model', label: 'Model' },
-  { key: 'lookCutting', label: 'Cutting' },
   { key: 'fabric', label: 'Fabric' },
   { key: 'color', label: 'Color' },
   { key: 'collar', label: 'Collar' },
   { key: 'cuff', label: 'Cuff' },
-  { key: 'plaket', label: 'Plaket' },
-  { key: 'pocket', label: 'Pocket' },
-  { key: 'button', label: 'Button' },
 ]
 
 // Single source of truth for "is this consultation ready for a Render

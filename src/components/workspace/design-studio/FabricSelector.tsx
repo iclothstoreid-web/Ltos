@@ -1,6 +1,7 @@
 'use client'
 
 import type { MasterDataOption } from '@/lib/design/masterData'
+import { EmptyOptionsState } from './EmptyOptionsState'
 
 interface MaterialStockInfo {
   available_stock: number
@@ -22,6 +23,10 @@ interface FabricSelectorProps {
 // "Stok belum terhubung" placeholder instead of fabricating a number.
 // Options come from the 'bahan' master data category.
 export function FabricSelector({ options, selected, materialStock, onSelect, onViewSpec }: FabricSelectorProps) {
+  if (options.length === 0) {
+    return <EmptyOptionsState label="Bahan" />
+  }
+
   return (
     <div className="space-y-4">
       {options.map(option => {
