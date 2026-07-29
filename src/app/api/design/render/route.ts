@@ -11,6 +11,10 @@ import { buildRenderInstruction, validateRenderInstruction } from '@/lib/design/
 import { serializeOpenAI } from '@/lib/design/promptBuilder/serializer'
 import { buildCompressedSections, compressPrompt } from '@/lib/design/promptBuilder/compression'
 import { generateImage } from '@/lib/ai/services/image'
+import type { DnaState } from '@/lib/design/dnaState/types'
+import { hashDnaState } from '@/lib/design/dnaState/hash'
+import { detectDirtyLayers } from '@/lib/design/dirtyLayer/detect'
+import { getCachedRender, setCachedRender } from '@/lib/design/renderCache/cache'
 
 // Debug logging (2026-07-28) — this endpoint's real callers have been
 // reporting collar/pocket/color loss in rendered output with no visibility
@@ -22,6 +26,14 @@ const SEP = '='.repeat(80)
 function logStage(emoji: string, title: string) {
   console.log(`\n${SEP}\n${emoji} ${title}\n${SEP}`)
 }
+
+// Incremental Render Engine V1 (Task 3/6/7) — remembers only the most
+// recently *processed* DNA State for this server process, purely so Dirty
+// Layer Detection has something to diff against for the debug log below.
+// Never read for any business decision (it is not per-consultation, not
+// persisted) — Render Cache is what actually decides hit/miss; this is
+// observation only, same convention as the STAGE 1-6 debug logging.
+let lastDnaState: DnaState | null = null
 
 // Design Render orchestration endpoint — the first live caller of the
 // DNA Resolver -> Recipe Composer -> Prompt Builder -> Image Service chain
@@ -67,6 +79,33 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     )
   }
+
+  // DNA State (Task 1) — the request body IS the DNA State; hashing it here,
+  // before any Supabase/DNA Resolver/Recipe Composer/OpenAI work happens,
+  // is what lets a Render Cache hit skip that entire chain rather than only
+  // skip the final image call.
+  const dnaState: DnaState = {
+    customerPhotoUrl,
+    components: componentSelections.map((selection) => ({
+      category: selection.componentType,
+      itemId: selection.componentId,
+    })),
+  }
+  const dnaHash = hashDnaState(dnaState)
+
+  logStage('🟤', 'STAGE 1.5: DNA STATE HASH + DIRTY LAYER + CACHE LOOKUP')
+  const dirty = detectDirtyLayers(lastDnaState, dnaState)
+  console.log(`DNA State hash: ${dnaHash}`)
+  console.log(`Dirty layers:     [${dirty.dirtyLayers.join(', ') || 'none'}]`)
+  console.log(`Unchanged layers: [${dirty.unchangedLayers.join(', ') || 'none'}]`)
+  lastDnaState = dnaState
+
+  const cached = getCachedRender<Record<string, unknown>>(dnaHash)
+  if (cached) {
+    console.log(`✅ Cache HIT (cached at ${cached.cachedAt}) — returning previously rendered result, no re-render.`)
+    return NextResponse.json(cached.response)
+  }
+  console.log('Cache MISS — proceeding with full render pipeline.')
 
   const supabase = createClient()
   const ids = componentSelections.map((selection) => selection.componentId).filter(Boolean)
@@ -197,7 +236,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: result.error }, { status: 502 })
   }
 
-  return NextResponse.json({
+  const responseBody = {
     success: true,
     renderedImageUrl: result.images[0]?.url ?? null,
     promptUsed: promptCompression.compressed,
@@ -210,6 +249,15 @@ export async function POST(req: NextRequest) {
       instruction,
       instructionValidation,
       referenceImageUrls,
+      dnaState: { hash: dnaHash },
+      dirtyLayers: dirty,
     },
-  })
+  }
+
+  // Render Cache (Task 6) — only a successful render is ever cached, so a
+  // 422/502 (e.g. incomplete master data) never sticks around and blocks a
+  // later request once the underlying data is fixed.
+  setCachedRender(dnaHash, responseBody)
+
+  return NextResponse.json(responseBody)
 }
