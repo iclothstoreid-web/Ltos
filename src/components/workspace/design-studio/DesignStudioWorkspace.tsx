@@ -72,9 +72,10 @@ export function DesignStudioWorkspace({
     buildInitialSelections(consultation.notes, masterOptions)
   )
   const [notes, setNotes] = useState<string>(() => decodeDesignSpecification(consultation.notes)?.notes ?? '')
-  // Sprint V1.2.1 (Fabric Quantity Input) — the manual value that finally
-  // lets reserveInventory() reserve something real at Create Order, instead
-  // of the always-null quantityMeters every earlier order carried (ADR-020).
+  // Sprint V1.2.1 (Fabric Quantity Input) — the Fitter's manual meter
+  // estimate. Spec-only: Fitter no longer reserves/deducts stock (see
+  // "Pindahkan Konsumsi Inventory ke Production"), this just travels into
+  // the order snapshot so Production's Persiapan Bahan card can auto-fill.
   const [fabricQuantityMeters, setFabricQuantityMeters] = useState<number | null>(
     () => decodeFabricQuantity(consultation.notes).quantityMeters
   )

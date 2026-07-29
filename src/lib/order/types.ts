@@ -39,18 +39,14 @@ export interface OrderSnapshot {
   // left empty at Create Order time, not that validation failed.
   eventInformation?: EventInformation | null
   estimationValidation?: EstimationValidationResult | null
-}
-
-// Wired to the Inventory schema's reserve_material_for_order RPC.
-// quantityMeters is the Fitter's manual Design Studio input (Sprint V1.2.1,
-// FabricQuantityField) — still nullable because that field is optional; a
-// null here means "not entered", not "not supported", and reserveInventory
-// no-ops accordingly.
-export interface InventoryReservationRequest {
-  orderId: string
-  fabricName: string
-  colorName: string
-  quantityMeters: number | null
+  // Fitter's manual Design Studio meter estimate (FabricQuantityField) —
+  // spec-only, per the "Pindahkan Konsumsi Inventory ke Production" business
+  // rule: Fitter records what an order *needs*, it never reserves or deducts
+  // stock itself anymore. Optional so pre-existing order.created events
+  // (which have no such key) still decode fine. Production's Persiapan
+  // Bahan card reads this (via get_production_packet) to auto-fill its
+  // Material quantity, editable if left null or wrong.
+  fabricQuantityMeters?: number | null
 }
 
 // Prepared for future wiring — no WhatsApp/messaging integration exists.

@@ -183,13 +183,19 @@ function usageStatus(reserved: number, released: number): MaterialUsageStatus {
 // the same ledger fetchMaterialMovements already reads for Riwayat Stok.
 // Aggregated client-side rather than a SQL view for the same reason as
 // before: the ledger is small per material, this is read-only display data.
+//
+// 'stock_out' (with an order_id) is Persiapan Bahan's direct consumption —
+// the "Pindahkan Konsumsi Inventory ke Production" sprint retired the old
+// reserve/release two-step, so there's no separate "reserved" moment to net
+// against anymore: it counts as both reserved and released at once (fully
+// used, status 'released'), same as a reservation that was released in full.
 export async function fetchMaterialOrderHistory(supabase: SupabaseClient, materialId: string): Promise<MaterialOrderUsage[]> {
   const { data: movements, error } = await supabase
     .from('material_stock_movements')
     .select('order_id, movement_type, quantity')
     .eq('material_id', materialId)
     .not('order_id', 'is', null)
-    .in('movement_type', ['reservation', 'release'])
+    .in('movement_type', ['reservation', 'release', 'stock_out'])
 
   if (error) throw error
 
@@ -198,7 +204,10 @@ export async function fetchMaterialOrderHistory(supabase: SupabaseClient, materi
     const orderId = m.order_id as string
     const entry = byOrder.get(orderId) ?? { reserved: 0, released: 0 }
     if (m.movement_type === 'reservation') entry.reserved += m.quantity
-    else entry.released += m.quantity
+    else if (m.movement_type === 'stock_out') {
+      entry.reserved += m.quantity
+      entry.released += m.quantity
+    } else entry.released += m.quantity
     byOrder.set(orderId, entry)
   }
 
@@ -236,7 +245,7 @@ export async function fetchOrderMaterialUsage(supabase: SupabaseClient, orderId:
     .from('material_stock_movements')
     .select('material_id, movement_type, quantity, materials(name, unit)')
     .eq('order_id', orderId)
-    .in('movement_type', ['reservation', 'release'])
+    .in('movement_type', ['reservation', 'release', 'stock_out'])
 
   if (error) throw error
 
@@ -246,7 +255,10 @@ export async function fetchOrderMaterialUsage(supabase: SupabaseClient, orderId:
     const materialId = row.material_id as string
     const entry = byMaterial.get(materialId) ?? { name: material?.name ?? 'Material', unit: material?.unit ?? '', reserved: 0, released: 0 }
     if (row.movement_type === 'reservation') entry.reserved += row.quantity
-    else entry.released += row.quantity
+    else if (row.movement_type === 'stock_out') {
+      entry.reserved += row.quantity
+      entry.released += row.quantity
+    } else entry.released += row.quantity
     byMaterial.set(materialId, entry)
   }
 
@@ -302,11 +314,12 @@ export function getMaterialAttentionList(
 }
 
 // "Material paling banyak dipakai" — sums real physical consumption from the
-// existing stock ledger. Only 'release' (physical_stock actually decremented
-// at Persiapan Material, see release_material_reservation) and 'stock_out'
-// (manual removal via inventory_adjust_stock) count as consumption;
-// 'reservation' is just a hold (physical_stock untouched) and 'adjustment'
-// is a correction, not usage, so both are excluded. All-time, no new table
+// existing stock ledger. Both 'release' (legacy, pre-Sprint reserve/release
+// pairs) and 'stock_out' (Persiapan Bahan's direct deduction via
+// save_material_preparation, or a manual removal via inventory_adjust_stock)
+// count as consumption; 'reservation' is just a hold (physical_stock
+// untouched, and no longer produced at all) and 'adjustment' is a
+// correction, not usage, so both are excluded. All-time, no new table
 // or RPC — read-only aggregation over material_stock_movements.
 export async function fetchMostUsedMaterials(supabase: SupabaseClient, limit = 5): Promise<MaterialUsageRanking[]> {
   const { data, error } = await supabase

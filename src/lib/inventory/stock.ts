@@ -20,20 +20,3 @@ export async function adjustStock(
   return data as Material
 }
 
-export async function reserveMaterialForOrder(
-  supabase: SupabaseClient,
-  params: { orderId: string; materialName: string; quantity: number }
-): Promise<Material | null> {
-  const { data, error } = await supabase.rpc('reserve_material_for_order', {
-    p_order_id: params.orderId,
-    p_material_name: params.materialName,
-    p_quantity: params.quantity,
-  })
-  if (error) throw error
-  return (data as Material) ?? null
-}
-
-export async function releaseMaterialReservation(supabase: SupabaseClient, orderId: string): Promise<void> {
-  const { error } = await supabase.rpc('release_material_reservation', { p_order_id: orderId })
-  if (error) throw error
-}

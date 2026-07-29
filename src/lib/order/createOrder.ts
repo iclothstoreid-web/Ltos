@@ -7,7 +7,6 @@ import type { EventInformation } from '@/components/workspace/consultation-revie
 import type { OrderSnapshot } from './types'
 import type { EstimationValidationResult } from './estimationValidation'
 import { buildQrPayload, generateCustomerToken, buildCustomerJourneyUrl } from './qr'
-import { reserveInventory } from './inventory'
 import { notifyOrderCreated } from './notifications'
 import { mapEstimasiToServiceLevel, setOrderService } from './service'
 
@@ -30,8 +29,10 @@ interface CreateOrderParams {
   eventInformation?: EventInformation | null
   estimationValidation?: EstimationValidationResult | null
   // Sprint V1.2.1 (Fabric Quantity Input) — the Fitter's manual meters entry
-  // from Design Studio, finally giving reserveInventory() a real quantity
-  // instead of the hardcoded null every earlier order carried (ADR-020).
+  // from Design Studio. Snapshot-only per the "Pindahkan Konsumsi Inventory
+  // ke Production" business rule: Fitter no longer reserves/deducts stock,
+  // it only records what the order needs so Production's Persiapan Bahan
+  // card can auto-fill its Material quantity.
   fabricQuantityMeters?: number | null
   userId: string
 }
@@ -165,6 +166,7 @@ export async function createOrderFromConsultation({
     consultationNumber: consultation.consultation_number,
     eventInformation,
     estimationValidation,
+    fabricQuantityMeters,
   }
 
   // 3. Consultation -> order_created
@@ -198,18 +200,13 @@ export async function createOrderFromConsultation({
     created_by: userId,
   })
 
-  // Reservation is wired to the Inventory schema (see reserveInventory).
-  // quantityMeters now carries the Fitter's real Design Studio input
-  // (Sprint V1.2.1) instead of the hardcoded null every earlier order
-  // carried (ADR-020) — reserveInventory still no-ops if it was left blank.
+  // Inventory reservation/deduction no longer happens here — per the
+  // "Pindahkan Konsumsi Inventory ke Production" business rule, Fitter only
+  // records the material specification (captured in the snapshot above).
+  // Production's Persiapan Bahan stage (save_material_preparation RPC) is
+  // now the only place that touches materials.physical_stock.
   // notifyOrderCreated is still an intentional no-op — no WhatsApp/messaging
   // integration exists in this repo.
-  await reserveInventory(supabase, {
-    orderId: order.id,
-    fabricName: selections.fabric,
-    colorName: selections.color,
-    quantityMeters: fabricQuantityMeters,
-  })
   notifyOrderCreated({
     orderId: order.id,
     orderNumber,

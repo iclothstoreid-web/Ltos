@@ -182,8 +182,10 @@ export function ConsultationReviewWorkspace({
   const selections = { ...DEFAULT_SELECTIONS, ...decodeDesignNotes(consultation.notes) }
 
   // Sprint V1.2.1 (Fabric Quantity Input) — read-only reuse of Design
-  // Studio's decoder, same technique as `selections` above. Feeds
-  // reserveInventory() via createOrderFromConsultation below.
+  // Studio's decoder, same technique as `selections` above. Snapshot-only
+  // (see "Pindahkan Konsumsi Inventory ke Production"): carried into the
+  // order.created snapshot via createOrderFromConsultation below, never
+  // used to reserve/deduct stock from the Fitter side anymore.
   const fabricQuantityMeters = decodeFabricQuantity(consultation.notes).quantityMeters
 
   // Same frozen ID/price snapshot createOrderFromConsultation later carries

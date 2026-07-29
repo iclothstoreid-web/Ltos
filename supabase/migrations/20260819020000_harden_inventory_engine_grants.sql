@@ -1,0 +1,32 @@
+-- Final Lock audit finding: Supabase's public schema has default privileges
+-- that grant EXECUTE to anon/authenticated on every newly created function,
+-- independent of `revoke all ... from public` (that only strips the PUBLIC
+-- pseudo-role, not explicit per-role default grants). This left two
+-- functions reachable that were never meant to be:
+--
+-- - `_inventory_apply_movement` -- documented as "internal only, not exposed
+--   to anon/authenticated", but was in fact directly callable by anon with
+--   NO role/authorization check of its own (it trusts its two callers,
+--   inventory_adjust_stock and save_material_preparation, to have already
+--   checked). Anyone holding the public anon key could have called it
+--   directly to mutate physical_stock with an arbitrary movement_type/
+--   quantity/material_id. This is the critical fix in this migration.
+-- - `inventory_adjust_stock` -- was reachable by anon too. Its own internal
+--   role check (admin/owner only, via profiles.role at auth.uid()) already
+--   blocks any anon call in practice (auth.uid() is null for anon, so the
+--   check always fails) -- lower severity, but revoked from anon anyway for
+--   defense in depth, matching the original migration's intent (it only
+--   ever explicitly granted execute to `authenticated`).
+--
+-- `save_material_preparation` and `list_material_catalog_for_preparation`
+-- are deliberately left anon-callable -- the Production kiosk has no login
+-- session (ADR-011), so anon is exactly the right grant for those two.
+--
+-- Verified post-fix via has_function_privilege(): _inventory_apply_movement
+-- is unreachable by both anon and authenticated, while save_material_preparation
+-- (which calls it internally, owned by the same role) still works -- a
+-- SECURITY DEFINER function's internal calls run as its owner, which always
+-- retains implicit EXECUTE on functions it owns regardless of role grants.
+
+revoke execute on function public._inventory_apply_movement(uuid, text, numeric, uuid, text, uuid) from anon, authenticated;
+revoke execute on function public.inventory_adjust_stock(uuid, text, numeric, text) from anon;

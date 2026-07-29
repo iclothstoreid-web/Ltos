@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
+  MaterialCatalogEntry,
+  MaterialPreparationItem,
   NotificationRules,
   Operator,
   PatternTemplate,
@@ -263,6 +265,55 @@ export async function setShippingInfo(
     p_tracking_number: params.trackingNumber,
   })
   if (error) throw error
+}
+
+// Persiapan Bahan's anon-safe catalog read — direct SELECT on `materials`
+// is RLS-blocked for the no-login kiosk session, so this goes through the
+// same SECURITY DEFINER pattern as get_production_packet.
+export async function listMaterialCatalogForPreparation(
+  supabase: SupabaseClient
+): Promise<MaterialCatalogEntry[]> {
+  const { data, error } = await supabase.rpc('list_material_catalog_for_preparation')
+  if (error) throw error
+  return (data as MaterialCatalogEntry[]) || []
+}
+
+// Persiapan Bahan's single "Reserve Material" action — the only place left
+// in the app that reduces physical_stock as a consequence of an order (see
+// 20260819010000_refine_material_preparation_dynamic_categories.sql). Items
+// are keyed by category (dynamic — whatever Material Categories currently
+// have an active material), not a fixed item list. Sends the full set every
+// save (including explicit None rows), so the RPC can replace this
+// attempt's rows atomically rather than patching one at a time.
+export async function saveMaterialPreparation(
+  supabase: SupabaseClient,
+  params: {
+    orderId: string
+    stageRecordId: string
+    items: {
+      categoryId: string
+      categoryName: string | null
+      materialId: string | null
+      materialName: string | null
+      quantity: number | null
+      used: boolean
+    }[]
+  }
+): Promise<MaterialPreparationItem[]> {
+  const { data, error } = await supabase.rpc('save_material_preparation', {
+    p_order_id: params.orderId,
+    p_stage_record_id: params.stageRecordId,
+    p_items: params.items.map(item => ({
+      category_id: item.categoryId,
+      category_name: item.categoryName,
+      material_id: item.materialId,
+      material_name: item.materialName,
+      quantity: item.quantity,
+      used: item.used,
+    })),
+  })
+  if (error) throw error
+  return (data as MaterialPreparationItem[]) || []
 }
 
 export async function savePatternFormulation(

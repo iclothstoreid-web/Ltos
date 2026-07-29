@@ -11,7 +11,6 @@ import {
   getCurrentStageRecord,
 } from '@/lib/production/stageConfig'
 import { completeStage, getProductionPacket, setShippingInfo, startStage } from '@/lib/production/client'
-import { releaseMaterialReservation } from '@/lib/inventory/stock'
 import { buildProductionQrPayload } from '@/lib/order/qr'
 import type { CommunicationMessage } from '@/lib/communication/types'
 import type { ConsultationDocument } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
@@ -36,6 +35,7 @@ import { ShippingReferencePanel } from './ShippingReferencePanel'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
 import { ReferenceModelCard } from './ReferenceModelCard'
 import { MaterialSpecCard } from './MaterialSpecCard'
+import { MaterialPreparationCard } from './MaterialPreparationCard'
 import { MediaProduksiCard } from './MediaProduksiCard'
 import { PackingVideoUploader } from './PackingVideoUploader'
 import { useProductionBackGuard } from './useProductionBackGuard'
@@ -205,19 +205,6 @@ export function ProductionPacketWorkspace({
         completedAt: completedAtCaptured,
       })
 
-      // Cross Application Integration (LOCKED): "Persiapan Material" is
-      // LTOS's actual first production stage (the brief's "Persiapan
-      // Barang") — its completion is what releases the Material
-      // Reservation made at order creation. Kiosk has no login session,
-      // same reasoning as completeStage itself being callable without one.
-      if (currentRecord.stage === 'material_prep') {
-        try {
-          await releaseMaterialReservation(supabase, orderId)
-        } catch (err) {
-          console.error('[inventory] release reservation failed', err)
-        }
-      }
-
       await refetch()
     } catch (err) {
       console.error('[production] complete stage failed', err)
@@ -250,11 +237,21 @@ export function ProductionPacketWorkspace({
     isQc && !productionRules.qc_checklist_required
       ? true
       : Object.values(checklist).every(Boolean)
+  // Persiapan Bahan gate: Setujui is unreachable until the operator has
+  // saved the Material Preparation card at least once for this attempt
+  // (even an all-None save counts — see MaterialPreparationCard) — this is
+  // what makes "Reserve Material" the thing that actually unlocks moving on
+  // to the next production stage, per Task 4 of the "Pindahkan Konsumsi
+  // Inventory ke Production" brief.
+  const materialPrepSaved = currentRecord
+    ? packet.material_preparation.some(i => i.stage_record_id === currentRecord.id)
+    : false
   // Delivery wajib konfirmasi (Production Rules): when off, Pengiriman can
   // be approved without courier/resi filled in.
   const canApprove =
     checklistComplete &&
     (!requiresEvidence || !!evidenceUrl) &&
+    (!isMaterialPrep || materialPrepSaved) &&
     (!isShipping ||
       !productionRules.delivery_confirmation_required ||
       (!!courier && trackingNumber.trim().length > 0))
@@ -378,6 +375,20 @@ export function ProductionPacketWorkspace({
                     it afterwards. */}
                 {evidenceUploadError && (
                   <p className="font-hanken text-xs text-red-600">{evidenceUploadError}</p>
+                )}
+
+                {isMaterialPrep && (
+                  <MaterialPreparationCard
+                    supabase={supabase}
+                    orderId={orderId}
+                    stageRecordId={currentRecord.id}
+                    fabricName={packet.design?.fabric ?? null}
+                    fabricQuantityMeters={packet.fabric_quantity_meters}
+                    existingItems={packet.material_preparation.filter(
+                      i => i.stage_record_id === currentRecord.id
+                    )}
+                    onSaved={refetch}
+                  />
                 )}
 
                 {isPatternFormulation && (

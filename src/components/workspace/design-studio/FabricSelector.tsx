@@ -22,6 +22,13 @@ interface FabricSelectorProps {
 // no matching material (not catalogued in Inventory yet) keeps the honest
 // "Stok belum terhubung" placeholder instead of fabricating a number.
 // Options come from the 'bahan' master data category.
+//
+// Out of Stock (available_stock <= 0) is disabled outright per the
+// "Pindahkan Konsumsi Inventory ke Production" business rule — Design
+// Studio must read Inventory's real stock and refuse a material that has
+// none left, rather than let the Fitter pick it and find out at Persiapan
+// Bahan. Low Stock (available_stock <= min_stock, but > 0) stays pickable,
+// just flagged.
 export function FabricSelector({ options, selected, materialStock, onSelect, onViewSpec }: FabricSelectorProps) {
   if (options.length === 0) {
     return <EmptyOptionsState label="Bahan" />
@@ -32,14 +39,18 @@ export function FabricSelector({ options, selected, materialStock, onSelect, onV
       {options.map(option => {
         const active = selected === option.name
         const stock = materialStock[option.name]
+        const outOfStock = !!stock && stock.available_stock <= 0
+        const lowStock = !!stock && !outOfStock && stock.available_stock <= stock.min_stock
         return (
           <button
             key={option.id}
             type="button"
-            onClick={() => onSelect(option.name)}
+            onClick={() => !outOfStock && onSelect(option.name)}
+            disabled={outOfStock}
+            aria-disabled={outOfStock}
             className={`w-full flex items-center gap-4 p-4 bg-white border text-left transition-all ${
               active ? 'border-[#775a19]' : 'border-[#c4c7c7]/40'
-            }`}
+            } ${outOfStock ? 'opacity-40 cursor-not-allowed' : ''}`}
           >
             <div className="w-16 h-16 bg-[#1c1b1b] flex items-center justify-center shrink-0 overflow-hidden">
               {option.photo_url ? (
@@ -75,11 +86,12 @@ export function FabricSelector({ options, selected, materialStock, onSelect, onV
                 {stock ? (
                   <span
                     className={`font-sans text-[10px] uppercase whitespace-nowrap ${
-                      stock.available_stock <= stock.min_stock ? 'text-[#ba1a1a]' : 'text-[#006c49]'
+                      outOfStock ? 'text-[#ba1a1a]' : lowStock ? 'text-[#8a5a00]' : 'text-[#006c49]'
                     }`}
                   >
-                    {stock.available_stock.toLocaleString('id-ID')} {stock.unit} tersedia
-                    {stock.available_stock <= stock.min_stock ? ' · Menipis' : ''}
+                    {outOfStock
+                      ? 'Stok Habis'
+                      : `${stock.available_stock.toLocaleString('id-ID')} ${stock.unit} tersedia${lowStock ? ' · Menipis' : ''}`}
                   </span>
                 ) : (
                   <span className="font-sans text-[10px] text-[#444748] uppercase whitespace-nowrap">
