@@ -14,6 +14,11 @@ import {
   deleteMasterDataOption,
   swapMasterDataOptionOrder,
   uploadMasterDataPhoto,
+  materialColorNames,
+  withMaterialColorNames,
+  MATERIAL_SUPPLIER_KEY,
+  MATERIAL_KARAKTERISTIK_KEY,
+  MATERIAL_RESERVED_METADATA_KEYS,
 } from '@/lib/design/masterData'
 import type { MasterOptionsByCategory, MasterDataOption, MasterDataCategory } from '@/lib/design/masterData'
 import { AiDesignDnaSection } from './AiDesignDnaSection'
@@ -30,8 +35,10 @@ interface SpecRow {
   value: string
 }
 
-function metadataToRows(metadata: Record<string, string>): SpecRow[] {
-  return Object.entries(metadata).map(([key, value]) => ({ key, value }))
+function metadataToRows(metadata: Record<string, string>, excludeKeys: readonly string[] = []): SpecRow[] {
+  return Object.entries(metadata)
+    .filter(([key]) => !excludeKeys.includes(key))
+    .map(([key, value]) => ({ key, value }))
 }
 
 function rowsToMetadata(rows: SpecRow[]): Record<string, string> {
@@ -73,6 +80,13 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const [editingName, setEditingName] = useState('')
   const [editingPhotoUrl, setEditingPhotoUrl] = useState<string | null>(null)
   const [editingSpecRows, setEditingSpecRows] = useState<SpecRow[]>([])
+  // Material ('bahan') only: dedicated Supplier/Karakteristik fields and a
+  // Warna multi-select referencing the warna_bahan Repository — kept out of
+  // the generic Tabel Spesifikasi editor so "Optimalkan proses input
+  // Material" gets a guided form instead of a free-form key/value table.
+  const [editingSupplier, setEditingSupplier] = useState('')
+  const [editingKarakteristik, setEditingKarakteristik] = useState('')
+  const [editingColorNames, setEditingColorNames] = useState<string[]>([])
   const [editingSellingPoints, setEditingSellingPoints] = useState<string[]>([])
   const [editingInternalNotes, setEditingInternalNotes] = useState('')
   const [editingPrice, setEditingPrice] = useState('')
@@ -144,7 +158,11 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingCategory(option.category)
     setEditingName(option.name)
     setEditingPhotoUrl(option.photo_url)
-    setEditingSpecRows(metadataToRows(option.metadata))
+    const isMaterial = option.category === 'bahan'
+    setEditingSpecRows(metadataToRows(option.metadata, isMaterial ? MATERIAL_RESERVED_METADATA_KEYS : []))
+    setEditingSupplier(isMaterial ? option.metadata[MATERIAL_SUPPLIER_KEY] ?? '' : '')
+    setEditingKarakteristik(isMaterial ? option.metadata[MATERIAL_KARAKTERISTIK_KEY] ?? '' : '')
+    setEditingColorNames(isMaterial ? materialColorNames(option.metadata) : [])
     setEditingSellingPoints(option.selling_points.length > 0 ? option.selling_points : [])
     setEditingInternalNotes(option.internal_notes)
     setEditingPrice(String(option.price ?? 0))
@@ -191,9 +209,15 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setSaving(true)
     setError(null)
     try {
+      let metadata = rowsToMetadata(editingSpecRows)
+      if (editingCategory === 'bahan') {
+        if (editingSupplier.trim()) metadata[MATERIAL_SUPPLIER_KEY] = editingSupplier.trim()
+        if (editingKarakteristik.trim()) metadata[MATERIAL_KARAKTERISTIK_KEY] = editingKarakteristik.trim()
+        metadata = withMaterialColorNames(metadata, editingColorNames)
+      }
       await updateMasterDataOption(supabase, editingId, {
         name: editingName,
-        metadata: rowsToMetadata(editingSpecRows),
+        metadata,
         photo_url: editingPhotoUrl,
         selling_points: editingSellingPoints.map(point => point.trim()).filter(Boolean),
         internal_notes: editingInternalNotes,
@@ -294,6 +318,10 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
   function removeSpecRow(index: number) {
     setEditingSpecRows(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function toggleEditingColor(name: string) {
+    setEditingColorNames(prev => (prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]))
   }
 
   function updateSellingPoint(index: number, value: string) {
@@ -409,6 +437,72 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                         />
                       </div>
                     </div>
+
+                    {editingCategory === 'bahan' && (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+                              Supplier
+                            </p>
+                            <input
+                              value={editingSupplier}
+                              onChange={e => setEditingSupplier(e.target.value)}
+                              className="w-full border-b border-[#c4c7c7] bg-transparent py-1 text-sm outline-none focus:border-[#775a19]"
+                            />
+                          </div>
+                          <div>
+                            <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+                              Karakteristik Material
+                            </p>
+                            <input
+                              value={editingKarakteristik}
+                              onChange={e => setEditingKarakteristik(e.target.value)}
+                              placeholder="mis. Adem, jatuh, tidak mudah kusut"
+                              className="w-full border-b border-[#c4c7c7] bg-transparent py-1 text-sm outline-none focus:border-[#775a19]"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+                            Warna Tersedia{' '}
+                            <span className="normal-case text-[#444748]/70">
+                              (referensi ke Repository Warna, bukan DNA baru)
+                            </span>
+                          </p>
+                          {options.warna_bahan.filter(c => c.is_active).length === 0 ? (
+                            <p className="text-xs text-[#444748]">Belum ada Warna aktif di Repository.</p>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {options.warna_bahan
+                                .filter(c => c.is_active)
+                                .map(color => {
+                                  const active = editingColorNames.includes(color.name)
+                                  return (
+                                    <button
+                                      key={color.id}
+                                      type="button"
+                                      onClick={() => toggleEditingColor(color.name)}
+                                      className={`flex items-center gap-2 px-3 py-1.5 border text-xs transition-colors ${
+                                        active
+                                          ? 'border-[#775a19] bg-[#775a19]/10 text-[#151c27]'
+                                          : 'border-[#c4c7c7]/60 text-[#444748]'
+                                      }`}
+                                    >
+                                      <span
+                                        className="w-3 h-3 rounded-full border border-[#c4c7c7]/60 shrink-0"
+                                        style={{ backgroundColor: color.metadata.hex || '#c4c7c7' }}
+                                      />
+                                      {color.name}
+                                    </button>
+                                  )
+                                })}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
@@ -581,9 +675,26 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                   <div className="w-10 h-10 border border-dashed border-[#c4c7c7] shrink-0" />
                 )}
 
-                <span className={`flex-1 min-w-[100px] text-sm truncate ${option.is_active ? '' : 'text-[#444748] line-through'}`}>
-                  {option.name}
-                </span>
+                <div className="flex-1 min-w-[100px]">
+                  <span className={`text-sm truncate ${option.is_active ? '' : 'text-[#444748] line-through'}`}>
+                    {option.name}
+                  </span>
+                  {option.category === 'bahan' && materialColorNames(option.metadata).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {materialColorNames(option.metadata).map(name => {
+                        const match = options.warna_bahan.find(c => c.name === name)
+                        return (
+                          <span
+                            key={name}
+                            title={name}
+                            className="w-3 h-3 rounded-full border border-[#c4c7c7]/60 inline-block"
+                            style={{ backgroundColor: match?.metadata.hex || '#c4c7c7' }}
+                          />
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
 
                 {priceEditingId === option.id ? (
                   <div className="flex items-center gap-2">

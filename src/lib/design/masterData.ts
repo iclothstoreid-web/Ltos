@@ -91,6 +91,45 @@ export interface MasterDataOption {
 
 export type MasterOptionsByCategory = Record<MasterDataCategory, MasterDataOption[]>
 
+// Reserved 'bahan' (Material) metadata keys for the dedicated Supplier /
+// Karakteristik fields and the Warna multi-select — kept inside the existing
+// flexible `metadata` jsonb column (same column 'warna_bahan' already uses
+// for `hex`) rather than a new DB column, so Repository Architecture stays
+// untouched. `warna` stores a comma-separated list of `warna_bahan` option
+// NAMES — a reference to the Repository, never a copy of the DNA warna row
+// itself. Single Source of Truth for color DNA stays the warna_bahan
+// category; a Material only ever points at it.
+export const MATERIAL_SUPPLIER_KEY = 'supplier'
+export const MATERIAL_KARAKTERISTIK_KEY = 'karakteristik'
+export const MATERIAL_COLOR_REFS_KEY = 'warna'
+export const MATERIAL_RESERVED_METADATA_KEYS: readonly string[] = [
+  MATERIAL_SUPPLIER_KEY,
+  MATERIAL_KARAKTERISTIK_KEY,
+  MATERIAL_COLOR_REFS_KEY,
+]
+
+export function materialColorNames(metadata: Record<string, string>): string[] {
+  const raw = metadata[MATERIAL_COLOR_REFS_KEY]
+  if (!raw) return []
+  return raw
+    .split(',')
+    .map(name => name.trim())
+    .filter(Boolean)
+}
+
+export function withMaterialColorNames(
+  metadata: Record<string, string>,
+  names: string[]
+): Record<string, string> {
+  const next = { ...metadata }
+  if (names.length > 0) {
+    next[MATERIAL_COLOR_REFS_KEY] = names.join(',')
+  } else {
+    delete next[MATERIAL_COLOR_REFS_KEY]
+  }
+  return next
+}
+
 // Roles allowed to manage the Product Knowledge Base — Owner OS (admin,
 // owner) and Fitter (artisan), per the locked decision that Fitter gets the
 // exact same access as Owner OS, no separate implementation. Single source
