@@ -15,6 +15,65 @@ import { getOpenAIClient } from "../client";
 const DEFAULT_MODEL = "gpt-image-1";
 const DEFAULT_TIMEOUT_MS = 60_000;
 
+// OpenAI's images.edit only accepts image/jpeg, image/png, image/webp. The
+// OpenAI SDK's own File conversion (openai/internal/to-file.js) trusts a
+// fetch() Response's Content-Type header verbatim when building the upload —
+// it never inspects the actual bytes. Supabase Storage sometimes serves a
+// reference image with a generic Content-Type (e.g. application/octet-stream)
+// when the original upload didn't carry a real image MIME type all the way
+// through to Storage, and that bad header would otherwise reach OpenAI as-is
+// and get rejected even though the bytes are a valid photo. Normalizing once
+// here — before any reference image reaches OpenAI — is what fixes that,
+// regardless of which upload path produced the bad header.
+const SUPPORTED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const EXTENSION_TO_MIME_TYPE: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+const MIME_TYPE_TO_EXTENSION: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const DEFAULT_IMAGE_MIME_TYPE = "image/jpeg";
+
+async function fetchReferenceImageFile(url: string): Promise<File> {
+  const response = await fetch(url);
+  const storageHeaderContentType = response.headers.get("content-type");
+  const reportedType = storageHeaderContentType?.split(";")[0]?.trim().toLowerCase();
+  const extension = new URL(url).pathname.split(".").pop()?.toLowerCase();
+
+  const mimeType =
+    (reportedType && SUPPORTED_IMAGE_MIME_TYPES.has(reportedType) ? reportedType : undefined) ??
+    (extension ? EXTENSION_TO_MIME_TYPE[extension] : undefined) ??
+    DEFAULT_IMAGE_MIME_TYPE;
+
+  const bytes = await response.arrayBuffer();
+  const blob = new Blob([bytes], { type: mimeType });
+  const filename = `reference-image.${MIME_TYPE_TO_EXTENSION[mimeType]}`;
+  const file = new File([blob], filename, { type: mimeType });
+
+  // TEMPORARY DEBUG LOGGING (2026-07-29) — added to prove in production
+  // whether MIME normalization actually runs before the OpenAI call. Remove
+  // once the "still application/octet-stream in prod" report is confirmed
+  // fixed or root-caused further.
+  console.log(
+    [
+      "[fetchReferenceImageFile] MIME normalization trace",
+      `URL: ${url}`,
+      `Storage Header (Content-Type): ${storageHeaderContentType ?? "(none)"}`,
+      `Blob Type: ${blob.type}`,
+      `Normalized File Type: ${file.type}`,
+      `Filename: ${file.name}`,
+      `Extension used: ${extension ?? "(none)"}`,
+    ].join("\n"),
+  );
+
+  return file;
+}
+
 export interface GenerateImageInput {
   instruction: RenderInstruction;
   model?: string;
@@ -74,7 +133,7 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
             {
               model: input.model ?? DEFAULT_MODEL,
               prompt,
-              image: await Promise.all(referenceImageUrls.map((url) => fetch(url))),
+              image: await Promise.all(referenceImageUrls.map((url) => fetchReferenceImageFile(url))),
             },
             { timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS },
           )
