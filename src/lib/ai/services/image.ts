@@ -149,10 +149,20 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
       return { ok: false, error: "OpenAI returned an empty image response." };
     }
 
+    // GPT Image models (gpt-image-1 and family) never populate `image.url` —
+    // per the OpenAI SDK's own Image type, that field is "Unsupported for
+    // the GPT image models"; they return `b64_json` only. Without this, every
+    // gpt-image-1 render came back `ok: true` with a fully generated image
+    // that the caller could never display, since route.ts/RenderResult only
+    // ever read `.url`. Building a displayable data: URL from the base64
+    // payload here (once, in the one place that already knows the SDK
+    // response shape) is what actually makes the image reach the UI.
+    const outputFormat = response.output_format ?? "png";
+
     return {
       ok: true,
       images: response.data.map((image) => ({
-        url: image.url,
+        url: image.url ?? (image.b64_json ? `data:image/${outputFormat};base64,${image.b64_json}` : undefined),
         b64Json: image.b64_json,
         revisedPrompt: image.revised_prompt,
       })),

@@ -68,16 +68,21 @@ export function AIPreviewPanel({
               <span className="material-symbols-outlined text-6xl text-[#775a19]/30 animate-spin">
                 auto_awesome
               </span>
-              <p className="font-sans text-sm uppercase tracking-widest text-[#151c27]">Rendering...</p>
+              <p className="font-sans text-sm uppercase tracking-widest text-[#151c27]">
+                Sedang menyiapkan Preview Eksklusif Anda...
+              </p>
+              <p className="font-sans text-xs text-[#444748] max-w-xs leading-relaxed">
+                Mohon tunggu beberapa saat. Kami sedang memproses visual berdasarkan foto dan detail desain pilihan
+                Anda.
+              </p>
             </>
           ) : (
             <>
               <span className="material-symbols-outlined text-6xl text-[#775a19]/30">auto_awesome</span>
-              <p className="font-sans text-sm uppercase tracking-widest text-[#151c27]">Pratinjau AI</p>
+              <p className="font-sans text-sm uppercase tracking-widest text-[#151c27]">Preview Eksklusif</p>
               <p className="font-sans text-xs text-[#444748] max-w-xs leading-relaxed">
-                {renderContext
-                  ? 'Render Context siap. AI Render Engine akan menggunakan ini pada sprint berikutnya.'
-                  : 'Pratinjau personal Anda akan muncul di sini. Selesaikan desain Anda lalu klik "Buat Pratinjau Akhir".'}
+                Selesaikan pilihan desain Anda, lalu buat preview personal untuk melihat gambaran busana sebelum
+                diproduksi.
               </p>
             </>
           )}
@@ -86,9 +91,12 @@ export function AIPreviewPanel({
       {renderResult.status === 'error' && (
         <div className="w-full max-w-lg bg-[#fdecea] border-[0.5px] border-[#c0392b] p-3">
           <p className="font-sans text-xs font-bold text-[#c0392b] uppercase tracking-widest mb-1">
-            Render Gagal
+            Preview belum dapat dibuat
           </p>
-          <p className="font-sans text-xs text-[#c0392b]">{renderResult.error || 'Unknown error'}</p>
+          <p className="font-sans text-xs text-[#c0392b]">
+            Terjadi kendala saat membuat preview. Silakan coba beberapa saat lagi atau ubah pilihan desain Anda
+            kemudian render kembali.
+          </p>
         </div>
       )}
 
