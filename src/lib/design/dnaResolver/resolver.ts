@@ -65,7 +65,15 @@ export function resolveDNA(input: DNAResolverInput): DNAResolverOutput {
   }
 
   const garment = buildGarmentSpec(input.aiDna, input.renderRecipe.garment)
-  const negativeRules = Array.from(new Set([...input.renderRecipe.negativeRules, ...input.aiDna.negativeRules]))
+  // Defensive: some Repository rows (e.g. warna_bahan, saku) were authored
+  // with a non-conforming ai_dna/render_recipe shape that omits negativeRules
+  // entirely — spreading `undefined` into an array literal throws, unlike the
+  // object spread in buildGarmentSpec above. `?? []` only guards against that
+  // missing-key case; it changes nothing for any row that already has the
+  // array (every currently-passing kerah/manset/plaket/bahan row).
+  const negativeRules = Array.from(
+    new Set([...(input.renderRecipe.negativeRules ?? []), ...(input.aiDna.negativeRules ?? [])])
+  )
 
   const recipe: RenderRecipe = { ...input.renderRecipe, garment, negativeRules }
 
