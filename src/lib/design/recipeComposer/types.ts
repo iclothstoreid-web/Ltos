@@ -26,14 +26,36 @@ export interface GlobalRenderPolicy {
   negativeRules: string[]
 }
 
+// Sprint AI-R2 (Part 1-3) — the ONE place this "applies to every render"
+// singleton policy actually gets populated. Root cause of the reported
+// half-body crop bug (confirmed by reading the pipeline, not assumed): before
+// this sprint every field below was `{}`/`[]`, so NOTHING anywhere in the
+// live pipeline ever told GPT Image to keep the shot full-body — no item's
+// Render Recipe sets `camera` either (see Sprint AI-R1's audit). GPT Image
+// then picked its own default framing, which is commonly half-body for a
+// person-centric edit. `camera`/`quality` stay short on purpose: both share
+// Prompt Compression's ~55-token "Other" bucket with lighting/background/
+// stitching/embroidery (src/lib/design/promptBuilder/compression.ts) — a
+// longer instruction here risks being silently truncated once components
+// start populating those other fields too. `negativeRules` carries the bulk
+// of the Identity Lock / Garment Lock constraints instead, since it has its
+// own dedicated ~50-token budget AND is the one mechanism GPT Image actually
+// has for negative instructions (serializeOpenAI turns it into an explicit
+// "Avoid: ..." clause — GPT Image has no separate negative-prompt param).
 export const DEFAULT_GLOBAL_RENDER_POLICY: GlobalRenderPolicy = {
-  camera: {},
+  camera: { framing: 'full body head-to-toe, feet visible, original camera framing, no crop' },
   pose: {},
   lighting: {},
   background: {},
-  quality: {},
+  quality: { lock: 'identity and pose locked — only clothing changes' },
   style: {},
-  negativeRules: [],
+  negativeRules: [
+    'body crop, half-body, missing feet, wrong framing',
+    'face, age, body shape, hairstyle, beard, skin tone, expression, ethnicity changed',
+    'camera, lighting, background changed',
+    'thobe replaced by shirt, polo, hoodie, t-shirt, jacket, tunic',
+    'short sleeves, low collar, non-Saudi silhouette',
+  ],
 }
 
 // One Master Item's Render Recipe plus the ordering info Recipe Composer

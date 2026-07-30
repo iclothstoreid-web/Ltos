@@ -36,7 +36,31 @@ function validate(input: DNAResolverInput): string[] {
 // already carries wins over the DNA-derived value — same "more specific
 // source wins" precedent as recipeComposer/composer.ts's mergeRecipe, here
 // applied to two sources on the same item rather than two different items.
-function buildGarmentSpec(aiDna: AiDesignDna, existingGarment: Record<string, unknown>): Record<string, unknown> {
+// Color DNA fallback (Sprint PR-01, P4) — a `warna_bahan` item's real color
+// description is routinely authored directly into the jsonb `ai_dna` column
+// under ad-hoc keys (`description`, `tone`, `undertone`, `brightness`,
+// `saturation`) rather than the typed `appearance` field above (confirmed
+// against production data — e.g. the "Maroon" row). The DB schema already
+// allows these extra keys (jsonb), this just makes the resolver tolerant of
+// reading them — no column/type added, no structure changed. Only used when
+// `appearance` itself is empty, so an item that already has real
+// `appearance` content is completely unaffected.
+function colorDescriptionFallback(aiDna: AiDesignDna): string | null {
+  const raw = aiDna as unknown as Record<string, unknown>
+  if (typeof raw.description === 'string' && raw.description.trim()) {
+    return raw.description
+  }
+  const descriptors = [raw.tone, raw.undertone, raw.brightness, raw.saturation].filter(
+    (value): value is string => typeof value === 'string' && value.trim().length > 0
+  )
+  return descriptors.length > 0 ? descriptors.join(', ') : null
+}
+
+function buildGarmentSpec(
+  aiDna: AiDesignDna,
+  existingGarment: Record<string, unknown>,
+  category: DNAResolverInput['category']
+): Record<string, unknown> {
   const derived: Record<string, unknown> = {}
 
   AI_DNA_GARMENT_FIELDS.forEach((field) => {
@@ -45,6 +69,30 @@ function buildGarmentSpec(aiDna: AiDesignDna, existingGarment: Record<string, un
       derived[field] = value
     }
   })
+
+  if (derived.appearance === undefined) {
+    const fallback = colorDescriptionFallback(aiDna)
+    if (fallback) derived.appearance = fallback
+  }
+
+  // Color Identity carve-out (Sprint PR-02 — found live during pipeline
+  // verification, fixed as an explicit blocker per that sprint's brief).
+  // Recipe Composer's Model Thobe "Anchor" rule (recipeComposer/
+  // composer.ts's resolveRecipeConflict) makes Model Thobe always win any
+  // same-key collision on `garment` — necessary so a Collar's geometry can
+  // never masquerade as the whole garment's shape, but it has the side
+  // effect of ALSO discarding warna_bahan's `appearance` (the customer's
+  // actual color choice) the moment Model Thobe has its own `appearance`
+  // text, since DNA Resolver maps every category onto the same
+  // unnamespaced key. Proven live: with a complete Model Thobe present,
+  // "Maroon" never reached the compiled prompt at all before this fix.
+  // Moving color onto its own `color` key removes the collision entirely
+  // — Prompt Builder/Serializer/Compression already pass `garment` through
+  // generically (Object.entries), so nothing else needs to change.
+  if (category === 'warna_bahan' && derived.appearance !== undefined) {
+    derived.color = derived.appearance
+    delete derived.appearance
+  }
 
   return { ...derived, ...existingGarment }
 }
@@ -64,7 +112,7 @@ export function resolveDNA(input: DNAResolverInput): DNAResolverOutput {
     return { recipe: null, ready: false, errors }
   }
 
-  const garment = buildGarmentSpec(input.aiDna, input.renderRecipe.garment)
+  const garment = buildGarmentSpec(input.aiDna, input.renderRecipe.garment, input.category)
   // Defensive: some Repository rows (e.g. warna_bahan, saku) were authored
   // with a non-conforming ai_dna/render_recipe shape that omits negativeRules
   // entirely — spreading `undefined` into an array literal throws, unlike the

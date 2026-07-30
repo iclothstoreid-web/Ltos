@@ -11,9 +11,16 @@ import { buildRenderInstruction, validateRenderInstruction } from '@/lib/design/
 import { serializeOpenAI } from '@/lib/design/promptBuilder/serializer'
 import { buildCompressedSections, compressPrompt } from '@/lib/design/promptBuilder/compression'
 import { generateImage } from '@/lib/ai/services/image'
-import { composeAiAssets, applyAssetInstructions } from '@/lib/design/aiAssetComposer/composer'
+import {
+  composeAiAssets,
+  applyAssetInstructions,
+  validateModelReferenceAvailable,
+  validateCollarReference,
+} from '@/lib/design/aiAssetComposer/composer'
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
+import type { UnresolvedComponent } from '@/lib/design/capabilityEngine/engine'
+import { LAYER1_IDENTITY_TEMPLATE } from '@/lib/design/promptArchitectureV2/layers'
 import type { DnaState } from '@/lib/design/dnaState/types'
 import { hashDnaState } from '@/lib/design/dnaState/hash'
 import { detectDirtyLayers } from '@/lib/design/dirtyLayer/detect'
@@ -38,25 +45,20 @@ function logStage(emoji: string, title: string) {
 // observation only, same convention as the STAGE 1-6 debug logging.
 let lastDnaState: DnaState | null = null
 
-// Design Render orchestration endpoint — the first live caller of the
-// DNA Resolver -> Recipe Composer -> Prompt Builder -> Image Service chain
-// (every prior sprint in this pipeline shipped as a library with zero
-// callers). Reads real design_master_options rows through the same
-// cookie-based, RLS-respecting server client every other route in this app
-// uses (src/lib/supabase/server.ts) — no service-role key, matching
-// existing convention.
+// Design Render orchestration endpoint — DNA Resolver -> Recipe Composer ->
+// Prompt Builder -> Image Service, gated by the AI Capability Engine.
 //
-// Gracefully handles partial data on purpose: current master data only has
-// model_thobe/kerah/warna_bahan rows past pending/empty, so most real
-// requests will resolve only a subset of the requested components. A
-// component that isn't found or isn't resolvable is reported in
-// `componentsMissing`, never treated as a hard failure on its own — the AI
-// Capability Engine (Sprint AI-R3, capabilityEngine/engine.ts) is what
-// decides render mode/quality from that partial data, and 422 is now
-// reserved for exactly 3 conditions (see STAGE 2.5 below): no Customer
-// Photo, no Model Thobe selected, or the Model Thobe's own AI Design DNA
-// empty/invalid. Everything else degrades gracefully instead of blocking.
-
+// Sprint PR-01 (Production Recovery) — this endpoint previously tolerated a
+// selected component silently failing to resolve (dropped into
+// `componentsMissing`, render proceeded anyway on whatever else resolved).
+// That is exactly the "silent fallback" the brief requires removed: a
+// customer who picked Saudi Modern got a render with no trace of Saudi
+// Modern in it and no error telling them why. Fail Fast (P3/P8) below makes
+// ANY unresolved *selected* component (not the "(None)" sentinel — that
+// never reaches `componentSelections` at all, see design-studio/types.ts's
+// OPTIONAL_FIELDS) a hard BLOCKED response via the Capability Engine,
+// instead of a quiet `componentsMissing` entry the render just continues
+// past.
 interface ComponentSelection {
   componentType: string
   componentId: string
@@ -86,33 +88,6 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     )
   }
-
-  // DNA State (Task 1) — the request body IS the DNA State; hashing it here,
-  // before any Supabase/DNA Resolver/Recipe Composer/OpenAI work happens,
-  // is what lets a Render Cache hit skip that entire chain rather than only
-  // skip the final image call.
-  const dnaState: DnaState = {
-    customerPhotoUrl,
-    components: componentSelections.map((selection) => ({
-      category: selection.componentType,
-      itemId: selection.componentId,
-    })),
-  }
-  const dnaHash = hashDnaState(dnaState)
-
-  logStage('🟤', 'STAGE 1.5: DNA STATE HASH + DIRTY LAYER + CACHE LOOKUP')
-  const dirty = detectDirtyLayers(lastDnaState, dnaState)
-  console.log(`DNA State hash: ${dnaHash}`)
-  console.log(`Dirty layers:     [${dirty.dirtyLayers.join(', ') || 'none'}]`)
-  console.log(`Unchanged layers: [${dirty.unchangedLayers.join(', ') || 'none'}]`)
-  lastDnaState = dnaState
-
-  const cached = getCachedRender<Record<string, unknown>>(dnaHash)
-  if (cached) {
-    console.log(`✅ Cache HIT (cached at ${cached.cachedAt}) — returning previously rendered result, no re-render.`)
-    return NextResponse.json(cached.response)
-  }
-  console.log('Cache MISS — proceeding with full render pipeline.')
 
   const supabase = createClient()
   const ids = componentSelections.map((selection) => selection.componentId).filter(Boolean)
@@ -171,6 +146,46 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  // DNA State (Task 1) — Sprint PR-01 (P7, Cache Invalidation) moved this
+  // hash computation to AFTER the Supabase fetch above (it used to run
+  // before, purely on the request body, so a cache hit could skip Supabase
+  // entirely). That was cache-incorrect: hashing only {category, itemId}
+  // meant editing a Master Data item's AI Design DNA / Render Recipe (which
+  // never changes its id) produced the exact same hash as before the edit,
+  // so a Render Cache hit could silently serve a render made under the OLD
+  // DNA. Including each component's real `ai_dna.version`/
+  // `render_recipe.version` (bumped by aiDna/types.ts's mark* functions on
+  // every real edit) fixes that at the cost of always paying for one
+  // Supabase SELECT even on a cache hit — a fixed, cheap cost compared to
+  // the OpenAI call a cache hit still saves.
+  const dnaState: DnaState = {
+    customerPhotoUrl,
+    components: componentSelections.map((selection) => {
+      const option = rowsById.get(selection.componentId)
+      return {
+        category: selection.componentType,
+        itemId: selection.componentId,
+        dnaVersion: option?.ai_dna.version,
+        recipeVersion: option?.render_recipe.version,
+      }
+    }),
+  }
+  const dnaHash = hashDnaState(dnaState)
+
+  logStage('🟤', 'STAGE 1.5: DNA STATE HASH + DIRTY LAYER + CACHE LOOKUP')
+  const dirty = detectDirtyLayers(lastDnaState, dnaState)
+  console.log(`DNA State hash: ${dnaHash}`)
+  console.log(`Dirty layers:     [${dirty.dirtyLayers.join(', ') || 'none'}]`)
+  console.log(`Unchanged layers: [${dirty.unchangedLayers.join(', ') || 'none'}]`)
+  lastDnaState = dnaState
+
+  const cached = getCachedRender<Record<string, unknown>>(dnaHash)
+  if (cached) {
+    console.log(`✅ Cache HIT (cached at ${cached.cachedAt}) — returning previously rendered result, no re-render.`)
+    return NextResponse.json(cached.response)
+  }
+  console.log('Cache MISS — proceeding with full render pipeline.')
+
   const componentsMissing: { componentId: string; componentType: string; reason: string }[] = []
   const resolved: { option: MasterDataOption; recipe: RenderRecipe }[] = []
 
@@ -178,7 +193,7 @@ export async function POST(req: NextRequest) {
     const option = rowsById.get(selection.componentId)
     if (!option) {
       console.log(`  ├─ ${selection.componentType} (${selection.componentId}): ⚠️  not_found in Supabase`)
-      componentsMissing.push({ ...selection, reason: 'not_found' })
+      componentsMissing.push({ ...selection, reason: 'Item tidak ditemukan di design_master_options.' })
       return
     }
 
@@ -194,7 +209,7 @@ export async function POST(req: NextRequest) {
     const { recipe, ready, errors } = resolveDNA(input)
     if (!ready || !recipe) {
       console.log(`  │    ⚠️  not ready: ${errors.join(' ')}`)
-      componentsMissing.push({ ...selection, reason: errors.join(' ') })
+      componentsMissing.push({ ...selection, reason: `"${option.name}" — ${errors.join(' ')}` })
       return
     }
 
@@ -205,14 +220,12 @@ export async function POST(req: NextRequest) {
   console.log(`\n✅ Resolved ${resolved.length}/${componentSelections.length} component(s); ${componentsMissing.length} missing`)
 
   // ---------------------------------------------------------------------
-  // AI Capability Engine (Sprint AI-R3) — the SOLE gate for whether this
-  // render is even attempted. Replaces the old binary "entries.length===0
-  // -> 422" / "Model Reference missing -> 422" hard stops (Phase 4 of the
-  // brief: "Hapus aturan Model Reference tidak ada -> 422"). Uses raw
-  // rowsById lookups (not `resolved`) for the DNA Validator checks below,
-  // same convention as the DNA Debug Viewer (debug/route.ts) — a component
-  // that failed resolveDNA (e.g. render_recipe.status still 'empty') still
-  // gets graded here, it doesn't just silently vanish.
+  // AI Capability Engine (Sprint AI-R3, extended Sprint PR-01 P3/P8) — the
+  // SOLE gate for whether this render is even attempted. A component that
+  // failed resolveDNA (e.g. render_recipe.status still 'empty') is now a
+  // BLOCKING condition (`unresolvedComponents`), not something the render
+  // silently continues past — see the module doc comment on
+  // EvaluateCapabilityInput.unresolvedComponents.
   // ---------------------------------------------------------------------
   const modelThobeSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'model_thobe')
   const modelThobeOptionRaw = modelThobeSelection ? (rowsById.get(modelThobeSelection.componentId) ?? null) : null
@@ -237,19 +250,39 @@ export async function POST(req: NextRequest) {
 
   const composedAssets = composeAiAssets({ customerPhotoUrl, modelThobeOption: modelThobeOptionRaw, collarOption: collarOptionRaw })
 
+  // Reference Image diagnostics (Sprint PR-01, P6) — validateModelReference
+  // Available/validateCollarReference already existed but were never
+  // called anywhere in production; wiring them in is what turns "reference
+  // image silently omitted" into a reported reason.
+  const modelReferenceStatus = validateModelReferenceAvailable({ modelThobeOption: modelThobeOptionRaw, composed: composedAssets })
+  const collarReferenceStatus = validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
+  console.log(`Model Reference: ${modelReferenceStatus.valid ? '✅' : '—'} ${modelReferenceStatus.reason}`)
+  console.log(`Collar Reference: ${collarReferenceStatus.valid ? '✅' : '—'} ${collarReferenceStatus.reason}`)
+
+  const unresolvedComponents: UnresolvedComponent[] = componentsMissing.map((m) => ({
+    itemId: m.componentId,
+    category: m.componentType,
+    reason: m.reason,
+  }))
+
   const capability = evaluateCapability({
     customerPhotoPresent: !!customerPhotoUrl,
     modelThobeSelected: !!modelThobeOptionRaw,
     modelThobeDnaValid: modelThobeDnaValidation?.valid ?? false,
     modelReferenceAvailable: !!composedAssets.modelReference,
     otherComponentDnaResults,
+    unresolvedComponents,
   })
 
   logStage('🟠', 'STAGE 2.5: AI CAPABILITY ENGINE')
   console.log(`Mode: ${capability.mode} | Score: ${capability.capabilityScore}% | Quality: ${capability.qualityLevel}/5`)
   console.log(`Warnings: [${capability.warnings.join(' | ') || 'none'}]`)
 
-  // The ONLY 3 conditions allowed to stop a render before OpenAI (Phase 4).
+  // Fail Fast (P3/P8): a selected component that never resolved, an invalid
+  // Model Thobe DNA, a missing Model Thobe, or a missing Customer Photo are
+  // now the ONLY conditions allowed to stop a render before OpenAI — but
+  // unlike before Sprint PR-01, "a selected component never resolved" is
+  // one of them. No more rendering ahead with a silently-dropped component.
   if (capability.mode === 'BLOCKED') {
     console.log(`  ❌ BLOCKED — ${capability.blockedReason}`)
     return NextResponse.json(
@@ -321,7 +354,21 @@ export async function POST(req: NextRequest) {
   // are appended only for whichever reference images are actually
   // included, so GPT Image never mistakes a reference photo's own
   // collar/cuff/fabric/color for what to render.
-  const finalPrompt = applyAssetInstructions(promptCompression.compressed, composedAssets)
+  const assetInstructedPrompt = applyAssetInstructions(promptCompression.compressed, composedAssets)
+
+  // Identity Lock (Sprint PR-01, P5) — capability.strategy.includeIdentityLock
+  // has existed since Sprint AI-R3 but was never actually consumed anywhere;
+  // this is what activates it. LAYER1_IDENTITY_TEMPLATE
+  // (promptArchitectureV2/layers.ts) is a permanent, DNA-independent
+  // instruction ("keep exactly the same person... only replace clothing")
+  // — prepended unconditionally (every non-BLOCKED mode sets
+  // includeIdentityLock true) rather than only when a Model/Collar
+  // reference image happens to be included, since the Customer Photo
+  // itself is ALWAYS sent and always needs this instruction alongside it.
+  const finalPrompt = capability.strategy.includeIdentityLock
+    ? `${LAYER1_IDENTITY_TEMPLATE} ${assetInstructedPrompt}`
+    : assetInstructedPrompt
+
   const result = await generateImage({ instruction, referenceImageUrls, promptOverride: finalPrompt })
 
   logStage('✅', 'STAGE 6: IMAGE SERVICE RESULT')
@@ -340,6 +387,10 @@ export async function POST(req: NextRequest) {
     componentsUsed: resolved.map(({ option }) => ({ id: option.id, name: option.name, category: option.category })),
     componentsMissing,
     capability,
+    referenceImageStatus: {
+      modelReference: modelReferenceStatus,
+      collarReference: collarReferenceStatus,
+    },
     debug: {
       masterRecipe,
       instruction,

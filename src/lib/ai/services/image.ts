@@ -134,6 +134,13 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
               model: input.model ?? DEFAULT_MODEL,
               prompt,
               image: await Promise.all(referenceImageUrls.map((url) => fetchReferenceImageFile(url))),
+              // Sprint AI-R1 — input_fidelity was previously unset (OpenAI
+              // default applies), so reference images (Customer Photo, Model
+              // Thobe official reference) were not guaranteed to be
+              // preserved at high fidelity during the edit. "high" is only
+              // valid on images.edit (no such param exists on
+              // images.generate, the no-reference-image branch below).
+              input_fidelity: "high",
             },
             { timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS },
           )

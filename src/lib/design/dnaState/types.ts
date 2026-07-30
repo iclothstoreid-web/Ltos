@@ -16,6 +16,16 @@ export interface DnaStateComponent {
   // and it degrades gracefully for one it doesn't recognize.
   category: string
   itemId: string
+  // Cache Invalidation fix (Sprint PR-01, P7) — optional so a caller that
+  // hasn't fetched the DB row yet (or a component that wasn't found at all)
+  // can still build a DnaState; hashDnaState treats a missing version as its
+  // own distinct value rather than silently matching any other state. This
+  // is what makes editing a Master Data item's AI Design DNA / Render
+  // Recipe (which bumps its `version` — see aiDna/types.ts's mark*
+  // functions) produce a genuinely different hash instead of reusing a
+  // stale Render Cache entry keyed only on the unchanged item id.
+  dnaVersion?: number
+  recipeVersion?: number
 }
 
 export interface DnaState {

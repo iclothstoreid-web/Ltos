@@ -79,10 +79,26 @@ export function compressPrompt(sections: PromptSection[], totalBudget = 270): Co
   return { compressed: parts.join('. '), totalTokens, metadata }
 }
 
+// Recursive — a nested object value (e.g. an AI Design DNA field authored as
+// a structured object rather than a string) must flatten through
+// stringifyRecord again, not fall through to String(value), which is what
+// used to produce literal "[object Object]" in the compressed prompt sent to
+// OpenAI. Mirrors formatValue/formatRecord's recursion in serializer.ts, kept
+// in this file's own "key value" (no colon) formatting style.
+function stringifyValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return ''
+  if (Array.isArray(value)) return value.map(stringifyValue).filter(Boolean).join('/')
+  if (typeof value === 'object') return stringifyRecord(value as Record<string, unknown>)
+  return String(value)
+}
+
 function stringifyRecord(record: Record<string, unknown>): string {
   return Object.entries(record)
-    .filter(([, value]) => value !== null && value !== undefined && value !== '')
-    .map(([key, value]) => `${key} ${Array.isArray(value) ? value.join('/') : String(value)}`)
+    .map(([key, value]) => {
+      const formatted = stringifyValue(value)
+      return formatted ? `${key} ${formatted}` : ''
+    })
+    .filter(Boolean)
     .join(', ')
 }
 

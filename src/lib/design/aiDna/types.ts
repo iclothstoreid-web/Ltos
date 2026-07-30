@@ -64,21 +64,46 @@ export const AI_DNA_LIFECYCLE_ORDER: AiDnaStatus[] = ['pending', 'draft', 'appro
 // stays `pending` until it's generated for the first time.
 export function markDnaNeedsRegeneration(dna: AiDesignDna): AiDesignDna {
   if (dna.status !== 'draft' && dna.status !== 'approved') return dna
-  return { ...dna, status: 'needs_regeneration' }
+  return { ...dna, status: 'needs_regeneration', version: dna.version + 1 }
 }
 
-// AI DNA generated/approved — freezes the Hero Image (`photo_url`) of that
-// moment into `metadata.sourceImage` as the Official Reference Image
-// (Design Knowledge Pipeline V1, decision 14). This is a snapshot, not a
-// live pointer: `photo_url` may keep changing afterwards (decision 4), but
+// AI DNA generated — freezes the Hero Image (`photo_url`) of that moment
+// into `metadata.sourceImage` as the Official Reference Image (Design
+// Knowledge Pipeline V1, decision 14). This is a snapshot, not a live
+// pointer: `photo_url` may keep changing afterwards (decision 4), but
 // `sourceImage` only moves the next time this function runs — i.e. the next
-// generate/approve — and Hero Image changing in between instead routes
-// through markDnaNeedsRegeneration above, never through here.
+// generate — and Hero Image changing in between instead routes through
+// markDnaNeedsRegeneration above, never through here. Only a draft-worthy
+// transition: reaching `approved` requires the separate markDnaApproved
+// step below (AI Asset Lifecycle sprint) — generating alone is not
+// approving.
 export function markDnaGenerated(dna: AiDesignDna, photoUrl: string | null): AiDesignDna {
   const now = new Date().toISOString()
   return {
     ...dna,
     status: 'draft',
+    version: dna.version + 1,
     metadata: { ...dna.metadata, generatedAt: now, sourceImage: photoUrl },
+  }
+}
+
+// AI Design DNA reviewed and approved (AI Asset Lifecycle sprint) — the
+// ONLY function allowed to set status 'approved'. Only meaningful from
+// 'draft' (there must be something generated — with a frozen sourceImage —
+// to review in the first place); calling it on any other status is a no-op,
+// same guard style as markDnaNeedsRegeneration above. This is the single
+// event that turns a Master Item's AI Asset (aiAssetComposer/
+// aiAssetComposer — the module reads `status === 'approved'`, not just
+// `sourceImage` presence) ACTIVE — there is no separate "Create AI Asset"
+// action anywhere in this codebase, by design (see aiAssetComposer's own
+// header comment).
+export function markDnaApproved(dna: AiDesignDna, approvedBy: string | null): AiDesignDna {
+  if (dna.status !== 'draft') return dna
+  const now = new Date().toISOString()
+  return {
+    ...dna,
+    status: 'approved',
+    version: dna.version + 1,
+    metadata: { ...dna.metadata, approvedAt: now, approvedBy },
   }
 }

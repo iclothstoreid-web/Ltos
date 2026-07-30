@@ -58,7 +58,11 @@ function formatValue(value: unknown): string {
 
 // Keys are sorted so the same RenderInstruction content always serializes to
 // the same string, regardless of the order its fields were assigned in.
-function formatRecord(record: Record<string, unknown>): string {
+// Exported (Sprint AI-R2.5) so Prompt Architecture V2 (promptArchitectureV2/
+// layers.ts) can format its Layer 3 (Garment DNA) using the exact same
+// deterministic key-sorted formatting as this file's own SECTION_ORDER
+// output, instead of re-implementing it a second time.
+export function formatRecord(record: Record<string, unknown>): string {
   return Object.keys(record)
     .sort()
     .map((key) => {
@@ -69,7 +73,7 @@ function formatRecord(record: Record<string, unknown>): string {
     .join(', ')
 }
 
-function formatSection(label: string, record: Record<string, unknown> | undefined): string {
+export function formatSection(label: string, record: Record<string, unknown> | undefined): string {
   if (!record) {
     return ''
   }
