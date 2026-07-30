@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   MASTER_DATA_CATEGORIES,
@@ -14,15 +14,15 @@ import {
   deleteMasterDataOption,
   swapMasterDataOptionOrder,
   uploadMasterDataPhoto,
-  materialColorNames,
-  withMaterialColorNames,
   MATERIAL_SUPPLIER_KEY,
   MATERIAL_KARAKTERISTIK_KEY,
   MATERIAL_RESERVED_METADATA_KEYS,
 } from '@/lib/design/masterData'
 import type { MasterOptionsByCategory, MasterDataOption, MasterDataCategory } from '@/lib/design/masterData'
+import { fetchMaterials } from '@/lib/inventory/materials'
+import type { Material } from '@/lib/inventory/types'
 import { AiDesignDnaSection } from './AiDesignDnaSection'
-import { markDnaGenerated, markDnaNeedsRegeneration } from '@/lib/design/aiDna/types'
+import { markDnaGenerated, markDnaNeedsRegeneration, markDnaApproved } from '@/lib/design/aiDna/types'
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
 import { RenderRecipeSection } from './RenderRecipeSection'
 
@@ -72,7 +72,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const [activeCategory, setActiveCategory] = useState<MasterDataCategory>(MASTER_DATA_CATEGORIES[0])
 
   const [newName, setNewName] = useState('')
-  const [newHex, setNewHex] = useState('#775a19')
   const [newPrice, setNewPrice] = useState('')
 
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -81,12 +80,15 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const [editingPhotoUrl, setEditingPhotoUrl] = useState<string | null>(null)
   const [editingSpecRows, setEditingSpecRows] = useState<SpecRow[]>([])
   // Material ('bahan') only: dedicated Supplier/Karakteristik fields and a
-  // Warna multi-select referencing the warna_bahan Repository — kept out of
-  // the generic Tabel Spesifikasi editor so "Optimalkan proses input
-  // Material" gets a guided form instead of a free-form key/value table.
+  // link to a real Inventory `materials` row — kept out of the generic Tabel
+  // Spesifikasi editor so "Optimalkan proses input Material" gets a guided
+  // form instead of a free-form key/value table. Color linkage for 'bahan'
+  // moved entirely to Material Master's Material Colors section
+  // (Architecture Lock: DNA Color Repository + Material Color Mapping).
   const [editingSupplier, setEditingSupplier] = useState('')
   const [editingKarakteristik, setEditingKarakteristik] = useState('')
-  const [editingColorNames, setEditingColorNames] = useState<string[]>([])
+  const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null)
+  const [materials, setMaterials] = useState<Material[]>([])
   const [editingSellingPoints, setEditingSellingPoints] = useState<string[]>([])
   const [editingInternalNotes, setEditingInternalNotes] = useState('')
   const [editingPrice, setEditingPrice] = useState('')
@@ -109,8 +111,17 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     return `Rp ${price.toLocaleString('id-ID')}`
   }
 
-  const isColorCategory = activeCategory === 'warna_bahan'
   const rows = options[activeCategory]
+
+  useEffect(() => {
+    fetchMaterials(supabase)
+      .then(setMaterials)
+      .catch(() => {
+        // Non-fatal — the Material dropdown just shows empty; Inventory's
+        // own page surfaces the real error if this genuinely fails.
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once
+  }, [])
 
   async function refreshCategory(category: MasterDataCategory) {
     const { data, error: fetchError } = await supabase
@@ -135,11 +146,10 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
       await createMasterDataOption(supabase, {
         category: activeCategory,
         name: newName,
-        metadata: isColorCategory ? { hex: newHex } : {},
+        metadata: {},
         price: Number(newPrice) || 0,
       })
       setNewName('')
-      setNewHex('#775a19')
       setNewPrice('')
       const updated = await refreshCategory(activeCategory)
       // Jump straight into editing the new row so Foto/Spesifikasi/Selling
@@ -162,7 +172,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingSpecRows(metadataToRows(option.metadata, isMaterial ? MATERIAL_RESERVED_METADATA_KEYS : []))
     setEditingSupplier(isMaterial ? option.metadata[MATERIAL_SUPPLIER_KEY] ?? '' : '')
     setEditingKarakteristik(isMaterial ? option.metadata[MATERIAL_KARAKTERISTIK_KEY] ?? '' : '')
-    setEditingColorNames(isMaterial ? materialColorNames(option.metadata) : [])
+    setEditingMaterialId(isMaterial ? option.material_id : null)
     setEditingSellingPoints(option.selling_points.length > 0 ? option.selling_points : [])
     setEditingInternalNotes(option.internal_notes)
     setEditingPrice(String(option.price ?? 0))
@@ -204,16 +214,26 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setShowQuickDnaPlaceholder(true)
   }
 
+  // Approve — AI Asset Lifecycle sprint. The only action that turns this
+  // item's AI Asset ACTIVE (see aiAssetComposer, which reads
+  // ai_dna.status === 'approved'). `approvedBy` is left null — this app has
+  // no user-identity context available in this component yet; wiring a real
+  // reviewer identity is a future auth-integration task, not fabricated
+  // here. Session-local like every other editing* field, persisted when
+  // handleSaveEdit calls updateMasterDataOption below.
+  function handleApproveAiDna() {
+    setEditingAiDna(prev => (prev ? markDnaApproved(prev, null) : prev))
+  }
+
   async function handleSaveEdit() {
     if (!editingId || !editingName.trim()) return
     setSaving(true)
     setError(null)
     try {
-      let metadata = rowsToMetadata(editingSpecRows)
+      const metadata = rowsToMetadata(editingSpecRows)
       if (editingCategory === 'bahan') {
         if (editingSupplier.trim()) metadata[MATERIAL_SUPPLIER_KEY] = editingSupplier.trim()
         if (editingKarakteristik.trim()) metadata[MATERIAL_KARAKTERISTIK_KEY] = editingKarakteristik.trim()
-        metadata = withMaterialColorNames(metadata, editingColorNames)
       }
       await updateMasterDataOption(supabase, editingId, {
         name: editingName,
@@ -224,6 +244,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
         price: Number(editingPrice) || 0,
         currentPhotoUrl: editingOriginalPhotoUrl,
         currentAiDna: editingAiDna ?? undefined,
+        ...(editingCategory === 'bahan' ? { material_id: editingMaterialId } : {}),
       })
       setEditingId(null)
       await refreshCategory(editingCategory)
@@ -320,10 +341,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingSpecRows(prev => prev.filter((_, i) => i !== index))
   }
 
-  function toggleEditingColor(name: string) {
-    setEditingColorNames(prev => (prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]))
-  }
-
   function updateSellingPoint(index: number, value: string) {
     setEditingSellingPoints(prev => prev.map((point, i) => (i === index ? value : point)))
   }
@@ -350,7 +367,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-8 lg:px-16 py-12">
         <div className="flex flex-wrap items-center gap-2 mb-8">
-          {MASTER_DATA_CATEGORIES.map(category => (
+          {MASTER_DATA_CATEGORIES.filter(category => category !== 'warna_bahan').map(category => (
             <button
               key={category}
               type="button"
@@ -368,6 +385,15 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
               {masterDataCategoryLabel(category)}
             </button>
           ))}
+          {/* DNA Color moved off this generic editor entirely — it has its own
+              lifecycle (hex/rgb/lab/hsv/prompt/reference image) and may only be
+              created from its own page, per the Architecture Lock. */}
+          <a
+            href="/owner/dna-colors"
+            className="px-4 py-2 text-xs uppercase tracking-widest border border-[#c4c7c7]/60 text-[#444748] hover:border-[#775a19]/40 transition-all"
+          >
+            DNA Color →
+          </a>
         </div>
 
         {error && (
@@ -466,40 +492,30 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
                         <div>
                           <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
-                            Warna Tersedia{' '}
+                            Material Terkait (Inventory){' '}
                             <span className="normal-case text-[#444748]/70">
-                              (referensi ke Repository Warna, bukan DNA baru)
+                              (menentukan stok live + pilihan Warna via Material Colors)
                             </span>
                           </p>
-                          {options.warna_bahan.filter(c => c.is_active).length === 0 ? (
-                            <p className="text-xs text-[#444748]">Belum ada Warna aktif di Repository.</p>
-                          ) : (
-                            <div className="flex flex-wrap gap-2">
-                              {options.warna_bahan
-                                .filter(c => c.is_active)
-                                .map(color => {
-                                  const active = editingColorNames.includes(color.name)
-                                  return (
-                                    <button
-                                      key={color.id}
-                                      type="button"
-                                      onClick={() => toggleEditingColor(color.name)}
-                                      className={`flex items-center gap-2 px-3 py-1.5 border text-xs transition-colors ${
-                                        active
-                                          ? 'border-[#775a19] bg-[#775a19]/10 text-[#151c27]'
-                                          : 'border-[#c4c7c7]/60 text-[#444748]'
-                                      }`}
-                                    >
-                                      <span
-                                        className="w-3 h-3 rounded-full border border-[#c4c7c7]/60 shrink-0"
-                                        style={{ backgroundColor: color.metadata.hex || '#c4c7c7' }}
-                                      />
-                                      {color.name}
-                                    </button>
-                                  )
-                                })}
-                            </div>
-                          )}
+                          <select
+                            value={editingMaterialId ?? ''}
+                            onChange={e => setEditingMaterialId(e.target.value || null)}
+                            className="w-full border-b border-[#c4c7c7] bg-transparent py-1 text-sm outline-none focus:border-[#775a19]"
+                          >
+                            <option value="">Belum terhubung</option>
+                            {materials.map(material => (
+                              <option key={material.id} value={material.id}>
+                                {material.name}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-[11px] text-[#444748]/70 mt-1">
+                            Kelola Warna &amp; kode supplier untuk material ini di{' '}
+                            <a href="/owner/material-master" className="underline hover:text-[#775a19]">
+                              Material Master
+                            </a>
+                            .
+                          </p>
                         </div>
                       </>
                     )}
@@ -612,6 +628,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                     dna={editingAiDna}
                     showQuickDnaPlaceholder={showQuickDnaPlaceholder}
                     onGenerateQuickDna={handleGenerateQuickDna}
+                    onApprove={handleApproveAiDna}
                   />
                 )}
 
@@ -666,11 +683,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                     alt={option.name}
                     className="w-10 h-10 object-cover border border-[#c4c7c7] shrink-0"
                   />
-                ) : isColorCategory ? (
-                  <div
-                    className="w-6 h-6 rounded-full border border-[#c4c7c7] shrink-0"
-                    style={{ backgroundColor: option.metadata.hex || '#c4c7c7' }}
-                  />
                 ) : (
                   <div className="w-10 h-10 border border-dashed border-[#c4c7c7] shrink-0" />
                 )}
@@ -679,20 +691,10 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                   <span className={`text-sm truncate ${option.is_active ? '' : 'text-[#444748] line-through'}`}>
                     {option.name}
                   </span>
-                  {option.category === 'bahan' && materialColorNames(option.metadata).length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {materialColorNames(option.metadata).map(name => {
-                        const match = options.warna_bahan.find(c => c.name === name)
-                        return (
-                          <span
-                            key={name}
-                            title={name}
-                            className="w-3 h-3 rounded-full border border-[#c4c7c7]/60 inline-block"
-                            style={{ backgroundColor: match?.metadata.hex || '#c4c7c7' }}
-                          />
-                        )
-                      })}
-                    </div>
+                  {option.category === 'bahan' && option.material_id && (
+                    <p className="text-[11px] text-[#444748]/70 mt-0.5 truncate">
+                      Material: {materials.find(m => m.id === option.material_id)?.name ?? option.material_id}
+                    </p>
                   )}
                 </div>
 
@@ -785,14 +787,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
             placeholder="Harga"
             className="w-32 border-b border-[#c4c7c7] bg-transparent py-2 text-sm outline-none focus:border-[#775a19]"
           />
-          {isColorCategory && (
-            <input
-              type="color"
-              value={newHex}
-              onChange={e => setNewHex(e.target.value)}
-              className="w-8 h-8 border-none p-0"
-            />
-          )}
           <button
             type="button"
             disabled={saving || !newName.trim()}

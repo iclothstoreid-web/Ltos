@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Material, MaterialCategory } from '@/lib/inventory/types'
 import {
@@ -14,6 +14,14 @@ import {
   updateMaterial,
 } from '@/lib/inventory/materials'
 import { formatRupiah } from '@/lib/format/money'
+import type { DnaColor } from '@/lib/design/dnaColors'
+import { fetchActiveDnaColors } from '@/lib/design/dnaColors'
+import type { MaterialColor } from '@/lib/design/materialColors'
+import {
+  addMaterialColor,
+  deactivateMaterialColor,
+  fetchMaterialColorsForMaterial,
+} from '@/lib/design/materialColors'
 
 interface MaterialMasterManagerProps {
   initialMaterials: Material[]
@@ -25,7 +33,6 @@ interface IdentityFormState {
   category_id: string
   supplier: string
   price: string
-  default_color: string
   sku: string
 }
 
@@ -34,7 +41,6 @@ const EMPTY_FORM: IdentityFormState = {
   category_id: '',
   supplier: '',
   price: '',
-  default_color: '',
   sku: '',
 }
 
@@ -62,6 +68,36 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
   const [editCategoryName, setEditCategoryName] = useState('')
+
+  // Material Colors (Architecture Lock: DNA Color Repository + Material
+  // Color Mapping) — dnaColors is the picker source (never a free-text/new
+  // DNA input, per "Tidak boleh membuat DNA baru dari halaman Material"),
+  // materialColors is the currently-open material's linked colors.
+  const [dnaColors, setDnaColors] = useState<DnaColor[]>([])
+  const [materialColors, setMaterialColors] = useState<MaterialColor[]>([])
+  const [loadingMaterialColors, setLoadingMaterialColors] = useState(false)
+  const [newColorDnaId, setNewColorDnaId] = useState('')
+  const [newColorSupplierCode, setNewColorSupplierCode] = useState('')
+  const [newColorSupplierName, setNewColorSupplierName] = useState('')
+
+  useEffect(() => {
+    fetchActiveDnaColors(supabase)
+      .then(setDnaColors)
+      .catch(err => console.error('[material-master] fetch dna colors failed', err))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once
+  }, [])
+
+  async function refreshMaterialColors(materialId: string) {
+    setLoadingMaterialColors(true)
+    try {
+      setMaterialColors(await fetchMaterialColorsForMaterial(supabase, materialId))
+    } catch (err) {
+      console.error('[material-master] fetch material colors failed', err)
+      setError('Gagal memuat Material Colors.')
+    } finally {
+      setLoadingMaterialColors(false)
+    }
+  }
 
   async function refresh() {
     setLoading(true)
@@ -141,7 +177,6 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
         unit: 'pcs',
         price: newForm.price ? Number(newForm.price) : 0,
         supplier: newForm.supplier || null,
-        default_color: newForm.default_color || null,
       })
       setNewForm(EMPTY_FORM)
       await refresh()
@@ -160,9 +195,45 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
       category_id: m.category_id,
       supplier: m.supplier || '',
       price: String(m.price),
-      default_color: m.default_color || '',
       sku: m.sku || '',
     })
+    setNewColorDnaId('')
+    setNewColorSupplierCode('')
+    setNewColorSupplierName('')
+    setMaterialColors([])
+    refreshMaterialColors(m.id)
+  }
+
+  async function handleAddMaterialColor() {
+    if (!editingId || !newColorDnaId || !newColorSupplierCode.trim()) return
+    setError(null)
+    try {
+      await addMaterialColor(supabase, {
+        materialId: editingId,
+        dnaColorId: newColorDnaId,
+        supplierColorCode: newColorSupplierCode,
+        supplierColorName: newColorSupplierName || null,
+      })
+      setNewColorDnaId('')
+      setNewColorSupplierCode('')
+      setNewColorSupplierName('')
+      await refreshMaterialColors(editingId)
+    } catch (err) {
+      console.error('[material-master] add material color failed', err)
+      setError(err instanceof Error ? err.message : 'Gagal menambah Material Color.')
+    }
+  }
+
+  async function handleDeactivateMaterialColor(id: string) {
+    if (!editingId) return
+    setError(null)
+    try {
+      await deactivateMaterialColor(supabase, id)
+      await refreshMaterialColors(editingId)
+    } catch (err) {
+      console.error('[material-master] deactivate material color failed', err)
+      setError('Gagal menonaktifkan Material Color.')
+    }
   }
 
   async function handleSaveEdit() {
@@ -183,7 +254,6 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
         photo_url: original.photo_url,
         is_active: original.is_active,
         supplier: editForm.supplier || null,
-        default_color: editForm.default_color || null,
       })
       setEditingId(null)
       await refresh()
@@ -210,7 +280,6 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
         photo_url: m.photo_url,
         is_active: !m.is_active,
         supplier: m.supplier,
-        default_color: m.default_color,
       })
       await refresh()
     } catch (err) {
@@ -231,7 +300,7 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
         <div>
           <h1 className="font-fraunces text-xl">Material Master</h1>
           <p className="text-xs text-[#444748]">
-            Nama, kategori, supplier, default cost, default color, SKU, status — bukan stok.
+            Nama, kategori, supplier, default cost, SKU, status, Material Colors — bukan stok.
           </p>
         </div>
         <button
@@ -364,13 +433,6 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
             />
             <input
               type="text"
-              value={newForm.default_color}
-              onChange={e => setNewForm(f => ({ ...f, default_color: e.target.value }))}
-              placeholder="Default Color"
-              className="py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
-            />
-            <input
-              type="text"
               value={newForm.sku}
               onChange={e => setNewForm(f => ({ ...f, sku: e.target.value }))}
               placeholder="SKU"
@@ -431,19 +493,80 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
                     />
                     <input
                       type="text"
-                      value={editForm.default_color}
-                      onChange={e => setEditForm(f => ({ ...f, default_color: e.target.value }))}
-                      placeholder="Default Color"
-                      className="py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
-                    />
-                    <input
-                      type="text"
                       value={editForm.sku}
                       onChange={e => setEditForm(f => ({ ...f, sku: e.target.value }))}
                       placeholder="SKU"
                       className="py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
                     />
                   </div>
+
+                  <div className="pt-3 border-t-[0.5px] border-[#c4c7c7] space-y-2">
+                    <h3 className="text-xs uppercase tracking-widest text-[#444748] font-bold">
+                      Material Colors {loadingMaterialColors && '· Memuat...'}
+                    </h3>
+                    {materialColors.length === 0 ? (
+                      <p className="text-xs text-[#444748]">Belum ada Warna terhubung.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {materialColors.map(mc => (
+                          <div key={mc.id} className="flex items-center gap-2 text-xs">
+                            <span
+                              className="w-3 h-3 rounded-full border border-[#c4c7c7] shrink-0"
+                              style={{ backgroundColor: mc.dna_colors?.hex || '#c4c7c7' }}
+                            />
+                            <span className="flex-1">
+                              {mc.dna_colors?.name ?? 'DNA Color'} — {mc.supplier_color_code}
+                              {mc.supplier_color_name ? ` (${mc.supplier_color_name})` : ''}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeactivateMaterialColor(mc.id)}
+                              className="text-[#ba1a1a] hover:underline"
+                            >
+                              Nonaktifkan
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2 items-center pt-1">
+                      <select
+                        value={newColorDnaId}
+                        onChange={e => setNewColorDnaId(e.target.value)}
+                        className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#755b00]"
+                      >
+                        <option value="">+ Add Existing DNA Color</option>
+                        {dnaColors.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={newColorSupplierCode}
+                        onChange={e => setNewColorSupplierCode(e.target.value)}
+                        placeholder="Supplier Color Code"
+                        className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#755b00] w-36"
+                      />
+                      <input
+                        type="text"
+                        value={newColorSupplierName}
+                        onChange={e => setNewColorSupplierName(e.target.value)}
+                        placeholder="Supplier Color Name (opsional)"
+                        className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#755b00] w-44"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddMaterialColor}
+                        disabled={!newColorDnaId || !newColorSupplierCode.trim()}
+                        className="py-1.5 px-3 bg-[#161b29] text-white text-[10px] uppercase tracking-widest disabled:opacity-40"
+                      >
+                        Tambah
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -467,7 +590,7 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
                     <p className="font-hanken text-sm font-semibold">{m.name}</p>
                     <p className="text-xs text-[#444748]">
                       {categoryName(m.category_id)} · {m.supplier || 'Supplier belum diatur'} ·{' '}
-                      {m.default_color || 'Warna belum diatur'} · {m.sku || 'SKU belum diatur'}
+                      {m.sku || 'SKU belum diatur'}
                     </p>
                     <p className="text-xs text-[#444748] mt-0.5">Default Cost: {formatRupiah(m.price)}</p>
                     <span

@@ -87,48 +87,32 @@ export interface MasterDataOption {
   // this app's code this sprint; no editor/mutation path exists yet, see
   // src/lib/design/renderRecipe/types.ts.
   render_recipe: RenderRecipe
+  // Optional link so Design Studio can join live stock/color by id instead
+  // of matching on name (category 'bahan') — see src/lib/inventory/materials.ts.
+  material_id: string | null
+  // DNA Color Repository link (category 'warna_bahan' only) — this row is a
+  // 1:1 render-pipeline mirror of a src/lib/design/dnaColors.ts row; the DNA
+  // Color itself is the single source of truth for hex/prompt/etc, never
+  // this row's own `metadata`. See src/lib/design/dnaColors.ts.
+  dna_color_id: string | null
 }
 
 export type MasterOptionsByCategory = Record<MasterDataCategory, MasterDataOption[]>
 
 // Reserved 'bahan' (Material) metadata keys for the dedicated Supplier /
-// Karakteristik fields and the Warna multi-select — kept inside the existing
-// flexible `metadata` jsonb column (same column 'warna_bahan' already uses
-// for `hex`) rather than a new DB column, so Repository Architecture stays
-// untouched. `warna` stores a comma-separated list of `warna_bahan` option
-// NAMES — a reference to the Repository, never a copy of the DNA warna row
-// itself. Single Source of Truth for color DNA stays the warna_bahan
-// category; a Material only ever points at it.
+// Karakteristik fields — kept inside the existing flexible `metadata` jsonb
+// column rather than a new DB column, so Repository Architecture stays
+// untouched. Color linkage moved off `metadata` entirely (Architecture Lock:
+// DNA Color Repository + Material Color Mapping) — a 'bahan' item now points
+// at a real `materials` row via `material_id`, and that Material's available
+// colors + supplier codes live in the `material_colors` bridge table (see
+// src/lib/design/materialColors.ts), never a comma-joined name list here.
 export const MATERIAL_SUPPLIER_KEY = 'supplier'
 export const MATERIAL_KARAKTERISTIK_KEY = 'karakteristik'
-export const MATERIAL_COLOR_REFS_KEY = 'warna'
 export const MATERIAL_RESERVED_METADATA_KEYS: readonly string[] = [
   MATERIAL_SUPPLIER_KEY,
   MATERIAL_KARAKTERISTIK_KEY,
-  MATERIAL_COLOR_REFS_KEY,
 ]
-
-export function materialColorNames(metadata: Record<string, string>): string[] {
-  const raw = metadata[MATERIAL_COLOR_REFS_KEY]
-  if (!raw) return []
-  return raw
-    .split(',')
-    .map(name => name.trim())
-    .filter(Boolean)
-}
-
-export function withMaterialColorNames(
-  metadata: Record<string, string>,
-  names: string[]
-): Record<string, string> {
-  const next = { ...metadata }
-  if (names.length > 0) {
-    next[MATERIAL_COLOR_REFS_KEY] = names.join(',')
-  } else {
-    delete next[MATERIAL_COLOR_REFS_KEY]
-  }
-  return next
-}
 
 // Roles allowed to manage the Product Knowledge Base — Owner OS (admin,
 // owner) and Fitter (artisan), per the locked decision that Fitter gets the
@@ -226,6 +210,10 @@ export interface UpdateMasterDataOptionParams {
   // skip that check (e.g. price-only callers).
   currentPhotoUrl?: string | null
   currentAiDna?: AiDesignDna
+  // 'bahan' items only — links this catalog entry to a real Inventory
+  // `materials` row (Architecture Lock: DNA Color Repository + Material
+  // Color Mapping). Omit to leave unchanged.
+  material_id?: string | null
 }
 
 export async function updateMasterDataOption(
@@ -252,6 +240,7 @@ export async function updateMasterDataOption(
       internal_notes: params.internal_notes ?? '',
       price: params.price ?? 0,
       ...(nextAiDna ? { ai_dna: nextAiDna } : {}),
+      ...(params.material_id !== undefined ? { material_id: params.material_id } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

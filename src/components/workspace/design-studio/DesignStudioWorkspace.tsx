@@ -34,6 +34,11 @@ interface DesignStudioWorkspaceProps {
   latestMeasurement: Measurement | null
   masterOptions: MasterOptionsByCategory
   materialStock: Record<string, MaterialStockInfo>
+  // Architecture Lock: DNA Color Repository + Material Color Mapping —
+  // material_id -> the dna_color_id[] that Material actually comes in (via
+  // material_colors). Scopes Warna Bahan to the selected Fabric's real,
+  // supplier-backed colors; see GarmentBlueprintPanel.
+  materialColorDnaIds: Record<string, string[]>
   canManageMasterData: boolean
   userId: string
 }
@@ -62,6 +67,7 @@ export function DesignStudioWorkspace({
   consultation,
   masterOptions,
   materialStock,
+  materialColorDnaIds,
   canManageMasterData,
   userId,
 }: DesignStudioWorkspaceProps) {
@@ -180,6 +186,7 @@ export function DesignStudioWorkspace({
           selections={selections}
           masterOptions={masterOptions}
           materialStock={materialStock}
+          materialColorDnaIds={materialColorDnaIds}
           onChange={handleChange}
           notes={notes}
           onNotesChange={setNotes}

@@ -5,6 +5,7 @@ import { OrderCreatedLockNotice } from '@/components/workspace/OrderCreatedLockN
 import { findOrderIdForConsultation } from '@/lib/order/lookup'
 import { fetchActiveMasterOptions, canManageMasterData } from '@/lib/design/masterData'
 import { fetchMaterialStockByName } from '@/lib/inventory/materials'
+import { fetchMaterialColorsForMaterials } from '@/lib/design/materialColors'
 
 interface Props {
   params: { consultationId: string }
@@ -62,12 +63,32 @@ export default async function DesignStudioPage({ params }: Props) {
   )
   const materialStock = Object.fromEntries(materialStockMap)
 
+  // Architecture Lock: DNA Color Repository + Material Color Mapping —
+  // per-Material scoped Warna choices (a Fabric's real, supplier-backed
+  // colors) instead of the flat DNA Color list. Flattened to
+  // material_id -> dna_color_id[] before crossing the server/client
+  // boundary, same reasoning as materialStock's Map->object flattening
+  // above. Only 'bahan' items that are actually linked to a real Inventory
+  // material contribute anything here — a not-yet-linked item's fabric
+  // simply falls back to the full DNA Color list in GarmentBlueprintPanel.
+  const bahanMaterialIds = masterOptions.bahan
+    .map(o => o.material_id)
+    .filter((id): id is string => !!id)
+  const materialColorsMap = await fetchMaterialColorsForMaterials(supabase, bahanMaterialIds)
+  const materialColorDnaIds = Object.fromEntries(
+    Array.from(materialColorsMap.entries()).map(([materialId, colors]) => [
+      materialId,
+      colors.map(c => c.dna_color_id),
+    ])
+  )
+
   return (
     <DesignStudioWorkspace
       consultation={consultation}
       latestMeasurement={latestMeasurement}
       masterOptions={masterOptions}
       materialStock={materialStock}
+      materialColorDnaIds={materialColorDnaIds}
       canManageMasterData={canManageMasterData(profile?.role)}
       userId={user.id}
     />

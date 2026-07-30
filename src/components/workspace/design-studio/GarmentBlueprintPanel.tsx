@@ -26,6 +26,9 @@ interface GarmentBlueprintPanelProps {
   selections: DesignSelections
   masterOptions: MasterOptionsByCategory
   materialStock: Record<string, MaterialStockInfo>
+  // Architecture Lock: DNA Color Repository + Material Color Mapping —
+  // material_id -> the dna_color_id[] that Material actually comes in.
+  materialColorDnaIds: Record<string, string[]>
   onChange: (key: keyof DesignSelections, value: string) => void
   notes: string
   onNotesChange: (value: string) => void
@@ -37,6 +40,7 @@ export function GarmentBlueprintPanel({
   selections,
   masterOptions,
   materialStock,
+  materialColorDnaIds,
   onChange,
   notes,
   onNotesChange,
@@ -47,6 +51,19 @@ export function GarmentBlueprintPanel({
   // additive on top of the existing selection workflow, doesn't touch
   // `selections`/`onChange` at all.
   const [specOption, setSpecOption] = useState<MasterDataOption | null>(null)
+
+  // Architecture Lock locked flow: Material -> Material Color -> DNA Color.
+  // The selected Fabric's linked `material_id` scopes Warna Bahan to only
+  // the colors that Material actually comes in (via material_colors) —
+  // falls back to the full active DNA Color list when the Fabric isn't
+  // linked to a real Material yet, or has no Material Colors mapped yet, so
+  // nothing in Design Studio ever goes empty during the data migration.
+  const selectedFabricMaterialId = masterOptions.bahan.find(o => o.name === selections.fabric)?.material_id ?? null
+  const scopedDnaColorIds = selectedFabricMaterialId ? materialColorDnaIds[selectedFabricMaterialId] : undefined
+  const colorOptions =
+    scopedDnaColorIds && scopedDnaColorIds.length > 0
+      ? masterOptions.warna_bahan.filter(c => c.dna_color_id && scopedDnaColorIds.includes(c.dna_color_id))
+      : masterOptions.warna_bahan
 
   return (
     <aside className="w-full lg:w-[30%] lg:h-full border-b-[0.5px] lg:border-b-0 lg:border-r-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] flex flex-col">
@@ -88,7 +105,7 @@ export function GarmentBlueprintPanel({
 
         <Accordion index={4} title="Warna Bahan">
           <ColorSelector
-            options={masterOptions.warna_bahan}
+            options={colorOptions}
             selected={selections.color}
             onSelect={v => onChange('color', v)}
             onViewSpec={setSpecOption}
