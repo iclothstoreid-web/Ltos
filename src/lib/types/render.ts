@@ -37,23 +37,25 @@ export interface RenderPayload {
  *
  * Shape mirrors the real /api/design/render response
  * (src/app/api/design/render/route.ts) — componentsUsed/componentsMissing
- * are object arrays (not string[]), and token count lives nested under
- * promptCompression.totalTokens (from compressPrompt()), not a top-level
- * totalTokens field.
+ * are object arrays (not string[]). Sprint PR-04 (Layer-Based Prompt
+ * Compression) replaced the old promptCompression.totalTokens field with
+ * a top-level promptTotalTokens + promptLayerReport (per-layer token/
+ * priority/included breakdown), since compression is no longer one flat
+ * pass over fixed buckets.
  */
 export interface RenderServiceResponse {
   success: boolean
   renderedImageUrl?: string | null
   promptUsed?: string
-  promptCompression?: {
-    compressed: string
-    totalTokens: number
-    metadata: {
-      sectionsIncluded: string[]
-      sectionsOmitted: string[]
-      estimatedTokens: Record<string, number>
-    }
-  }
+  promptTotalTokens?: number
+  promptLayerReport?: Array<{
+    id: string
+    label: string
+    priority: 0 | 1 | 2
+    tokens: number
+    included: boolean
+    truncated: boolean
+  }>
   promptUncompressed?: string
   componentsUsed?: Array<{ id: string; name: string; category: string }>
   componentsMissing?: Array<{ componentId: string; componentType: string; reason: string }>

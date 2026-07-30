@@ -9,7 +9,7 @@ import type { RenderRecipeEntry } from '@/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
 import { buildRenderInstruction, validateRenderInstruction } from '@/lib/design/promptBuilder/builder'
 import { serializeOpenAI } from '@/lib/design/promptBuilder/serializer'
-import { buildCompressedSections, compressPrompt } from '@/lib/design/promptBuilder/compression'
+import { buildPromptLayers, compressPromptByLayers, validatePriorityZeroIntact } from '@/lib/design/promptBuilder/compression'
 import { generateImage } from '@/lib/ai/services/image'
 import {
   composeAiAssets,
@@ -333,19 +333,56 @@ export async function POST(req: NextRequest) {
   // of failing.
   const referenceImageUrls = composedAssets.urls
 
-  logStage('🔵', 'STAGE 5: PROMPT SERIALIZER + COMPRESSION (~270 token budget)')
+  logStage('🔵', 'STAGE 5: PROMPT SERIALIZER (uncompressed, diagnostic only)')
   const uncompressed = serializeOpenAI({ instruction })
   console.log(`Uncompressed prompt (${uncompressed?.length ?? 0} chars):`)
   console.log(uncompressed)
 
-  // Per the Prompt Compression Strategy (~270 tokens total) — this compressed
-  // string is what actually reaches OpenAI (passed as `promptOverride` below),
-  // not the full uncompressed serializeOpenAI() output.
-  const promptCompression = compressPrompt(buildCompressedSections(instruction))
-  console.log(`\nCompressed prompt (~${promptCompression.totalTokens} tokens):`)
-  console.log(promptCompression.compressed)
-  console.log(`Sections included: [${promptCompression.metadata.sectionsIncluded.join(', ')}]`)
-  console.log(`Sections omitted:  [${promptCompression.metadata.sectionsOmitted.join(', ')}]`)
+  // Layer-Based Prompt Compression (Sprint PR-04) — replaces the old fixed
+  // Anchor/Material/Other/Negatives buckets, which truncated by raw word
+  // count with no concept of which content mattered more. Built from
+  // `entries` (per-item, pre-merge) so each layer is exactly one
+  // category's own resolved content — Material Color can never again be
+  // silently cut just because it happened to serialize after Model
+  // Thobe's now-richer content inside one shared bucket.
+  const promptLayers = buildPromptLayers({ entries, masterRecipe, identityTemplate: LAYER1_IDENTITY_TEMPLATE })
+  const layerCompression = compressPromptByLayers(promptLayers)
+
+  logStage('🔵', 'STAGE 5b: LAYER-BASED COMPRESSION (~270 token budget)')
+  console.table(layerCompression.layerReport)
+
+  // Phase 4 (Sprint PR-04) — Priority 0 (Identity/Model Thobe/Look
+  // Cutting/Material/Material Color) is NEVER truncated or dropped to make
+  // room. If it alone exceeds the token budget, the render is refused
+  // outright rather than silently deleting one of those layers.
+  if (!layerCompression.ok) {
+    console.log(`  ❌ ${layerCompression.error}`)
+    return NextResponse.json(
+      { success: false, error: layerCompression.error, componentsMissing, layerReport: layerCompression.layerReport },
+      { status: 422 },
+    )
+  }
+
+  // Phase 5 (Sprint PR-04) — final safety net before the OpenAI call.
+  // Identity/Model Thobe/Material/Material Color are always required once
+  // Capability Engine hasn't already blocked the render; Look Cutting is
+  // only required when the customer actually selected a real one (it is a
+  // legitimate "(None)" optional field — see design-studio/types.ts's
+  // OPTIONAL_FIELDS — so its absence on its own is never an error).
+  const lookCuttingSelected = entries.some((e) => e.category === 'look_cutting')
+  const requiredPriorityZeroIds = ['identity', 'model_thobe', 'material', 'material_color', ...(lookCuttingSelected ? ['look_cutting'] : [])]
+  const priorityZeroCheck = validatePriorityZeroIntact(layerCompression.layerReport, requiredPriorityZeroIds)
+  if (!priorityZeroCheck.valid) {
+    const message = `Prompt akhir kehilangan layer wajib sebelum dikirim ke OpenAI: ${priorityZeroCheck.missing.join(', ')}.`
+    console.log(`  ❌ ${message}`)
+    return NextResponse.json(
+      { success: false, error: message, componentsMissing, layerReport: layerCompression.layerReport },
+      { status: 422 },
+    )
+  }
+
+  console.log(`\nCompressed prompt (~${layerCompression.totalTokens} tokens):`)
+  console.log(layerCompression.compressed)
 
   console.log(`\nReference images sent to OpenAI: ${referenceImageUrls.length ? referenceImageUrls.join(', ') : 'none'}`)
 
@@ -354,20 +391,7 @@ export async function POST(req: NextRequest) {
   // are appended only for whichever reference images are actually
   // included, so GPT Image never mistakes a reference photo's own
   // collar/cuff/fabric/color for what to render.
-  const assetInstructedPrompt = applyAssetInstructions(promptCompression.compressed, composedAssets)
-
-  // Identity Lock (Sprint PR-01, P5) — capability.strategy.includeIdentityLock
-  // has existed since Sprint AI-R3 but was never actually consumed anywhere;
-  // this is what activates it. LAYER1_IDENTITY_TEMPLATE
-  // (promptArchitectureV2/layers.ts) is a permanent, DNA-independent
-  // instruction ("keep exactly the same person... only replace clothing")
-  // — prepended unconditionally (every non-BLOCKED mode sets
-  // includeIdentityLock true) rather than only when a Model/Collar
-  // reference image happens to be included, since the Customer Photo
-  // itself is ALWAYS sent and always needs this instruction alongside it.
-  const finalPrompt = capability.strategy.includeIdentityLock
-    ? `${LAYER1_IDENTITY_TEMPLATE} ${assetInstructedPrompt}`
-    : assetInstructedPrompt
+  const finalPrompt = applyAssetInstructions(layerCompression.compressed, composedAssets)
 
   const result = await generateImage({ instruction, referenceImageUrls, promptOverride: finalPrompt })
 
@@ -382,7 +406,8 @@ export async function POST(req: NextRequest) {
     success: true,
     renderedImageUrl: result.images[0]?.url ?? null,
     promptUsed: finalPrompt,
-    promptCompression,
+    promptLayerReport: layerCompression.layerReport,
+    promptTotalTokens: layerCompression.totalTokens,
     promptUncompressed: uncompressed,
     componentsUsed: resolved.map(({ option }) => ({ id: option.id, name: option.name, category: option.category })),
     componentsMissing,

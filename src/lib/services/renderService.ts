@@ -105,10 +105,10 @@ export async function renderDesign(context: RenderContext): Promise<RenderResult
     return {
       status: 'success',
       imageUrl: data.renderedImageUrl ?? undefined,
-      // totalTokens lives nested under promptCompression (compressPrompt()'s
-      // own output), not as a top-level field on the API response.
+      // Sprint PR-04 — token total now lives top-level (promptTotalTokens),
+      // not nested under the old fixed-bucket promptCompression object.
       tokenUsage: {
-        total: data.promptCompression?.totalTokens,
+        total: data.promptTotalTokens,
       },
     }
   } catch (error) {
