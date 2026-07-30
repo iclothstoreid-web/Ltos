@@ -95,6 +95,13 @@ export interface MasterDataOption {
   // Color itself is the single source of truth for hex/prompt/etc, never
   // this row's own `metadata`. See src/lib/design/dnaColors.ts.
   dna_color_id: string | null
+  // Sprint PR-05 (Master Data Integrity) — always present (DB column
+  // default), only newly exposed on this type. Used as the optimistic-lock
+  // comparison value in updateMasterDataOption: a save whose `original.
+  // updated_at` no longer matches the row's real value (because another
+  // session saved in between) is refused rather than silently overwriting
+  // whatever that other session wrote — see StaleMasterDataError.
+  updated_at: string
 }
 
 export type MasterOptionsByCategory = Record<MasterDataCategory, MasterDataOption[]>
@@ -214,6 +221,42 @@ export interface UpdateMasterDataOptionParams {
   // `materials` row (Architecture Lock: DNA Color Repository + Material
   // Color Mapping). Omit to leave unchanged.
   material_id?: string | null
+  // Sprint PR-05 (Master Data Integrity — Lost Update fix) — the full row
+  // exactly as it was read when this edit session opened (MasterDataManager's
+  // startEdit). Two things depend on it:
+  //   1. Safe Save (Phase 2): every field above is compared against its
+  //      `original` counterpart; anything unchanged is never sent to the
+  //      database, so an edit session that never touched AI Design DNA (a
+  //      price-only change, say) can no longer resend its stale in-memory
+  //      `ai_dna` snapshot and overwrite whatever the database actually
+  //      holds now.
+  //   2. Optimistic Lock (Phase 3): `original.updated_at` is used as a
+  //      WHERE-clause guard — if another session already saved this row in
+  //      between, the write matches zero rows and this function throws
+  //      StaleMasterDataError instead of silently clobbering that other
+  //      session's save.
+  // This is the direct fix for the 2026-07-30 incident where a stale
+  // Master Data Editor tab overwrote Saudi Modern's authorized AI Design
+  // DNA (version 2, fully populated) back down to version 1 with four
+  // required fields null, which then BLOCKED render at the Capability
+  // Engine gate.
+  original: MasterDataOption
+}
+
+// Phase 3 (Sprint PR-05) — thrown when the optimistic-lock WHERE clause
+// (id + original.updated_at) matches zero rows, meaning some other session
+// saved this item after the current edit session opened it. The message is
+// shown to the user as-is (MasterDataManager's catch blocks already surface
+// `err.message` directly).
+export class StaleMasterDataError extends Error {
+  constructor() {
+    super('Data telah berubah karena diedit dari sesi lain. Muat ulang halaman sebelum menyimpan.')
+    this.name = 'StaleMasterDataError'
+  }
+}
+
+function sameJson(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
 }
 
 export async function updateMasterDataOption(
@@ -221,31 +264,62 @@ export async function updateMasterDataOption(
   id: string,
   params: UpdateMasterDataOptionParams
 ): Promise<void> {
+  const { original } = params
   const nextPhotoUrl = params.photo_url ?? null
   const heroImageChanged =
-    params.currentAiDna !== undefined && nextPhotoUrl !== (params.currentPhotoUrl ?? null)
+    params.currentAiDna !== undefined && nextPhotoUrl !== (params.currentPhotoUrl ?? original.photo_url)
   const nextAiDna = params.currentAiDna
     ? heroImageChanged
       ? markDnaNeedsRegeneration(params.currentAiDna)
       : params.currentAiDna
     : undefined
 
-  const { error } = await supabase
+  const nextName = params.name.trim()
+  const nextMetadata = params.metadata ?? {}
+  const nextSellingPoints = params.selling_points ?? []
+  const nextInternalNotes = params.internal_notes ?? ''
+  const nextPrice = params.price ?? 0
+
+  // Safe Save (Phase 2) — build the UPDATE payload from ONLY the fields
+  // that genuinely differ from `original`. A field never touched during
+  // this edit session is never re-sent, however "current" its value looks
+  // in local component state.
+  const patch: Record<string, unknown> = {}
+  if (nextName !== original.name) patch.name = nextName
+  if (!sameJson(nextMetadata, original.metadata)) patch.metadata = nextMetadata
+  if (nextPhotoUrl !== original.photo_url) patch.photo_url = nextPhotoUrl
+  if (!sameJson(nextSellingPoints, original.selling_points)) patch.selling_points = nextSellingPoints
+  if (nextInternalNotes !== original.internal_notes) patch.internal_notes = nextInternalNotes
+  if (nextPrice !== original.price) patch.price = nextPrice
+  if (params.material_id !== undefined && params.material_id !== original.material_id) {
+    patch.material_id = params.material_id
+  }
+  if (nextAiDna && !sameJson(nextAiDna, original.ai_dna)) patch.ai_dna = nextAiDna
+
+  if (Object.keys(patch).length === 0) {
+    // Nothing actually changed since the edit session opened — no write,
+    // so there is nothing an optimistic-lock conflict could even mean here.
+    return
+  }
+
+  patch.updated_at = new Date().toISOString()
+
+  // Optimistic Lock (Phase 3) — `.eq('updated_at', original.updated_at)`
+  // means this UPDATE only takes effect if the row is still exactly as
+  // this edit session last saw it. `.select('id')` is what makes a
+  // zero-row match observable (Supabase does not error on a WHERE clause
+  // that matches nothing; it just returns an empty array).
+  const { data, error } = await supabase
     .from('design_master_options')
-    .update({
-      name: params.name.trim(),
-      metadata: params.metadata ?? {},
-      photo_url: nextPhotoUrl,
-      selling_points: params.selling_points ?? [],
-      internal_notes: params.internal_notes ?? '',
-      price: params.price ?? 0,
-      ...(nextAiDna ? { ai_dna: nextAiDna } : {}),
-      ...(params.material_id !== undefined ? { material_id: params.material_id } : {}),
-      updated_at: new Date().toISOString(),
-    })
+    .update(patch)
     .eq('id', id)
+    .eq('updated_at', original.updated_at)
+    .select('id')
 
   if (error) throw error
+  if (!data || data.length === 0) {
+    throw new StaleMasterDataError()
+  }
 }
 
 // Quick-access "Update Harga" action (Fitter App sprint) — a lightweight

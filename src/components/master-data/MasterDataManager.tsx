@@ -96,6 +96,13 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   // separate from `editingPhotoUrl` (which mutates on a new upload) so
   // updateMasterDataOption can detect a real Hero Image change (Task 8).
   const [editingOriginalPhotoUrl, setEditingOriginalPhotoUrl] = useState<string | null>(null)
+  // Sprint PR-05 (Master Data Integrity) — the FULL row exactly as read
+  // when this edit session opened, never mutated afterwards. Passed to
+  // updateMasterDataOption as `original` for both dirty-field diffing
+  // (Safe Save) and the optimistic-lock `updated_at` guard — see that
+  // function's own doc comment for why this is the direct fix for the
+  // Saudi Modern Lost Update incident.
+  const [editingOriginal, setEditingOriginal] = useState<MasterDataOption | null>(null)
   const [editingAiDna, setEditingAiDna] = useState<AiDesignDna | null>(null)
   const [showQuickDnaPlaceholder, setShowQuickDnaPlaceholder] = useState(false)
 
@@ -178,6 +185,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingPrice(String(option.price ?? 0))
     setEditingOriginalPhotoUrl(option.photo_url)
     setEditingAiDna(option.ai_dna)
+    setEditingOriginal(option)
     setShowQuickDnaPlaceholder(false)
     setError(null)
   }
@@ -226,7 +234,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   }
 
   async function handleSaveEdit() {
-    if (!editingId || !editingName.trim()) return
+    if (!editingId || !editingName.trim() || !editingOriginal) return
     setSaving(true)
     setError(null)
     try {
@@ -245,6 +253,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
         currentPhotoUrl: editingOriginalPhotoUrl,
         currentAiDna: editingAiDna ?? undefined,
         ...(editingCategory === 'bahan' ? { material_id: editingMaterialId } : {}),
+        original: editingOriginal,
       })
       setEditingId(null)
       await refreshCategory(editingCategory)
