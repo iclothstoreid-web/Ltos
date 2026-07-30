@@ -13,6 +13,7 @@ import {
 } from '@/lib/commercial/client'
 import type { DiscountType, OrderInvoice } from '@/lib/commercial/types'
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS } from '@/lib/commercial/types'
+import { COMMERCIAL_TYPE_LABELS, requiresInvoice } from '@/lib/commercial/commercialType'
 import { PaymentTimeline } from './PaymentTimeline'
 
 interface OrderCommercialSectionProps {
@@ -167,7 +168,10 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
 
   return (
     <div>
-      <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">Komersial</p>
+      <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-1">Komersial</p>
+      <p className="font-hanken text-xs text-[#161b29] mb-2">
+        Tipe Komersial: <span className="font-semibold">{COMMERCIAL_TYPE_LABELS[invoice.commercial_type]}</span>
+      </p>
       {error && <p className="font-hanken text-xs text-[#c0392b] mb-2">{error}</p>}
 
       {!invoice.has_quotation ? (
@@ -187,7 +191,7 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
             )}
             {invoice.kol_discount_amount > 0 && (
               <>
-                <span className="text-[#46464c]">KOL {invoice.kol_code ? `(${invoice.kol_code})` : ''}</span>
+                <span className="text-[#46464c]">Diskon Influencer {invoice.kol_code ? `(${invoice.kol_code})` : ''}</span>
                 <span className="text-right text-[#161b29]">-{formatRupiah(invoice.kol_discount_amount)}</span>
               </>
             )}
@@ -227,11 +231,17 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
           )}
 
           <div className="mt-5 border-t border-[#e5e5e0] pt-4">
-            <PaymentTimeline
-              invoice={invoice}
-              productionStarted={productionStarted}
-              deliveryCompleted={deliveryCompleted}
-            />
+            {requiresInvoice(invoice.commercial_type) ? (
+              <PaymentTimeline
+                invoice={invoice}
+                productionStarted={productionStarted}
+                deliveryCompleted={deliveryCompleted}
+              />
+            ) : (
+              <p className="font-hanken text-xs text-[#46464c]">
+                Tidak ada tagihan (Tipe Komersial: {COMMERCIAL_TYPE_LABELS[invoice.commercial_type]}).
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -272,13 +282,15 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
             </div>
 
             <div className="border-t border-[#e5e5e0] pt-3">
-              <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">KOL</p>
+              <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">
+                Diskon Influencer
+              </p>
               <div className="flex flex-wrap gap-2">
                 <input
                   type="text"
                   value={kolCode}
                   onChange={e => setKolCode(e.target.value)}
-                  placeholder="Kode KOL"
+                  placeholder="Kode Influencer"
                   className="w-28 py-1.5 px-2 border border-[#c4c7c7] text-xs"
                 />
                 <input

@@ -14,12 +14,14 @@ import { ClockCalendar } from './widgets/ClockCalendar'
 import { EngineOverviewSection, type EngineOverviewSectionProps } from './EngineOverviewSection'
 import { DecisionCardsSection } from './DecisionCards'
 import { OrderDetailModal } from './OrderDetailModal'
+import { CommercialTypeSummarySection } from './CommercialTypeSummarySection'
 import type {
   OperationalAlertCardData,
   CommercialAlertCardData,
   InventoryAlertCardData,
   BusinessInsightCardData,
 } from '@/lib/decision/types'
+import type { CommercialTypeSummaryRow } from '@/lib/commercial/transactionSummary'
 
 export type OwnerCommandCenterProps = {
   profileName: string
@@ -68,6 +70,8 @@ export type OwnerCommandCenterProps = {
     inventoryAlert: InventoryAlertCardData
     businessInsight: BusinessInsightCardData
   }
+  // Milestone A — Commercial Type Engine
+  commercialTypeSummary: CommercialTypeSummaryRow[]
 }
 
 export function OwnerCommandCenter({
@@ -82,6 +86,7 @@ export function OwnerCommandCenter({
   artisanCards,
   agendaItems,
   decisionCards,
+  commercialTypeSummary,
 }: OwnerCommandCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   // Sprint N.2 — same OrderDetailModal instance BottleneckPanel/Decision
@@ -131,6 +136,8 @@ export function OwnerCommandCenter({
             businessInsight={decisionCards.businessInsight}
             onSelectOrder={setSelectedOrderId}
           />
+
+          <CommercialTypeSummarySection rows={commercialTypeSummary} onSelectOrder={setSelectedOrderId} />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <section className="lg:col-span-7 space-y-10">

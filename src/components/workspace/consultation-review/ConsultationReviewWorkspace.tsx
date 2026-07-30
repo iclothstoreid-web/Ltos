@@ -17,6 +17,7 @@ import { MeasurementSummaryCard } from './MeasurementSummaryCard'
 import { GarmentPreviewSection } from './GarmentPreviewSection'
 import { ConsultationNotesCard } from './ConsultationNotesCard'
 import { PriceSummaryCard } from './PriceSummaryCard'
+import { CommercialTypeCard } from './CommercialTypeCard'
 import { ReadinessGauge } from './ReadinessGauge'
 import { DecisionPanel } from './DecisionPanel'
 import { ReviewFooter } from './ReviewFooter'
@@ -35,6 +36,7 @@ import {
   type EventInformation,
 } from './eventInformationCodec'
 import { buildDesignSpecification } from '@/lib/designSpecification/buildSpecification'
+import type { CommercialType } from '@/lib/commercial/commercialType'
 import { decodeDesignSpecification, encodeDesignSpecification } from '@/lib/designSpecification/codec'
 import type { MasterOptionsByCategory } from '@/lib/design/masterData'
 import type { ServiceValidationResult } from '@/lib/order/service'
@@ -103,6 +105,11 @@ export function ConsultationReviewWorkspace({
   )
   const [savingEventInfo, setSavingEventInfo] = useState(false)
   const [serviceValidation, setServiceValidation] = useState<ServiceValidationResult | null>(null)
+
+  // Milestone A (Commercial Type Engine) — carried into
+  // createOrderFromConsultation below, locked in on the transaction at
+  // Create Order time.
+  const [commercialType, setCommercialType] = useState<CommercialType>('normal')
 
   async function persistEnhancements(patch: Partial<FitterEnhancements>) {
     const next = { ...enhancements, ...patch }
@@ -242,6 +249,7 @@ export function ConsultationReviewWorkspace({
         eventInformation: eventInfo,
         estimationValidation: estimationValidationResult,
         fabricQuantityMeters,
+        commercialType,
         userId,
       })
 
@@ -303,6 +311,7 @@ export function ConsultationReviewWorkspace({
             measurementComplete={readiness.measurementComplete}
             designComplete={readiness.designComplete}
           />
+          <CommercialTypeCard value={commercialType} onChange={setCommercialType} />
           <DecisionPanel loading={loading} onCreateOrder={handleCreateOrder} onApprove={handleApprove} />
           {orderError && (
             <div className="bg-[#fdecea] border-[0.5px] border-[#c0392b] p-3">

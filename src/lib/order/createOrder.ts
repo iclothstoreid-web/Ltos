@@ -6,6 +6,7 @@ import type { DesignSpecification } from '@/lib/designSpecification/types'
 import type { EventInformation } from '@/components/workspace/consultation-review/eventInformationCodec'
 import type { OrderSnapshot } from './types'
 import type { EstimationValidationResult } from './estimationValidation'
+import type { CommercialType } from '@/lib/commercial/commercialType'
 import { buildQrPayload, generateCustomerToken, buildCustomerJourneyUrl } from './qr'
 import { notifyOrderCreated } from './notifications'
 import { mapEstimasiToServiceLevel, setOrderService } from './service'
@@ -34,6 +35,12 @@ interface CreateOrderParams {
   // it only records what the order needs so Production's Persiapan Bahan
   // card can auto-fill its Material quantity.
   fabricQuantityMeters?: number | null
+  // Milestone A (Commercial Type Engine) — defaults to 'normal' (today's
+  // behavior: invoice generated, revenue counted) so every existing caller
+  // keeps working unchanged. Every order now belongs to exactly one
+  // transaction (the commercial/payment container); multi-garment
+  // transactions (multiple orders sharing one transaction_id) are Milestone B.
+  commercialType?: CommercialType
   userId: string
 }
 
@@ -79,6 +86,7 @@ export async function createOrderFromConsultation({
   eventInformation = null,
   estimationValidation = null,
   fabricQuantityMeters = null,
+  commercialType = 'normal',
   userId,
 }: CreateOrderParams): Promise<CreateOrderResult> {
   // Root cause of "Create Order gagal tanpa alasan": order_number is
@@ -109,6 +117,28 @@ export async function createOrderFromConsultation({
   // stay internal to Fitter/Production/Owner.
   const customerToken = generateCustomerToken()
 
+  // Milestone A (Commercial Type Engine) — every order belongs to a
+  // transaction (the payment container). Derived from order_number the same
+  // way order_number is derived from consultation_number, so it's
+  // guaranteed unique. This transaction is 1:1 with the order until
+  // Milestone B's "add garment to open transaction" flow exists.
+  const transactionNumber = 'LT-TRX-' + orderNumber.slice('LT-ORD-'.length)
+  const { data: transaction, error: transactionError } = await supabase
+    .from('transactions')
+    .insert({
+      transaction_number: transactionNumber,
+      primary_customer_id: consultation.customers.id,
+      status: 'open',
+      commercial_type: commercialType,
+      created_by: userId,
+    })
+    .select('id')
+    .single()
+
+  if (transactionError || !transaction) {
+    throw transactionError || new Error('Transaction insert returned no row')
+  }
+
   // 1. Create the order. current_state check constraint has no 'confirmed'
   // value — 'order' is the closest existing one and is already labeled
   // "Order Confirmed" in this app's own STATE_LABELS (src/lib/ltos.ts).
@@ -119,6 +149,7 @@ export async function createOrderFromConsultation({
       order_number: orderNumber,
       current_state: 'order',
       customer_token: customerToken,
+      transaction_id: transaction.id,
     })
     .select('id')
     .single()

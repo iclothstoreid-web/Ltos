@@ -79,6 +79,13 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
         .select(
           'id, order_id, total, subtotal, discount_amount, override_amount, override_reason, orders!inner(order_number, customers(name))'
         )
+        // Milestone A (Commercial Type Engine): 'not_billable' quotations
+        // (KOL/Sponsor/Warranty/Internal Sample — see
+        // supabase/migrations/20260820000000) never get paid by design
+        // (record_order_payment rejects them), so without this exclusion
+        // every one of them would show up here as Outstanding Payment / DP
+        // Outstanding, which is wrong — they were never meant to be billed.
+        .neq('status', 'not_billable')
         .order('created_at', { ascending: false }),
       supabase.from('order_payments').select('quotation_id, amount'),
       getCommercialRules(supabase),

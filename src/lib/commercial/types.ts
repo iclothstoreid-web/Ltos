@@ -1,10 +1,11 @@
 import type { PriceSnapshotLine } from '@/lib/designSpecification/types'
+import type { CommercialType } from './commercialType'
 
 export type DiscountType = 'percentage' | 'fixed'
 export type PaymentType = 'dp' | 'installment' | 'pelunasan' | 'full'
 export type PaymentMethod = 'tunai' | 'transfer' | 'qris'
 
-export type PaymentStatus = 'belum_ada_harga' | 'belum_dibayar' | 'dp_diterima' | 'lunas'
+export type PaymentStatus = 'belum_ada_harga' | 'tidak_ada_tagihan' | 'belum_dibayar' | 'dp_diterima' | 'lunas'
 
 export interface OrderPayment {
   id: string
@@ -24,6 +25,9 @@ export interface OrderInvoice {
   order_id: string
   order_number: string
   customer_name: string | null
+  transaction_id: string
+  transaction_number: string
+  commercial_type: CommercialType
   has_quotation: boolean
   line_items: PriceSnapshotLine[]
   subtotal: number
@@ -77,6 +81,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   belum_ada_harga: 'Belum Dihitung',
+  tidak_ada_tagihan: 'Tidak Ada Tagihan',
   belum_dibayar: 'Belum Dibayar',
   dp_diterima: 'DP Diterima',
   lunas: 'Lunas',
