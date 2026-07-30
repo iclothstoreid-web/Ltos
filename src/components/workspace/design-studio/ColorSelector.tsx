@@ -2,6 +2,7 @@
 
 import type { MasterDataOption } from '@/lib/design/masterData'
 import { EmptyOptionsState } from './EmptyOptionsState'
+import { CatalogCard, CatalogGrid } from './CatalogCard'
 
 interface ColorSelectorProps {
   options: MasterDataOption[]
@@ -11,53 +12,28 @@ interface ColorSelectorProps {
 }
 
 // Options come from the 'warna_bahan' master data category; the swatch hex
-// lives in each option's `metadata.hex` instead of a hardcoded name->hex map.
+// lives in each option's `metadata.hex` instead of a hardcoded name->hex
+// map. Uses the same CatalogCard every other selector uses (Single Source
+// of Truth) — a solid-color swatch fills the card's image area instead of
+// a photo, since a hex color has no meaningful "picture" of its own.
 export function ColorSelector({ options, selected, onSelect, onViewSpec }: ColorSelectorProps) {
   if (options.length === 0) {
     return <EmptyOptionsState label="Warna Bahan" />
   }
 
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {options.map(option => {
-        const active = selected === option.name
-        return (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => onSelect(option.name)}
-            className="group flex flex-col items-center gap-2"
-          >
-            <div
-              className={`w-10 h-10 rounded-full border border-[#c4c7c7] group-hover:scale-110 transition-transform ring-2 ring-offset-2 ${
-                active ? 'ring-[#775a19]' : 'ring-transparent'
-              }`}
-              style={{ backgroundColor: option.metadata.hex || '#c4c7c7' }}
-            />
-            <span className="flex items-center gap-1">
-              <span className="text-[10px] uppercase font-sans text-[#444748]">{option.name}</span>
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={e => {
-                  e.stopPropagation()
-                  onViewSpec(option)
-                }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.stopPropagation()
-                    onViewSpec(option)
-                  }
-                }}
-                aria-label={`Lihat Spesifikasi ${option.name}`}
-                className="material-symbols-outlined text-[12px] text-[#775a19]/60 hover:text-[#775a19]"
-              >
-                info
-              </span>
-            </span>
-          </button>
-        )
-      })}
-    </div>
+    <CatalogGrid>
+      {options.map(option => (
+        <CatalogCard
+          key={option.id}
+          name={option.name}
+          description={option.selling_points[0] ?? null}
+          swatchColor={option.metadata.hex || '#c4c7c7'}
+          selected={selected === option.name}
+          onSelect={() => onSelect(option.name)}
+          onViewSpec={() => onViewSpec(option)}
+        />
+      ))}
+    </CatalogGrid>
   )
 }

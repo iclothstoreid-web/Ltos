@@ -1,8 +1,7 @@
 'use client'
 
 import type { MasterDataOption } from '@/lib/design/masterData'
-import { EmptyOptionsState } from './EmptyOptionsState'
-import { NONE_SELECTION, isNoneSelection } from './types'
+import { OptionGroup } from './OptionGroup'
 
 interface LookCuttingSelectorProps {
   options: MasterDataOption[]
@@ -16,52 +15,10 @@ interface LookCuttingSelectorProps {
 // 'look_cutting' master data category (default seed: Slim/Standard/Regular
 // Fit) — this choice rides along in the Order snapshot as a reference for
 // Production's Formulasi Pola stage, without altering that stage itself.
+// No label passed to OptionGroup: the Accordion wrapping this selector
+// already titles it "Look Cutting" (see GarmentBlueprintPanel).
 export function LookCuttingSelector({ options, selected, onSelect, onViewSpec }: LookCuttingSelectorProps) {
   return (
-    <div className="space-y-2">
-      {options.length === 0 && <EmptyOptionsState label="Look Cutting" />}
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => onSelect(NONE_SELECTION)}
-          className={`px-3 py-2 font-sans text-sm border transition-all ${
-            isNoneSelection(selected)
-              ? 'border-[#775a19] bg-[#775a19]/5 text-[#151c27]'
-              : 'border-[#c4c7c7]/60 text-[#444748] hover:border-[#775a19]/40'
-          }`}
-        >
-          (None)
-        </button>
-        {options.map(option => {
-          const active = selected === option.name
-          return (
-            <div key={option.id} className="relative">
-              <button
-                type="button"
-                onClick={() => onSelect(option.name)}
-                className={`px-3 py-2 pr-7 font-sans text-sm border transition-all ${
-                  active
-                    ? 'border-[#775a19] bg-[#775a19]/5 text-[#151c27]'
-                    : 'border-[#c4c7c7]/60 text-[#444748] hover:border-[#775a19]/40'
-                }`}
-              >
-                {option.name}
-              </button>
-              <button
-                type="button"
-                onClick={e => {
-                  e.stopPropagation()
-                  onViewSpec(option)
-                }}
-                aria-label={`Lihat Spesifikasi ${option.name}`}
-                className="material-symbols-outlined absolute right-1 top-1/2 -translate-y-1/2 text-[14px] text-[#775a19]/60 hover:text-[#775a19]"
-              >
-                info
-              </button>
-            </div>
-          )
-        })}
-      </div>
-    </div>
+    <OptionGroup options={options} selected={selected} onSelect={onSelect} onViewSpec={onViewSpec} allowNone />
   )
 }

@@ -2,6 +2,8 @@
 
 import type { MasterDataOption } from '@/lib/design/masterData'
 import { EmptyOptionsState } from './EmptyOptionsState'
+import { CatalogCard, CatalogGrid, type CatalogCardAvailabilityTone } from './CatalogCard'
+import { formatRupiah } from '@/lib/format/money'
 
 interface MaterialStockInfo {
   available_stock: number
@@ -17,9 +19,9 @@ interface FabricSelectorProps {
   onViewSpec: (option: MasterDataOption) => void
 }
 
-// Inventory -> Fitter App (READ only): now wired to real stock, matched by
-// name against the Inventory workspace's `materials` table. An option with
-// no matching material (not catalogued in Inventory yet) keeps the honest
+// Inventory -> Fitter App (READ only): wired to real stock, matched by name
+// against the Inventory workspace's `materials` table. An option with no
+// matching material (not catalogued in Inventory yet) keeps the honest
 // "Stok belum terhubung" placeholder instead of fabricating a number.
 // Options come from the 'bahan' master data category.
 //
@@ -28,81 +30,52 @@ interface FabricSelectorProps {
 // Studio must read Inventory's real stock and refuse a material that has
 // none left, rather than let the Fitter pick it and find out at Persiapan
 // Bahan. Low Stock (available_stock <= min_stock, but > 0) stays pickable,
-// just flagged.
+// just flagged. Uses the same CatalogCard every other selector uses (Single
+// Source of Truth), with the stock badge mapped into its
+// availabilityLabel/availabilityTone slot.
 export function FabricSelector({ options, selected, materialStock, onSelect, onViewSpec }: FabricSelectorProps) {
   if (options.length === 0) {
     return <EmptyOptionsState label="Bahan" />
   }
 
   return (
-    <div className="space-y-4">
+    <CatalogGrid>
       {options.map(option => {
-        const active = selected === option.name
         const stock = materialStock[option.name]
         const outOfStock = !!stock && stock.available_stock <= 0
         const lowStock = !!stock && !outOfStock && stock.available_stock <= stock.min_stock
+
+        const availabilityLabel = stock
+          ? outOfStock
+            ? 'Stok Habis'
+            : `${stock.available_stock.toLocaleString('id-ID')} ${stock.unit} tersedia${lowStock ? ' · Menipis' : ''}`
+          : 'Stok belum terhubung'
+        const availabilityTone: CatalogCardAvailabilityTone = !stock
+          ? 'neutral'
+          : outOfStock
+            ? 'negative'
+            : lowStock
+              ? 'warning'
+              : 'positive'
+
         return (
-          <button
+          <CatalogCard
             key={option.id}
-            type="button"
-            onClick={() => !outOfStock && onSelect(option.name)}
+            name={option.name}
+            description={option.selling_points[0] ?? null}
+            imageUrl={option.photo_url}
+            icon="texture"
+            selected={selected === option.name}
             disabled={outOfStock}
-            aria-disabled={outOfStock}
-            className={`w-full flex items-center gap-4 p-4 bg-white border text-left transition-all ${
-              active ? 'border-[#775a19]' : 'border-[#c4c7c7]/40'
-            } ${outOfStock ? 'opacity-40 cursor-not-allowed' : ''}`}
-          >
-            <div className="w-16 h-16 bg-[#1c1b1b] flex items-center justify-center shrink-0 overflow-hidden">
-              {option.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
-                <img src={option.photo_url} alt={option.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="material-symbols-outlined text-white/40">texture</span>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex items-center gap-1 min-w-0">
-                  <h4 className="font-sans text-sm text-[#151c27] truncate">{option.name}</h4>
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    onClick={e => {
-                      e.stopPropagation()
-                      onViewSpec(option)
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.stopPropagation()
-                        onViewSpec(option)
-                      }
-                    }}
-                    aria-label={`Lihat Spesifikasi ${option.name}`}
-                    className="material-symbols-outlined text-[14px] text-[#775a19]/60 hover:text-[#775a19]"
-                  >
-                    info
-                  </span>
-                </div>
-                {stock ? (
-                  <span
-                    className={`font-sans text-[10px] uppercase whitespace-nowrap ${
-                      outOfStock ? 'text-[#ba1a1a]' : lowStock ? 'text-[#8a5a00]' : 'text-[#006c49]'
-                    }`}
-                  >
-                    {outOfStock
-                      ? 'Stok Habis'
-                      : `${stock.available_stock.toLocaleString('id-ID')} ${stock.unit} tersedia${lowStock ? ' · Menipis' : ''}`}
-                  </span>
-                ) : (
-                  <span className="font-sans text-[10px] text-[#444748] uppercase whitespace-nowrap">
-                    Stok belum terhubung
-                  </span>
-                )}
-              </div>
-            </div>
-          </button>
+            disabledReason={outOfStock ? 'Stok habis' : undefined}
+            availabilityLabel={availabilityLabel}
+            availabilityTone={availabilityTone}
+            priceLabel={option.price > 0 ? formatRupiah(option.price) : null}
+            onSelect={() => onSelect(option.name)}
+            onViewSpec={() => onViewSpec(option)}
+          />
         )
       })}
-    </div>
+    </CatalogGrid>
   )
 }
