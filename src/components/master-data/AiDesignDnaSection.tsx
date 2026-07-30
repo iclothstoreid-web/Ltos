@@ -7,6 +7,7 @@ interface AiDesignDnaSectionProps {
   dna: AiDesignDna
   showQuickDnaPlaceholder: boolean
   onGenerateQuickDna: () => void
+  onApprove: () => void
 }
 
 function formatTimestamp(value: string | null): string {
@@ -15,12 +16,15 @@ function formatTimestamp(value: string | null): string {
 
 // Read-only recap of a Master Item's permanent AI Design DNA lifecycle.
 // Status is never directly editable here; it only ever moves via
-// markDnaNeedsRegeneration (Hero Image replaced) or markDnaGenerated
-// (Generate Quick DNA below, which also freezes the Official Reference
-// Image — see MasterDataManager's handleGenerateQuickDna). Advanced/Expert
-// DNA (real geometry/construction/appearance extraction) remain future
-// AI Vision Integration work — untouched by this pipeline.
-export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQuickDna }: AiDesignDnaSectionProps) {
+// markDnaNeedsRegeneration (Hero Image replaced), markDnaGenerated
+// (Generate Quick DNA, which also freezes the Official Reference Image —
+// see MasterDataManager's handleGenerateQuickDna), or markDnaApproved
+// (Approve below — AI Asset Lifecycle sprint: this is the ONLY action that
+// turns this item's AI Asset ACTIVE; there is deliberately no separate
+// "Add Reference"/"Create AI Asset" affordance anywhere in this app).
+// Advanced/Expert DNA (real geometry/construction/appearance extraction)
+// remain future AI Vision Integration work — untouched by this pipeline.
+export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQuickDna, onApprove }: AiDesignDnaSectionProps) {
   return (
     <div className="border-t border-[#c4c7c7]/30 pt-5 mt-2">
       <p className="font-sans text-[10px] uppercase tracking-widest text-[#775a19] mb-3">AI Design DNA</p>
@@ -69,6 +73,28 @@ export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQui
           <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
           Generate Quick DNA
         </button>
+        {dna.status === 'draft' ? (
+          <button
+            type="button"
+            onClick={onApprove}
+            className="flex items-center gap-2 px-4 py-2 border-[0.5px] border-[#2e7d32] text-[#2e7d32]
+                       font-sans text-xs uppercase tracking-widest hover:bg-[#2e7d32]/5 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+            Approve
+          </button>
+        ) : (
+          <span
+            title={
+              dna.status === 'approved'
+                ? 'AI Design DNA sudah approved — AI Asset aktif.'
+                : 'Approve hanya tersedia setelah Generate Quick DNA (status draft).'
+            }
+            className="px-3 py-2 border-[0.5px] border-dashed border-[#c4c7c7] text-[#c4c7c7] font-sans text-xs uppercase tracking-widest cursor-not-allowed"
+          >
+            {dna.status === 'approved' ? 'Approved' : 'Approve'}
+          </span>
+        )}
         <span
           title="Belum aktif — bagian dari fase AI Vision Integration berikutnya"
           className="px-3 py-2 border-[0.5px] border-dashed border-[#c4c7c7] text-[#c4c7c7] font-sans text-xs uppercase tracking-widest cursor-not-allowed"
