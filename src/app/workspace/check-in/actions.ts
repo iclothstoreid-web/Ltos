@@ -2,9 +2,11 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { STAGE_ORDER, STAGE_LABELS } from '@/lib/production/stageConfig'
+import { TERMINAL_CONSULTATION_STATUSES } from './types'
 import type {
   Customer,
   Consultation,
+  ConsultationStatus,
   RecentConsultation,
   CreateConsultationResult,
   CreateCustomerResult,
@@ -55,6 +57,37 @@ export async function getCustomerById(customerId: string): Promise<{
   }
 
   return { customer: data as Customer, error: null }
+}
+
+export interface ActiveConsultationResult {
+  consultation: { id: string; status: ConsultationStatus } | null
+  error: string | null
+}
+
+// The "one active workflow per customer" gate (LTOS Resume, Don't Recreate
+// rule). The excluded-status list is NOT re-declared here — it's built
+// from TERMINAL_CONSULTATION_STATUSES (types.ts), the same constant
+// resumeRouteForConsultation reads, so this query and that route resolver
+// can never disagree about which statuses are terminal.
+export async function findActiveConsultationForCustomer(
+  customerId: string
+): Promise<ActiveConsultationResult> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('consultations')
+    .select('id, status')
+    .eq('customer_id', customerId)
+    .not('status', 'in', `(${TERMINAL_CONSULTATION_STATUSES.join(',')})`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    return { consultation: null, error: error.message }
+  }
+
+  return { consultation: data as { id: string; status: ConsultationStatus } | null, error: null }
 }
 
 export async function isReturningCustomer(customerId: string): Promise<{

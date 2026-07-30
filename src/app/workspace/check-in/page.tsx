@@ -14,8 +14,8 @@ import { SessionBar } from './components/SessionBar'
 import { OperatorAutocomplete } from '@/components/workspace/production/OperatorAutocomplete'
 import { FITTER_DIVISI } from '@/lib/fitter/client'
 import type { Operator } from '@/lib/production/types'
-import { createConsultationSession } from './actions'
-import type { Customer } from './types'
+import { createConsultationSession, findActiveConsultationForCustomer } from './actions'
+import { resumeRouteForConsultation, type Customer } from './types'
 
 type ViewState = 'search' | 'profile' | 'new-customer' | 'success'
 
@@ -26,6 +26,7 @@ export default function CheckInPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [fitter, setFitter] = useState<Operator | null>(null)
   const [creating, setCreating] = useState(false)
+  const [resolvingCustomer, setResolvingCustomer] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successData, setSuccessData] = useState<{
     consultationId: string
@@ -33,10 +34,42 @@ export default function CheckInPage() {
     customerName: string
   } | null>(null)
 
-  const handleSelectCustomer = (customer: Customer) => {
+  // "Resume, Don't Recreate" gate — a customer with an unfinished
+  // consultation (anything except order_created/cancelled) must resume that
+  // exact consultation, never land on the "Mulai Konsultasi Baru" profile
+  // view. This is the single entry point both Customer Search results and
+  // "Konsultasi Terakhir" clicks funnel through (see CustomerSearch.tsx's
+  // handleSelectRecent), so gating here closes the bug at its only source:
+  // handleCreateSession/createConsultationSession has no other caller.
+  const handleSelectCustomer = async (customer: Customer) => {
+    if (resolvingCustomer) return
+    setError(null)
+    setResolvingCustomer(true)
+
+    const { consultation, error: lookupError } = await findActiveConsultationForCustomer(customer.id)
+
+    if (lookupError) {
+      setError(lookupError)
+      setResolvingCustomer(false)
+      return
+    }
+
+    if (consultation) {
+      const route = resumeRouteForConsultation(consultation.status, consultation.id)
+      // Defensive only: findActiveConsultationForCustomer and
+      // resumeRouteForConsultation share TERMINAL_CONSULTATION_STATUSES, so
+      // a terminal status should never reach here. If it ever does (future
+      // drift), fail open to "start a new consultation" rather than getting
+      // stuck with no action.
+      if (route) {
+        router.push(route)
+        return
+      }
+    }
+
     setSelectedCustomer(customer)
     setView('profile')
-    setError(null)
+    setResolvingCustomer(false)
   }
 
   const handleNewCustomer = () => {
