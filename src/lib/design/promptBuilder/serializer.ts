@@ -62,11 +62,11 @@ function formatValue(value: unknown): string {
 // layers.ts) can format its Layer 3 (Garment DNA) using the exact same
 // deterministic key-sorted formatting as this file's own SECTION_ORDER
 // output, instead of re-implementing it a second time.
-export function formatRecord(record: Record<string, unknown>): string {
-  return Object.keys(record)
+export function formatRecord(record: Record<string, unknown> | null | undefined): string {
+  return Object.keys(record ?? {})
     .sort()
     .map((key) => {
-      const value = formatValue(record[key])
+      const value = formatValue(record?.[key])
       return value ? `${key}: ${value}` : ''
     })
     .filter(Boolean)
