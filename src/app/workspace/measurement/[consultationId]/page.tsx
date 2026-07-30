@@ -4,8 +4,15 @@ import { MeasurementWorkspace } from '@/components/workspace/MeasurementWorkspac
 import { OrderCreatedLockNotice } from '@/components/workspace/OrderCreatedLockNotice'
 import { findOrderIdForConsultation } from '@/lib/order/lookup'
 
+// Route contract (locked): Measurement is consultation-driven, not
+// order-driven. This folder was previously named [orderId], which was a
+// stale label — every query below always resolved a consultation first,
+// keyed by consultation_id, never an order. Renamed for clarity; the actual
+// value passed by every caller (Check-In, Consultation Review) is and
+// always was a consultation id, so this is a pure rename with zero runtime
+// behavior change.
 interface Props {
-  params: { orderId: string }
+  params: { consultationId: string }
 }
 
 export default async function MeasurementPage({ params }: Props) {
@@ -25,7 +32,7 @@ export default async function MeasurementPage({ params }: Props) {
   const { data: consultation } = await supabase
     .from('consultations')
     .select(`*, customers(*)`)
-    .eq('id', params.orderId)
+    .eq('id', params.consultationId)
     .single()
 
   if (!consultation) redirect('/workspace/check-in')
@@ -45,7 +52,7 @@ export default async function MeasurementPage({ params }: Props) {
   const { data: measurement } = await supabase
     .from('measurements')
     .select('*')
-    .eq('consultation_id', params.orderId)
+    .eq('consultation_id', params.consultationId)
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
@@ -54,7 +61,7 @@ export default async function MeasurementPage({ params }: Props) {
   const { data: events } = await supabase
     .from('business_events')
     .select(`*, profiles(name)`)
-    .eq('consultation_id', params.orderId)
+    .eq('consultation_id', params.consultationId)
     .order('created_at', { ascending: false })
 
   return (
