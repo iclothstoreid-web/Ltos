@@ -25,9 +25,10 @@ export interface Material {
   location: string | null
   is_active: boolean
   // Material Master identity fields (Sprint K LOCK V1 §6-7) — no stock
-  // meaning, purely descriptive.
+  // meaning, purely descriptive. Color is never a field on Material itself —
+  // it lives in material_colors (Architecture Lock: DNA Color Repository +
+  // Material Color Mapping).
   supplier: string | null
-  default_color: string | null
   created_at: string
   updated_at: string
   // Joined

@@ -80,11 +80,14 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const [editingPhotoUrl, setEditingPhotoUrl] = useState<string | null>(null)
   const [editingSpecRows, setEditingSpecRows] = useState<SpecRow[]>([])
   // Material ('bahan') only: dedicated Supplier/Karakteristik fields and a
-  // link to a real Inventory `materials` row — kept out of the generic Tabel
-  // Spesifikasi editor so "Optimalkan proses input Material" gets a guided
-  // form instead of a free-form key/value table. Color linkage for 'bahan'
-  // moved entirely to Material Master's Material Colors section
-  // (Architecture Lock: DNA Color Repository + Material Color Mapping).
+  // link to a real Material Master `materials` row — kept out of the generic
+  // Tabel Spesifikasi editor so "Optimalkan proses input Material" gets a
+  // guided form instead of a free-form key/value table. This link only
+  // scopes Design Studio's Warna Bahan picker to the linked Material's
+  // colors (GarmentBlueprintPanel); Material Color itself is owned and
+  // edited entirely on Material Master's own page (Architecture Lock: DNA
+  // Color Repository + Material Color Mapping — Material Color is never an
+  // Inventory concept).
   const [editingSupplier, setEditingSupplier] = useState('')
   const [editingKarakteristik, setEditingKarakteristik] = useState('')
   const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null)
@@ -507,10 +510,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
                         <div>
                           <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
-                            Material Terkait (Inventory){' '}
-                            <span className="normal-case text-[#444748]/70">
-                              (menentukan stok live + pilihan Warna via Material Colors)
-                            </span>
+                            Material Master
                           </p>
                           <select
                             value={editingMaterialId ?? ''}
@@ -524,13 +524,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                               </option>
                             ))}
                           </select>
-                          <p className="text-[11px] text-[#444748]/70 mt-1">
-                            Kelola Warna &amp; kode supplier untuk material ini di{' '}
-                            <a href="/owner/material-master" className="underline hover:text-[#775a19]">
-                              Material Master
-                            </a>
-                            .
-                          </p>
                         </div>
                       </>
                     )}

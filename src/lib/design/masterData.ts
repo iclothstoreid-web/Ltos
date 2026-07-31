@@ -116,9 +116,17 @@ export type MasterOptionsByCategory = Record<MasterDataCategory, MasterDataOptio
 // src/lib/design/materialColors.ts), never a comma-joined name list here.
 export const MATERIAL_SUPPLIER_KEY = 'supplier'
 export const MATERIAL_KARAKTERISTIK_KEY = 'karakteristik'
+// 'warna' is a pre-Material-Colors leftover key (free-text comma list, e.g.
+// "Black,Navy") some rows still carry in metadata from before the
+// material_colors bridge table existed. Reserved (never rendered, never
+// re-written) rather than actively supported — see the SQL cleanup in
+// migration 20260824000000_drop_materials_default_color.sql for the one row
+// that had it.
+export const MATERIAL_LEGACY_WARNA_KEY = 'warna'
 export const MATERIAL_RESERVED_METADATA_KEYS: readonly string[] = [
   MATERIAL_SUPPLIER_KEY,
   MATERIAL_KARAKTERISTIK_KEY,
+  MATERIAL_LEGACY_WARNA_KEY,
 ]
 
 // Roles allowed to manage the Product Knowledge Base — Owner OS (admin,

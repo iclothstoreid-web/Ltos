@@ -47,9 +47,11 @@ const EMPTY_FORM: IdentityFormState = {
 // Material Master (Sprint K LOCK V1 §6-7) -- identity-only view of the same
 // `materials` table Inventory's Material page manages. This page never
 // touches physical_stock/reserved_stock/min_stock; it only writes
-// name/category_id/supplier/price/default_color/sku/is_active, passing
-// through the material's existing unit/min_stock/location/photo_url
-// unchanged on every save so Inventory's stock data is never disturbed.
+// name/category_id/supplier/price/sku/is_active, passing through the
+// material's existing unit/min_stock/location/photo_url unchanged on every
+// save so Inventory's stock data is never disturbed. Color lives entirely in
+// material_colors (Architecture Lock: DNA Color Repository + Material Color
+// Mapping) — Material itself never carries a color field.
 export function MaterialMasterManager({ initialMaterials, categories: initialCategories }: MaterialMasterManagerProps) {
   const router = useRouter()
   const [supabase] = useState(() => createClient())

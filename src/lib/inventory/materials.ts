@@ -84,7 +84,6 @@ export interface CreateMaterialParams {
   min_stock?: number
   location?: string | null
   supplier?: string | null
-  default_color?: string | null
 }
 
 export async function createMaterial(supabase: SupabaseClient, params: CreateMaterialParams): Promise<void> {
@@ -97,7 +96,6 @@ export async function createMaterial(supabase: SupabaseClient, params: CreateMat
     min_stock: params.min_stock ?? 0,
     location: params.location?.trim() || null,
     supplier: params.supplier?.trim() || null,
-    default_color: params.default_color?.trim() || null,
   })
 
   if (error) throw error
@@ -114,14 +112,13 @@ export interface UpdateMaterialParams {
   photo_url?: string | null
   is_active?: boolean
   supplier?: string | null
-  default_color?: string | null
 }
 
 export async function updateMaterial(supabase: SupabaseClient, id: string, params: UpdateMaterialParams): Promise<void> {
-  // supplier/default_color only ever come from the Material Master admin
-  // page (/owner/material-master) — Inventory's own MaterialFormModal never
-  // passes them, so they must be omitted (not defaulted to null) here or
-  // every stock-only save from Inventory would silently wipe them.
+  // supplier only ever comes from the Material Master admin page
+  // (/owner/material-master) — Inventory's own MaterialFormModal never
+  // passes it, so it must be omitted (not defaulted to null) here or every
+  // stock-only save from Inventory would silently wipe it.
   const { error } = await supabase
     .from('materials')
     .update({
@@ -135,7 +132,6 @@ export async function updateMaterial(supabase: SupabaseClient, id: string, param
       photo_url: params.photo_url ?? null,
       is_active: params.is_active ?? true,
       ...(params.supplier !== undefined && { supplier: params.supplier?.trim() || null }),
-      ...(params.default_color !== undefined && { default_color: params.default_color?.trim() || null }),
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
