@@ -14,6 +14,14 @@ function formatTimestamp(value: string | null): string {
   return value ? new Date(value).toLocaleString('id-ID') : '—'
 }
 
+// `dna.metadata` is optionally-chained below (not a bare `dna.metadata.x`)
+// because `AiDesignDna` only guarantees this shape for rows written through
+// markDnaGenerated/markDnaApproved/the DB column default — a row whose
+// ai_dna was overwritten wholesale by a raw SQL data fix (e.g. Saku's
+// "regional masked overlay" DNA) can lack `metadata` entirely, which used
+// to throw "Cannot read properties of undefined" the instant this dialog
+// opened (Owner App Master Data > Pocket > Edit bugfix).
+
 // Read-only recap of a Master Item's permanent AI Design DNA lifecycle.
 // Status is never directly editable here; it only ever moves via
 // markDnaNeedsRegeneration (Hero Image replaced), markDnaGenerated
@@ -55,11 +63,11 @@ export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQui
         </div>
         <div>
           <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-1">Generated At</p>
-          <p className="font-sans text-sm text-[#151c27]">{formatTimestamp(dna.metadata.generatedAt)}</p>
+          <p className="font-sans text-sm text-[#151c27]">{formatTimestamp(dna.metadata?.generatedAt ?? null)}</p>
         </div>
         <div>
           <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-1">Approved At</p>
-          <p className="font-sans text-sm text-[#151c27]">{formatTimestamp(dna.metadata.approvedAt)}</p>
+          <p className="font-sans text-sm text-[#151c27]">{formatTimestamp(dna.metadata?.approvedAt ?? null)}</p>
         </div>
       </div>
 

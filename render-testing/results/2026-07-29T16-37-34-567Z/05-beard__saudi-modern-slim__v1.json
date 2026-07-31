@@ -1,0 +1,27 @@
+{
+  "customerId": "05-beard",
+  "customerLabel": "05 Beard",
+  "dnaId": "saudi-modern-slim",
+  "dnaLabel": "Saudi Modern Slim",
+  "promptVersion": "v1",
+  "timestamp": "2026-07-29T16:37:34.567Z",
+  "model": "gpt-image-1",
+  "inputFidelity": null,
+  "referenceImages": [],
+  "prompt": null,
+  "revisedPrompt": null,
+  "validation": {
+    "dnaValidator": [],
+    "promptValidator": null,
+    "renderRequestValidator": {
+      "valid": false,
+      "checks": []
+    }
+  },
+  "output": {
+    "ok": false,
+    "cancelled": false,
+    "renderedImageUrl": null
+  },
+  "skippedReason": "Customer \"05-beard\" belum punya photoUrl."
+}

@@ -10,12 +10,15 @@ import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
 import { buildRenderInstruction, validateRenderInstruction } from '@/lib/design/promptBuilder/builder'
 import { serializeOpenAI } from '@/lib/design/promptBuilder/serializer'
 import { buildPromptLayers, compressPromptByLayers, validatePriorityZeroIntact } from '@/lib/design/promptBuilder/compression'
-import { generateImage } from '@/lib/ai/services/image'
+import { DEFAULT_MODEL } from '@/lib/ai/services/image'
+import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '@/lib/ai/renderSession/service'
 import {
   composeAiAssets,
   applyAssetInstructions,
   validateModelReferenceAvailable,
   validateCollarReference,
+  validatePlaketReference,
+  validatePocketReference,
 } from '@/lib/design/aiAssetComposer/composer'
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
@@ -25,6 +28,9 @@ import type { DnaState } from '@/lib/design/dnaState/types'
 import { hashDnaState } from '@/lib/design/dnaState/hash'
 import { detectDirtyLayers } from '@/lib/design/dirtyLayer/detect'
 import { getCachedRender, setCachedRender } from '@/lib/design/renderCache/cache'
+import { createRenderProfiler, formatProfileReport } from '@/lib/ai/renderProfiler/profiler'
+import { prefetchReferenceImages } from '@/lib/ai/services/image'
+import type { ProviderUsage } from '@/lib/ai/services/image'
 
 // Debug logging (2026-07-28) — this endpoint's real callers have been
 // reporting collar/pocket/color loss in rendered output with no visibility
@@ -32,9 +38,32 @@ import { getCachedRender, setCachedRender } from '@/lib/design/renderCache/cache
 // actual data inspectable (server console + response.debug) without
 // altering any of the pipeline's own logic — pure observation, no new
 // behavior. Remove once the loss is root-caused.
+//
+// Sprint O.1 (Task 3/6, Audit Duplicate Work) — a real profiling probe this
+// sprint (see SPRINT_O1 report) measured this whole diagnostic block
+// (JSON.stringify of the full instruction/masterRecipe + the uncompressed
+// prompt dump below) at well under 1ms of CPU per request — not the
+// latency bottleneck (OpenAI's own generation time is ~99%+ of total). It's
+// still real, unconditional work done on every production render for a
+// payload (`promptUncompressed`, `debug`) that has zero confirmed
+// consumers (verified: no client code reads `data.debug` or
+// `data.promptUncompressed` — see report). Gating it behind
+// RENDER_DEBUG_LOG removes that always-on cost/response-payload growth
+// without losing the ability to turn it back on for a specific
+// investigation (env var, no redeploy needed).
+const RENDER_DEBUG_LOG = process.env.RENDER_DEBUG_LOG === 'true' || process.env.NODE_ENV !== 'production'
 const SEP = '='.repeat(80)
 function logStage(emoji: string, title: string) {
+  if (!RENDER_DEBUG_LOG) return
   console.log(`\n${SEP}\n${emoji} ${title}\n${SEP}`)
+}
+function debugLog(...args: unknown[]) {
+  if (!RENDER_DEBUG_LOG) return
+  console.log(...args)
+}
+function debugTable(data: unknown) {
+  if (!RENDER_DEBUG_LOG) return
+  console.table(data)
 }
 
 // Incremental Render Engine V1 (Task 3/6/7) — remembers only the most
@@ -74,20 +103,29 @@ interface ComponentSelection {
 interface RenderRequestBody {
   customerPhotoUrl?: string
   componentSelections?: ComponentSelection[]
+  // Sprint O (Render Session) — optional so an older client build still
+  // works exactly as before (Render History just records consultation_id
+  // as null for that request instead of blocking it).
+  consultationId?: string
 }
 
 export async function POST(req: NextRequest) {
+  // Render Profiler (Sprint O.1, Task 1/2) — created before anything else
+  // runs so "request masuk" is the profiler's own creation instant; every
+  // stage below is timed against it. See src/lib/ai/renderProfiler.
+  const profiler = createRenderProfiler()
+
   let body: RenderRequestBody
   try {
-    body = await req.json()
+    body = await profiler.markAsync('request_parse', () => req.json())
   } catch {
     return NextResponse.json({ success: false, error: 'Invalid JSON body.' }, { status: 400 })
   }
 
-  const { customerPhotoUrl, componentSelections } = body
+  const { customerPhotoUrl, componentSelections, consultationId } = body
 
   logStage('🔵', 'STAGE 1: INPUT PAYLOAD')
-  console.log(JSON.stringify({ customerPhotoUrl, componentSelections }, null, 2))
+  debugLog(JSON.stringify({ customerPhotoUrl, componentSelections, consultationId }, null, 2))
 
   if (!customerPhotoUrl || !Array.isArray(componentSelections) || componentSelections.length === 0) {
     return NextResponse.json(
@@ -97,15 +135,74 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createClient()
-  const ids = componentSelections.map((selection) => selection.componentId).filter(Boolean)
+  const {
+    data: { user },
+  } = await profiler.markAsync('auth_check', () => supabase.auth.getUser())
 
-  const { data: rows, error } = await supabase.from('design_master_options').select('*').in('id', ids)
-  if (error) {
-    return NextResponse.json({ success: false, error: 'Failed to fetch components.', details: error.message }, { status: 500 })
+  // Render Request Lock (Sprint O, Task 1) — acquired BEFORE any pipeline
+  // work starts, so a rejected (locked) request never pays for the DNA
+  // Resolver/Recipe Composer/Compression work either, not just the OpenAI
+  // call. See src/lib/ai/renderSession/service.ts for the DB-constraint-
+  // backed (not check-then-act) locking mechanism.
+  const session = await profiler.markAsync('session_start', () =>
+    startRenderSession({
+      supabase,
+      source: 'design_studio',
+      consultationId: consultationId ?? null,
+      userId: user?.id ?? null,
+      model: DEFAULT_MODEL,
+    }),
+  )
+
+  if (session.locked) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Render lain untuk consultation ini masih berjalan. Tunggu hingga selesai sebelum mencoba lagi.',
+        activeRenderId: session.activeRenderId,
+      },
+      { status: 409 },
+    )
   }
 
-  logStage('🟡', 'STAGE 2: DNA RESOLVER — components fetched from Supabase')
-  console.log(`Requested ${ids.length} id(s), found ${rows?.length ?? 0} row(s) in design_master_options`)
+  const { renderId, historyRowId, startedAt } = session
+
+  // Render History Engine outcome — set right before every return path
+  // below (including the cache-hit fast path); read once in `finally` so
+  // the Render History row and Structured Logging both close out exactly
+  // once per request, regardless of which branch actually returned.
+  let outcome: {
+    status: 'success' | 'failed' | 'cancelled'
+    requestCount: number
+    retryCount: number
+    model: string | null
+    errorMessage: string | null
+    provider?: string
+    providerUsage?: ProviderUsage | null
+  } = {
+    status: 'failed',
+    requestCount: 0,
+    retryCount: 0,
+    model: null,
+    errorMessage: 'Unhandled exception before the render pipeline completed.',
+  }
+
+  try {
+    const ids = componentSelections.map((selection) => selection.componentId).filter(Boolean)
+
+    const { data: rows, error } = await profiler.markAsync('fetch_components', async () =>
+      supabase.from('design_master_options').select('*').in('id', ids),
+    )
+    if (error) {
+      outcome = { status: 'failed', requestCount: 0, retryCount: 0, model: null, errorMessage: error.message }
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch components.', details: error.message, renderId },
+        { status: 500 },
+      )
+    }
+
+    logStage('🟡', 'STAGE 2: DNA RESOLVER — components fetched from Supabase')
+  debugLog(`Requested ${ids.length} id(s), found ${rows?.length ?? 0} row(s) in design_master_options`)
 
   // Trust the DB row's own `category`, not the caller's `componentType`
   // string — the request body's componentType is only ever a UI label, and
@@ -129,27 +226,29 @@ export async function POST(req: NextRequest) {
     (row) => row.category === 'warna_bahan' && row.dna_color_id
   )
   if (warnaBahanRows.length > 0) {
-    const { data: dnaColorRows } = await supabase
-      .from('dna_colors')
-      .select('id, prompt, character, family, hex')
-      .in('id', warnaBahanRows.map((row) => row.dna_color_id as string))
+    await profiler.markAsync('fetch_dna_colors', async () => {
+      const { data: dnaColorRows } = await supabase
+        .from('dna_colors')
+        .select('id, prompt, character, family, hex')
+        .in('id', warnaBahanRows.map((row) => row.dna_color_id as string))
 
-    const dnaColorsById = new Map((dnaColorRows ?? []).map((c) => [c.id, c]))
-    warnaBahanRows.forEach((row) => {
-      const dnaColor = dnaColorsById.get(row.dna_color_id as string)
-      const appearance =
-        dnaColor?.prompt || [dnaColor?.character, dnaColor?.family, dnaColor?.hex].filter(Boolean).join(', ')
-      if (!appearance) return
+      const dnaColorsById = new Map((dnaColorRows ?? []).map((c) => [c.id, c]))
+      warnaBahanRows.forEach((row) => {
+        const dnaColor = dnaColorsById.get(row.dna_color_id as string)
+        const appearance =
+          dnaColor?.prompt || [dnaColor?.character, dnaColor?.family, dnaColor?.hex].filter(Boolean).join(', ')
+        if (!appearance) return
 
-      row.ai_dna = {
-        ...row.ai_dna,
-        status: row.ai_dna.status === 'pending' ? 'draft' : row.ai_dna.status,
-        appearance,
-      }
-      row.render_recipe = {
-        ...row.render_recipe,
-        status: row.render_recipe.status === 'empty' ? 'configured' : row.render_recipe.status,
-      }
+        row.ai_dna = {
+          ...row.ai_dna,
+          status: row.ai_dna.status === 'pending' ? 'draft' : row.ai_dna.status,
+          appearance,
+        }
+        row.render_recipe = {
+          ...row.render_recipe,
+          status: row.render_recipe.status === 'empty' ? 'configured' : row.render_recipe.status,
+        }
+      })
     })
   }
 
@@ -181,50 +280,55 @@ export async function POST(req: NextRequest) {
 
   logStage('🟤', 'STAGE 1.5: DNA STATE HASH + DIRTY LAYER + CACHE LOOKUP')
   const dirty = detectDirtyLayers(lastDnaState, dnaState)
-  console.log(`DNA State hash: ${dnaHash}`)
-  console.log(`Dirty layers:     [${dirty.dirtyLayers.join(', ') || 'none'}]`)
-  console.log(`Unchanged layers: [${dirty.unchangedLayers.join(', ') || 'none'}]`)
+  debugLog(`DNA State hash: ${dnaHash}`)
+  debugLog(`Dirty layers:     [${dirty.dirtyLayers.join(', ') || 'none'}]`)
+  debugLog(`Unchanged layers: [${dirty.unchangedLayers.join(', ') || 'none'}]`)
   lastDnaState = dnaState
 
   const cached = getCachedRender<Record<string, unknown>>(dnaHash)
   if (cached) {
-    console.log(`✅ Cache HIT (cached at ${cached.cachedAt}) — returning previously rendered result, no re-render.`)
-    return NextResponse.json(cached.response)
+    debugLog(`✅ Cache HIT (cached at ${cached.cachedAt}) — returning previously rendered result, no re-render.`)
+    // Zero OpenAI requests for a cache hit — `provider: 'cache'` keeps this
+    // visibly distinct from a real spend in Render History.
+    outcome = { status: 'success', requestCount: 0, retryCount: 0, model: null, errorMessage: null, provider: 'cache' }
+    return NextResponse.json({ ...cached.response, renderId })
   }
-  console.log('Cache MISS — proceeding with full render pipeline.')
+  debugLog('Cache MISS — proceeding with full render pipeline.')
 
   const componentsMissing: { componentId: string; componentType: string; reason: string }[] = []
   const resolved: { option: MasterDataOption; recipe: RenderRecipe }[] = []
 
-  componentSelections.forEach((selection) => {
-    const option = rowsById.get(selection.componentId)
-    if (!option) {
-      console.log(`  ├─ ${selection.componentType} (${selection.componentId}): ⚠️  not_found in Supabase`)
-      componentsMissing.push({ ...selection, reason: 'Item tidak ditemukan di design_master_options.' })
-      return
-    }
+  profiler.mark('dna_resolver', () => {
+    componentSelections.forEach((selection) => {
+      const option = rowsById.get(selection.componentId)
+      if (!option) {
+        debugLog(`  ├─ ${selection.componentType} (${selection.componentId}): ⚠️  not_found in Supabase`)
+        componentsMissing.push({ ...selection, reason: 'Item tidak ditemukan di design_master_options.' })
+        return
+      }
 
-    console.log(`  ├─ ${selection.componentType} → "${option.name}" [category=${option.category}]`)
-    console.log(`  │    ai_dna.status=${option.ai_dna.status}  render_recipe.status=${option.render_recipe.status}`)
+      debugLog(`  ├─ ${selection.componentType} → "${option.name}" [category=${option.category}]`)
+      debugLog(`  │    ai_dna.status=${option.ai_dna.status}  render_recipe.status=${option.render_recipe.status}`)
 
-    const input: DNAResolverInput = {
-      itemId: option.id,
-      category: option.category,
-      aiDna: option.ai_dna,
-      renderRecipe: option.render_recipe,
-    }
-    const { recipe, ready, errors } = resolveDNA(input)
-    if (!ready || !recipe) {
-      console.log(`  │    ⚠️  not ready: ${errors.join(' ')}`)
-      componentsMissing.push({ ...selection, reason: `"${option.name}" — ${errors.join(' ')}` })
-      return
-    }
+      const input: DNAResolverInput = {
+        itemId: option.id,
+        category: option.category,
+        aiDna: option.ai_dna,
+        renderRecipe: option.render_recipe,
+      }
+      const { recipe, ready, errors } = resolveDNA(input)
+      if (!ready || !recipe) {
+        debugLog(`  │    ⚠️  not ready: ${errors.join(' ')}`)
+        componentsMissing.push({ ...selection, reason: `"${option.name}" — ${errors.join(' ')}` })
+        return
+      }
 
-    console.log(`  │    ✅ resolved — garment keys: [${Object.keys(recipe.garment).join(', ') || 'none'}]`)
-    resolved.push({ option, recipe })
+      debugLog(`  │    ✅ resolved — garment keys: [${Object.keys(recipe.garment).join(', ') || 'none'}]`)
+      resolved.push({ option, recipe })
+    })
   })
 
-  console.log(`\n✅ Resolved ${resolved.length}/${componentSelections.length} component(s); ${componentsMissing.length} missing`)
+  debugLog(`\n✅ Resolved ${resolved.length}/${componentSelections.length} component(s); ${componentsMissing.length} missing`)
 
   // ---------------------------------------------------------------------
   // AI Capability Engine (Sprint AI-R3, extended Sprint PR-01 P3/P8) — the
@@ -249,22 +353,45 @@ export async function POST(req: NextRequest) {
       return { itemId: option.id, category: option.category, valid: validation.valid }
     })
 
-  // AI Asset Library — kerah (Collar) reuses the same "found regardless of
-  // resolve success" raw lookup as Model Thobe above, since a Collar
-  // Reference is optional (validateCollarReference never blocks a render).
+  // AI Asset Library — kerah (Collar), plaket (Placket), and saku (Pocket)
+  // all reuse the same "found regardless of resolve success" raw lookup as
+  // Model Thobe above, since each of these references is optional
+  // (validateCollarReference/validatePlaketReference/validatePocketReference
+  // never block a render — Sprint AI Stability Phase 2 extended Plaket/
+  // Pocket onto the exact mechanism Collar already used).
   const collarSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'kerah')
   const collarOptionRaw = collarSelection ? (rowsById.get(collarSelection.componentId) ?? null) : null
 
-  const composedAssets = composeAiAssets({ customerPhotoUrl, modelThobeOption: modelThobeOptionRaw, collarOption: collarOptionRaw })
+  const plaketSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'plaket')
+  const plaketOptionRaw = plaketSelection ? (rowsById.get(plaketSelection.componentId) ?? null) : null
 
-  // Reference Image diagnostics (Sprint PR-01, P6) — validateModelReference
-  // Available/validateCollarReference already existed but were never
+  const pocketSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'saku')
+  const pocketOptionRaw = pocketSelection ? (rowsById.get(pocketSelection.componentId) ?? null) : null
+
+  const composedAssets = profiler.mark('asset_composer', () =>
+    composeAiAssets({
+      customerPhotoUrl,
+      modelThobeOption: modelThobeOptionRaw,
+      collarOption: collarOptionRaw,
+      plaketOption: plaketOptionRaw,
+      pocketOption: pocketOptionRaw,
+    }),
+  )
+
+  // Reference Image diagnostics (Sprint PR-01, P6; extended Sprint AI
+  // Stability Phase 2) — validateModelReferenceAvailable/
+  // validateCollarReference/validatePlaketReference/validatePocketReference
+  // already existed (or now mirror what already existed) but were never
   // called anywhere in production; wiring them in is what turns "reference
   // image silently omitted" into a reported reason.
   const modelReferenceStatus = validateModelReferenceAvailable({ modelThobeOption: modelThobeOptionRaw, composed: composedAssets })
   const collarReferenceStatus = validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
-  console.log(`Model Reference: ${modelReferenceStatus.valid ? '✅' : '—'} ${modelReferenceStatus.reason}`)
-  console.log(`Collar Reference: ${collarReferenceStatus.valid ? '✅' : '—'} ${collarReferenceStatus.reason}`)
+  const plaketReferenceStatus = validatePlaketReference({ plaketOption: plaketOptionRaw, composed: composedAssets })
+  const pocketReferenceStatus = validatePocketReference({ pocketOption: pocketOptionRaw, composed: composedAssets })
+  debugLog(`Model Reference: ${modelReferenceStatus.valid ? '✅' : '—'} ${modelReferenceStatus.reason}`)
+  debugLog(`Collar Reference: ${collarReferenceStatus.valid ? '✅' : '—'} ${collarReferenceStatus.reason}`)
+  debugLog(`Plaket Reference: ${plaketReferenceStatus.valid ? '✅' : '—'} ${plaketReferenceStatus.reason}`)
+  debugLog(`Pocket Reference: ${pocketReferenceStatus.valid ? '✅' : '—'} ${pocketReferenceStatus.reason}`)
 
   const unresolvedComponents: UnresolvedComponent[] = componentsMissing.map((m) => ({
     itemId: m.componentId,
@@ -272,18 +399,20 @@ export async function POST(req: NextRequest) {
     reason: m.reason,
   }))
 
-  const capability = evaluateCapability({
-    customerPhotoPresent: !!customerPhotoUrl,
-    modelThobeSelected: !!modelThobeOptionRaw,
-    modelThobeDnaValid: modelThobeDnaValidation?.valid ?? false,
-    modelReferenceAvailable: !!composedAssets.modelReference,
-    otherComponentDnaResults,
-    unresolvedComponents,
-  })
+  const capability = profiler.mark('capability_engine', () =>
+    evaluateCapability({
+      customerPhotoPresent: !!customerPhotoUrl,
+      modelThobeSelected: !!modelThobeOptionRaw,
+      modelThobeDnaValid: modelThobeDnaValidation?.valid ?? false,
+      modelReferenceAvailable: !!composedAssets.modelReference,
+      otherComponentDnaResults,
+      unresolvedComponents,
+    }),
+  )
 
   logStage('🟠', 'STAGE 2.5: AI CAPABILITY ENGINE')
-  console.log(`Mode: ${capability.mode} | Score: ${capability.capabilityScore}% | Quality: ${capability.qualityLevel}/5`)
-  console.log(`Warnings: [${capability.warnings.join(' | ') || 'none'}]`)
+  debugLog(`Mode: ${capability.mode} | Score: ${capability.capabilityScore}% | Quality: ${capability.qualityLevel}/5`)
+  debugLog(`Warnings: [${capability.warnings.join(' | ') || 'none'}]`)
 
   // Fail Fast (P3/P8): a selected component that never resolved, an invalid
   // Model Thobe DNA, a missing Model Thobe, or a missing Customer Photo are
@@ -291,12 +420,36 @@ export async function POST(req: NextRequest) {
   // unlike before Sprint PR-01, "a selected component never resolved" is
   // one of them. No more rendering ahead with a silently-dropped component.
   if (capability.mode === 'BLOCKED') {
-    console.log(`  ❌ BLOCKED — ${capability.blockedReason}`)
+    debugLog(`  ❌ BLOCKED — ${capability.blockedReason}`)
+    outcome = {
+      status: 'cancelled',
+      requestCount: 0,
+      retryCount: 0,
+      model: null,
+      errorMessage: capability.blockedReason ?? 'BLOCKED by AI Capability Engine.',
+    }
     return NextResponse.json(
-      { success: false, error: capability.blockedReason, componentsMissing, capability },
+      { success: false, error: capability.blockedReason, componentsMissing, capability, renderId },
       { status: 422 },
     )
   }
+
+  // Reference Image Prefetch (Sprint O.1, Task 4/6) — `composedAssets.urls`
+  // is already fully known at this point (composeAiAssets ran above); the
+  // download from Supabase Storage doesn't need anything Recipe
+  // Composer/Prompt Builder/Compression produce, so it's kicked off here
+  // and only awaited right before the OpenAI call, overlapping the
+  // download with those CPU-bound stages instead of paying for both in
+  // sequence (previously: image.ts only started this fetch AFTER prompt
+  // compression fully finished).
+  const referenceImagesPromise = profiler.markAsync('reference_image_fetch', () => prefetchReferenceImages(composedAssets.urls))
+  // Suppress Node's "unhandled promise rejection" warning for the case where
+  // an earlier stage below returns/throws before this is ever awaited (e.g.
+  // Prompt Compression rejects the render) — the real rejection is still
+  // delivered normally to whichever `await referenceImagesPromise` actually
+  // runs further down; this extra handler only exists to not crash/warn on
+  // the ones that don't.
+  referenceImagesPromise.catch(() => {})
 
   // Priority mirrors the caller's own selection order (model_thobe first,
   // per RenderRecipeEntry's own "Model before Collar before Pocket"
@@ -309,27 +462,34 @@ export async function POST(req: NextRequest) {
   }))
 
   logStage('🟣', 'STAGE 3: RECIPE COMPOSER — merging component recipes')
-  console.log(`Entries (priority order): ${entries.map((e) => `${e.category}#${e.priority}`).join(', ')}`)
-  const masterRecipe = composeRenderRecipe({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY })
+  debugLog(`Entries (priority order): ${entries.map((e) => `${e.category}#${e.priority}`).join(', ')}`)
+  const masterRecipe = profiler.mark('recipe_composer', () => composeRenderRecipe({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY }))
   if (masterRecipe) {
     ;(
       ['camera', 'pose', 'lighting', 'composition', 'focus', 'fabricBehavior', 'visibilityRules', 'garment', 'fabricIdentity', 'stitching', 'embroidery', 'background', 'quality', 'style'] as const
     ).forEach((key) => {
       const keys = Object.keys(masterRecipe[key] ?? {})
-      console.log(`  ├─ ${key}: ${keys.length ? `{${keys.join(', ')}}` : '✗ empty'}`)
+      debugLog(`  ├─ ${key}: ${keys.length ? `{${keys.join(', ')}}` : '✗ empty'}`)
     })
-    console.log(`  └─ negativeRules: [${masterRecipe.negativeRules.join(', ')}]`)
+    debugLog(`  └─ negativeRules: [${masterRecipe.negativeRules.join(', ')}]`)
   } else {
-    console.log('  ⚠️  composeRenderRecipe returned null')
+    debugLog('  ⚠️  composeRenderRecipe returned null')
   }
 
   logStage('🟢', 'STAGE 4: PROMPT BUILDER — RenderInstruction')
-  const instruction = buildRenderInstruction(masterRecipe)
+  const instruction = profiler.mark('prompt_builder', () => buildRenderInstruction(masterRecipe))
   const instructionValidation = validateRenderInstruction(instruction)
-  console.log(JSON.stringify(instruction, null, 2))
-  console.log(`Validation: ${instructionValidation.valid ? '✅ valid' : `⚠️  ${instructionValidation.errors.join(' | ')}`}`)
+  debugLog(JSON.stringify(instruction, null, 2))
+  debugLog(`Validation: ${instructionValidation.valid ? '✅ valid' : `⚠️  ${instructionValidation.errors.join(' | ')}`}`)
   if (!instruction) {
-    return NextResponse.json({ success: false, error: 'Render Instruction could not be compiled.' }, { status: 422 })
+    outcome = {
+      status: 'failed',
+      requestCount: 0,
+      retryCount: 0,
+      model: null,
+      errorMessage: 'Render Instruction could not be compiled.',
+    }
+    return NextResponse.json({ success: false, error: 'Render Instruction could not be compiled.', renderId }, { status: 422 })
   }
 
   // AI Asset Composer already ran (STAGE 2.5, alongside the Capability
@@ -341,9 +501,16 @@ export async function POST(req: NextRequest) {
   const referenceImageUrls = composedAssets.urls
 
   logStage('🔵', 'STAGE 5: PROMPT SERIALIZER (uncompressed, diagnostic only)')
-  const uncompressed = serializeOpenAI({ instruction })
-  console.log(`Uncompressed prompt (${uncompressed?.length ?? 0} chars):`)
-  console.log(uncompressed)
+  // Sprint O.1 (Task 3, Audit Duplicate Work) — this uncompressed
+  // serialization exists purely for diagnostics (its own comment says so);
+  // it's never sent to OpenAI (`finalPrompt` below, from the COMPRESSED
+  // layers, is) and no client reads `promptUncompressed` from the response
+  // (verified — see SPRINT_O1 report). Only computed when a debug build/env
+  // actually wants it, instead of unconditionally on every production
+  // render.
+  const uncompressed = profiler.mark('prompt_serialize_uncompressed', () => (RENDER_DEBUG_LOG ? serializeOpenAI({ instruction }) : null))
+  debugLog(`Uncompressed prompt (${uncompressed?.length ?? 0} chars):`)
+  debugLog(uncompressed)
 
   // Layer-Based Prompt Compression (Sprint PR-04) — replaces the old fixed
   // Anchor/Material/Other/Negatives buckets, which truncated by raw word
@@ -352,20 +519,23 @@ export async function POST(req: NextRequest) {
   // category's own resolved content — Material Color can never again be
   // silently cut just because it happened to serialize after Model
   // Thobe's now-richer content inside one shared bucket.
-  const promptLayers = buildPromptLayers({ entries, masterRecipe, identityTemplate: LAYER1_IDENTITY_TEMPLATE })
-  const layerCompression = compressPromptByLayers(promptLayers)
+  const layerCompression = profiler.mark('prompt_compression', () => {
+    const promptLayers = buildPromptLayers({ entries, masterRecipe, identityTemplate: LAYER1_IDENTITY_TEMPLATE })
+    return compressPromptByLayers(promptLayers)
+  })
 
   logStage('🔵', 'STAGE 5b: LAYER-BASED COMPRESSION (~270 token budget)')
-  console.table(layerCompression.layerReport)
+  debugTable(layerCompression.layerReport)
 
   // Phase 4 (Sprint PR-04) — Priority 0 (Identity/Model Thobe/Look
   // Cutting/Material/Material Color) is NEVER truncated or dropped to make
   // room. If it alone exceeds the token budget, the render is refused
   // outright rather than silently deleting one of those layers.
   if (!layerCompression.ok) {
-    console.log(`  ❌ ${layerCompression.error}`)
+    debugLog(`  ❌ ${layerCompression.error}`)
+    outcome = { status: 'failed', requestCount: 0, retryCount: 0, model: null, errorMessage: layerCompression.error ?? 'Compression failed.' }
     return NextResponse.json(
-      { success: false, error: layerCompression.error, componentsMissing, layerReport: layerCompression.layerReport },
+      { success: false, error: layerCompression.error, componentsMissing, layerReport: layerCompression.layerReport, renderId },
       { status: 422 },
     )
   }
@@ -381,63 +551,138 @@ export async function POST(req: NextRequest) {
   const priorityZeroCheck = validatePriorityZeroIntact(layerCompression.layerReport, requiredPriorityZeroIds)
   if (!priorityZeroCheck.valid) {
     const message = `Prompt akhir kehilangan layer wajib sebelum dikirim ke OpenAI: ${priorityZeroCheck.missing.join(', ')}.`
-    console.log(`  ❌ ${message}`)
+    debugLog(`  ❌ ${message}`)
+    outcome = { status: 'failed', requestCount: 0, retryCount: 0, model: null, errorMessage: message }
     return NextResponse.json(
-      { success: false, error: message, componentsMissing, layerReport: layerCompression.layerReport },
+      { success: false, error: message, componentsMissing, layerReport: layerCompression.layerReport, renderId },
       { status: 422 },
     )
   }
 
-  console.log(`\nCompressed prompt (~${layerCompression.totalTokens} tokens):`)
-  console.log(layerCompression.compressed)
+  debugLog(`\nCompressed prompt (~${layerCompression.totalTokens} tokens):`)
+  debugLog(layerCompression.compressed)
 
-  console.log(`\nReference images sent to OpenAI: ${referenceImageUrls.length ? referenceImageUrls.join(', ') : 'none'}`)
+  debugLog(`\nReference images sent to OpenAI: ${referenceImageUrls.length ? referenceImageUrls.join(', ') : 'none'}`)
 
   // Reference DNA Architecture V1 + AI Asset Library — the SILHOUETTE-only
   // (Model Reference) and/or COLLAR_SHAPE-only (Collar Reference) caveats
   // are appended only for whichever reference images are actually
   // included, so GPT Image never mistakes a reference photo's own
   // collar/cuff/fabric/color for what to render.
-  const finalPrompt = applyAssetInstructions(layerCompression.compressed, composedAssets)
+  const finalPrompt = profiler.mark('asset_instructions', () => applyAssetInstructions(layerCompression.compressed, composedAssets))
 
-  const result = await generateImage({ instruction, referenceImageUrls, promptOverride: finalPrompt })
+  // Reference images were kicked off (STAGE 2.5) concurrently with Recipe
+  // Composer/Prompt Builder/Compression above — awaited here, right before
+  // they're actually needed, so generateImage() never re-downloads them.
+  const referenceImageFiles = await referenceImagesPromise
+
+  // Request Counter / Controlled Retry (Sprint O, Task 2/4) — replaces the
+  // bare generateImage() call. maxApplicationRetries defaults to 0 (see
+  // renderSession/service.ts), so this is currently identical in behavior
+  // to a single generateImage() call — the difference is that every
+  // attempt is now counted and the count is persisted, instead of the
+  // OpenAI SDK's own default retries (now disabled, src/lib/ai/client.ts)
+  // silently happening with zero record of it ever occurring.
+  const { result, requestCount, retryCount, attempts, usage } = await generateImageWithControlledRetry({
+    input: { instruction, referenceImageUrls, referenceImageFiles, promptOverride: finalPrompt },
+  })
+
+  // Sprint O.1 (Task 1/5) — one 'openai_request' stage per real network
+  // attempt (controlled retries included), so Render Profiler's
+  // providerDurationMs reflects every OpenAI call this request actually
+  // made, not just the last one.
+  attempts.forEach((attempt, index) => {
+    profiler.record(`openai_request_attempt_${index + 1}`, attempt.requestSentAt, attempt.responseReceivedAt)
+  })
 
   logStage('✅', 'STAGE 6: IMAGE SERVICE RESULT')
-  console.log(result.ok ? `success — ${result.images.length} image(s) returned` : `❌ error: ${result.error}`)
+  debugLog(
+    result.ok
+      ? `success — ${result.images.length} image(s) returned (requests: ${requestCount}, retries: ${retryCount})`
+      : `❌ error: ${result.error} (requests: ${requestCount}, retries: ${retryCount})`,
+  )
 
   if (!result.ok) {
-    return NextResponse.json({ success: false, error: result.error }, { status: 502 })
+    outcome = { status: 'failed', requestCount, retryCount, model: DEFAULT_MODEL, errorMessage: result.error }
+    return NextResponse.json({ success: false, error: result.error, renderId }, { status: 502 })
   }
 
-  const responseBody = {
-    success: true,
-    renderedImageUrl: result.images[0]?.url ?? null,
-    promptUsed: finalPrompt,
-    promptLayerReport: layerCompression.layerReport,
-    promptTotalTokens: layerCompression.totalTokens,
-    promptUncompressed: uncompressed,
-    componentsUsed: resolved.map(({ option }) => ({ id: option.id, name: option.name, category: option.category })),
-    componentsMissing,
-    capability,
-    referenceImageStatus: {
-      modelReference: modelReferenceStatus,
-      collarReference: collarReferenceStatus,
-    },
-    debug: {
-      masterRecipe,
-      instruction,
-      instructionValidation,
-      referenceImageUrls,
-      aiAssetComposer: composedAssets,
-      dnaState: { hash: dnaHash },
-      dirtyLayers: dirty,
-    },
-  }
+  const responseBody = profiler.mark('save_result', () => {
+    const body = {
+      success: true,
+      renderId,
+      renderedImageUrl: result.images[0]?.url ?? null,
+      promptUsed: finalPrompt,
+      promptLayerReport: layerCompression.layerReport,
+      promptTotalTokens: layerCompression.totalTokens,
+      componentsUsed: resolved.map(({ option }) => ({ id: option.id, name: option.name, category: option.category })),
+      componentsMissing,
+      capability,
+      referenceImageStatus: {
+        modelReference: modelReferenceStatus,
+        collarReference: collarReferenceStatus,
+        plaketReference: plaketReferenceStatus,
+        pocketReference: pocketReferenceStatus,
+      },
+      // Sprint O.1 (Task 3) — `promptUncompressed`/`debug` were computed and
+      // sent on every production response with zero confirmed consumers
+      // (verified — see SPRINT_O1 report); the 2026-07-28 comment on
+      // `debug`'s original addition already called it temporary ("Remove
+      // once the loss is root-caused"). Kept available on demand
+      // (RENDER_DEBUG_LOG) for exactly the investigation it was built for,
+      // instead of shipping on every render regardless of need.
+      ...(RENDER_DEBUG_LOG
+        ? {
+            promptUncompressed: uncompressed,
+            debug: {
+              masterRecipe,
+              instruction,
+              instructionValidation,
+              referenceImageUrls,
+              aiAssetComposer: composedAssets,
+              dnaState: { hash: dnaHash },
+              dirtyLayers: dirty,
+            },
+          }
+        : {}),
+    }
 
-  // Render Cache (Task 6) — only a successful render is ever cached, so a
-  // 422/502 (e.g. incomplete master data) never sticks around and blocks a
-  // later request once the underlying data is fixed.
-  setCachedRender(dnaHash, responseBody)
+    // Render Cache (Task 6) — only a successful render is ever cached, so a
+    // 422/502 (e.g. incomplete master data) never sticks around and blocks a
+    // later request once the underlying data is fixed.
+    setCachedRender(dnaHash, body)
+    return body
+  })
 
+  outcome = { status: 'success', requestCount, retryCount, model: DEFAULT_MODEL, errorMessage: null, providerUsage: usage ?? null }
   return NextResponse.json(responseBody)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unhandled exception in render pipeline.'
+    console.error('[render/route] unhandled exception:', message)
+    outcome = { status: 'failed', requestCount: 0, retryCount: 0, model: null, errorMessage: message }
+    return NextResponse.json({ success: false, error: message, renderId }, { status: 500 })
+  } finally {
+    // Render Profiler (Sprint O.1, Task 1/2/8) — computed once, here, so
+    // EVERY exit path (success, 4xx validation, 5xx error) gets its
+    // breakdown persisted, not just a successful render.
+    const profileReport = profiler.report()
+    if (RENDER_DEBUG_LOG) console.table(formatProfileReport(profileReport))
+
+    await finishRenderSession({
+      supabase,
+      historyRowId,
+      renderId,
+      startedAt,
+      status: outcome.status,
+      requestCount: outcome.requestCount,
+      retryCount: outcome.retryCount,
+      model: outcome.model,
+      provider: outcome.provider,
+      errorMessage: outcome.errorMessage,
+      preprocessingDurationMs: profileReport.preprocessingDurationMs,
+      providerDurationMs: profileReport.providerDurationMs,
+      postprocessingDurationMs: profileReport.postprocessingDurationMs,
+      providerUsage: outcome.providerUsage,
+    })
+  }
 }

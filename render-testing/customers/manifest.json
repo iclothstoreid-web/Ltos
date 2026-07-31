@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "description": "Golden Dataset — Customer roster (Sprint AI-R2.5, Part 6). Minimal set per brief: 01 Slim, 02 Athletic, 03 Large, 04 Short, 05 Beard.",
+  "schema": {
+    "id": "stable slug, used in result/report filenames",
+    "label": "human-readable name",
+    "photoUrl": "public URL to a REAL full-body customer photo (Supabase Storage or any public HTTPS URL) — MUST be filled in before render:test can use this entry for a real (non-dry-run) render",
+    "note": "free text — leave BELUM DIISI markers until photoUrl is filled in"
+  },
+  "customers": [
+    { "id": "01-slim", "label": "01 Slim", "photoUrl": null, "note": "BELUM DIISI — perlu foto customer full-body nyata (lihat render-testing/README.md)." },
+    { "id": "02-athletic", "label": "02 Athletic", "photoUrl": null, "note": "BELUM DIISI — perlu foto customer full-body nyata." },
+    { "id": "03-large", "label": "03 Large", "photoUrl": null, "note": "BELUM DIISI — perlu foto customer full-body nyata." },
+    { "id": "04-short", "label": "04 Short", "photoUrl": null, "note": "BELUM DIISI — perlu foto customer full-body nyata." },
+    { "id": "05-beard", "label": "05 Beard", "photoUrl": null, "note": "BELUM DIISI — perlu foto customer full-body nyata." }
+  ]
+}

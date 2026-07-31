@@ -83,9 +83,17 @@ function mapContextToPayload(context: RenderContext): RenderPayload {
  * 3. Handle response or error
  * 4. Return RenderResult for UI consumption
  */
-export async function renderDesign(context: RenderContext): Promise<RenderResult> {
+export async function renderDesign(
+  context: RenderContext,
+  // Sprint O (Render Session) — consultationId lets the API scope its
+  // Render Request Lock / Render History to this consultation. Optional
+  // param (not part of RenderContext itself) so the design/business object
+  // this function has always taken stays exactly as it was.
+  meta?: { consultationId?: string },
+): Promise<RenderResult> {
   try {
     const payload = mapContextToPayload(context)
+    if (meta?.consultationId) payload.consultationId = meta.consultationId
 
     const response = await fetch('/api/design/render', {
       method: 'POST',
@@ -96,9 +104,14 @@ export async function renderDesign(context: RenderContext): Promise<RenderResult
     const data: RenderServiceResponse = await response.json()
 
     if (!response.ok || !data.success) {
+      // 409 = Render Request Lock rejection (Task 1) — a render for this
+      // consultation is already in flight; surfaced as a normal error so
+      // AIPreviewPanel's existing error banner shows it, no new UI state.
+      const lockedNote = response.status === 409 && data.activeRenderId ? ` (render aktif: ${data.activeRenderId})` : ''
       return {
         status: 'error',
-        error: data.error || 'Render failed',
+        error: (data.error || 'Render failed') + lockedNote,
+        renderId: data.renderId,
       }
     }
 
@@ -110,6 +123,7 @@ export async function renderDesign(context: RenderContext): Promise<RenderResult
       tokenUsage: {
         total: data.promptTotalTokens,
       },
+      renderId: data.renderId,
     }
   } catch (error) {
     return {

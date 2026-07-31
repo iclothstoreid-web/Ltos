@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "description": "Golden Dataset — DNA scenario roster (Sprint AI-R2.5, Part 6). Minimal set per brief: Saudi Modern Slim, Saudi Modern Regular, Saudi Modern Black, Saudi Modern Maroon, Saudi Modern White.",
+  "schema": {
+    "id": "stable slug, used in result/report filenames",
+    "label": "human-readable name",
+    "componentSelections": "array of { componentType, componentId } — componentId MUST be a real design_master_options.id (see render-testing/README.md for how to look one up); componentType is a free label only used for report readability, the DB row's own category is what the pipeline actually trusts",
+    "note": "free text — leave BELUM DIISI markers until every componentId is filled in"
+  },
+  "scenarios": [
+    {
+      "id": "saudi-modern-slim",
+      "label": "Saudi Modern Slim",
+      "componentSelections": [
+        { "componentType": "model_thobe", "componentId": null },
+        { "componentType": "look_cutting", "componentId": null }
+      ],
+      "note": "BELUM DIISI — perlu componentId nyata dari design_master_options (kategori model_thobe = varian Saudi Modern potongan slim)."
+    },
+    {
+      "id": "saudi-modern-regular",
+      "label": "Saudi Modern Regular",
+      "componentSelections": [
+        { "componentType": "model_thobe", "componentId": null },
+        { "componentType": "look_cutting", "componentId": null }
+      ],
+      "note": "BELUM DIISI — perlu componentId nyata (varian Saudi Modern potongan regular)."
+    },
+    {
+      "id": "saudi-modern-black",
+      "label": "Saudi Modern Black",
+      "componentSelections": [
+        { "componentType": "model_thobe", "componentId": null },
+        { "componentType": "warna_bahan", "componentId": null }
+      ],
+      "note": "BELUM DIISI — perlu componentId nyata (model_thobe Saudi Modern + warna_bahan hitam)."
+    },
+    {
+      "id": "saudi-modern-maroon",
+      "label": "Saudi Modern Maroon",
+      "componentSelections": [
+        { "componentType": "model_thobe", "componentId": null },
+        { "componentType": "warna_bahan", "componentId": null }
+      ],
+      "note": "BELUM DIISI — perlu componentId nyata (model_thobe Saudi Modern + warna_bahan maroon)."
+    },
+    {
+      "id": "saudi-modern-white",
+      "label": "Saudi Modern White",
+      "componentSelections": [
+        { "componentType": "model_thobe", "componentId": null },
+        { "componentType": "warna_bahan", "componentId": null }
+      ],
+      "note": "BELUM DIISI — perlu componentId nyata (model_thobe Saudi Modern + warna_bahan putih)."
+    }
+  ]
+}

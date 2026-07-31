@@ -144,25 +144,30 @@ export async function archiveDnaColor(supabase: SupabaseClient, id: string): Pro
 }
 
 export async function syncDnaColorMirror(supabase: SupabaseClient, color: DnaColor): Promise<void> {
+  // `metadata` selected here (not just `id`) so the update below can merge
+  // onto it rather than replace it — a bare `{ metadata: { hex, color_family } }`
+  // would silently wipe any other key the mirror row's metadata ever picks
+  // up (e.g. hand-added Tabel Spesifikasi rows), even though this sync only
+  // ever intends to touch hex/color_family.
   const { data: existing, error: findError } = await supabase
     .from('design_master_options')
-    .select('id')
+    .select('id, metadata')
     .eq('category', 'warna_bahan')
     .eq('dna_color_id', color.id)
     .maybeSingle()
 
   if (findError) throw findError
 
-  const metadata: Record<string, string> = {}
-  if (color.hex) metadata.hex = color.hex
-  if (color.family) metadata.color_family = color.family
+  const metadataUpdates: Record<string, string> = {}
+  if (color.hex) metadataUpdates.hex = color.hex
+  if (color.family) metadataUpdates.color_family = color.family
 
   if (existing) {
     const { error } = await supabase
       .from('design_master_options')
       .update({
         name: color.name,
-        metadata,
+        metadata: { ...(existing.metadata ?? {}), ...metadataUpdates },
         is_active: color.status === 'active',
         updated_at: new Date().toISOString(),
       })
@@ -183,7 +188,7 @@ export async function syncDnaColorMirror(supabase: SupabaseClient, color: DnaCol
   const { error } = await supabase.from('design_master_options').insert({
     category: 'warna_bahan',
     name: color.name,
-    metadata,
+    metadata: metadataUpdates,
     dna_color_id: color.id,
     is_active: color.status === 'active',
     sort_order: (last?.sort_order ?? 0) + 1,

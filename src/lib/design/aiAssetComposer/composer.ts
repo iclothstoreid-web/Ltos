@@ -6,14 +6,15 @@ import { REFERENCE_PRIORITY, type ReferenceImageDescriptor } from './types'
 // AI Assets accompany a render request. Sits alongside Recipe Composer in
 // the pipeline, but composes IMAGES, not text:
 //
-//   Customer Photo -----------------------------------\
-//   Model Thobe  (approved AI Design DNA + Hero Image) --- AI Asset Composer -> images.edit
-//   Collar/Kerah (approved AI Design DNA + Hero Image) --/  (only when
-//   Cuff/Pocket/Placket/... ---------------------------      APPROVED)
-//                                                         (never contribute
-//                                                          an image; text-
-//                                                          only, via Recipe
-//                                                          Composer)
+//   Customer Photo -------------------------------------\
+//   Model Thobe   (approved AI Design DNA + Hero Image) --\
+//   Collar/Kerah  (approved AI Design DNA + Hero Image) ---- AI Asset Composer -> images.edit
+//   Plaket        (approved AI Design DNA + Hero Image) --/  (only when
+//   Saku/Pocket   (approved AI Design DNA + Hero Image) -/    APPROVED)
+//   Cuff/Bahan/Warna/... ---------------------------------  (never contribute
+//                                                            an image; text-
+//                                                            only, via Recipe
+//                                                            Composer)
 //
 // THE KEY RULE THIS SPRINT ADDS: an AI Asset is ACTIVE if and only if that
 // item's `ai_dna.status === 'approved'` (AND it is `is_active` in the
@@ -39,6 +40,14 @@ import { REFERENCE_PRIORITY, type ReferenceImageDescriptor } from './types'
 // shape (`collarOption` is one value, never an array), not something
 // validated after the fact.
 //
+// PLAKET_REFERENCE and POCKET_REFERENCE (Sprint AI Stability Phase 2) reuse
+// the identical mechanism again — `plaketOption`/`pocketOption` are single
+// values for the same structural reason `collarOption` is. Phase 1's audit
+// found both categories already had real, `approved` Hero Images sitting
+// unused in the database (Plaket) or approved DNA with no reference
+// implementation at all (Pocket) — this closes that gap; it does not add
+// any new DB column, table, or upload flow.
+//
 // Background and Mannequin have no reference category anywhere in this
 // codebase (confirmed: MASTER_DATA_CATEGORIES has no such entry) — their
 // counts are hardcoded 0 to make that invariant an assertable fact rather
@@ -58,6 +67,16 @@ export const MODEL_REFERENCE_SILHOUETTE_INSTRUCTION =
 export const COLLAR_REFERENCE_SHAPE_INSTRUCTION =
   'The attached collar reference image is provided ONLY to describe the collar shape and geometry. Transfer only: collar outline, collar curvature, collar opening, collar proportion, collar height. Do NOT copy: fabric texture, fabric color, stitching, lighting, wrinkles, shadows, background, photography style. The collar must still follow the selected AI Design DNA. This reference is only a geometric guide for the collar shape.'
 
+// Same mechanism as COLLAR_REFERENCE_SHAPE_INSTRUCTION, for Placket —
+// PLAKET_SHAPE geometry only (Sprint AI Stability Phase 2).
+export const PLAKET_REFERENCE_SHAPE_INSTRUCTION =
+  'The attached placket reference image is provided ONLY to describe the placket shape and geometry. Transfer only: placket outline, placket opening length, placket width, button spacing, stitch-line geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style. The placket must still follow the selected AI Design DNA. This reference is only a geometric guide for the placket shape.'
+
+// Same mechanism as COLLAR_REFERENCE_SHAPE_INSTRUCTION, for Pocket —
+// POCKET_SHAPE geometry only (Sprint AI Stability Phase 2).
+export const POCKET_REFERENCE_SHAPE_INSTRUCTION =
+  'The attached pocket reference image is provided ONLY to describe the pocket shape and geometry. Transfer only: pocket outline, pocket placement, pocket proportion, pocket flap/opening geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style. The pocket must still follow the selected AI Design DNA. This reference is only a geometric guide for the pocket shape.'
+
 export interface ExcludedReferenceCategory {
   category: MasterDataCategory
   reason: string
@@ -67,9 +86,16 @@ export interface ComposedAiAssets {
   customerPhotoUrl: string
   modelReference: ReferenceImageDescriptor | null
   collarReference: ReferenceImageDescriptor | null
+  /** PLAKET_SHAPE — same 4-condition gate as collarReference (Sprint AI
+   *  Stability Phase 2). */
+  plaketReference: ReferenceImageDescriptor | null
+  /** POCKET_SHAPE — same 4-condition gate as collarReference (Sprint AI
+   *  Stability Phase 2). */
+  pocketReference: ReferenceImageDescriptor | null
   /** Ordered: customer photo first, then every present AI Asset by
-   *  descending priority (Model Reference 100, Collar Reference 90, ...) —
-   *  same order the pipeline has always sent images in. */
+   *  descending priority (Model Reference 100, Collar Reference 90, Plaket
+   *  Reference 80, Pocket Reference 70, ...) — same order the pipeline has
+   *  always sent images in. */
   urls: string[]
   excluded: ExcludedReferenceCategory[]
   // Asserted invariants — always 0, no reference category for either
@@ -81,8 +107,9 @@ export interface ComposedAiAssets {
 // Phase 6 extension point ("Reference Evolution"): a future FABRIC_REFERENCE/
 // EMBROIDERY_REFERENCE/PATTERN_REFERENCE would each be added as their own
 // optional field here (e.g. `fabricReferenceOption?: MasterDataOption |
-// null`), read the same way `collarOption` is below, and contribute their
-// own descriptor to ComposedAiAssets — additive, no restructuring required.
+// null`), read the same way `collarOption`/`plaketOption`/`pocketOption` are
+// below, and contribute their own descriptor to ComposedAiAssets —
+// additive, no restructuring required.
 export interface ComposeAiAssetsInput {
   customerPhotoUrl: string
   /** The resolved Model Thobe MasterDataOption for this render, or null if
@@ -94,6 +121,13 @@ export interface ComposeAiAssetsInput {
   /** The resolved Collar (kerah) MasterDataOption for this render, or null.
    *  Same 3-condition gate as `modelThobeOption` above. */
   collarOption?: MasterDataOption | null
+  /** The resolved Placket (plaket) MasterDataOption for this render, or
+   *  null. Same 4-condition gate as `collarOption` (Sprint AI Stability
+   *  Phase 2). */
+  plaketOption?: MasterDataOption | null
+  /** The resolved Pocket (saku) MasterDataOption for this render, or null.
+   *  Same 4-condition gate as `collarOption` (Sprint AI Stability Phase 2). */
+  pocketOption?: MasterDataOption | null
   /** Every OTHER category present in this render's selection, purely so
    *  `excluded` can report exactly which ones were deliberately skipped
    *  for this request, not the full static category list. */
@@ -107,8 +141,8 @@ const NON_REFERENCE_CATEGORIES: MasterDataCategory[] = MASTER_DATA_CATEGORIES.fi
 // (Sprint PR-01, P6: an approved DNA with no configured Render Recipe still
 // has nothing structured for Recipe Composer to merge, so sending its photo
 // as a reference without any accompanying recipe content would mislead
-// GPT Image rather than help it). Shared by Model and Collar below so the
-// rule can only ever be expressed once.
+// GPT Image rather than help it). Shared by Model, Collar, Plaket, and
+// Pocket below so the rule can only ever be expressed once.
 function isAiAssetActive(option: MasterDataOption | null): boolean {
   return (
     !!option &&
@@ -120,7 +154,7 @@ function isAiAssetActive(option: MasterDataOption | null): boolean {
 }
 
 export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
-  const { customerPhotoUrl, modelThobeOption, collarOption = null, otherSelectedCategories } = input
+  const { customerPhotoUrl, modelThobeOption, collarOption = null, plaketOption = null, pocketOption = null, otherSelectedCategories } = input
 
   const modelReference: ReferenceImageDescriptor | null = isAiAssetActive(modelThobeOption)
     ? { type: 'MODEL_THOBE', role: 'SILHOUETTE', priority: REFERENCE_PRIORITY.MODEL_THOBE ?? 100, itemId: modelThobeOption!.id, url: modelThobeOption!.ai_dna.metadata.sourceImage! }
@@ -130,17 +164,28 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
     ? { type: 'COLLAR_REFERENCE', role: 'COLLAR_SHAPE', priority: REFERENCE_PRIORITY.COLLAR_REFERENCE ?? 90, itemId: collarOption!.id, url: collarOption!.ai_dna.metadata.sourceImage! }
     : null
 
-  // kerah stays in `excluded` (still text-only, per Recipe Composer) unless
-  // a real COLLAR_REFERENCE was actually composed in for THIS render.
+  const plaketReference: ReferenceImageDescriptor | null = isAiAssetActive(plaketOption)
+    ? { type: 'PLAKET_REFERENCE', role: 'PLAKET_SHAPE', priority: REFERENCE_PRIORITY.PLAKET_REFERENCE ?? 80, itemId: plaketOption!.id, url: plaketOption!.ai_dna.metadata.sourceImage! }
+    : null
+
+  const pocketReference: ReferenceImageDescriptor | null = isAiAssetActive(pocketOption)
+    ? { type: 'POCKET_REFERENCE', role: 'POCKET_SHAPE', priority: REFERENCE_PRIORITY.POCKET_REFERENCE ?? 70, itemId: pocketOption!.id, url: pocketOption!.ai_dna.metadata.sourceImage! }
+    : null
+
+  // kerah/plaket/saku stay in `excluded` (still text-only, per Recipe
+  // Composer) unless their real reference was actually composed in for
+  // THIS render.
   const excludedCategorySet = new Set(otherSelectedCategories ?? NON_REFERENCE_CATEGORIES)
   if (collarReference) excludedCategorySet.delete('kerah')
+  if (plaketReference) excludedCategorySet.delete('plaket')
+  if (pocketReference) excludedCategorySet.delete('saku')
   const excluded: ExcludedReferenceCategory[] = Array.from(excludedCategorySet).map((category) => ({
     category,
     reason:
       'Component DNA (AI Design DNA / Render Recipe) is the source of truth for this category — it is described to GPT Image as text via Recipe Composer/Prompt Builder, never as an image reference.',
   }))
 
-  const assets = [modelReference, collarReference]
+  const assets = [modelReference, collarReference, plaketReference, pocketReference]
     .filter((ref): ref is ReferenceImageDescriptor => !!ref)
     .sort((a, b) => b.priority - a.priority)
   const urls = [customerPhotoUrl, ...assets.map((ref) => ref.url)]
@@ -149,6 +194,8 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
     customerPhotoUrl,
     modelReference,
     collarReference,
+    plaketReference,
+    pocketReference,
     urls,
     excluded,
     backgroundReferenceCount: 0,
@@ -158,13 +205,16 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
 
 // Appends every applicable AI Asset instruction to a base prompt —
 // SILHOUETTE-only caveat when a Model AI Asset is included, COLLAR_SHAPE-
-// only caveat when a Collar AI Asset is included. Either, both, or neither
-// may apply; a render with no AI Asset at all gets no caveat, since there
-// is nothing to caveat.
+// only caveat when a Collar AI Asset is included, PLAKET_SHAPE-only /
+// POCKET_SHAPE-only caveats likewise. Any combination, or none, may apply;
+// a render with no AI Asset at all gets no caveat, since there is nothing
+// to caveat.
 export function applyAssetInstructions(basePrompt: string, composed: ComposedAiAssets): string {
   let prompt = basePrompt
   if (composed.modelReference) prompt = `${prompt} ${MODEL_REFERENCE_SILHOUETTE_INSTRUCTION}`
   if (composed.collarReference) prompt = `${prompt} ${COLLAR_REFERENCE_SHAPE_INSTRUCTION}`
+  if (composed.plaketReference) prompt = `${prompt} ${PLAKET_REFERENCE_SHAPE_INSTRUCTION}`
+  if (composed.pocketReference) prompt = `${prompt} ${POCKET_REFERENCE_SHAPE_INSTRUCTION}`
   return prompt
 }
 
@@ -227,4 +277,15 @@ export function validateModelReferenceAvailable(params: { modelThobeOption: Mast
 // `collarOption` value.
 export function validateCollarReference(params: { collarOption: MasterDataOption | null; composed: ComposedAiAssets }): AiAssetValidation {
   return validateAiAssetAvailable({ option: params.collarOption, asset: params.composed.collarReference, label: 'Collar Reference' })
+}
+
+// Same non-blocking semantics as validateCollarReference — a FAIL here just
+// means plaketReference/pocketReference stay null and the render proceeds
+// on DNA (text) alone (Sprint AI Stability Phase 2).
+export function validatePlaketReference(params: { plaketOption: MasterDataOption | null; composed: ComposedAiAssets }): AiAssetValidation {
+  return validateAiAssetAvailable({ option: params.plaketOption, asset: params.composed.plaketReference, label: 'Plaket Reference' })
+}
+
+export function validatePocketReference(params: { pocketOption: MasterDataOption | null; composed: ComposedAiAssets }): AiAssetValidation {
+  return validateAiAssetAvailable({ option: params.pocketOption, asset: params.composed.pocketReference, label: 'Pocket Reference' })
 }

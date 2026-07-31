@@ -83,7 +83,13 @@ export function markDnaGenerated(dna: AiDesignDna, photoUrl: string | null): AiD
     ...dna,
     status: 'draft',
     version: dna.version + 1,
-    metadata: { ...dna.metadata, generatedAt: now, sourceImage: photoUrl },
+    // Spreading DEFAULT metadata first, then `dna.metadata`, guards a row
+    // whose `metadata` key is entirely missing (e.g. overwritten by a raw
+    // SQL data fix) — `{...undefined}` alone would silently drop
+    // approvedAt/approvedBy instead of throwing, which is how such a row
+    // could quietly end up with a metadata object the rest of the app
+    // (AiDesignDnaSection) never expected. Self-heals on next Generate.
+    metadata: { ...DEFAULT_AI_DESIGN_DNA.metadata, ...dna.metadata, generatedAt: now, sourceImage: photoUrl },
   }
 }
 
@@ -104,6 +110,7 @@ export function markDnaApproved(dna: AiDesignDna, approvedBy: string | null): Ai
     ...dna,
     status: 'approved',
     version: dna.version + 1,
-    metadata: { ...dna.metadata, approvedAt: now, approvedBy },
+    // See markDnaGenerated above for why DEFAULT metadata is spread first.
+    metadata: { ...DEFAULT_AI_DESIGN_DNA.metadata, ...dna.metadata, approvedAt: now, approvedBy },
   }
 }

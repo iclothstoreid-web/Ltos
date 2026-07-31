@@ -35,10 +35,10 @@ interface SpecRow {
   value: string
 }
 
-function metadataToRows(metadata: Record<string, string>, excludeKeys: readonly string[] = []): SpecRow[] {
-  return Object.entries(metadata)
+function metadataToRows(metadata: Record<string, string> | null | undefined, excludeKeys: readonly string[] = []): SpecRow[] {
+  return Object.entries(metadata ?? {})
     .filter(([key]) => !excludeKeys.includes(key))
-    .map(([key, value]) => ({ key, value }))
+    .map(([key, value]) => ({ key, value: value ?? '' }))
 }
 
 function rowsToMetadata(rows: SpecRow[]): Record<string, string> {
@@ -171,20 +171,26 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   }
 
   function startEdit(option: MasterDataOption) {
+    // Every editing* field is set unconditionally from `option` here (never
+    // merged with whatever the previous edit session left behind), so
+    // switching from editing one item straight to another can never carry
+    // stale state across — each `?? fallback` below exists only to survive
+    // a legacy row with an incomplete DB shape (see AiDesignDnaSection's
+    // note), not to preserve anything from before.
     setEditingId(option.id)
     setEditingCategory(option.category)
     setEditingName(option.name)
-    setEditingPhotoUrl(option.photo_url)
+    setEditingPhotoUrl(option.photo_url ?? null)
     const isMaterial = option.category === 'bahan'
     setEditingSpecRows(metadataToRows(option.metadata, isMaterial ? MATERIAL_RESERVED_METADATA_KEYS : []))
-    setEditingSupplier(isMaterial ? option.metadata[MATERIAL_SUPPLIER_KEY] ?? '' : '')
-    setEditingKarakteristik(isMaterial ? option.metadata[MATERIAL_KARAKTERISTIK_KEY] ?? '' : '')
+    setEditingSupplier(isMaterial ? (option.metadata?.[MATERIAL_SUPPLIER_KEY] ?? '') : '')
+    setEditingKarakteristik(isMaterial ? (option.metadata?.[MATERIAL_KARAKTERISTIK_KEY] ?? '') : '')
     setEditingMaterialId(isMaterial ? option.material_id : null)
-    setEditingSellingPoints(option.selling_points.length > 0 ? option.selling_points : [])
-    setEditingInternalNotes(option.internal_notes)
+    setEditingSellingPoints(option.selling_points?.length ? option.selling_points : [])
+    setEditingInternalNotes(option.internal_notes ?? '')
     setEditingPrice(String(option.price ?? 0))
-    setEditingOriginalPhotoUrl(option.photo_url)
-    setEditingAiDna(option.ai_dna)
+    setEditingOriginalPhotoUrl(option.photo_url ?? null)
+    setEditingAiDna(option.ai_dna ?? null)
     setEditingOriginal(option)
     setShowQuickDnaPlaceholder(false)
     setError(null)

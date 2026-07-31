@@ -1,8 +1,6 @@
 import OpenAI, { APIConnectionTimeoutError, APIError } from "openai";
 import type { RenderInstruction } from "@/lib/design/promptBuilder/types";
 import { serializeOpenAI } from "@/lib/design/promptBuilder/serializer";
-import type { CustomerDigitalProfile } from "@/lib/customerProfile/types";
-import type { MasterDataOption } from "@/lib/design/masterData";
 import { getOpenAIClient } from "../client";
 
 // Image Generation Service — the ONLY door from LTOS domain code into an AI
@@ -12,7 +10,7 @@ import { getOpenAIClient } from "../client";
 // then hands that off to the OpenAI provider client. No storage, no DB, no UI
 // this sprint — raw SDK output only.
 
-const DEFAULT_MODEL = "gpt-image-1";
+export const DEFAULT_MODEL = "gpt-image-1";
 // Final Production Render Test (2026-07-31) — measured real gpt-image-1
 // images.edit latency at input_fidelity "high" with a full 7-component DNA
 // prompt + 1 reference image: 68.4s. The previous 60_000ms default was
@@ -46,6 +44,14 @@ const MIME_TYPE_TO_EXTENSION: Record<string, string> = {
 };
 const DEFAULT_IMAGE_MIME_TYPE = "image/jpeg";
 
+// Sprint O.1 finalization — this trace previously ran unconditionally on
+// every reference-image fetch in production (dead weight once the MIME
+// normalization bug it was added to diagnose is no longer being actively
+// investigated). Gated behind the same debug convention route.ts uses so it
+// can still be turned back on (env var, no redeploy) if the "still
+// application/octet-stream in prod" question ever comes back.
+const IMAGE_SERVICE_DEBUG_LOG = process.env.RENDER_DEBUG_LOG === "true" || process.env.NODE_ENV !== "production";
+
 async function fetchReferenceImageFile(url: string): Promise<File> {
   const response = await fetch(url);
   const storageHeaderContentType = response.headers.get("content-type");
@@ -66,17 +72,19 @@ async function fetchReferenceImageFile(url: string): Promise<File> {
   // whether MIME normalization actually runs before the OpenAI call. Remove
   // once the "still application/octet-stream in prod" report is confirmed
   // fixed or root-caused further.
-  console.log(
-    [
-      "[fetchReferenceImageFile] MIME normalization trace",
-      `URL: ${url}`,
-      `Storage Header (Content-Type): ${storageHeaderContentType ?? "(none)"}`,
-      `Blob Type: ${blob.type}`,
-      `Normalized File Type: ${file.type}`,
-      `Filename: ${file.name}`,
-      `Extension used: ${extension ?? "(none)"}`,
-    ].join("\n"),
-  );
+  if (IMAGE_SERVICE_DEBUG_LOG) {
+    console.log(
+      [
+        "[fetchReferenceImageFile] MIME normalization trace",
+        `URL: ${url}`,
+        `Storage Header (Content-Type): ${storageHeaderContentType ?? "(none)"}`,
+        `Blob Type: ${blob.type}`,
+        `Normalized File Type: ${file.type}`,
+        `Filename: ${file.name}`,
+        `Extension used: ${extension ?? "(none)"}`,
+      ].join("\n"),
+    );
+  }
 
   return file;
 }
@@ -90,8 +98,17 @@ export interface GenerateImageInput {
   // alongside the text prompt. Empty/omitted keeps the existing
   // text-to-image call exactly as before (decision 7). Recipe Composer and
   // Prompt Builder never populate or read this — it is Image Service's own
-  // concern only (decision 12), assembled by buildReferenceImageUrls below.
+  // concern only (decision 12), assembled by AI Asset Composer
+  // (src/lib/design/aiAssetComposer/composer.ts).
   referenceImageUrls?: string[];
+  // Sprint O.1 (Task 6) — lets a caller that already downloaded the
+  // reference images itself (e.g. kicked off concurrently with its own
+  // CPU-bound prompt-building stages, see route.ts) hand the resulting
+  // Files straight in, so this call skips re-downloading them. Must be the
+  // same length/order as `referenceImageUrls` when both are provided.
+  // Omitted = fetch them here exactly as before (unchanged default path,
+  // still used by the Debug Viewer and QA scripts).
+  referenceImageFiles?: File[];
   // Added 2026-07-27 (DNA Resolver / render-pipeline integration) — lets a
   // caller that already ran its own token-budgeted compression (see
   // promptBuilder/compression.ts) hand this service a final prompt string
@@ -107,17 +124,50 @@ export interface GeneratedImage {
   revisedPrompt?: string;
 }
 
+// Sprint O.1 (Task 1/5) — request-sent / response-received wall-clock
+// timestamps for the ONE real network call to the AI provider, so the
+// caller (route.ts's Render Profiler) can report exactly how much of a
+// render's total time was spent waiting on OpenAI vs. everything else,
+// without this module needing to know what a "profiler" is.
+export interface ProviderTiming {
+  requestSentAt: number;
+  responseReceivedAt: number;
+}
+
+// Cost Observability (Sprint O foundation, completed this finalization) —
+// raw token usage exactly as OpenAI reports it for gpt-image-1, passed
+// through untouched. Deliberately NOT converted to a dollar estimate here:
+// gpt-image-1's per-token pricing isn't something this module should hardcode
+// (rates change, and a wrong embedded rate would silently mislead financial
+// reporting) — persisting the real counts lets a future sprint compute cost
+// against whatever OpenAI's pricing is AT THAT TIME. `undefined` (not an
+// empty object) when the provider didn't include a usage block.
+export type ProviderUsage = OpenAI.Images.ImagesResponse.Usage;
+
 export type GenerateImageResult =
-  | { ok: true; images: GeneratedImage[]; raw: OpenAI.Images.ImagesResponse }
-  | { ok: false; error: string };
+  | { ok: true; images: GeneratedImage[]; raw: OpenAI.Images.ImagesResponse; timing: ProviderTiming; usage?: ProviderUsage }
+  | { ok: false; error: string; timing: ProviderTiming };
+
+// Sprint O.1 (Task 4/6) — extracted so a caller can kick this off as soon as
+// it knows the reference URLs (right after AI Asset Composer resolves them),
+// concurrently with the recipe/prompt/compression stages that follow before
+// generateImage() is ever called — those stages don't depend on the
+// downloaded bytes, only on Supabase rows already in memory. Already
+// downloads every URL in parallel (Promise.all) — this only changes WHEN
+// that parallel download can start, not how it works.
+export function prefetchReferenceImages(urls: string[]): Promise<File[]> {
+  return Promise.all(urls.map((url) => fetchReferenceImageFile(url)));
+}
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageResult> {
   const prompt = input.promptOverride ?? serializeOpenAI({ instruction: input.instruction });
 
   if (!prompt) {
+    const now = Date.now();
     return {
       ok: false,
       error: "RenderInstruction could not be serialized into a prompt (Prompt Serializer not implemented yet).",
+      timing: { requestSentAt: now, responseReceivedAt: now },
     };
   }
 
@@ -125,12 +175,26 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
   try {
     client = getOpenAIClient();
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "OpenAI client unavailable." };
+    const now = Date.now();
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "OpenAI client unavailable.",
+      timing: { requestSentAt: now, responseReceivedAt: now },
+    };
   }
 
   const referenceImageUrls = input.referenceImageUrls ?? [];
+  // Bracket ONLY the real network call to OpenAI — reference-image download
+  // (when this function does it itself, i.e. `referenceImageFiles` wasn't
+  // pre-fetched by the caller) is deliberately excluded from `timing` so
+  // provider latency never gets inflated by an unrelated Supabase Storage
+  // download.
+  let requestSentAt = 0;
 
   try {
+    const referenceImageFiles = input.referenceImageFiles ?? (await Promise.all(referenceImageUrls.map((url) => fetchReferenceImageFile(url))));
+    requestSentAt = Date.now();
+
     // decision 8: reference images present -> the image-input-capable
     // endpoint (images.edit); decision 7: none -> the existing
     // text-to-image call (images.generate), unchanged.
@@ -140,7 +204,7 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
             {
               model: input.model ?? DEFAULT_MODEL,
               prompt,
-              image: await Promise.all(referenceImageUrls.map((url) => fetchReferenceImageFile(url))),
+              image: referenceImageFiles,
               // Sprint AI-R1 — input_fidelity was previously unset (OpenAI
               // default applies), so reference images (Customer Photo, Model
               // Thobe official reference) were not guaranteed to be
@@ -159,8 +223,10 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
             { timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS },
           );
 
+    const responseReceivedAt = Date.now();
+
     if (!response.data || response.data.length === 0) {
-      return { ok: false, error: "OpenAI returned an empty image response." };
+      return { ok: false, error: "OpenAI returned an empty image response.", timing: { requestSentAt, responseReceivedAt } };
     }
 
     // GPT Image models (gpt-image-1 and family) never populate `image.url` —
@@ -181,39 +247,23 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
         revisedPrompt: image.revised_prompt,
       })),
       raw: response,
+      timing: { requestSentAt, responseReceivedAt },
+      usage: response.usage,
     };
   } catch (error) {
+    const responseReceivedAt = Date.now();
     if (error instanceof APIConnectionTimeoutError) {
-      return { ok: false, error: "OpenAI image request timed out." };
+      return { ok: false, error: "OpenAI image request timed out.", timing: { requestSentAt, responseReceivedAt } };
     }
 
     if (error instanceof APIError) {
-      return { ok: false, error: `OpenAI request failed: ${error.message}` };
+      return { ok: false, error: `OpenAI request failed: ${error.message}`, timing: { requestSentAt, responseReceivedAt } };
     }
 
-    return { ok: false, error: error instanceof Error ? error.message : "Unknown error generating image." };
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Unknown error generating image.",
+      timing: { requestSentAt, responseReceivedAt },
+    };
   }
-}
-
-// Design Knowledge Pipeline V1 (decision 9-10) — the ONLY two visual
-// references GPT Image ever receives: the Customer Photo and the Model
-// Thobe's frozen Official Reference Image (`ai_dna.metadata.sourceImage`,
-// set by markDnaGenerated). Every other category — Collar, Cuff, Plaket,
-// Pocket, Button, Embroidery, Fabric, Color — is deliberately excluded here;
-// those are described through Render Recipe -> Prompt Builder -> Prompt
-// text only, never as an image input. Caller must pass the Model Thobe
-// MasterDataOption specifically (not any other category) as `modelThobe`.
-export function buildReferenceImageUrls(params: {
-  customerDigitalProfile: CustomerDigitalProfile | null;
-  modelThobe: MasterDataOption | null;
-}): string[] {
-  const urls: string[] = [];
-
-  const customerPhotoUrl = params.customerDigitalProfile?.customerPhoto?.url;
-  if (customerPhotoUrl) urls.push(customerPhotoUrl);
-
-  const officialReferenceImage = params.modelThobe?.ai_dna.metadata.sourceImage;
-  if (officialReferenceImage) urls.push(officialReferenceImage);
-
-  return urls;
 }

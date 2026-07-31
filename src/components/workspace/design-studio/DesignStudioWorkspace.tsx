@@ -169,8 +169,15 @@ export function DesignStudioWorkspace({
   }
 
   async function handleRenderGenerate(context: RenderContext) {
+    // Render Request Lock (Sprint O, Task 1) — guards against a double
+    // click even before the network round-trip: while renderResult.status
+    // is already 'loading', a second call here would just overwrite it
+    // with another 'loading' and fire a second request. AIPreviewPanel's
+    // button is also disabled during 'loading' (defense in depth); this
+    // guard covers any other caller of onGenerate.
+    if (renderResult.status === 'loading') return
     setRenderResult({ status: 'loading' })
-    const result = await renderDesign(context)
+    const result = await renderDesign(context, { consultationId: consultation.id })
     setRenderResult(result)
   }
 

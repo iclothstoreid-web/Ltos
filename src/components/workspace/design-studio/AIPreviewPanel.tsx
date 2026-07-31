@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CustomerDigitalProfile } from '@/lib/customerProfile/types'
 import type { DesignSpecification } from '@/lib/designSpecification/types'
 import { buildRenderContext, validateRenderContextReadiness } from '@/lib/customerProfile/renderContext'
@@ -27,6 +27,37 @@ interface AIPreviewPanelProps {
 // the parent) against the live `designSpecification.lastUpdated` prop is
 // enough to detect a stale preview — no extra state needed, just a diff at
 // render time when that sprint is ready to add it.
+// Sprint O.1 (Task 7, UI Responsiveness) — a real render takes ~68-78s,
+// almost entirely spent waiting on the AI provider (see SPRINT_O1 report);
+// there is no earlier point in the request/response cycle where a
+// meaningful progress fraction or the Render ID actually exists yet to show
+// (the whole pipeline runs inside one request-response round trip — see
+// route.ts). These thresholds only set the right EXPECTATION so the app
+// never reads as frozen, not a real progress measurement.
+const LOADING_STAGE_MESSAGES: { afterSeconds: number; text: string }[] = [
+  { afterSeconds: 0, text: 'Menyiapkan detail desain dan foto Anda...' },
+  { afterSeconds: 5, text: 'Mengirim permintaan ke AI Rendering Engine...' },
+  { afterSeconds: 12, text: 'AI sedang menyusun visual Anda — proses ini normalnya memakan waktu 60–80 detik.' },
+  { afterSeconds: 45, text: 'Hampir selesai — AI masih menyempurnakan detail visual Anda...' },
+]
+
+function useElapsedSeconds(active: boolean): number {
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    if (!active) {
+      setElapsed(0)
+      return
+    }
+    const startedAt = Date.now()
+    setElapsed(0)
+    const interval = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000)
+    return () => clearInterval(interval)
+  }, [active])
+
+  return elapsed
+}
+
 export function AIPreviewPanel({
   customerDigitalProfile,
   designSpecification,
@@ -35,8 +66,18 @@ export function AIPreviewPanel({
   renderResult,
 }: AIPreviewPanelProps) {
   const [validationMessages, setValidationMessages] = useState<string[]>([])
+  const isLoading = renderResult.status === 'loading'
+  const elapsedSeconds = useElapsedSeconds(isLoading)
+  const loadingMessage = [...LOADING_STAGE_MESSAGES].reverse().find((stage) => elapsedSeconds >= stage.afterSeconds)?.text
+    ?? LOADING_STAGE_MESSAGES[0].text
 
   function handleGenerate() {
+    // Render Request Lock (Sprint O, Task 1) — the button below is already
+    // `disabled` while loading, but that only stops a mouse click; this
+    // guard also stops a stray keyboard/programmatic activation from
+    // firing a second render while one is still in flight.
+    if (renderResult.status === 'loading') return
+
     const { ready, missing } = validateRenderContextReadiness(customerDigitalProfile, designSpecification)
     if (!ready) {
       setValidationMessages(missing)
@@ -72,8 +113,10 @@ export function AIPreviewPanel({
                 Sedang menyiapkan Preview Eksklusif Anda...
               </p>
               <p className="font-sans text-xs text-[#444748] max-w-xs leading-relaxed">
-                Mohon tunggu beberapa saat. Kami sedang memproses visual berdasarkan foto dan detail desain pilihan
-                Anda.
+                {loadingMessage}
+              </p>
+              <p className="font-sans text-xs font-semibold text-[#775a19] tabular-nums">
+                {elapsedSeconds}s berlalu
               </p>
             </>
           ) : (
@@ -97,6 +140,11 @@ export function AIPreviewPanel({
             Terjadi kendala saat membuat preview. Silakan coba beberapa saat lagi atau ubah pilihan desain Anda
             kemudian render kembali.
           </p>
+          {renderResult.renderId && (
+            <p className="font-sans text-[10px] text-[#c0392b]/70 mt-1">
+              Render ID: {renderResult.renderId} (sertakan ID ini saat melapor)
+            </p>
+          )}
         </div>
       )}
 
@@ -118,11 +166,13 @@ export function AIPreviewPanel({
       <button
         type="button"
         onClick={handleGenerate}
+        disabled={renderResult.status === 'loading'}
         className="px-8 py-4 bg-[#151c27] text-white font-sans text-sm uppercase tracking-widest
-                   flex items-center gap-2 hover:bg-[#151c27]/90 transition-colors"
+                   flex items-center gap-2 hover:bg-[#151c27]/90 transition-colors
+                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#151c27]"
       >
         <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-        Buat Pratinjau Akhir
+        {renderResult.status === 'loading' ? 'Sedang Memproses...' : 'Buat Pratinjau Akhir'}
       </button>
     </section>
   )

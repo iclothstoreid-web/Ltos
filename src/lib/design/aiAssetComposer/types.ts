@@ -10,8 +10,11 @@
 // (kept as-is, it already matched the brief's own field names) — only the
 // COMPOSER (composer.ts) was renamed and re-gated this turn.
 
-// MODEL_THOBE (role SILHOUETTE) and COLLAR_REFERENCE (role COLLAR_SHAPE)
-// are implemented. FABRIC_REFERENCE / EMBROIDERY_REFERENCE /
+// MODEL_THOBE (role SILHOUETTE), COLLAR_REFERENCE (role COLLAR_SHAPE),
+// PLAKET_REFERENCE (role PLAKET_SHAPE), and POCKET_REFERENCE (role
+// POCKET_SHAPE) are implemented (PLAKET/POCKET added Sprint AI Stability
+// Phase 2, mirroring COLLAR_REFERENCE exactly — see Phase 1 audit's Issue 1
+// / Priority 2 item 4). FABRIC_REFERENCE / EMBROIDERY_REFERENCE /
 // PATTERN_REFERENCE remain reserved names with no composer logic, no role,
 // no priority, and no caller anywhere in this codebase —
 // composeAiAssets() never constructs a descriptor for them. Implementing
@@ -19,7 +22,14 @@
 // REFERENCE_PRIORITY entry, a new optional input on ComposeAiAssetsInput,
 // and its own inclusion rule in composeAiAssets — all additive, following
 // the exact same shape COLLAR_REFERENCE did.
-export type ReferenceType = 'MODEL_THOBE' | 'COLLAR_REFERENCE' | 'FABRIC_REFERENCE' | 'EMBROIDERY_REFERENCE' | 'PATTERN_REFERENCE'
+export type ReferenceType =
+  | 'MODEL_THOBE'
+  | 'COLLAR_REFERENCE'
+  | 'PLAKET_REFERENCE'
+  | 'POCKET_REFERENCE'
+  | 'FABRIC_REFERENCE'
+  | 'EMBROIDERY_REFERENCE'
+  | 'PATTERN_REFERENCE'
 
 // Each implemented reference type gets exactly one role, describing the
 // ONLY dimension that type's AI Asset is allowed to contribute:
@@ -27,9 +37,13 @@ export type ReferenceType = 'MODEL_THOBE' | 'COLLAR_REFERENCE' | 'FABRIC_REFEREN
 //   COLLAR_SHAPE (COLLAR_REFERENCE) — collar outline/curvature/opening/
 //                height/proportion/profile/geometry ONLY, never fabric/
 //                color/stitching/lighting/background (those stay DNA-driven)
+//   PLAKET_SHAPE (PLAKET_REFERENCE) — placket outline/opening length/button
+//                spacing/stitch-line geometry ONLY
+//   POCKET_SHAPE (POCKET_REFERENCE) — pocket outline/placement/proportion
+//                geometry ONLY
 // A future FABRIC_REFERENCE/EMBROIDERY_REFERENCE/PATTERN_REFERENCE would
 // each need their own role added here — none is guessed/invented in advance.
-export type ReferenceRole = 'SILHOUETTE' | 'COLLAR_SHAPE'
+export type ReferenceRole = 'SILHOUETTE' | 'COLLAR_SHAPE' | 'PLAKET_SHAPE' | 'POCKET_SHAPE'
 
 // Priority mirrors "more specific overrides more generic" — same ordering
 // principle recipeComposer/composer.ts already uses for text DNA (Model
@@ -40,6 +54,8 @@ export type ReferenceRole = 'SILHOUETTE' | 'COLLAR_SHAPE'
 export const REFERENCE_PRIORITY: Partial<Record<ReferenceType, number>> = {
   MODEL_THOBE: 100,
   COLLAR_REFERENCE: 90,
+  PLAKET_REFERENCE: 80,
+  POCKET_REFERENCE: 70,
 }
 
 export interface ReferenceImageDescriptor {
