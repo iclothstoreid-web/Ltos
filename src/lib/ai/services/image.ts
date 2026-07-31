@@ -13,7 +13,14 @@ import { getOpenAIClient } from "../client";
 // this sprint — raw SDK output only.
 
 const DEFAULT_MODEL = "gpt-image-1";
-const DEFAULT_TIMEOUT_MS = 60_000;
+// Final Production Render Test (2026-07-31) — measured real gpt-image-1
+// images.edit latency at input_fidelity "high" with a full 7-component DNA
+// prompt + 1 reference image: 68.4s. The previous 60_000ms default was
+// aborting real production renders (APIConnectionTimeoutError) after the
+// image had already been generated successfully server-side — confirmed by
+// re-running the identical request with a longer timeout and getting a
+// normal 200. Raised with headroom above the observed worst case.
+const DEFAULT_TIMEOUT_MS = 120_000;
 
 // OpenAI's images.edit only accepts image/jpeg, image/png, image/webp. The
 // OpenAI SDK's own File conversion (openai/internal/to-file.js) trusts a

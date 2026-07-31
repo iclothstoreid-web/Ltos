@@ -59,6 +59,13 @@ let lastDnaState: DnaState | null = null
 // OPTIONAL_FIELDS) a hard BLOCKED response via the Capability Engine,
 // instead of a quiet `componentsMissing` entry the render just continues
 // past.
+// Final Production Render Test (2026-07-31) — real gpt-image-1 generation
+// measured at 68.4s (see image.ts's DEFAULT_TIMEOUT_MS comment); without an
+// explicit maxDuration this route falls back to the Vercel plan/framework
+// default, which can be shorter than that and would kill the function
+// before the OpenAI client's own (now-raised) timeout ever fires.
+export const maxDuration = 120
+
 interface ComponentSelection {
   componentType: string
   componentId: string
