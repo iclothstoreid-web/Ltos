@@ -1,6 +1,6 @@
 import type { RenderInstruction } from './types'
 import { formatRecord } from './serializer'
-import { applyLockRulesIfReferenceBacked } from './lockRules'
+import { applyLockRulesIfReferenceBacked } from './referenceResolver'
 import type { RenderRecipeEntry, MasterRenderRecipe } from '@/lib/design/recipeComposer/types'
 import { masterDataCategoryLabel, type MasterDataCategory } from '@/lib/design/masterData'
 
@@ -224,6 +224,24 @@ const SELECTED_COMPONENT_CATEGORIES: MasterDataCategory[] = [
   'aksesori',
 ]
 
+// Sprint R-05 (Phase 1/3) — the Priority 0 DNA-only slots (Anchor/Look
+// Cutting/Material/Material Color), DRYed from 4 near-identical
+// `layers.push(...)` calls into one small table + loop. Unlike
+// SELECTED_COMPONENT_CATEGORIES above, these can't just read
+// masterDataCategoryLabel(category) generically — `warna_bahan`'s generic
+// label is "Warna Material" (see masterData.ts), not the "Material Color"
+// this layer has always been called — so each slot's id/label is declared
+// explicitly here instead. These 4 are structurally different from
+// SELECTED_COMPONENT_CATEGORIES (Anchor/required-if-selected/material
+// slots, not repeatable "did the customer pick one" components), which is
+// why they stay their own table rather than merging into one.
+const P0_DNA_SLOTS: { id: string; label: string; category: MasterDataCategory }[] = [
+  { id: 'model_thobe', label: 'Model Thobe', category: 'model_thobe' },
+  { id: 'look_cutting', label: 'Look Cutting', category: 'look_cutting' },
+  { id: 'material', label: 'Material', category: 'bahan' },
+  { id: 'material_color', label: 'Material Color', category: 'warna_bahan' },
+]
+
 // One entry's own resolved content only — garment (DNA Resolver's per-item
 // output) plus its own fabricIdentity/fabricBehavior (per-item sensory
 // fields Recipe Composer would otherwise merge across items). Never reads
@@ -235,12 +253,12 @@ const SELECTED_COMPONENT_CATEGORIES: MasterDataCategory[] = [
 // route.ts from the SAME composeAiAssets() result that decided which Hero
 // Images are actually being sent). When this entry's own category is
 // reference-backed, its `garment` record is pruned to Lock Rules only
-// (lockRules.ts) BEFORE formatting — the narrative geometry/construction/
-// appearance/materials/stitching text a photo already conveys is dropped,
-// while placement/color/negativeRules-adjacent content and everything else
-// still reaches the prompt untouched. `fabricIdentity`/`fabricBehavior` are
-// never pruned — Reference-First only ever concerns `garment` (see
-// lockRules.ts's own doc comment on scope).
+// (referenceResolver.ts) BEFORE formatting — the narrative geometry/
+// construction/appearance/materials/stitching text a photo already conveys
+// is dropped, while placement/color/negativeRules-adjacent content and
+// everything else still reaches the prompt untouched. `fabricIdentity`/
+// `fabricBehavior` are never pruned — Reference-First only ever concerns
+// `garment` (see referenceResolver.ts's own doc comment on scope).
 function formatEntryContent(entry: RenderRecipeEntry, referenceBacked: Set<MasterDataCategory>): string {
   const garment = applyLockRulesIfReferenceBacked(entry.recipe.garment, entry.category, referenceBacked)
   return [formatRecord(garment), formatRecord(entry.recipe.fabricIdentity), formatRecord(entry.recipe.fabricBehavior)]
@@ -363,17 +381,10 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
     layers.push({ id: instruction.id, label: instruction.label, priority: 0, content: instruction.content })
   })
 
-  const modelThobeEntry = byCategory.get('model_thobe')
-  layers.push({ id: 'model_thobe', label: 'Model Thobe', priority: 0, content: modelThobeEntry ? formatEntryContent(modelThobeEntry, referenceBackedCategories) : '' })
-
-  const lookCuttingEntry = byCategory.get('look_cutting')
-  layers.push({ id: 'look_cutting', label: 'Look Cutting', priority: 0, content: lookCuttingEntry ? formatEntryContent(lookCuttingEntry, referenceBackedCategories) : '' })
-
-  const bahanEntry = byCategory.get('bahan')
-  layers.push({ id: 'material', label: 'Material', priority: 0, content: bahanEntry ? formatEntryContent(bahanEntry, referenceBackedCategories) : '' })
-
-  const warnaEntry = byCategory.get('warna_bahan')
-  layers.push({ id: 'material_color', label: 'Material Color', priority: 0, content: warnaEntry ? formatEntryContent(warnaEntry, referenceBackedCategories) : '' })
+  P0_DNA_SLOTS.forEach(({ id, label, category }) => {
+    const entry = byCategory.get(category)
+    layers.push({ id, label, priority: 0, content: entry ? formatEntryContent(entry, referenceBackedCategories) : '' })
+  })
 
   SELECTED_COMPONENT_CATEGORIES.forEach((category) => {
     const entry = byCategory.get(category)

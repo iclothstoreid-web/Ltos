@@ -1,5 +1,18 @@
 import { MASTER_DATA_CATEGORIES, type MasterDataCategory, type MasterDataOption } from '@/lib/design/masterData'
-import { REFERENCE_PRIORITY, type ReferenceImageDescriptor } from './types'
+import type { ReferenceImageDescriptor } from './types'
+import { REFERENCE_CATEGORY_REGISTRY } from './registry'
+// Re-exported for backward compatibility — every existing caller (route.ts,
+// the DNA Debug Viewer) imports these instruction constants from this
+// module. Sprint R-05 moved their canonical definition into registry.ts
+// (the Category Registry, Phase 3) so they live alongside the rest of each
+// category's metadata (type/role/priority) instead of only here; nothing
+// about their content or callers changed.
+export {
+  MODEL_REFERENCE_SILHOUETTE_INSTRUCTION,
+  COLLAR_REFERENCE_SHAPE_INSTRUCTION,
+  PLAKET_REFERENCE_SHAPE_INSTRUCTION,
+  POCKET_REFERENCE_SHAPE_INSTRUCTION,
+} from './registry'
 
 // AI Asset Composer (renamed from Reference Composer this sprint — "AI
 // Asset Lifecycle" brief) — the ONLY place allowed to decide which visual
@@ -53,30 +66,6 @@ import { REFERENCE_PRIORITY, type ReferenceImageDescriptor } from './types'
 // counts are hardcoded 0 to make that invariant an assertable fact rather
 // than an implicit absence.
 
-// The exact instruction GPT Image needs alongside a Model Thobe AI Asset so
-// it doesn't copy that specific reference photo's collar/cuff/pocket/
-// color/fabric onto a customer who chose different DNA for those — this
-// text is what the SILHOUETTE role is FOR (see types.ts). Appended to the
-// outgoing prompt only when a Model AI Asset is actually included.
-export const MODEL_REFERENCE_SILHOUETTE_INSTRUCTION =
-  'The attached reference image is provided ONLY to describe the overall silhouette, garment proportion, garment length, and natural drape of the thobe. Do NOT copy or preserve the collar, cuffs, pockets, placket, embroidery, buttons, fabric texture, or color from the reference image. Those elements are defined separately by the selected Design DNA and must follow the customer\'s chosen configuration. Apply only the overall garment shape from the reference while preserving the customer\'s identity completely.'
-
-// The exact instruction GPT Image needs alongside a Collar AI Asset —
-// collar GEOMETRY only, everything else (fabric/color/stitching/lighting/
-// background) stays DNA-driven.
-export const COLLAR_REFERENCE_SHAPE_INSTRUCTION =
-  'The attached collar reference image is provided ONLY to describe the collar shape and geometry. Transfer only: collar outline, collar curvature, collar opening, collar proportion, collar height. Do NOT copy: fabric texture, fabric color, stitching, lighting, wrinkles, shadows, background, photography style. The collar must still follow the selected AI Design DNA. This reference is only a geometric guide for the collar shape.'
-
-// Same mechanism as COLLAR_REFERENCE_SHAPE_INSTRUCTION, for Placket —
-// PLAKET_SHAPE geometry only (Sprint AI Stability Phase 2).
-export const PLAKET_REFERENCE_SHAPE_INSTRUCTION =
-  'The attached placket reference image is provided ONLY to describe the placket shape and geometry. Transfer only: placket outline, placket opening length, placket width, button spacing, stitch-line geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style. The placket must still follow the selected AI Design DNA. This reference is only a geometric guide for the placket shape.'
-
-// Same mechanism as COLLAR_REFERENCE_SHAPE_INSTRUCTION, for Pocket —
-// POCKET_SHAPE geometry only (Sprint AI Stability Phase 2).
-export const POCKET_REFERENCE_SHAPE_INSTRUCTION =
-  'The attached pocket reference image is provided ONLY to describe the pocket shape and geometry. Transfer only: pocket outline, pocket placement, pocket proportion, pocket flap/opening geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style. The pocket must still follow the selected AI Design DNA. This reference is only a geometric guide for the pocket shape.'
-
 export interface ExcludedReferenceCategory {
   category: MasterDataCategory
   reason: string
@@ -92,6 +81,15 @@ export interface ComposedAiAssets {
   /** POCKET_SHAPE — same 4-condition gate as collarReference (Sprint AI
    *  Stability Phase 2). */
   pocketReference: ReferenceImageDescriptor | null
+  /** Sprint R-05 (Phase 2/3) — the same 4 descriptors above, keyed by
+   *  category instead of by name. This is the ONE generic place every other
+   *  "which categories have an active Hero Image right now" question gets
+   *  answered from (referenceBackedCategories, applyAssetInstructions,
+   *  route.ts's asset-instruction-layer construction) — the named fields
+   *  above are kept only for existing callers (e.g. the DNA Debug Viewer)
+   *  that already read them by name; nothing new should be built against
+   *  them, prefer this map instead. */
+  referencesByCategory: ReadonlyMap<MasterDataCategory, ReferenceImageDescriptor>
   /** Ordered: customer photo first, then every present AI Asset by
    *  descending priority (Model Reference 100, Collar Reference 90, Plaket
    *  Reference 80, Pocket Reference 70, ...) — same order the pipeline has
@@ -165,41 +163,51 @@ function isAiAssetActive(option: MasterDataOption | null): boolean {
   )
 }
 
+// Sprint R-05 (Phase 1/3) — replaces 4 near-identical hardcoded blocks (one
+// per category, each repeating the same isAiAssetActive-then-build-
+// descriptor shape) with one loop over REFERENCE_CATEGORY_REGISTRY. Adding
+// a 5th reference-eligible category no longer means adding a 5th copy of
+// this block — see registry.ts's header comment.
 export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
   const { customerPhotoUrl, modelThobeOption, collarOption = null, plaketOption = null, pocketOption = null, otherSelectedCategories } = input
 
-  const modelReference: ReferenceImageDescriptor | null = isAiAssetActive(modelThobeOption)
-    ? { type: 'MODEL_THOBE', role: 'SILHOUETTE', priority: REFERENCE_PRIORITY.MODEL_THOBE ?? 100, itemId: modelThobeOption!.id, url: modelThobeOption!.ai_dna.metadata.sourceImage! }
-    : null
+  const optionByCategory: Partial<Record<MasterDataCategory, MasterDataOption | null>> = {
+    model_thobe: modelThobeOption,
+    kerah: collarOption,
+    plaket: plaketOption,
+    saku: pocketOption,
+  }
 
-  const collarReference: ReferenceImageDescriptor | null = isAiAssetActive(collarOption)
-    ? { type: 'COLLAR_REFERENCE', role: 'COLLAR_SHAPE', priority: REFERENCE_PRIORITY.COLLAR_REFERENCE ?? 90, itemId: collarOption!.id, url: collarOption!.ai_dna.metadata.sourceImage! }
-    : null
+  const referencesByCategory = new Map<MasterDataCategory, ReferenceImageDescriptor>()
+  REFERENCE_CATEGORY_REGISTRY.forEach((def) => {
+    const option = optionByCategory[def.category] ?? null
+    if (!isAiAssetActive(option)) return
+    referencesByCategory.set(def.category, {
+      type: def.type,
+      role: def.role,
+      priority: def.priority,
+      itemId: option!.id,
+      url: option!.ai_dna.metadata.sourceImage!,
+    })
+  })
 
-  const plaketReference: ReferenceImageDescriptor | null = isAiAssetActive(plaketOption)
-    ? { type: 'PLAKET_REFERENCE', role: 'PLAKET_SHAPE', priority: REFERENCE_PRIORITY.PLAKET_REFERENCE ?? 80, itemId: plaketOption!.id, url: plaketOption!.ai_dna.metadata.sourceImage! }
-    : null
-
-  const pocketReference: ReferenceImageDescriptor | null = isAiAssetActive(pocketOption)
-    ? { type: 'POCKET_REFERENCE', role: 'POCKET_SHAPE', priority: REFERENCE_PRIORITY.POCKET_REFERENCE ?? 70, itemId: pocketOption!.id, url: pocketOption!.ai_dna.metadata.sourceImage! }
-    : null
+  const modelReference = referencesByCategory.get('model_thobe') ?? null
+  const collarReference = referencesByCategory.get('kerah') ?? null
+  const plaketReference = referencesByCategory.get('plaket') ?? null
+  const pocketReference = referencesByCategory.get('saku') ?? null
 
   // kerah/plaket/saku stay in `excluded` (still text-only, per Recipe
   // Composer) unless their real reference was actually composed in for
   // THIS render.
   const excludedCategorySet = new Set(otherSelectedCategories ?? NON_REFERENCE_CATEGORIES)
-  if (collarReference) excludedCategorySet.delete('kerah')
-  if (plaketReference) excludedCategorySet.delete('plaket')
-  if (pocketReference) excludedCategorySet.delete('saku')
+  referencesByCategory.forEach((_descriptor, category) => excludedCategorySet.delete(category))
   const excluded: ExcludedReferenceCategory[] = Array.from(excludedCategorySet).map((category) => ({
     category,
     reason:
       'Component DNA (AI Design DNA / Render Recipe) is the source of truth for this category — it is described to GPT Image as text via Recipe Composer/Prompt Builder, never as an image reference.',
   }))
 
-  const assets = [modelReference, collarReference, plaketReference, pocketReference]
-    .filter((ref): ref is ReferenceImageDescriptor => !!ref)
-    .sort((a, b) => b.priority - a.priority)
+  const assets = Array.from(referencesByCategory.values()).sort((a, b) => b.priority - a.priority)
   const urls = [customerPhotoUrl, ...assets.map((ref) => ref.url)]
 
   return {
@@ -208,6 +216,7 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
     collarReference,
     plaketReference,
     pocketReference,
+    referencesByCategory,
     urls,
     excluded,
     backgroundReferenceCount: 0,
@@ -220,34 +229,30 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
 // only caveat when a Collar AI Asset is included, PLAKET_SHAPE-only /
 // POCKET_SHAPE-only caveats likewise. Any combination, or none, may apply;
 // a render with no AI Asset at all gets no caveat, since there is nothing
-// to caveat.
+// to caveat. Sprint R-05 — loops over the registry (declared Model > Collar
+// > Plaket > Pocket, the same order this always appended in) instead of 4
+// hardcoded `if` statements.
 export function applyAssetInstructions(basePrompt: string, composed: ComposedAiAssets): string {
   let prompt = basePrompt
-  if (composed.modelReference) prompt = `${prompt} ${MODEL_REFERENCE_SILHOUETTE_INSTRUCTION}`
-  if (composed.collarReference) prompt = `${prompt} ${COLLAR_REFERENCE_SHAPE_INSTRUCTION}`
-  if (composed.plaketReference) prompt = `${prompt} ${PLAKET_REFERENCE_SHAPE_INSTRUCTION}`
-  if (composed.pocketReference) prompt = `${prompt} ${POCKET_REFERENCE_SHAPE_INSTRUCTION}`
+  REFERENCE_CATEGORY_REGISTRY.forEach((def) => {
+    if (composed.referencesByCategory.has(def.category)) prompt = `${prompt} ${def.instruction}`
+  })
   return prompt
 }
 
 // Reference-First (Sprint R-02) — the set of categories for which a real
 // Hero Image was actually composed into THIS render's request. Derived
-// straight from `composed` (already gated by isAiAssetActive above, via
-// composeAiAssets) rather than re-checking approved/active/sourceImage a
-// second, possibly diverging way. Prompt Builder/Compression use this to
-// decide which categories' AI Design DNA can collapse to Lock Rules only
-// (see promptBuilder/lockRules.ts) — a category absent from this set keeps
-// getting its full DNA text exactly as before (Phase 4's "fallback",
-// automatic by construction: nothing here can mark a category
-// reference-backed without composeAiAssets first having included its
-// image).
+// straight from `composed.referencesByCategory` (already gated by
+// isAiAssetActive above, via composeAiAssets) rather than re-checking
+// approved/active/sourceImage a second, possibly diverging way. Prompt
+// Builder/Compression use this to decide which categories' AI Design DNA
+// can collapse to Lock Rules only (see promptBuilder/referenceResolver.ts)
+// — a category absent from this set keeps getting its full DNA text
+// exactly as before (Phase 4's "fallback", automatic by construction:
+// nothing here can mark a category reference-backed without
+// composeAiAssets first having included its image).
 export function referenceBackedCategories(composed: ComposedAiAssets): Set<MasterDataCategory> {
-  const categories = new Set<MasterDataCategory>()
-  if (composed.modelReference) categories.add('model_thobe')
-  if (composed.collarReference) categories.add('kerah')
-  if (composed.plaketReference) categories.add('plaket')
-  if (composed.pocketReference) categories.add('saku')
-  return categories
+  return new Set(composed.referencesByCategory.keys())
 }
 
 export interface AiAssetValidation {

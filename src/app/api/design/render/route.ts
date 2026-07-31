@@ -19,11 +19,8 @@ import {
   validatePlaketReference,
   validatePocketReference,
   referenceBackedCategories,
-  MODEL_REFERENCE_SILHOUETTE_INSTRUCTION,
-  COLLAR_REFERENCE_SHAPE_INSTRUCTION,
-  PLAKET_REFERENCE_SHAPE_INSTRUCTION,
-  POCKET_REFERENCE_SHAPE_INSTRUCTION,
 } from '@/lib/design/aiAssetComposer/composer'
+import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
 import type { AssetInstructionLayer } from '@/lib/design/promptBuilder/compression'
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
@@ -364,14 +361,23 @@ export async function POST(req: NextRequest) {
   // (validateCollarReference/validatePlaketReference/validatePocketReference
   // never block a render — Sprint AI Stability Phase 2 extended Plaket/
   // Pocket onto the exact mechanism Collar already used).
-  const collarSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'kerah')
-  const collarOptionRaw = collarSelection ? (rowsById.get(collarSelection.componentId) ?? null) : null
-
-  const plaketSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'plaket')
-  const plaketOptionRaw = plaketSelection ? (rowsById.get(plaketSelection.componentId) ?? null) : null
-
-  const pocketSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'saku')
-  const pocketOptionRaw = pocketSelection ? (rowsById.get(pocketSelection.componentId) ?? null) : null
+  //
+  // Sprint R-05 (Phase 3) — loops over REFERENCE_CATEGORY_REGISTRY instead
+  // of one hardcoded `find()` block per category; model_thobe's own lookup
+  // stays a named variable above since `modelThobeSelection` (not just its
+  // resolved option) is read again by `otherComponentDnaResults`.
+  const referenceOptionByCategory = new Map<string, MasterDataOption | null>()
+  REFERENCE_CATEGORY_REGISTRY.forEach((def) => {
+    if (def.category === 'model_thobe') {
+      referenceOptionByCategory.set(def.category, modelThobeOptionRaw)
+      return
+    }
+    const selection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === def.category)
+    referenceOptionByCategory.set(def.category, selection ? (rowsById.get(selection.componentId) ?? null) : null)
+  })
+  const collarOptionRaw = referenceOptionByCategory.get('kerah') ?? null
+  const plaketOptionRaw = referenceOptionByCategory.get('plaket') ?? null
+  const pocketOptionRaw = referenceOptionByCategory.get('saku') ?? null
 
   const composedAssets = profiler.mark('asset_composer', () =>
     composeAiAssets({
@@ -404,7 +410,7 @@ export async function POST(req: NextRequest) {
   // Prompt Builder (diagnostic instruction) and Prompt Compression (the
   // real prompt sent to OpenAI) below so a reference-backed category's
   // narrative DNA collapses to Lock Rules instead of full prose — see
-  // promptBuilder/lockRules.ts.
+  // promptBuilder/referenceResolver.ts (the Reference Resolver contract).
   const referenceBacked = referenceBackedCategories(composedAssets)
   debugLog(`Reference-backed categories (Lock Rules only): [${Array.from(referenceBacked).join(', ') || 'none'}]`)
 
@@ -534,20 +540,13 @@ export async function POST(req: NextRequest) {
   // of being concatenated onto the compressed string afterward (the old
   // `applyAssetInstructions` call, removed below — see compression.ts's
   // AssetInstructionLayer doc comment for why that broke the token audit).
-  const assetInstructionLayers: AssetInstructionLayer[] = [
-    composedAssets.modelReference
-      ? { id: 'asset_instruction:model', label: 'Model Reference Instruction', content: MODEL_REFERENCE_SILHOUETTE_INSTRUCTION }
-      : null,
-    composedAssets.collarReference
-      ? { id: 'asset_instruction:collar', label: 'Collar Reference Instruction', content: COLLAR_REFERENCE_SHAPE_INSTRUCTION }
-      : null,
-    composedAssets.plaketReference
-      ? { id: 'asset_instruction:plaket', label: 'Plaket Reference Instruction', content: PLAKET_REFERENCE_SHAPE_INSTRUCTION }
-      : null,
-    composedAssets.pocketReference
-      ? { id: 'asset_instruction:pocket', label: 'Pocket Reference Instruction', content: POCKET_REFERENCE_SHAPE_INSTRUCTION }
-      : null,
-  ].filter((layer): layer is AssetInstructionLayer => !!layer)
+  // Sprint R-05 (Phase 3) — loops over REFERENCE_CATEGORY_REGISTRY instead
+  // of 4 hardcoded ternaries; `composedAssets.referencesByCategory` (Sprint
+  // R-05) is the one generic map every "is category X active" question here
+  // reads from.
+  const assetInstructionLayers: AssetInstructionLayer[] = REFERENCE_CATEGORY_REGISTRY.filter((def) =>
+    composedAssets.referencesByCategory.has(def.category),
+  ).map((def) => ({ id: `asset_instruction:${def.idSuffix}`, label: def.instructionLabel, content: def.instruction }))
 
   // Layer-Based Prompt Compression (Sprint PR-04) — replaces the old fixed
   // Anchor/Material/Other/Negatives buckets, which truncated by raw word

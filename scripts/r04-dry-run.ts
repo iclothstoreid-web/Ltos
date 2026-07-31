@@ -152,7 +152,7 @@ const materialFabricBehavior = {
 // ---------------------------------------------------------------------
 // Material Color — verbatim from scripts/final-render-test-result.json
 // `color` (not `appearance`) is the resolver's Color Identity carve-out key
-// — it is NOT in lockRules.ts's NARRATIVE_GARMENT_KEYS, so Reference-First
+// — it is NOT in referenceResolver.ts's NARRATIVE_GARMENT_KEYS, so Reference-First
 // pruning never touches it regardless of reference-backed status.
 // ---------------------------------------------------------------------
 const materialColorGarment = {

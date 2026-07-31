@@ -1,6 +1,6 @@
 import type { MasterRenderRecipe } from '@/lib/design/recipeComposer/types'
 import type { MasterDataCategory } from '@/lib/design/masterData'
-import { pruneToLockRules } from './lockRules'
+import { applyLockRulesIfReferenceBacked } from './referenceResolver'
 import type { RenderInstruction, RenderInstructionValidation } from './types'
 
 // Prompt Builder (Sprint AI-06) — reads ONLY MasterRenderRecipe (accepting
@@ -44,14 +44,18 @@ import type { RenderInstruction, RenderInstructionValidation } from './types'
 // and, when omitted, this function behaves exactly as before (full DNA
 // text, no pruning) — every existing caller that doesn't pass it (Debug
 // Viewer, Render Test Framework scripts) is unaffected. When passed, and
-// `model_thobe` is in the set, `recipe.garment` is pruned to Lock Rules
-// (lockRules.ts) before it's copied into RenderInstruction. Only the Anchor
-// (model_thobe) is checked here — unlike compression.ts's per-entry
-// formatEntryContent, `recipe.garment` at this point is Recipe Composer's
-// ALREADY-MERGED, Anchor-collision-resolved single object (see
-// recipeComposer/composer.ts's resolveRecipeConflict): per-category
-// boundaries no longer exist for any key Model Thobe's own DNA also sets,
-// so pruning can only be keyed on whether the Anchor itself is
+// `model_thobe` is in the set, `recipe.garment` is pruned to Lock Rules via
+// referenceResolver.ts's applyLockRulesIfReferenceBacked (Sprint R-05,
+// Phase 2/5 — this used to hand-roll the identical ternary directly against
+// pruneToLockRules instead of calling the shared resolver function; two
+// implementations of the same Fallback Contract is exactly what Phase 2/5
+// rule out, so this now calls the one function everything else in the
+// pipeline calls too). Only the Anchor (model_thobe) is checked here —
+// unlike compression.ts's per-entry formatEntryContent, `recipe.garment` at
+// this point is Recipe Composer's ALREADY-MERGED, Anchor-collision-resolved
+// single object (see recipeComposer/composer.ts's resolveRecipeConflict):
+// per-category boundaries no longer exist for any key Model Thobe's own DNA
+// also sets, so pruning can only be keyed on whether the Anchor itself is
 // reference-backed, not on Collar/Plaket/Pocket individually. This path is
 // diagnostic-only in production anyway (route.ts only serializes it when
 // RENDER_DEBUG_LOG is on; the real prompt sent to OpenAI is compression.ts's
@@ -65,7 +69,7 @@ export function buildRenderInstruction(
     return null
   }
 
-  const garment = referenceBackedCategories?.has('model_thobe') ? pruneToLockRules(recipe.garment) : recipe.garment
+  const garment = applyLockRulesIfReferenceBacked(recipe.garment, 'model_thobe', referenceBackedCategories ?? new Set())
 
   return {
     subject: { ...recipe.pose },
