@@ -19,6 +19,7 @@ import {
   validateCollarReference,
   validatePlaketReference,
   validatePocketReference,
+  referenceBackedCategories,
 } from '@/lib/design/aiAssetComposer/composer'
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
@@ -393,6 +394,16 @@ export async function POST(req: NextRequest) {
   debugLog(`Plaket Reference: ${plaketReferenceStatus.valid ? '✅' : '—'} ${plaketReferenceStatus.reason}`)
   debugLog(`Pocket Reference: ${pocketReferenceStatus.valid ? '✅' : '—'} ${pocketReferenceStatus.reason}`)
 
+  // Reference-First (Sprint R-02) — categories whose Hero Image is actually
+  // being sent this render (derived from composedAssets above, the same
+  // isAiAssetActive gate that decided the image itself). Threaded into
+  // Prompt Builder (diagnostic instruction) and Prompt Compression (the
+  // real prompt sent to OpenAI) below so a reference-backed category's
+  // narrative DNA collapses to Lock Rules instead of full prose — see
+  // promptBuilder/lockRules.ts.
+  const referenceBacked = referenceBackedCategories(composedAssets)
+  debugLog(`Reference-backed categories (Lock Rules only): [${Array.from(referenceBacked).join(', ') || 'none'}]`)
+
   const unresolvedComponents: UnresolvedComponent[] = componentsMissing.map((m) => ({
     itemId: m.componentId,
     category: m.componentType,
@@ -477,7 +488,7 @@ export async function POST(req: NextRequest) {
   }
 
   logStage('🟢', 'STAGE 4: PROMPT BUILDER — RenderInstruction')
-  const instruction = profiler.mark('prompt_builder', () => buildRenderInstruction(masterRecipe))
+  const instruction = profiler.mark('prompt_builder', () => buildRenderInstruction(masterRecipe, referenceBacked))
   const instructionValidation = validateRenderInstruction(instruction)
   debugLog(JSON.stringify(instruction, null, 2))
   debugLog(`Validation: ${instructionValidation.valid ? '✅ valid' : `⚠️  ${instructionValidation.errors.join(' | ')}`}`)
@@ -520,7 +531,7 @@ export async function POST(req: NextRequest) {
   // silently cut just because it happened to serialize after Model
   // Thobe's now-richer content inside one shared bucket.
   const layerCompression = profiler.mark('prompt_compression', () => {
-    const promptLayers = buildPromptLayers({ entries, masterRecipe, identityTemplate: LAYER1_IDENTITY_TEMPLATE })
+    const promptLayers = buildPromptLayers({ entries, masterRecipe, identityTemplate: LAYER1_IDENTITY_TEMPLATE, referenceBackedCategories: referenceBacked })
     return compressPromptByLayers(promptLayers)
   })
 
@@ -640,6 +651,7 @@ export async function POST(req: NextRequest) {
               instructionValidation,
               referenceImageUrls,
               aiAssetComposer: composedAssets,
+              referenceBackedCategories: Array.from(referenceBacked),
               dnaState: { hash: dnaHash },
               dirtyLayers: dirty,
             },

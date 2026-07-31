@@ -143,12 +143,24 @@ const NON_REFERENCE_CATEGORIES: MasterDataCategory[] = MASTER_DATA_CATEGORIES.fi
 // as a reference without any accompanying recipe content would mislead
 // GPT Image rather than help it). Shared by Model, Collar, Plaket, and
 // Pocket below so the rule can only ever be expressed once.
+//
+// `metadata?.sourceImage` (Sprint R-02 fix, found while building the Lock
+// Rules token report) — some Repository rows were authored with a
+// non-conforming ai_dna shape that omits `metadata` entirely (confirmed
+// live: "Patch Pocket Topstitched Medium", status already 'approved', has
+// no `metadata` key at all — see aiDna/types.ts's markDnaGenerated/
+// markDnaApproved, which already guard the same "metadata key missing"
+// case on the write side with the identical `?? DEFAULT` pattern). Without
+// the `?.` here, selecting that item threw before this function could ever
+// return a normal INACTIVE result, crashing the whole render — a
+// pre-existing bug, not something Reference-First introduced, but directly
+// in this gate's own path.
 function isAiAssetActive(option: MasterDataOption | null): boolean {
   return (
     !!option &&
     option.is_active &&
     option.ai_dna.status === 'approved' &&
-    !!option.ai_dna.metadata.sourceImage &&
+    !!option.ai_dna.metadata?.sourceImage &&
     option.render_recipe.status !== 'empty'
   )
 }
@@ -216,6 +228,26 @@ export function applyAssetInstructions(basePrompt: string, composed: ComposedAiA
   if (composed.plaketReference) prompt = `${prompt} ${PLAKET_REFERENCE_SHAPE_INSTRUCTION}`
   if (composed.pocketReference) prompt = `${prompt} ${POCKET_REFERENCE_SHAPE_INSTRUCTION}`
   return prompt
+}
+
+// Reference-First (Sprint R-02) — the set of categories for which a real
+// Hero Image was actually composed into THIS render's request. Derived
+// straight from `composed` (already gated by isAiAssetActive above, via
+// composeAiAssets) rather than re-checking approved/active/sourceImage a
+// second, possibly diverging way. Prompt Builder/Compression use this to
+// decide which categories' AI Design DNA can collapse to Lock Rules only
+// (see promptBuilder/lockRules.ts) — a category absent from this set keeps
+// getting its full DNA text exactly as before (Phase 4's "fallback",
+// automatic by construction: nothing here can mark a category
+// reference-backed without composeAiAssets first having included its
+// image).
+export function referenceBackedCategories(composed: ComposedAiAssets): Set<MasterDataCategory> {
+  const categories = new Set<MasterDataCategory>()
+  if (composed.modelReference) categories.add('model_thobe')
+  if (composed.collarReference) categories.add('kerah')
+  if (composed.plaketReference) categories.add('plaket')
+  if (composed.pocketReference) categories.add('saku')
+  return categories
 }
 
 export interface AiAssetValidation {

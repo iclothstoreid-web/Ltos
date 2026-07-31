@@ -1,5 +1,6 @@
 import type { RenderInstruction } from './types'
 import { formatRecord } from './serializer'
+import { applyLockRulesIfReferenceBacked } from './lockRules'
 import type { RenderRecipeEntry, MasterRenderRecipe } from '@/lib/design/recipeComposer/types'
 import { masterDataCategoryLabel, type MasterDataCategory } from '@/lib/design/masterData'
 
@@ -228,12 +229,21 @@ const SELECTED_COMPONENT_CATEGORIES: MasterDataCategory[] = [
 // fields Recipe Composer would otherwise merge across items). Never reads
 // another entry's data, so two entries in the same category collision the
 // old Anchor-rule solves for MasterRenderRecipe never arises here at all.
-function formatEntryContent(entry: RenderRecipeEntry): string {
-  return [
-    formatRecord(entry.recipe.garment),
-    formatRecord(entry.recipe.fabricIdentity),
-    formatRecord(entry.recipe.fabricBehavior),
-  ]
+//
+// Reference-First (Sprint R-02) — `referenceBacked` is threaded in from
+// aiAssetComposer's referenceBackedCategories (computed once per request in
+// route.ts from the SAME composeAiAssets() result that decided which Hero
+// Images are actually being sent). When this entry's own category is
+// reference-backed, its `garment` record is pruned to Lock Rules only
+// (lockRules.ts) BEFORE formatting — the narrative geometry/construction/
+// appearance/materials/stitching text a photo already conveys is dropped,
+// while placement/color/negativeRules-adjacent content and everything else
+// still reaches the prompt untouched. `fabricIdentity`/`fabricBehavior` are
+// never pruned — Reference-First only ever concerns `garment` (see
+// lockRules.ts's own doc comment on scope).
+function formatEntryContent(entry: RenderRecipeEntry, referenceBacked: Set<MasterDataCategory>): string {
+  const garment = applyLockRulesIfReferenceBacked(entry.recipe.garment, entry.category, referenceBacked)
+  return [formatRecord(garment), formatRecord(entry.recipe.fabricIdentity), formatRecord(entry.recipe.fabricBehavior)]
     .filter(Boolean)
     .join(', ')
 }
@@ -266,6 +276,13 @@ export interface BuildPromptLayersInput {
   // fields; Priority 0/1 layers below never read from it.
   masterRecipe: MasterRenderRecipe | null
   identityTemplate: string
+  // Reference-First (Sprint R-02) — categories whose Hero Image is actually
+  // being sent this render (aiAssetComposer's referenceBackedCategories).
+  // Optional and defaults to empty so every existing caller that doesn't
+  // pass it (Render Test Framework scripts, any future ad-hoc caller) keeps
+  // getting the pre-R-02 behavior: full DNA text for every category,
+  // exactly as before.
+  referenceBackedCategories?: Set<MasterDataCategory>
 }
 
 // Phase 1 (Sprint PR-04) — splits the render into the 7 layers the brief
@@ -276,7 +293,7 @@ export interface BuildPromptLayersInput {
 // skipped entirely for Priority 1 slots (Selected Components) — "Skip
 // otomatis jika NONE" per the brief.
 export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] {
-  const { entries, masterRecipe, identityTemplate } = input
+  const { entries, masterRecipe, identityTemplate, referenceBackedCategories = new Set<MasterDataCategory>() } = input
 
   const byCategory = new Map<MasterDataCategory, RenderRecipeEntry>()
   entries.forEach((entry) => {
@@ -288,21 +305,21 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
   layers.push({ id: 'identity', label: 'Identity Lock', priority: 0, content: identityTemplate })
 
   const modelThobeEntry = byCategory.get('model_thobe')
-  layers.push({ id: 'model_thobe', label: 'Model Thobe', priority: 0, content: modelThobeEntry ? formatEntryContent(modelThobeEntry) : '' })
+  layers.push({ id: 'model_thobe', label: 'Model Thobe', priority: 0, content: modelThobeEntry ? formatEntryContent(modelThobeEntry, referenceBackedCategories) : '' })
 
   const lookCuttingEntry = byCategory.get('look_cutting')
-  layers.push({ id: 'look_cutting', label: 'Look Cutting', priority: 0, content: lookCuttingEntry ? formatEntryContent(lookCuttingEntry) : '' })
+  layers.push({ id: 'look_cutting', label: 'Look Cutting', priority: 0, content: lookCuttingEntry ? formatEntryContent(lookCuttingEntry, referenceBackedCategories) : '' })
 
   const bahanEntry = byCategory.get('bahan')
-  layers.push({ id: 'material', label: 'Material', priority: 0, content: bahanEntry ? formatEntryContent(bahanEntry) : '' })
+  layers.push({ id: 'material', label: 'Material', priority: 0, content: bahanEntry ? formatEntryContent(bahanEntry, referenceBackedCategories) : '' })
 
   const warnaEntry = byCategory.get('warna_bahan')
-  layers.push({ id: 'material_color', label: 'Material Color', priority: 0, content: warnaEntry ? formatEntryContent(warnaEntry) : '' })
+  layers.push({ id: 'material_color', label: 'Material Color', priority: 0, content: warnaEntry ? formatEntryContent(warnaEntry, referenceBackedCategories) : '' })
 
   SELECTED_COMPONENT_CATEGORIES.forEach((category) => {
     const entry = byCategory.get(category)
     if (!entry) return
-    layers.push({ id: `component:${category}`, label: masterDataCategoryLabel(category), priority: 1, content: formatEntryContent(entry) })
+    layers.push({ id: `component:${category}`, label: masterDataCategoryLabel(category), priority: 1, content: formatEntryContent(entry, referenceBackedCategories) })
   })
 
   layers.push({ id: 'visual_description', label: 'Visual Description', priority: 2, content: buildVisualDescriptionContent(masterRecipe) })
