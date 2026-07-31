@@ -331,16 +331,80 @@ function layerTokens(layer: PromptLayer): number {
 // tracking, not an OpenAI limit.
 const DEFAULT_LAYER_TOTAL_BUDGET = 1200
 
-// Phase 2/3/4 (Sprint PR-04) — computes a per-layer token report (Phase 2),
-// then fits layers into `totalBudget` strictly in priority order: Priority
-// 0 is always included in full; Priority 1 gets whatever budget remains
-// after Priority 0, truncated/dropped (starting from the last-fitting
-// entry) only if it doesn't all fit; Priority 2 gets only what's left after
-// that, so it is the first and most aggressively compressed tier — matching
-// the brief's "Compression hanya boleh dimulai dari Priority 2. Jika masih
-// melebihi budget, baru Priority 1." Priority 0 is NEVER truncated or
-// dropped: if it alone exceeds `totalBudget` even with Priority 1/2 fully
-// removed, this returns `ok: false` with a clear reason instead (Phase 4).
+interface PackResult {
+  contents: string[]
+  usedTokens: number
+}
+
+// Best-Fit packing (Sprint PR-06) — replaces the old single-pass greedy scan
+// that BROKE the instant one candidate didn't fit whole, silently discarding
+// every candidate still left in the queue no matter how small. That's what
+// let Plaket Hexagonal's 697-token DNA zero out the budget via Manset's
+// truncation and take Saku's 52-token pocket layer down with it, even though
+// 52 tokens of room genuinely existed — confirmed in production PAT-01/02
+// (2026-07-31): `component:plaket` and `component:saku` both came back
+// `included: false`, and the render showed no hexagon and no pocket at all.
+//
+// Two passes, no break:
+//   Pass 1 (maximize count) — candidates sorted smallest-token-first; each
+//   one that fits whole is taken whole. A candidate that doesn't fit is
+//   deferred, not fatal — the scan keeps going, so a later (or smaller)
+//   candidate still gets its shot at whatever budget remains.
+//   Pass 2 (fair-share truncation) — whatever budget pass 1 left over is
+//   split evenly across every deferred candidate (remainder to the last/
+//   largest one), so one oversized layer can no longer starve the rest of
+//   all remaining room. Every selected component ends up with SOME
+//   representation in the final prompt rather than a lucky few getting
+//   everything and the rest getting nothing.
+// Output order follows the original `candidates` order (category priority),
+// not the size-sorted scan order — sorting only drives the fit decision.
+function packLayers(candidates: PromptLayer[], budget: number, markIncluded: (id: string, truncated?: boolean) => void): PackResult {
+  let remaining = budget
+  const included = new Map<string, string>()
+  const deferred: PromptLayer[] = []
+
+  const bySize = [...candidates].sort((a, b) => layerTokens(a) - layerTokens(b))
+  for (const layer of bySize) {
+    const tokens = layerTokens(layer)
+    if (remaining > 0 && tokens <= remaining) {
+      included.set(layer.id, layer.content)
+      markIncluded(layer.id)
+      remaining -= tokens
+    } else {
+      deferred.push(layer)
+    }
+  }
+
+  if (remaining > 0 && deferred.length > 0) {
+    const share = Math.floor(remaining / deferred.length)
+    const remainder = remaining % deferred.length
+
+    deferred.forEach((layer, index) => {
+      const grant = share + (index === deferred.length - 1 ? remainder : 0)
+      if (grant <= 0) return
+      const truncated = truncateToTokenBudget(layer.content, grant)
+      if (!truncated) return
+      included.set(layer.id, truncated)
+      markIncluded(layer.id, true)
+      remaining -= estimateTokens(truncated)
+    })
+  }
+
+  const contents = candidates.filter((l) => included.has(l.id)).map((l) => included.get(l.id) as string)
+  return { contents, usedTokens: budget - remaining }
+}
+
+// Phase 2/3/4 (Sprint PR-04, packing rewritten Sprint PR-06) — computes a
+// per-layer token report (Phase 2), then fits layers into `totalBudget`
+// strictly in priority order: Priority 0 is always included in full;
+// Priority 1 gets whatever budget remains after Priority 0, best-fit packed
+// (see packLayers above) only if it doesn't all fit whole; Priority 2 gets
+// only what's left after that, so it is the first and most aggressively
+// compressed tier — matching the brief's "Compression hanya boleh dimulai
+// dari Priority 2. Jika masih melebihi budget, baru Priority 1." Priority 0
+// is NEVER truncated or dropped: if it alone exceeds `totalBudget` even with
+// Priority 1/2 fully removed, this returns `ok: false` with a clear reason
+// instead (Phase 4).
 export function compressPromptByLayers(layers: PromptLayer[], totalBudget = DEFAULT_LAYER_TOTAL_BUDGET): LayeredCompressionResult {
   const report: LayerTokenReport[] = layers.map((layer) => ({
     id: layer.id,
@@ -380,30 +444,14 @@ export function compressPromptByLayers(layers: PromptLayer[], totalBudget = DEFA
   p0.forEach((l) => markIncluded(l.id))
   let remaining = totalBudget - p0Tokens
 
-  const fitGreedily = (candidates: PromptLayer[]): string[] => {
-    const parts: string[] = []
-    for (const layer of candidates) {
-      if (remaining <= 0) break
-      const tokens = layerTokens(layer)
-      if (tokens <= remaining) {
-        parts.push(layer.content)
-        markIncluded(layer.id)
-        remaining -= tokens
-      } else {
-        parts.push(truncateToTokenBudget(layer.content, remaining))
-        markIncluded(layer.id, true)
-        remaining = 0
-      }
-    }
-    return parts
-  }
-
   // Priority 1 served first (from what's left after Priority 0) so it
   // survives longer than Priority 2 under a tight budget.
-  const p1Parts = fitGreedily(p1)
-  const p2Parts = fitGreedily(p2)
+  const p1Result = packLayers(p1, remaining, markIncluded)
+  remaining -= p1Result.usedTokens
+  const p2Result = packLayers(p2, remaining, markIncluded)
+  remaining -= p2Result.usedTokens
 
-  const compressed = [...p0.map((l) => l.content), ...p1Parts, ...p2Parts].filter(Boolean).join('. ')
+  const compressed = [...p0.map((l) => l.content), ...p1Result.contents, ...p2Result.contents].filter(Boolean).join('. ')
   const totalTokens = totalBudget - remaining
 
   return { ok: true, compressed, error: null, totalTokens, layerReport: report }
