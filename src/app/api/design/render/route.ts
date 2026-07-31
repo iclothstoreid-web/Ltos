@@ -14,13 +14,17 @@ import { DEFAULT_MODEL } from '@/lib/ai/services/image'
 import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '@/lib/ai/renderSession/service'
 import {
   composeAiAssets,
-  applyAssetInstructions,
   validateModelReferenceAvailable,
   validateCollarReference,
   validatePlaketReference,
   validatePocketReference,
   referenceBackedCategories,
+  MODEL_REFERENCE_SILHOUETTE_INSTRUCTION,
+  COLLAR_REFERENCE_SHAPE_INSTRUCTION,
+  PLAKET_REFERENCE_SHAPE_INSTRUCTION,
+  POCKET_REFERENCE_SHAPE_INSTRUCTION,
 } from '@/lib/design/aiAssetComposer/composer'
+import type { AssetInstructionLayer } from '@/lib/design/promptBuilder/compression'
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
 import type { UnresolvedComponent } from '@/lib/design/capabilityEngine/engine'
@@ -523,6 +527,28 @@ export async function POST(req: NextRequest) {
   debugLog(`Uncompressed prompt (${uncompressed?.length ?? 0} chars):`)
   debugLog(uncompressed)
 
+  // Sprint R-04 — AI Asset caveat instructions (SILHOUETTE-only/COLLAR_
+  // SHAPE-only/PLAKET_SHAPE-only/POCKET_SHAPE-only) built as layer
+  // candidates here, one per reference actually composed in this request,
+  // so they enter compressPromptByLayers alongside everything else instead
+  // of being concatenated onto the compressed string afterward (the old
+  // `applyAssetInstructions` call, removed below — see compression.ts's
+  // AssetInstructionLayer doc comment for why that broke the token audit).
+  const assetInstructionLayers: AssetInstructionLayer[] = [
+    composedAssets.modelReference
+      ? { id: 'asset_instruction:model', label: 'Model Reference Instruction', content: MODEL_REFERENCE_SILHOUETTE_INSTRUCTION }
+      : null,
+    composedAssets.collarReference
+      ? { id: 'asset_instruction:collar', label: 'Collar Reference Instruction', content: COLLAR_REFERENCE_SHAPE_INSTRUCTION }
+      : null,
+    composedAssets.plaketReference
+      ? { id: 'asset_instruction:plaket', label: 'Plaket Reference Instruction', content: PLAKET_REFERENCE_SHAPE_INSTRUCTION }
+      : null,
+    composedAssets.pocketReference
+      ? { id: 'asset_instruction:pocket', label: 'Pocket Reference Instruction', content: POCKET_REFERENCE_SHAPE_INSTRUCTION }
+      : null,
+  ].filter((layer): layer is AssetInstructionLayer => !!layer)
+
   // Layer-Based Prompt Compression (Sprint PR-04) — replaces the old fixed
   // Anchor/Material/Other/Negatives buckets, which truncated by raw word
   // count with no concept of which content mattered more. Built from
@@ -531,17 +557,24 @@ export async function POST(req: NextRequest) {
   // silently cut just because it happened to serialize after Model
   // Thobe's now-richer content inside one shared bucket.
   const layerCompression = profiler.mark('prompt_compression', () => {
-    const promptLayers = buildPromptLayers({ entries, masterRecipe, identityTemplate: LAYER1_IDENTITY_TEMPLATE, referenceBackedCategories: referenceBacked })
+    const promptLayers = buildPromptLayers({
+      entries,
+      masterRecipe,
+      identityTemplate: LAYER1_IDENTITY_TEMPLATE,
+      referenceBackedCategories: referenceBacked,
+      assetInstructions: assetInstructionLayers,
+    })
     return compressPromptByLayers(promptLayers)
   })
 
-  logStage('🔵', 'STAGE 5b: LAYER-BASED COMPRESSION (~270 token budget)')
+  logStage('🔵', 'STAGE 5b: LAYER-BASED COMPRESSION (~1200 token budget)')
   debugTable(layerCompression.layerReport)
 
-  // Phase 4 (Sprint PR-04) — Priority 0 (Identity/Model Thobe/Look
-  // Cutting/Material/Material Color) is NEVER truncated or dropped to make
-  // room. If it alone exceeds the token budget, the render is refused
-  // outright rather than silently deleting one of those layers.
+  // Phase 4 (Sprint PR-04) — Priority 0 (Identity/Negative Rules/active AI
+  // Asset Instructions/Model Thobe/Look Cutting/Material/Material Color) is
+  // NEVER truncated or dropped to make room. If it alone exceeds the token
+  // budget, the render is refused outright rather than silently deleting
+  // one of those layers.
   if (!layerCompression.ok) {
     debugLog(`  ❌ ${layerCompression.error}`)
     outcome = { status: 'failed', requestCount: 0, retryCount: 0, model: null, errorMessage: layerCompression.error ?? 'Compression failed.' }
@@ -551,14 +584,24 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Phase 5 (Sprint PR-04) — final safety net before the OpenAI call.
-  // Identity/Model Thobe/Material/Material Color are always required once
-  // Capability Engine hasn't already blocked the render; Look Cutting is
-  // only required when the customer actually selected a real one (it is a
-  // legitimate "(None)" optional field — see design-studio/types.ts's
-  // OPTIONAL_FIELDS — so its absence on its own is never an error).
+  // Phase 5 (Sprint PR-04, extended Sprint R-04) — final safety net before
+  // the OpenAI call. Identity/Negative Rules/Model Thobe/Material/Material
+  // Color are always required once Capability Engine hasn't already blocked
+  // the render; Look Cutting and each AI Asset Instruction are only
+  // required when applicable to THIS request (Look Cutting is a legitimate
+  // "(None)" optional field — design-studio/types.ts's OPTIONAL_FIELDS; an
+  // Asset Instruction is only meaningful when its reference was actually
+  // composed in — see composedAssets above).
   const lookCuttingSelected = entries.some((e) => e.category === 'look_cutting')
-  const requiredPriorityZeroIds = ['identity', 'model_thobe', 'material', 'material_color', ...(lookCuttingSelected ? ['look_cutting'] : [])]
+  const requiredPriorityZeroIds = [
+    'identity',
+    'negative_rules',
+    'model_thobe',
+    'material',
+    'material_color',
+    ...(lookCuttingSelected ? ['look_cutting'] : []),
+    ...assetInstructionLayers.map((layer) => layer.id),
+  ]
   const priorityZeroCheck = validatePriorityZeroIntact(layerCompression.layerReport, requiredPriorityZeroIds)
   if (!priorityZeroCheck.valid) {
     const message = `Prompt akhir kehilangan layer wajib sebelum dikirim ke OpenAI: ${priorityZeroCheck.missing.join(', ')}.`
@@ -575,12 +618,13 @@ export async function POST(req: NextRequest) {
 
   debugLog(`\nReference images sent to OpenAI: ${referenceImageUrls.length ? referenceImageUrls.join(', ') : 'none'}`)
 
-  // Reference DNA Architecture V1 + AI Asset Library — the SILHOUETTE-only
-  // (Model Reference) and/or COLLAR_SHAPE-only (Collar Reference) caveats
-  // are appended only for whichever reference images are actually
-  // included, so GPT Image never mistakes a reference photo's own
-  // collar/cuff/fabric/color for what to render.
-  const finalPrompt = profiler.mark('asset_instructions', () => applyAssetInstructions(layerCompression.compressed, composedAssets))
+  // Sprint R-04 — `layerCompression.compressed` IS the final prompt now;
+  // AI Asset Instructions already went through compressPromptByLayers as
+  // Priority 0 layers above, so there is nothing left to concatenate here.
+  // This is what makes the audited `layerReport`/`totalTokens` (Sprint
+  // R-03's whole complaint) match what actually reaches OpenAI, byte for
+  // byte — no post-compression step can silently grow the prompt again.
+  const finalPrompt = layerCompression.compressed
 
   // Reference images were kicked off (STAGE 2.5) concurrently with Recipe
   // Composer/Prompt Builder/Compression above — awaited here, right before
