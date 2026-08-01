@@ -22,6 +22,7 @@ import {
   deactivateMaterialColor,
   fetchMaterialColorsForMaterial,
 } from '@/lib/design/materialColors'
+import { DnaColorPicker } from './DnaColorPicker'
 
 interface MaterialMasterManagerProps {
   initialMaterials: Material[]
@@ -549,18 +550,14 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2 items-center pt-1">
-                      <select
+                      <DnaColorPicker
+                        colors={dnaColors}
                         value={newColorDnaId}
-                        onChange={e => setNewColorDnaId(e.target.value)}
-                        className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#755b00]"
-                      >
-                        <option value="">+ Add Existing DNA Color</option>
-                        {dnaColors.map(c => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={setNewColorDnaId}
+                        placeholder="+ Add Existing DNA Color"
+                        accent="#755b00"
+                        className="w-52"
+                      />
                       <input
                         type="text"
                         value={newColorSupplierCode}
