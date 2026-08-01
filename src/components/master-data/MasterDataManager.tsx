@@ -21,9 +21,7 @@ import {
 import type { MasterOptionsByCategory, MasterDataOption, MasterDataCategory } from '@/lib/design/masterData'
 import { fetchMaterials } from '@/lib/inventory/materials'
 import type { Material } from '@/lib/inventory/types'
-import { fetchActiveDnaColors } from '@/lib/design/dnaColors'
-import type { DnaColor } from '@/lib/design/dnaColors'
-import { fetchMaterialColorsForMaterial, addMaterialColor, deactivateMaterialColor } from '@/lib/design/materialColors'
+import { fetchMaterialColorsForMaterial } from '@/lib/design/materialColors'
 import type { MaterialColor } from '@/lib/design/materialColors'
 import { AiDesignDnaSection } from './AiDesignDnaSection'
 import { markDnaGenerated, markDnaNeedsRegeneration, markDnaApproved } from '@/lib/design/aiDna/types'
@@ -88,26 +86,20 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   // Tabel Spesifikasi editor so "Optimalkan proses input Material" gets a
   // guided form instead of a free-form key/value table. This link only
   // scopes Design Studio's Warna Bahan picker to the linked Material's
-  // colors (GarmentBlueprintPanel); Material Color itself is owned and
-  // edited entirely on Material Master's own page (Architecture Lock: DNA
-  // Color Repository + Material Color Mapping — Material Color is never an
-  // Inventory concept).
+  // colors (GarmentBlueprintPanel).
+  //
+  // Material Colors themselves have a single editor: Material Master
+  // (/owner/material-master). This page only shows a read-only summary of
+  // the linked Material's colors — no add/remove/DNA-color-picker UI here
+  // anymore (that used to be duplicated from MaterialMasterManager.tsx,
+  // which is exactly the duplication the "single owner, single editor"
+  // correction removed). "Kelola Material Colors" deep-links there instead.
   const [editingSupplier, setEditingSupplier] = useState('')
   const [editingKarakteristik, setEditingKarakteristik] = useState('')
   const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null)
   const [materials, setMaterials] = useState<Material[]>([])
-  // Material Colors, shown directly once editingMaterialId is set (one-time
-  // link — see handleSelectMaterial) instead of the Material Master picker.
-  // Same underlying table/functions as MaterialMasterManager.tsx's own
-  // Material Colors section (Architecture Lock unchanged, only this page's
-  // UX for picking-then-editing is simplified).
-  const [dnaColors, setDnaColors] = useState<DnaColor[]>([])
   const [materialColors, setMaterialColors] = useState<MaterialColor[]>([])
   const [loadingMaterialColors, setLoadingMaterialColors] = useState(false)
-  const [showAddColor, setShowAddColor] = useState(false)
-  const [newColorDnaId, setNewColorDnaId] = useState('')
-  const [newColorSupplierCode, setNewColorSupplierCode] = useState('')
-  const [newColorSupplierName, setNewColorSupplierName] = useState('')
   const [editingSellingPoints, setEditingSellingPoints] = useState<string[]>([])
   const [editingInternalNotes, setEditingInternalNotes] = useState('')
   const [editingPrice, setEditingPrice] = useState('')
@@ -146,15 +138,11 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
         // Non-fatal — the Material dropdown just shows empty; Inventory's
         // own page surfaces the real error if this genuinely fails.
       })
-    fetchActiveDnaColors(supabase)
-      .then(setDnaColors)
-      .catch(() => {
-        // Non-fatal — the DNA Color picker in Material Colors just shows
-        // empty; /owner/dna-colors surfaces the real error if this fails.
-      })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once
   }, [])
 
+  // Read-only — the only mutation surface for Material Colors is Material
+  // Master (/owner/material-master); this just displays what's already there.
   async function refreshMaterialColors(materialId: string) {
     setLoadingMaterialColors(true)
     try {
@@ -167,41 +155,11 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   }
 
   // Material Master is a one-time link — once picked, the dropdown never
-  // reappears for this item, replaced immediately by its Material Colors.
+  // reappears for this item, replaced immediately by its (read-only)
+  // Material Colors summary.
   function handleSelectMaterial(materialId: string) {
     setEditingMaterialId(materialId || null)
     if (materialId) refreshMaterialColors(materialId)
-  }
-
-  async function handleAddMaterialColor() {
-    if (!editingMaterialId || !newColorDnaId || !newColorSupplierCode.trim()) return
-    setError(null)
-    try {
-      await addMaterialColor(supabase, {
-        materialId: editingMaterialId,
-        dnaColorId: newColorDnaId,
-        supplierColorCode: newColorSupplierCode,
-        supplierColorName: newColorSupplierName || null,
-      })
-      setNewColorDnaId('')
-      setNewColorSupplierCode('')
-      setNewColorSupplierName('')
-      setShowAddColor(false)
-      await refreshMaterialColors(editingMaterialId)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal menambah Material Color.')
-    }
-  }
-
-  async function handleDeactivateMaterialColor(id: string) {
-    if (!editingMaterialId) return
-    setError(null)
-    try {
-      await deactivateMaterialColor(supabase, id)
-      await refreshMaterialColors(editingMaterialId)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal menonaktifkan Material Color.')
-    }
   }
 
   async function refreshCategory(category: MasterDataCategory) {
@@ -261,10 +219,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingKarakteristik(isMaterial ? (option.metadata?.[MATERIAL_KARAKTERISTIK_KEY] ?? '') : '')
     setEditingMaterialId(isMaterial ? option.material_id : null)
     setMaterialColors([])
-    setShowAddColor(false)
-    setNewColorDnaId('')
-    setNewColorSupplierCode('')
-    setNewColorSupplierName('')
     if (isMaterial && option.material_id) refreshMaterialColors(option.material_id)
     setEditingSellingPoints(option.selling_points?.length ? option.selling_points : [])
     setEditingInternalNotes(option.internal_notes ?? '')
@@ -587,98 +541,35 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
                         {editingMaterialId ? (
                           <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748]">
-                                Material Colors {loadingMaterialColors && '· Memuat...'}
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => setShowAddColor(v => !v)}
-                                className="text-xs uppercase tracking-widest text-[#775a19] hover:underline"
-                              >
-                                + Tambah Warna
-                              </button>
-                            </div>
+                            <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+                              Material Colors {loadingMaterialColors && '· Memuat...'}
+                            </p>
 
                             {materialColors.length === 0 ? (
-                              <p className="text-xs text-[#444748]">Belum ada Warna terhubung.</p>
+                              <p className="text-xs text-[#444748] mb-2">Belum ada Warna terhubung.</p>
                             ) : (
-                              <div className="space-y-2">
+                              <div className="space-y-1.5 mb-2">
                                 {materialColors.map(mc => (
-                                  <div
-                                    key={mc.id}
-                                    className="flex items-start gap-3 text-xs border-b border-[#c4c7c7]/20 pb-2 last:border-b-0"
-                                  >
+                                  <div key={mc.id} className="flex items-center gap-2 text-xs">
                                     <span
-                                      className="w-3 h-3 rounded-full border border-[#c4c7c7] shrink-0 mt-1"
+                                      className="w-3 h-3 rounded-full border border-[#c4c7c7] shrink-0"
                                       style={{ backgroundColor: mc.dna_colors?.hex || '#c4c7c7' }}
                                     />
-                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                      <div>
-                                        <p className="text-[9px] uppercase tracking-widest text-[#444748]/70">DNA Color</p>
-                                        <p>{mc.dna_colors?.name ?? '—'}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-[9px] uppercase tracking-widest text-[#444748]/70">
-                                          Nama Warna Supplier
-                                        </p>
-                                        <p>{mc.supplier_color_name || '—'}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-[9px] uppercase tracking-widest text-[#444748]/70">Kode Supplier</p>
-                                        <p>{mc.supplier_color_code}</p>
-                                      </div>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeactivateMaterialColor(mc.id)}
-                                      className="text-[#c0392b] hover:underline shrink-0"
-                                    >
-                                      Nonaktifkan
-                                    </button>
+                                    <span>{mc.dna_colors?.name ?? '—'}</span>
                                   </div>
                                 ))}
                               </div>
                             )}
 
-                            {showAddColor && (
-                              <div className="flex flex-wrap gap-2 items-center pt-2 mt-2 border-t border-[#c4c7c7]/20">
-                                <select
-                                  value={newColorDnaId}
-                                  onChange={e => setNewColorDnaId(e.target.value)}
-                                  className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#775a19]"
-                                >
-                                  <option value="">Pilih DNA Color</option>
-                                  {dnaColors.map(c => (
-                                    <option key={c.id} value={c.id}>
-                                      {c.name}
-                                    </option>
-                                  ))}
-                                </select>
-                                <input
-                                  type="text"
-                                  value={newColorSupplierName}
-                                  onChange={e => setNewColorSupplierName(e.target.value)}
-                                  placeholder="Nama Warna Supplier (opsional)"
-                                  className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#775a19] w-44"
-                                />
-                                <input
-                                  type="text"
-                                  value={newColorSupplierCode}
-                                  onChange={e => setNewColorSupplierCode(e.target.value)}
-                                  placeholder="Kode Supplier"
-                                  className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#775a19] w-36"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={handleAddMaterialColor}
-                                  disabled={!newColorDnaId || !newColorSupplierCode.trim()}
-                                  className="py-1.5 px-3 bg-[#151c27] text-white text-[10px] uppercase tracking-widest disabled:opacity-40"
-                                >
-                                  Tambah
-                                </button>
-                              </div>
-                            )}
+                            {/* Material Colors have a single editor now — Material
+                                Master (/owner/material-master). Deep-links straight
+                                into editing this linked Material there. */}
+                            <a
+                              href={`/owner/material-master?materialId=${editingMaterialId}`}
+                              className="inline-block text-xs uppercase tracking-widest text-[#775a19] hover:underline"
+                            >
+                              Kelola Material Colors →
+                            </a>
                           </div>
                         ) : (
                           <div>

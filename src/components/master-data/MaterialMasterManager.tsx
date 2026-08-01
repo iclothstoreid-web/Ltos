@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Material, MaterialCategory } from '@/lib/inventory/types'
 import {
@@ -54,6 +54,8 @@ const EMPTY_FORM: IdentityFormState = {
 // Mapping) — Material itself never carries a color field.
 export function MaterialMasterManager({ initialMaterials, categories: initialCategories }: MaterialMasterManagerProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const deepLinkHandled = useRef(false)
   const [supabase] = useState(() => createClient())
   const [materials, setMaterials] = useState(initialMaterials)
   const [categories, setCategories] = useState(initialCategories)
@@ -88,6 +90,21 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
       .catch(err => console.error('[material-master] fetch dna colors failed', err))
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once
   }, [])
+
+  // Deep-link from Master Data's "Kelola Material Colors" button
+  // (?materialId=...) — opens straight into that Material's edit view,
+  // same as clicking "Ubah" on it directly. Only fires once per page load.
+  useEffect(() => {
+    if (deepLinkHandled.current) return
+    const materialId = searchParams.get('materialId')
+    if (!materialId) return
+    const material = materials.find(m => m.id === materialId)
+    if (material) {
+      deepLinkHandled.current = true
+      startEdit(material)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-check once materials load; startEdit is stable per render
+  }, [materials])
 
   async function refreshMaterialColors(materialId: string) {
     setLoadingMaterialColors(true)
