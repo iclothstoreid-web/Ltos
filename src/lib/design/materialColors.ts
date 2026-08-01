@@ -84,21 +84,21 @@ export async function addMaterialColor(supabase: SupabaseClient, params: Materia
   if (error) throw error
 }
 
+// Partial by design — only the fields actually passed are written, so an
+// editor that only ever touches DNA Color/Supplier Code/Supplier Name (the
+// Material Master "Edit" row) can never silently null out `stock`.
 export async function updateMaterialColor(
   supabase: SupabaseClient,
   id: string,
-  params: Pick<MaterialColorInput, 'supplierColorCode' | 'supplierColorName' | 'stock'>
+  params: Partial<Pick<MaterialColorInput, 'dnaColorId' | 'supplierColorCode' | 'supplierColorName' | 'stock'>>
 ): Promise<void> {
-  const { error } = await supabase
-    .from('material_colors')
-    .update({
-      supplier_color_code: params.supplierColorCode.trim(),
-      supplier_color_name: params.supplierColorName?.trim() || null,
-      stock: params.stock ?? null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id)
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (params.dnaColorId !== undefined) update.dna_color_id = params.dnaColorId
+  if (params.supplierColorCode !== undefined) update.supplier_color_code = params.supplierColorCode.trim()
+  if (params.supplierColorName !== undefined) update.supplier_color_name = params.supplierColorName?.trim() || null
+  if (params.stock !== undefined) update.stock = params.stock
 
+  const { error } = await supabase.from('material_colors').update(update).eq('id', id)
   if (error) throw error
 }
 

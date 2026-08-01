@@ -21,6 +21,7 @@ import {
   addMaterialColor,
   deactivateMaterialColor,
   fetchMaterialColorsForMaterial,
+  updateMaterialColor,
 } from '@/lib/design/materialColors'
 import { DnaColorPicker } from './DnaColorPicker'
 
@@ -84,6 +85,12 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
   const [newColorDnaId, setNewColorDnaId] = useState('')
   const [newColorSupplierCode, setNewColorSupplierCode] = useState('')
   const [newColorSupplierName, setNewColorSupplierName] = useState('')
+  // Edit — only one Material Color row editable at a time, enforced simply
+  // by this being a single id (not a Set/array).
+  const [editingColorId, setEditingColorId] = useState<string | null>(null)
+  const [editColorDnaId, setEditColorDnaId] = useState('')
+  const [editColorSupplierCode, setEditColorSupplierCode] = useState('')
+  const [editColorSupplierName, setEditColorSupplierName] = useState('')
 
   useEffect(() => {
     fetchActiveDnaColors(supabase)
@@ -220,6 +227,7 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
     setNewColorDnaId('')
     setNewColorSupplierCode('')
     setNewColorSupplierName('')
+    setEditingColorId(null)
     setMaterialColors([])
     refreshMaterialColors(m.id)
   }
@@ -253,6 +261,34 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
     } catch (err) {
       console.error('[material-master] deactivate material color failed', err)
       setError('Gagal menonaktifkan Material Color.')
+    }
+  }
+
+  function startEditColor(mc: MaterialColor) {
+    setEditingColorId(mc.id)
+    setEditColorDnaId(mc.dna_color_id)
+    setEditColorSupplierCode(mc.supplier_color_code)
+    setEditColorSupplierName(mc.supplier_color_name ?? '')
+  }
+
+  function cancelEditColor() {
+    setEditingColorId(null)
+  }
+
+  async function handleSaveEditColor() {
+    if (!editingId || !editingColorId || !editColorDnaId || !editColorSupplierCode.trim()) return
+    setError(null)
+    try {
+      await updateMaterialColor(supabase, editingColorId, {
+        dnaColorId: editColorDnaId,
+        supplierColorCode: editColorSupplierCode,
+        supplierColorName: editColorSupplierName || null,
+      })
+      setEditingColorId(null)
+      await refreshMaterialColors(editingId)
+    } catch (err) {
+      console.error('[material-master] update material color failed', err)
+      setError(err instanceof Error ? err.message : 'Gagal menyimpan Material Color.')
     }
   }
 
@@ -528,25 +564,77 @@ export function MaterialMasterManager({ initialMaterials, categories: initialCat
                       <p className="text-xs text-[#444748]">Belum ada Warna terhubung.</p>
                     ) : (
                       <div className="space-y-1.5">
-                        {materialColors.map(mc => (
-                          <div key={mc.id} className="flex items-center gap-2 text-xs">
-                            <span
-                              className="w-3 h-3 rounded-full border border-[#c4c7c7] shrink-0"
-                              style={{ backgroundColor: mc.dna_colors?.hex || '#c4c7c7' }}
-                            />
-                            <span className="flex-1">
-                              {mc.dna_colors?.name ?? 'DNA Color'} — {mc.supplier_color_code}
-                              {mc.supplier_color_name ? ` (${mc.supplier_color_name})` : ''}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleDeactivateMaterialColor(mc.id)}
-                              className="text-[#ba1a1a] hover:underline"
+                        {materialColors.map(mc =>
+                          editingColorId === mc.id ? (
+                            <div
+                              key={mc.id}
+                              className="flex flex-wrap gap-2 items-center py-1.5 border-b border-[#c4c7c7]/20 last:border-b-0"
                             >
-                              Nonaktifkan
-                            </button>
-                          </div>
-                        ))}
+                              <DnaColorPicker
+                                colors={dnaColors}
+                                value={editColorDnaId}
+                                onChange={setEditColorDnaId}
+                                placeholder="Pilih DNA Color"
+                                accent="#755b00"
+                                className="w-52"
+                              />
+                              <input
+                                type="text"
+                                value={editColorSupplierCode}
+                                onChange={e => setEditColorSupplierCode(e.target.value)}
+                                placeholder="Supplier Color Code"
+                                className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#755b00] w-36"
+                              />
+                              <input
+                                type="text"
+                                value={editColorSupplierName}
+                                onChange={e => setEditColorSupplierName(e.target.value)}
+                                placeholder="Supplier Color Name (opsional)"
+                                className="py-1.5 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#755b00] w-44"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleSaveEditColor}
+                                disabled={!editColorDnaId || !editColorSupplierCode.trim()}
+                                className="py-1.5 px-3 bg-[#161b29] text-white text-[10px] uppercase tracking-widest disabled:opacity-40"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelEditColor}
+                                className="text-[10px] uppercase tracking-widest text-[#444748] hover:underline"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div key={mc.id} className="flex items-center gap-2 text-xs">
+                              <span
+                                className="w-3 h-3 rounded-full border border-[#c4c7c7] shrink-0"
+                                style={{ backgroundColor: mc.dna_colors?.hex || '#c4c7c7' }}
+                              />
+                              <span className="flex-1">
+                                {mc.dna_colors?.name ?? 'DNA Color'} — {mc.supplier_color_code}
+                                {mc.supplier_color_name ? ` (${mc.supplier_color_name})` : ''}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => startEditColor(mc)}
+                                className="text-[#755b00] hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeactivateMaterialColor(mc.id)}
+                                className="text-[#ba1a1a] hover:underline"
+                              >
+                                Nonaktifkan
+                              </button>
+                            </div>
+                          )
+                        )}
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2 items-center pt-1">
