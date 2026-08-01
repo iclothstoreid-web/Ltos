@@ -14,13 +14,16 @@
 // `renderNotes` (admin-facing only, never sent to GPT). `placement` is kept
 // as-is — structural positioning a photo can't convey, not narrative.
 //
-// The `needs_regeneration` member's DISPLAY label is "Needs Review" (see
-// AI_DNA_STATUS_LABELS below): on the Reference-First architecture this
-// state means "the Hero Image changed, go re-review/re-approve it," not
+// The `needs_regeneration` member means "the Hero Image changed, go
+// re-activate it as a Reference" on the Reference-First architecture, not
 // "the DNA content is stale and must be regenerated" — the DNA fields
 // themselves are untouched by this transition (see markDnaNeedsRegeneration
-// below). The literal string value is left unchanged (no DB/schema impact,
-// it's a JSONB field, not a Postgres enum) — only the label mapping changed.
+// below). Master Data UI Cleanup (Sprint R-06.1) removed the lifecycle
+// status display (Pending/Draft/Approved/Needs Review radio row) from
+// AiDesignDnaSection.tsx — `status` itself is unchanged and still gates
+// aiAssetComposer's isAiAssetActive(), only its old label constants
+// (AI_DNA_STATUS_LABELS/AI_DNA_LIFECYCLE_ORDER) were removed as dead code
+// once nothing rendered them anymore.
 export type AiDnaStatus = 'pending' | 'draft' | 'approved' | 'needs_regeneration'
 
 export interface AiDesignDnaMetadata {
@@ -106,18 +109,6 @@ export const DEFAULT_AI_DESIGN_DNA: AiDesignDna = {
     approvedBy: null,
   },
 }
-
-export const AI_DNA_STATUS_LABELS: Record<AiDnaStatus, string> = {
-  pending: 'Pending',
-  draft: 'Draft',
-  approved: 'Approved',
-  needs_regeneration: 'Needs Review',
-}
-
-// Display order for the lifecycle indicator in the Master Data Editor —
-// not a strict linear state machine (Needs Review is reached from
-// Draft/Approved, not from Pending), just the brief's own ordering.
-export const AI_DNA_LIFECYCLE_ORDER: AiDnaStatus[] = ['pending', 'draft', 'approved', 'needs_regeneration']
 
 // Hero Image was replaced — per the brief, flip status to Needs Review
 // (Sprint R-06 — previously labeled "Needs Regeneration") and never delete

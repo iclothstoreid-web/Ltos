@@ -116,7 +116,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   // Saudi Modern Lost Update incident.
   const [editingOriginal, setEditingOriginal] = useState<MasterDataOption | null>(null)
   const [editingAiDna, setEditingAiDna] = useState<AiDesignDna | null>(null)
-  const [showQuickDnaPlaceholder, setShowQuickDnaPlaceholder] = useState(false)
   // Render Recipe editor (Reference-First Cleanup) — session-local, same
   // pattern as editingAiDna: initialized in startEdit, persisted via
   // updateMasterDataOption's `currentRenderRecipe` param on Simpan.
@@ -232,7 +231,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingAiDna(option.ai_dna ?? null)
     setEditingRenderRecipe(option.render_recipe ?? null)
     setEditingOriginal(option)
-    setShowQuickDnaPlaceholder(false)
     setError(null)
   }
 
@@ -258,25 +256,23 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     }
   }
 
-  // Generate Quick DNA — freezes the Hero Image currently shown in this
-  // edit session (`editingPhotoUrl`) into `ai_dna.metadata.sourceImage` as
-  // the Official Reference Image (decision 14). Session-local only, same as
-  // every other editing* field here — persisted when handleSaveEdit calls
+  // Aktifkan Hero Image sebagai Reference (Master Data UI Cleanup, Sprint
+  // R-06.1) — collapses the old two-step Generate Quick DNA + Approve flow
+  // into one action. Freezes the Hero Image currently shown in this edit
+  // session (`editingPhotoUrl`) into `ai_dna.metadata.sourceImage` AND
+  // advances status straight to 'approved' in the same click — chaining
+  // markDnaGenerated then markDnaApproved (both unchanged, aiDna/types.ts)
+  // is what still lets aiAssetComposer's isAiAssetActive() gate work for
+  // this item going forward; only the UI decision (one button instead of
+  // two) changed. `approvedBy` stays null — no user-identity context
+  // available in this component, same as before. Session-local like every
+  // other editing* field, persisted when handleSaveEdit calls
   // updateMasterDataOption below.
-  function handleGenerateQuickDna() {
-    setEditingAiDna(prev => (prev ? markDnaGenerated(prev, editingPhotoUrl) : prev))
-    setShowQuickDnaPlaceholder(true)
-  }
-
-  // Approve — AI Asset Lifecycle sprint. The only action that turns this
-  // item's AI Asset ACTIVE (see aiAssetComposer, which reads
-  // ai_dna.status === 'approved'). `approvedBy` is left null — this app has
-  // no user-identity context available in this component yet; wiring a real
-  // reviewer identity is a future auth-integration task, not fabricated
-  // here. Session-local like every other editing* field, persisted when
-  // handleSaveEdit calls updateMasterDataOption below.
-  function handleApproveAiDna() {
-    setEditingAiDna(prev => (prev ? markDnaApproved(prev, null) : prev))
+  function handleActivateHeroImageReference() {
+    setEditingAiDna(prev => {
+      if (!prev) return prev
+      return markDnaApproved(markDnaGenerated(prev, editingPhotoUrl), null)
+    })
   }
 
   // Reference-First Cleanup — session-local field editors, same "update the
@@ -729,9 +725,8 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                 {editingAiDna && (
                   <AiDesignDnaSection
                     dna={editingAiDna}
-                    showQuickDnaPlaceholder={showQuickDnaPlaceholder}
-                    onGenerateQuickDna={handleGenerateQuickDna}
-                    onApprove={handleApproveAiDna}
+                    heroImageUrl={editingPhotoUrl}
+                    onActivateHeroImageReference={handleActivateHeroImageReference}
                     onReferenceInstructionChange={handleReferenceInstructionChange}
                     onRenderNotesChange={handleRenderNotesChange}
                     onLockRulesChange={handleLockRulesChange}
