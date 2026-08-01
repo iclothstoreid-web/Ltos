@@ -221,7 +221,8 @@ export interface UpdateMasterDataOptionParams {
   // The row's current photo_url/ai_dna before this edit — passed in by the
   // caller (already holds the full row in memory) rather than re-fetched
   // here, purely so this function can detect a Hero Image change and flip
-  // AI DNA to Needs Regeneration in the same write (Task 8). Omit either to
+  // AI DNA to Needs Review (Sprint R-06 — previously "Needs Regeneration")
+  // in the same write (Task 8). Omit either to
   // skip that check (e.g. price-only callers).
   currentPhotoUrl?: string | null
   currentAiDna?: AiDesignDna

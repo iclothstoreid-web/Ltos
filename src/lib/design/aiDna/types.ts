@@ -1,6 +1,16 @@
 // AI Design DNA — permanent, per-ITEM asset (never per-category; Category is
 // only a container). Prompt and render-instruction construction lives in
 // src/lib/design/promptBuilder/; this module owns the DNA lifecycle and shape.
+//
+// Sprint R-06 (Reference Approval Workflow) — the `needs_regeneration`
+// member's DISPLAY label was renamed to "Needs Review" (see
+// AI_DNA_STATUS_LABELS below): on the Reference-First architecture (Sprint
+// R-01+) this state means "the Hero Image changed, go re-review/re-approve
+// it," not "the DNA content is stale and must be regenerated" — the DNA
+// fields themselves are untouched by this transition (see
+// markDnaNeedsRegeneration below). The literal string value is left
+// unchanged (no DB/schema impact, it's a JSONB field, not a Postgres enum)
+// — only the label mapping changed.
 export type AiDnaStatus = 'pending' | 'draft' | 'approved' | 'needs_regeneration'
 
 export interface AiDesignDnaMetadata {
@@ -49,19 +59,20 @@ export const AI_DNA_STATUS_LABELS: Record<AiDnaStatus, string> = {
   pending: 'Pending',
   draft: 'Draft',
   approved: 'Approved',
-  needs_regeneration: 'Needs Regeneration',
+  needs_regeneration: 'Needs Review',
 }
 
 // Display order for the lifecycle indicator in the Master Data Editor —
-// not a strict linear state machine (Needs Regeneration is reached from
+// not a strict linear state machine (Needs Review is reached from
 // Draft/Approved, not from Pending), just the brief's own ordering.
 export const AI_DNA_LIFECYCLE_ORDER: AiDnaStatus[] = ['pending', 'draft', 'approved', 'needs_regeneration']
 
-// Hero Image was replaced — per the brief, flip status to Needs
-// Regeneration and never delete the existing DNA content. Only meaningful
-// once something has actually been generated (`draft`/`approved`); a `
-// pending` item has no DNA yet, so there's nothing to regenerate and it
-// stays `pending` until it's generated for the first time.
+// Hero Image was replaced — per the brief, flip status to Needs Review
+// (Sprint R-06 — previously labeled "Needs Regeneration") and never delete
+// the existing DNA content. Only meaningful once something has actually
+// been generated (`draft`/`approved`); a `pending` item has no DNA yet, so
+// there's nothing to review and it stays `pending` until it's generated
+// for the first time.
 export function markDnaNeedsRegeneration(dna: AiDesignDna): AiDesignDna {
   if (dna.status !== 'draft' && dna.status !== 'approved') return dna
   return { ...dna, status: 'needs_regeneration', version: dna.version + 1 }
