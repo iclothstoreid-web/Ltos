@@ -2,7 +2,12 @@
 
 interface RuleListEditorProps {
   label: string
-  items: string[]
+  // Nullable/undefined on purpose — a row's ai_dna.lockRules/negativeRules
+  // predating Sprint R-06 simply doesn't have this key yet (the data-cleanup
+  // migration that would backfill it has not been applied), and the editor
+  // must still open. Never assume the DB guarantees this shape at the UI
+  // boundary; see the defensive normalize below.
+  items: string[] | null | undefined
   onChange: (items: string[]) => void
 }
 
@@ -11,25 +16,37 @@ interface RuleListEditorProps {
 // Cleanup). Reorder mirrors MasterDataManager.tsx's existing up/down
 // neighbor-swap pattern (handleMove) rather than inventing drag-and-drop;
 // Add/Delete mirror the existing Selling Point row editor in the same file.
+//
+// Hotfix R-06.2 — Defensive UI Guard. `items` is normalized to `[]` right
+// here, at the component's own boundary, the same `Array.isArray(x) ? x :
+// []` idiom recipeComposer/composer.ts's normalizeRenderRecipeEntries
+// already uses for these exact two fields — so every internal reference
+// (render, add/edit/delete/reorder) is guaranteed a real array and legacy
+// Master Data rows without lockRules/negativeRules yet no longer crash the
+// editor. Business logic, AI pipeline, Prompt Builder, and Render Engine
+// are untouched — this fixes only how the UI reads a possibly-missing
+// field, not what the field means or how it flows downstream.
 export function RuleListEditor({ label, items, onChange }: RuleListEditorProps) {
+  const safeItems = Array.isArray(items) ? items : []
+
   function updateItem(index: number, value: string) {
-    const next = [...items]
+    const next = [...safeItems]
     next[index] = value
     onChange(next)
   }
 
   function addItem() {
-    onChange([...items, ''])
+    onChange([...safeItems, ''])
   }
 
   function removeItem(index: number) {
-    onChange(items.filter((_, i) => i !== index))
+    onChange(safeItems.filter((_, i) => i !== index))
   }
 
   function moveItem(index: number, direction: 'up' | 'down') {
     const target = direction === 'up' ? index - 1 : index + 1
-    if (target < 0 || target >= items.length) return
-    const next = [...items]
+    if (target < 0 || target >= safeItems.length) return
+    const next = [...safeItems]
     ;[next[index], next[target]] = [next[target], next[index]]
     onChange(next)
   }
@@ -47,7 +64,7 @@ export function RuleListEditor({ label, items, onChange }: RuleListEditorProps) 
         </button>
       </div>
       <div className="space-y-2">
-        {items.map((item, index) => (
+        {safeItems.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
             <div className="flex flex-col shrink-0">
               <button
@@ -60,7 +77,7 @@ export function RuleListEditor({ label, items, onChange }: RuleListEditorProps) 
               </button>
               <button
                 type="button"
-                disabled={index === items.length - 1}
+                disabled={index === safeItems.length - 1}
                 onClick={() => moveItem(index, 'down')}
                 className="material-symbols-outlined text-sm text-[#444748] disabled:opacity-20 -mt-2"
               >
@@ -81,7 +98,7 @@ export function RuleListEditor({ label, items, onChange }: RuleListEditorProps) 
             </button>
           </div>
         ))}
-        {items.length === 0 && <p className="text-xs text-[#444748]">Belum ada rule.</p>}
+        {safeItems.length === 0 && <p className="text-xs text-[#444748]">Belum ada rule.</p>}
       </div>
     </div>
   )
