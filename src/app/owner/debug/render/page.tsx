@@ -126,13 +126,6 @@ interface DebugResponse {
     valid: boolean
     requiredFields: string[]
     missingFields: string[]
-    subKeyCheck: {
-      checkedOn: 'geometry' | 'construction'
-      applicable: boolean
-      requiredKeys: string[]
-      missingKeys: string[]
-      reason: string
-    } | null
     errors: string[]
   }[]
   promptArchitectureV2: {
@@ -517,17 +510,6 @@ export default function RenderDebugPage() {
                     </div>
                     {row.missingFields.length > 0 && (
                       <div className="text-xs text-red-600">Missing: {row.missingFields.join(', ')}</div>
-                    )}
-                    {row.subKeyCheck && (
-                      <div className="text-xs text-gray-500">
-                        Sub-key check ({row.subKeyCheck.checkedOn}):{' '}
-                        {row.subKeyCheck.applicable ? (
-                          <StatusBadge status={row.subKeyCheck.missingKeys.length === 0 ? 'PASS' : 'FAIL'} />
-                        ) : (
-                          <StatusBadge status="INFO" />
-                        )}{' '}
-                        {row.subKeyCheck.reason}
-                      </div>
                     )}
                     {row.errors.length > 0 && (
                       <div className="mt-1 text-xs text-red-600">{row.errors.join(' | ')}</div>

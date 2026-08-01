@@ -2,12 +2,17 @@
 
 import { AI_DNA_LIFECYCLE_ORDER, AI_DNA_STATUS_LABELS } from '@/lib/design/aiDna/types'
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
+import { RuleListEditor } from './RuleListEditor'
 
 interface AiDesignDnaSectionProps {
   dna: AiDesignDna
   showQuickDnaPlaceholder: boolean
   onGenerateQuickDna: () => void
   onApprove: () => void
+  onReferenceInstructionChange: (value: string) => void
+  onRenderNotesChange: (value: string) => void
+  onLockRulesChange: (items: string[]) => void
+  onNegativeRulesChange: (items: string[]) => void
 }
 
 function formatTimestamp(value: string | null): string {
@@ -22,17 +27,29 @@ function formatTimestamp(value: string | null): string {
 // to throw "Cannot read properties of undefined" the instant this dialog
 // opened (Owner App Master Data > Pocket > Edit bugfix).
 
-// Read-only recap of a Master Item's permanent AI Design DNA lifecycle.
-// Status is never directly editable here; it only ever moves via
+// Lifecycle recap + Reference-First editors for a Master Item's permanent AI
+// Design DNA. Status is never directly editable here; it only ever moves via
 // markDnaNeedsRegeneration (Hero Image replaced), markDnaGenerated
 // (Generate Quick DNA, which also freezes the Official Reference Image —
 // see MasterDataManager's handleGenerateQuickDna), or markDnaApproved
 // (Approve below — AI Asset Lifecycle sprint: this is the ONLY action that
 // turns this item's AI Asset ACTIVE; there is deliberately no separate
 // "Add Reference"/"Create AI Asset" affordance anywhere in this app).
-// Advanced/Expert DNA (real geometry/construction/appearance extraction)
-// remain future AI Vision Integration work — untouched by this pipeline.
-export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQuickDna, onApprove }: AiDesignDnaSectionProps) {
+//
+// Reference Instruction / Render Notes / Lock Rules / Negative Rules ARE
+// directly editable here (unlike the old geometry/construction/appearance/
+// materials/stitching fields they replaced, which never had field-level UI
+// at all).
+export function AiDesignDnaSection({
+  dna,
+  showQuickDnaPlaceholder,
+  onGenerateQuickDna,
+  onApprove,
+  onReferenceInstructionChange,
+  onRenderNotesChange,
+  onLockRulesChange,
+  onNegativeRulesChange,
+}: AiDesignDnaSectionProps) {
   return (
     <div className="border-t border-[#c4c7c7]/30 pt-5 mt-2">
       <p className="font-sans text-[10px] uppercase tracking-widest text-[#775a19] mb-3">AI Design DNA</p>
@@ -103,18 +120,6 @@ export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQui
             {dna.status === 'approved' ? 'Approved' : 'Approve'}
           </span>
         )}
-        <span
-          title="Belum aktif — bagian dari fase AI Vision Integration berikutnya"
-          className="px-3 py-2 border-[0.5px] border-dashed border-[#c4c7c7] text-[#c4c7c7] font-sans text-xs uppercase tracking-widest cursor-not-allowed"
-        >
-          Advanced DNA
-        </span>
-        <span
-          title="Belum aktif — bagian dari fase AI Vision Integration berikutnya"
-          className="px-3 py-2 border-[0.5px] border-dashed border-[#c4c7c7] text-[#c4c7c7] font-sans text-xs uppercase tracking-widest cursor-not-allowed"
-        >
-          Expert DNA
-        </span>
       </div>
 
       {showQuickDnaPlaceholder && (
@@ -122,6 +127,40 @@ export function AiDesignDnaSection({ dna, showQuickDnaPlaceholder, onGenerateQui
           AI DNA Generation will be available in the next phase.
         </p>
       )}
+
+      <div className="mt-4">
+        <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+          Reference Instruction
+        </p>
+        <textarea
+          value={dna.referenceInstruction ?? ''}
+          onChange={e => onReferenceInstructionChange(e.target.value)}
+          rows={3}
+          placeholder="Instruksi untuk GPT Image tentang cara memakai Hero Image ini — silhouette, proporsi, panjang, seam alignment, fold/drape, posisi komponen, bagian mana yang dipertahankan/diabaikan/diganti Color DNA."
+          className="w-full border-[0.5px] border-[#c4c7c7] bg-transparent p-2 text-sm outline-none focus:border-[#775a19]"
+        />
+      </div>
+
+      <div className="mt-4">
+        <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+          Render Notes <span className="normal-case text-[#444748]/70">(opsional, tidak dikirim ke GPT)</span>
+        </p>
+        <textarea
+          value={dna.renderNotes ?? ''}
+          onChange={e => onRenderNotesChange(e.target.value)}
+          rows={2}
+          placeholder="Catatan internal — misal alasan Lock Rule tertentu ditambahkan, atau kuirk render yang sudah diketahui."
+          className="w-full border-[0.5px] border-[#c4c7c7] bg-transparent p-2 text-sm outline-none focus:border-[#775a19]"
+        />
+      </div>
+
+      <div className="mt-4">
+        <RuleListEditor label="Lock Rules" items={dna.lockRules} onChange={onLockRulesChange} />
+      </div>
+
+      <div className="mt-4">
+        <RuleListEditor label="Negative Rules" items={dna.negativeRules} onChange={onNegativeRulesChange} />
+      </div>
     </div>
   )
 }

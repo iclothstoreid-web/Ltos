@@ -218,8 +218,8 @@ export async function POST(req: NextRequest) {
   // row (see src/lib/design/dnaColors.ts); the mirror's OWN ai_dna/
   // render_recipe are never hand-authored anymore (no admin UI writes them),
   // so they sit at the DB default (pending/empty) forever. Merge the linked
-  // DNA Color's `prompt` in as this row's ai_dna.appearance and mark it
-  // ready IN-MEMORY ONLY (never persisted) so DNA Resolver's existing
+  // DNA Color's `prompt` in as this row's ai_dna.referenceInstruction and
+  // mark it ready IN-MEMORY ONLY (never persisted) so DNA Resolver's existing
   // pending/empty gate doesn't block it — dna_colors.prompt is the ONLY
   // color content that ever reaches OpenAI this way; material_colors'
   // supplier_color_code is never read here. Does not touch DNA Resolver,
@@ -237,14 +237,14 @@ export async function POST(req: NextRequest) {
       const dnaColorsById = new Map((dnaColorRows ?? []).map((c) => [c.id, c]))
       warnaBahanRows.forEach((row) => {
         const dnaColor = dnaColorsById.get(row.dna_color_id as string)
-        const appearance =
+        const colorText =
           dnaColor?.prompt || [dnaColor?.character, dnaColor?.family, dnaColor?.hex].filter(Boolean).join(', ')
-        if (!appearance) return
+        if (!colorText) return
 
         row.ai_dna = {
           ...row.ai_dna,
           status: row.ai_dna.status === 'pending' ? 'draft' : row.ai_dna.status,
-          appearance,
+          referenceInstruction: colorText,
         }
         row.render_recipe = {
           ...row.render_recipe,
@@ -404,15 +404,15 @@ export async function POST(req: NextRequest) {
   debugLog(`Plaket Reference: ${plaketReferenceStatus.valid ? '✅' : '—'} ${plaketReferenceStatus.reason}`)
   debugLog(`Pocket Reference: ${pocketReferenceStatus.valid ? '✅' : '—'} ${pocketReferenceStatus.reason}`)
 
-  // Reference-First (Sprint R-02) — categories whose Hero Image is actually
-  // being sent this render (derived from composedAssets above, the same
-  // isAiAssetActive gate that decided the image itself). Threaded into
-  // Prompt Builder (diagnostic instruction) and Prompt Compression (the
-  // real prompt sent to OpenAI) below so a reference-backed category's
-  // narrative DNA collapses to Lock Rules instead of full prose — see
-  // promptBuilder/referenceResolver.ts (the Reference Resolver contract).
+  // Reference-First — categories whose Hero Image is actually being sent
+  // this render (derived from composedAssets above, the same
+  // isAiAssetActive gate that decided the image itself). Still used below
+  // to decide which AI Asset caveat instruction layers apply and for debug
+  // logging; no longer used to prune garment text (Reference-First Cleanup
+  // removed the narrative fields that pruning used to target — every
+  // category's `garment.referenceInstruction` is already right-sized).
   const referenceBacked = referenceBackedCategories(composedAssets)
-  debugLog(`Reference-backed categories (Lock Rules only): [${Array.from(referenceBacked).join(', ') || 'none'}]`)
+  debugLog(`Reference-backed categories (photo sent): [${Array.from(referenceBacked).join(', ') || 'none'}]`)
 
   const unresolvedComponents: UnresolvedComponent[] = componentsMissing.map((m) => ({
     itemId: m.componentId,
@@ -498,7 +498,7 @@ export async function POST(req: NextRequest) {
   }
 
   logStage('🟢', 'STAGE 4: PROMPT BUILDER — RenderInstruction')
-  const instruction = profiler.mark('prompt_builder', () => buildRenderInstruction(masterRecipe, referenceBacked))
+  const instruction = profiler.mark('prompt_builder', () => buildRenderInstruction(masterRecipe))
   const instructionValidation = validateRenderInstruction(instruction)
   debugLog(JSON.stringify(instruction, null, 2))
   debugLog(`Validation: ${instructionValidation.valid ? '✅ valid' : `⚠️  ${instructionValidation.errors.join(' | ')}`}`)
@@ -544,6 +544,18 @@ export async function POST(req: NextRequest) {
   // of 4 hardcoded ternaries; `composedAssets.referencesByCategory` (Sprint
   // R-05) is the one generic map every "is category X active" question here
   // reads from.
+  //
+  // Reference-First Cleanup / Duplication Fix — this layer carries ONLY the
+  // registry's static caveat text. An earlier revision also appended the
+  // item's own `ai_dna.referenceInstruction` here, but that text is ALSO
+  // always present in this same category's own DNA slot / component layer
+  // below (`garment.referenceInstruction`, set unconditionally by
+  // dnaResolver/resolver.ts's buildGarmentSpec regardless of reference-
+  // backed status) — sending both meant GPT Image received the identical
+  // instruction twice for every reference-backed category. Reference
+  // Instruction now has exactly one source in finalPrompt: `garment.
+  // referenceInstruction`. This layer's content is unchanged from before
+  // that duplication was introduced.
   const assetInstructionLayers: AssetInstructionLayer[] = REFERENCE_CATEGORY_REGISTRY.filter((def) =>
     composedAssets.referencesByCategory.has(def.category),
   ).map((def) => ({ id: `asset_instruction:${def.idSuffix}`, label: def.instructionLabel, content: def.instruction }))
@@ -560,7 +572,6 @@ export async function POST(req: NextRequest) {
       entries,
       masterRecipe,
       identityTemplate: LAYER1_IDENTITY_TEMPLATE,
-      referenceBackedCategories: referenceBacked,
       assetInstructions: assetInstructionLayers,
     })
     return compressPromptByLayers(promptLayers)
@@ -595,6 +606,7 @@ export async function POST(req: NextRequest) {
   const requiredPriorityZeroIds = [
     'identity',
     'negative_rules',
+    'lock_rules',
     'model_thobe',
     'material',
     'material_color',

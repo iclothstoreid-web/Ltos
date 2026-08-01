@@ -37,6 +37,7 @@ export interface RenderInstruction {
   embroidery: Record<string, unknown>
   quality: Record<string, unknown>
   negativeRules: string[]
+  lockRules: string[]
 }
 
 export interface RenderInstructionValidation {

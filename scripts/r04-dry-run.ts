@@ -324,6 +324,7 @@ const masterRecipe: MasterRenderRecipe = {
   quality: { ...DEFAULT_GLOBAL_RENDER_POLICY.quality, rendering: 'Photorealistic, natural fabric behavior, no plastic/CGI look' },
   style: {},
   negativeRules: [...DEFAULT_GLOBAL_RENDER_POLICY.negativeRules],
+  lockRules: [],
   sources: entries.map((e) => ({ itemId: e.itemId, category: e.category, priority: e.priority })),
   composedAt: new Date().toISOString(),
 }
@@ -336,11 +337,14 @@ const ALL_ASSET_INSTRUCTIONS: Record<'model' | 'collar' | 'plaket' | 'pocket', A
 }
 
 function runScenario(label: string, referenceBackedCategories: Set<MasterDataCategory>, assetInstructions: AssetInstructionLayer[]) {
+  // Reference-First Cleanup — buildPromptLayers no longer prunes garment
+  // text by reference-backed status (there's no narrative text left to
+  // prune); `referenceBackedCategories` is kept as a parameter here only
+  // for this script's own scenario labeling/logging below.
   const layers = buildPromptLayers({
     entries,
     masterRecipe,
     identityTemplate: LAYER1_IDENTITY_TEMPLATE,
-    referenceBackedCategories,
     assetInstructions,
   })
   const result = compressPromptByLayers(layers, 1200)

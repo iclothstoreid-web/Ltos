@@ -35,6 +35,11 @@ export interface RenderRecipe {
   embroidery: Record<string, unknown>
   renderPriority: string[]
   negativeRules: string[]
+  // Reference-First Cleanup — per-item Lock Rules, unioned from AI Design
+  // DNA's own `lockRules` the same way `negativeRules` already is (see
+  // dnaResolver/resolver.ts). Real seed content lives on AiDesignDna;
+  // defaults to empty here.
+  lockRules: string[]
 }
 
 // Matches the DB column default on design_master_options.render_recipe
@@ -57,6 +62,7 @@ export const DEFAULT_RENDER_RECIPE: RenderRecipe = {
   embroidery: {},
   renderPriority: [],
   negativeRules: [],
+  lockRules: [],
 }
 
 export const RENDER_RECIPE_STATUS_LABELS: Record<RenderRecipeStatus, string> = {

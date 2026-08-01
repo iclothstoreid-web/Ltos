@@ -27,6 +27,7 @@ import { AiDesignDnaSection } from './AiDesignDnaSection'
 import { markDnaGenerated, markDnaNeedsRegeneration, markDnaApproved } from '@/lib/design/aiDna/types'
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
 import { RenderRecipeSection } from './RenderRecipeSection'
+import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
 
 interface MasterDataManagerProps {
   initialOptions: MasterOptionsByCategory
@@ -116,6 +117,10 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const [editingOriginal, setEditingOriginal] = useState<MasterDataOption | null>(null)
   const [editingAiDna, setEditingAiDna] = useState<AiDesignDna | null>(null)
   const [showQuickDnaPlaceholder, setShowQuickDnaPlaceholder] = useState(false)
+  // Render Recipe editor (Reference-First Cleanup) — session-local, same
+  // pattern as editingAiDna: initialized in startEdit, persisted via
+  // updateMasterDataOption's `currentRenderRecipe` param on Simpan.
+  const [editingRenderRecipe, setEditingRenderRecipe] = useState<RenderRecipe | null>(null)
 
   const [priceEditingId, setPriceEditingId] = useState<string | null>(null)
   const [priceDraft, setPriceDraft] = useState('')
@@ -225,6 +230,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingPrice(String(option.price ?? 0))
     setEditingOriginalPhotoUrl(option.photo_url ?? null)
     setEditingAiDna(option.ai_dna ?? null)
+    setEditingRenderRecipe(option.render_recipe ?? null)
     setEditingOriginal(option)
     setShowQuickDnaPlaceholder(false)
     setError(null)
@@ -273,6 +279,29 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingAiDna(prev => (prev ? markDnaApproved(prev, null) : prev))
   }
 
+  // Reference-First Cleanup — session-local field editors, same "update the
+  // whole editingAiDna object, persist on Simpan" pattern as
+  // handleGenerateQuickDna/handleApproveAiDna above.
+  function handleReferenceInstructionChange(value: string) {
+    setEditingAiDna(prev => (prev ? { ...prev, referenceInstruction: value } : prev))
+  }
+
+  function handleRenderNotesChange(value: string) {
+    setEditingAiDna(prev => (prev ? { ...prev, renderNotes: value } : prev))
+  }
+
+  function handleLockRulesChange(items: string[]) {
+    setEditingAiDna(prev => (prev ? { ...prev, lockRules: items } : prev))
+  }
+
+  function handleNegativeRulesChange(items: string[]) {
+    setEditingAiDna(prev => (prev ? { ...prev, negativeRules: items } : prev))
+  }
+
+  function handleRenderRecipeChange(recipe: RenderRecipe) {
+    setEditingRenderRecipe(recipe)
+  }
+
   async function handleSaveEdit() {
     if (!editingId || !editingName.trim() || !editingOriginal) return
     setSaving(true)
@@ -292,6 +321,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
         price: Number(editingPrice) || 0,
         currentPhotoUrl: editingOriginalPhotoUrl,
         currentAiDna: editingAiDna ?? undefined,
+        currentRenderRecipe: editingRenderRecipe ?? undefined,
         ...(editingCategory === 'bahan' ? { material_id: editingMaterialId } : {}),
         original: editingOriginal,
       })
@@ -702,10 +732,14 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                     showQuickDnaPlaceholder={showQuickDnaPlaceholder}
                     onGenerateQuickDna={handleGenerateQuickDna}
                     onApprove={handleApproveAiDna}
+                    onReferenceInstructionChange={handleReferenceInstructionChange}
+                    onRenderNotesChange={handleRenderNotesChange}
+                    onLockRulesChange={handleLockRulesChange}
+                    onNegativeRulesChange={handleNegativeRulesChange}
                   />
                 )}
 
-                <RenderRecipeSection recipe={option.render_recipe} />
+                <RenderRecipeSection recipe={editingRenderRecipe} onChange={handleRenderRecipeChange} />
 
                 <div className="flex items-center gap-4">
                   <button

@@ -59,6 +59,7 @@ export function normalizeRenderRecipeEntries(entries: RenderRecipeEntry[]): Rend
       embroidery: normalizeRecord(entry.recipe.embroidery),
       renderPriority: Array.isArray(entry.recipe.renderPriority) ? entry.recipe.renderPriority : [],
       negativeRules: Array.isArray(entry.recipe.negativeRules) ? entry.recipe.negativeRules : [],
+      lockRules: Array.isArray(entry.recipe.lockRules) ? entry.recipe.lockRules : [],
     },
   }))
 }
@@ -113,11 +114,11 @@ export interface RecipeConflictResolution {
 //
 // Exception — `garment` Anchor rule: DNA Resolver's buildGarmentSpec maps
 // EVERY component's AI Design DNA onto the same unnamespaced keys
-// (geometry/construction/appearance/materials/stitching/placement — see
+// (referenceInstruction/placement, or `color` for warna_bahan — see
 // dnaResolver/resolver.ts). Without an exception, a same-key collision on
 // `garment` would let whichever component merges with the highest priority
 // (e.g. Collar/Cuff/Pocket, since Model Thobe is always sent first at
-// priority 0) silently clobber Model Thobe's own geometry/construction —
+// priority 0) silently clobber Model Thobe's own referenceInstruction —
 // the one component that defines the garment's actual identity. Model
 // Thobe is the Anchor: on `garment` only, if Model Thobe is among the
 // candidates it always wins the collision, regardless of priority. Every
@@ -204,6 +205,7 @@ export function mergeRecipe(input: MergeRecipeInput): Partial<MasterRenderRecipe
   })
 
   merged.negativeRules = Array.from(new Set([...(base.negativeRules ?? []), ...incoming.recipe.negativeRules]))
+  merged.lockRules = Array.from(new Set([...(base.lockRules ?? []), ...incoming.recipe.lockRules]))
 
   return merged
 }
@@ -239,6 +241,9 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
   const negativeRules = Array.from(
     new Set([...policy.negativeRules, ...sorted.flatMap((entry) => entry.recipe.negativeRules)])
   )
+  const lockRules = Array.from(
+    new Set([...policy.lockRules, ...sorted.flatMap((entry) => entry.recipe.lockRules)])
+  )
 
   // GlobalRenderPolicy overlaps RenderRecipe on exactly 3 fields (camera,
   // pose, lighting) — policy supplies the baseline there and any item's own
@@ -264,6 +269,7 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     quality: normalizeRecord(policy.quality),
     style: normalizeRecord(policy.style),
     negativeRules,
+    lockRules,
     sources,
     composedAt: new Date().toISOString(),
   }

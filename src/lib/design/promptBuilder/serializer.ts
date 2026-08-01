@@ -16,7 +16,7 @@ export interface PromptSerializerInput {
   instruction: RenderInstruction
 }
 
-type RenderInstructionSectionKey = Exclude<keyof RenderInstruction, 'negativeRules'>
+type RenderInstructionSectionKey = Exclude<keyof RenderInstruction, 'negativeRules' | 'lockRules'>
 
 interface PromptSection {
   key: RenderInstructionSectionKey
@@ -101,6 +101,11 @@ export function serializeOpenAI(input: PromptSerializerInput): string | null {
   }
 
   let prompt = `${sections.join('. ')}.`
+
+  const lockRules = (instruction.lockRules ?? []).filter(Boolean)
+  if (lockRules.length > 0) {
+    prompt += ` Preserve: ${lockRules.join(', ')}.`
+  }
 
   const negativeRules = (instruction.negativeRules ?? []).filter(Boolean)
   if (negativeRules.length > 0) {

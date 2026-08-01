@@ -1,6 +1,5 @@
 import type { RenderInstruction } from './types'
 import { formatRecord } from './serializer'
-import { applyLockRulesIfReferenceBacked } from './referenceResolver'
 import type { RenderRecipeEntry, MasterRenderRecipe } from '@/lib/design/recipeComposer/types'
 import { masterDataCategoryLabel, type MasterDataCategory } from '@/lib/design/masterData'
 
@@ -248,20 +247,13 @@ const P0_DNA_SLOTS: { id: string; label: string; category: MasterDataCategory }[
 // another entry's data, so two entries in the same category collision the
 // old Anchor-rule solves for MasterRenderRecipe never arises here at all.
 //
-// Reference-First (Sprint R-02) — `referenceBacked` is threaded in from
-// aiAssetComposer's referenceBackedCategories (computed once per request in
-// route.ts from the SAME composeAiAssets() result that decided which Hero
-// Images are actually being sent). When this entry's own category is
-// reference-backed, its `garment` record is pruned to Lock Rules only
-// (referenceResolver.ts) BEFORE formatting — the narrative geometry/
-// construction/appearance/materials/stitching text a photo already conveys
-// is dropped, while placement/color/negativeRules-adjacent content and
-// everything else still reaches the prompt untouched. `fabricIdentity`/
-// `fabricBehavior` are never pruned — Reference-First only ever concerns
-// `garment` (see referenceResolver.ts's own doc comment on scope).
-function formatEntryContent(entry: RenderRecipeEntry, referenceBacked: Set<MasterDataCategory>): string {
-  const garment = applyLockRulesIfReferenceBacked(entry.recipe.garment, entry.category, referenceBacked)
-  return [formatRecord(garment), formatRecord(entry.recipe.fabricIdentity), formatRecord(entry.recipe.fabricBehavior)]
+// Reference-First Cleanup — `entry.recipe.garment` no longer carries
+// prunable narrative text (see dnaResolver/resolver.ts: it only ever holds
+// `referenceInstruction`/`placement`/`color` now, already right-sized for
+// its purpose whether or not a Hero Image photo is also being sent for this
+// category), so there is nothing left to conditionally prune here.
+function formatEntryContent(entry: RenderRecipeEntry): string {
+  return [formatRecord(entry.recipe.garment), formatRecord(entry.recipe.fabricIdentity), formatRecord(entry.recipe.fabricBehavior)]
     .filter(Boolean)
     .join(', ')
 }
@@ -305,6 +297,19 @@ function buildNegativeRulesContent(masterRecipe: MasterRenderRecipe | null): str
   return negatives.length > 0 ? `Avoid: ${negatives.join(', ')}.` : ''
 }
 
+// Reference-First Cleanup — Lock Rules is the positive-constraint mirror of
+// Negative Rules above: per-item admin-authored text ("Preserve garment
+// silhouette exactly.") unioned across every selected item plus the Global
+// Render Policy floor (see recipeComposer/composer.ts's composeRenderRecipe).
+// Same Priority 0 treatment as Negative Rules — a positive identity/garment
+// constraint is no less important than a negative one, so it gets the same
+// "included in full or the render refuses" guarantee, never P2 mood-tier
+// compression.
+function buildLockRulesContent(masterRecipe: MasterRenderRecipe | null): string {
+  const locks = (masterRecipe?.lockRules ?? []).filter(Boolean)
+  return locks.length > 0 ? `Preserve: ${locks.join(', ')}.` : ''
+}
+
 // Sprint R-04 — an AI Asset caveat instruction (SILHOUETTE-only, COLLAR_
 // SHAPE-only, etc. — aiAssetComposer/composer.ts's MODEL_REFERENCE_
 // SILHOUETTE_INSTRUCTION and siblings) as a layer candidate. These used to
@@ -329,13 +334,6 @@ export interface BuildPromptLayersInput {
   // layers below never read from it.
   masterRecipe: MasterRenderRecipe | null
   identityTemplate: string
-  // Reference-First (Sprint R-02) — categories whose Hero Image is actually
-  // being sent this render (aiAssetComposer's referenceBackedCategories).
-  // Optional and defaults to empty so every existing caller that doesn't
-  // pass it (Render Test Framework scripts, any future ad-hoc caller) keeps
-  // getting the pre-R-02 behavior: full DNA text for every category,
-  // exactly as before.
-  referenceBackedCategories?: Set<MasterDataCategory>
   // Sprint R-04 — caller-supplied (route.ts already knows which AI Assets
   // composeAiAssets() actually activated for this request; this module
   // never re-derives that). Optional and defaults to none, so an existing
@@ -354,7 +352,7 @@ export interface BuildPromptLayersInput {
 // skipped entirely for Priority 1 slots (Selected Components) — "Skip
 // otomatis jika NONE" per the brief.
 export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] {
-  const { entries, masterRecipe, identityTemplate, referenceBackedCategories = new Set<MasterDataCategory>(), assetInstructions = [] } = input
+  const { entries, masterRecipe, identityTemplate, assetInstructions = [] } = input
 
   const byCategory = new Map<MasterDataCategory, RenderRecipeEntry>()
   entries.forEach((entry) => {
@@ -373,6 +371,11 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
   // Phase 4 gate), never silently compressed away.
   layers.push({ id: 'negative_rules', label: 'Negative Rules (Constraint)', priority: 0, content: buildNegativeRulesContent(masterRecipe) })
 
+  // Reference-First Cleanup — Lock Rules (positive constraint) gets the
+  // same Priority 0 treatment as Negative Rules; see buildLockRulesContent's
+  // doc comment.
+  layers.push({ id: 'lock_rules', label: 'Lock Rules (Constraint)', priority: 0, content: buildLockRulesContent(masterRecipe) })
+
   // Sprint R-04 — AI Asset caveat instructions, now real Priority 0 layers
   // instead of text appended after compression finished (see
   // AssetInstructionLayer's doc comment above). Only ever non-empty when
@@ -383,13 +386,13 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
 
   P0_DNA_SLOTS.forEach(({ id, label, category }) => {
     const entry = byCategory.get(category)
-    layers.push({ id, label, priority: 0, content: entry ? formatEntryContent(entry, referenceBackedCategories) : '' })
+    layers.push({ id, label, priority: 0, content: entry ? formatEntryContent(entry) : '' })
   })
 
   SELECTED_COMPONENT_CATEGORIES.forEach((category) => {
     const entry = byCategory.get(category)
     if (!entry) return
-    layers.push({ id: `component:${category}`, label: masterDataCategoryLabel(category), priority: 1, content: formatEntryContent(entry, referenceBackedCategories) })
+    layers.push({ id: `component:${category}`, label: masterDataCategoryLabel(category), priority: 1, content: formatEntryContent(entry) })
   })
 
   layers.push({ id: 'visual_description', label: 'Visual Description', priority: 2, content: buildVisualDescriptionContent(masterRecipe) })

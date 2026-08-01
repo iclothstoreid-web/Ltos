@@ -24,6 +24,11 @@ export interface GlobalRenderPolicy {
   quality: Record<string, unknown>
   style: Record<string, unknown>
   negativeRules: string[]
+  // Reference-First Cleanup — global-policy floor for Lock Rules, merged
+  // with every item's own AiDesignDna.lockRules the same way negativeRules
+  // already merges (see composer.ts). Empty by default — the real seed
+  // content lives per-item (per-item scope decision), not here.
+  lockRules: string[]
 }
 
 // Sprint AI-R2 (Part 1-3) — the ONE place this "applies to every render"
@@ -56,6 +61,7 @@ export const DEFAULT_GLOBAL_RENDER_POLICY: GlobalRenderPolicy = {
     'thobe replaced by shirt, polo, hoodie, t-shirt, jacket, tunic',
     'short sleeves, low collar, non-Saudi silhouette',
   ],
+  lockRules: [],
 }
 
 // One Master Item's Render Recipe plus the ordering info Recipe Composer
@@ -104,6 +110,7 @@ export interface MasterRenderRecipe {
   quality: Record<string, unknown>
   style: Record<string, unknown>
   negativeRules: string[]
+  lockRules: string[]
   // Provenance — which Master Items (in which resolved order) contributed,
   // so a future Prompt Builder / debugging tool can trace any field back to
   // its source without re-reading the individual Render Recipes itself.

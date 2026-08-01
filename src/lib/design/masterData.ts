@@ -83,8 +83,9 @@ export interface MasterDataOption {
   // row, old or new, always has one; see src/lib/design/aiDna/types.ts.
   ai_dna: AiDesignDna
   // Permanent Render Recipe object — same DB-default guarantee as ai_dna
-  // (see migration add_render_recipe_to_master_options). Read-only from
-  // this app's code this sprint; no editor/mutation path exists yet, see
+  // (see migration add_render_recipe_to_master_options). Editable via
+  // RenderRecipeSection.tsx / updateMasterDataOption's `currentRenderRecipe`
+  // param, mirroring how ai_dna is edited — see
   // src/lib/design/renderRecipe/types.ts.
   render_recipe: RenderRecipe
   // Optional link so Design Studio can join live stock/color by id instead
@@ -226,6 +227,11 @@ export interface UpdateMasterDataOptionParams {
   // skip that check (e.g. price-only callers).
   currentPhotoUrl?: string | null
   currentAiDna?: AiDesignDna
+  // Render Recipe editor (Reference-First Cleanup) — same Safe Save
+  // treatment as `currentAiDna` above: diffed against `original.render_recipe`
+  // and only sent if changed. Omit to leave Render Recipe untouched (e.g. a
+  // price-only or AI-DNA-only caller).
+  currentRenderRecipe?: RenderRecipe
   // 'bahan' items only — links this catalog entry to a real Inventory
   // `materials` row (Architecture Lock: DNA Color Repository + Material
   // Color Mapping). Omit to leave unchanged.
@@ -304,6 +310,9 @@ export async function updateMasterDataOption(
     patch.material_id = params.material_id
   }
   if (nextAiDna && !sameJson(nextAiDna, original.ai_dna)) patch.ai_dna = nextAiDna
+  if (params.currentRenderRecipe && !sameJson(params.currentRenderRecipe, original.render_recipe)) {
+    patch.render_recipe = params.currentRenderRecipe
+  }
 
   if (Object.keys(patch).length === 0) {
     // Nothing actually changed since the edit session opened — no write,

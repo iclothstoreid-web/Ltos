@@ -240,17 +240,14 @@ export function applyAssetInstructions(basePrompt: string, composed: ComposedAiA
   return prompt
 }
 
-// Reference-First (Sprint R-02) — the set of categories for which a real
-// Hero Image was actually composed into THIS render's request. Derived
-// straight from `composed.referencesByCategory` (already gated by
-// isAiAssetActive above, via composeAiAssets) rather than re-checking
-// approved/active/sourceImage a second, possibly diverging way. Prompt
-// Builder/Compression use this to decide which categories' AI Design DNA
-// can collapse to Lock Rules only (see promptBuilder/referenceResolver.ts)
-// — a category absent from this set keeps getting its full DNA text
-// exactly as before (Phase 4's "fallback", automatic by construction:
-// nothing here can mark a category reference-backed without
-// composeAiAssets first having included its image).
+// Reference-First — the set of categories for which a real Hero Image was
+// actually composed into THIS render's request. Derived straight from
+// `composed.referencesByCategory` (already gated by isAiAssetActive above,
+// via composeAiAssets) rather than re-checking approved/active/sourceImage
+// a second, possibly diverging way. Consumed by route.ts to decide which AI
+// Asset caveat instruction layers apply and for debug logging — no longer
+// used to prune AI Design DNA text (Reference-First Cleanup removed the
+// narrative fields that pruning used to target).
 export function referenceBackedCategories(composed: ComposedAiAssets): Set<MasterDataCategory> {
   return new Set(composed.referencesByCategory.keys())
 }

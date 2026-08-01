@@ -1,6 +1,4 @@
 import type { MasterRenderRecipe } from '@/lib/design/recipeComposer/types'
-import type { MasterDataCategory } from '@/lib/design/masterData'
-import { applyLockRulesIfReferenceBacked } from './referenceResolver'
 import type { RenderInstruction, RenderInstructionValidation } from './types'
 
 // Prompt Builder (Sprint AI-06) — reads ONLY MasterRenderRecipe (accepting
@@ -40,41 +38,20 @@ import type { RenderInstruction, RenderInstructionValidation } from './types'
 // a prompt. `sources`/`composedAt` are provenance metadata, not renderable
 // content — RenderInstruction has no equivalent field, and none is invented;
 // they are simply not carried forward.
-// Reference-First (Sprint R-02) — `referenceBackedCategories` is optional
-// and, when omitted, this function behaves exactly as before (full DNA
-// text, no pruning) — every existing caller that doesn't pass it (Debug
-// Viewer, Render Test Framework scripts) is unaffected. When passed, and
-// `model_thobe` is in the set, `recipe.garment` is pruned to Lock Rules via
-// referenceResolver.ts's applyLockRulesIfReferenceBacked (Sprint R-05,
-// Phase 2/5 — this used to hand-roll the identical ternary directly against
-// pruneToLockRules instead of calling the shared resolver function; two
-// implementations of the same Fallback Contract is exactly what Phase 2/5
-// rule out, so this now calls the one function everything else in the
-// pipeline calls too). Only the Anchor (model_thobe) is checked here —
-// unlike compression.ts's per-entry formatEntryContent, `recipe.garment` at
-// this point is Recipe Composer's ALREADY-MERGED, Anchor-collision-resolved
-// single object (see recipeComposer/composer.ts's resolveRecipeConflict):
-// per-category boundaries no longer exist for any key Model Thobe's own DNA
-// also sets, so pruning can only be keyed on whether the Anchor itself is
-// reference-backed, not on Collar/Plaket/Pocket individually. This path is
-// diagnostic-only in production anyway (route.ts only serializes it when
-// RENDER_DEBUG_LOG is on; the real prompt sent to OpenAI is compression.ts's
-// output, which prunes per-category correctly — see compression.ts's
-// formatEntryContent).
-export function buildRenderInstruction(
-  recipe: MasterRenderRecipe | null,
-  referenceBackedCategories?: Set<MasterDataCategory>,
-): RenderInstruction | null {
+// Reference-First Cleanup — `recipe.garment` no longer carries prunable
+// narrative fields (see dnaResolver/resolver.ts: it only ever holds
+// `referenceInstruction`/`placement`/`color` now), so there is nothing left
+// to prune here. `garment` passes through unchanged, same as every other
+// MasterRenderRecipe field this function reshapes.
+export function buildRenderInstruction(recipe: MasterRenderRecipe | null): RenderInstruction | null {
   if (!recipe) {
     return null
   }
 
-  const garment = applyLockRulesIfReferenceBacked(recipe.garment, 'model_thobe', referenceBackedCategories ?? new Set())
-
   return {
     subject: { ...recipe.pose },
     body: { ...recipe.visibilityRules },
-    garment: { ...garment },
+    garment: { ...recipe.garment },
     camera: { ...recipe.camera },
     lighting: { ...recipe.lighting },
     composition: { ...recipe.composition, focus: recipe.focus },
@@ -84,6 +61,7 @@ export function buildRenderInstruction(
     embroidery: { ...recipe.embroidery },
     quality: { ...recipe.quality, style: recipe.style },
     negativeRules: [...recipe.negativeRules],
+    lockRules: [...recipe.lockRules],
   }
 }
 
