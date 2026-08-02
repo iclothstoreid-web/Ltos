@@ -29,18 +29,27 @@ set ai_dna = (
       else jsonb_set(
         ai_dna,
         '{referenceInstruction}',
-        to_jsonb(
-          nullif(
-            concat_ws(
-              ', ',
-              nullif(ai_dna ->> 'appearance', ''),
-              nullif(ai_dna ->> 'geometry', ''),
-              nullif(ai_dna ->> 'construction', ''),
-              nullif(ai_dna ->> 'stitching', ''),
-              nullif(ai_dna ->> 'materials', '')
-            ),
-            ''
-          )
+        -- jsonb_set is STRICT: to_jsonb(NULL) yields SQL NULL (not a JSON
+        -- null), and a NULL replacement value makes jsonb_set return NULL
+        -- for the whole row, which then violates ai_dna's NOT NULL
+        -- constraint. Rows with no narrative content at all (e.g. "Asil
+        -- Cuff") hit this — coalesce to 'null'::jsonb so the key is set to
+        -- JSON null instead of nulling out the entire column.
+        coalesce(
+          to_jsonb(
+            nullif(
+              concat_ws(
+                ', ',
+                nullif(ai_dna ->> 'appearance', ''),
+                nullif(ai_dna ->> 'geometry', ''),
+                nullif(ai_dna ->> 'construction', ''),
+                nullif(ai_dna ->> 'stitching', ''),
+                nullif(ai_dna ->> 'materials', '')
+              ),
+              ''
+            )
+          ),
+          'null'::jsonb
         ),
         true
       )
