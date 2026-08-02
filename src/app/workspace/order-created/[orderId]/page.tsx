@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { OrderCreatedWorkspace } from '@/components/workspace/order-created/OrderCreatedWorkspace'
 import { fetchOrderMessages } from '@/lib/communication/messages'
 import type { OrderSnapshot } from '@/lib/order/types'
@@ -11,14 +12,13 @@ interface Props {
 export default async function OrderCreatedPage({ params }: Props) {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/fitter/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name')
-    .eq('id', user.id)
-    .single()
+  // Sprint O.3 (TTFB) — identity already verified by middleware for this
+  // exact route (matcher covers /workspace/:path*) and forwarded as request
+  // headers, instead of this page repeating auth.getUser() + a second
+  // profiles lookup (measured ~168ms of pure duplicate work).
+  const userId = headers().get('x-user-id')
+  if (!userId) redirect('/fitter/login')
+  const fitterName = headers().get('x-user-name') || 'Fitter'
 
   const { data: order } = await supabase
     .from('orders')
@@ -60,8 +60,8 @@ export default async function OrderCreatedPage({ params }: Props) {
       snapshot={snapshot}
       orderCreatedAt={createdEvent.created_at}
       timelineEvents={timelineEvents || []}
-      fitterName={profile?.name || 'Fitter'}
-      profileId={user.id}
+      fitterName={fitterName}
+      profileId={userId}
       initialMessages={initialMessages}
     />
   )

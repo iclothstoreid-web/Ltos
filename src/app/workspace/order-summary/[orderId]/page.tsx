@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/rbac/session'
 import type { OrderSnapshot } from '@/lib/order/types'
 import { getProductionPacket } from '@/lib/production/client'
 import { getCustomerPhotoForOrder } from '@/lib/production/customerPhoto'
@@ -21,9 +22,10 @@ interface Props {
 export default async function OrderSummaryPage({ params }: Props) {
   const supabase = createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Sprint O.5 — identity already verified by middleware for this route
+  // (matcher covers /workspace/:path*); reads the forwarded header instead
+  // of repeating auth.getUser().
+  const user = await getCurrentUser()
   if (!user) redirect('/fitter/login')
 
   const { data: order } = await supabase

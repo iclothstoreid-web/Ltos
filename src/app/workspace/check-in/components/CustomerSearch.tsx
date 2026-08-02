@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { searchCustomers, getRecentConsultations, getFitterOrders, getCustomerById } from '../actions'
+import { searchCustomers, getCustomerById } from '../actions'
 import type { Customer, RecentConsultation, FitterOrder } from '../types'
 import { CustomerCard } from './CustomerCard'
 import { OrderCard } from './OrderCard'
@@ -25,40 +25,30 @@ interface CustomerSearchProps {
   // layout. When it's not mounted, this panel grows to fill that space
   // instead of leaving it blank.
   expanded?: boolean
+  // Sprint O.2 (CLS fix) — fetched server-side by page.tsx (the only
+  // caller) so these lists are present on first paint instead of popping in
+  // after a client-side fetch, which was the root cause of CLS 0.44 on this
+  // page: it pushed "Aksi Cepat" and the sidebar down mid-load. Same data,
+  // same limits (10/5) this component previously fetched itself on mount —
+  // only the fetch timing/location moved.
+  initialFitterOrders: FitterOrder[]
+  initialRecentConsultations: RecentConsultation[]
 }
 
 export function CustomerSearch({
   onSelectCustomer,
   onNewCustomer,
   expanded = false,
+  initialFitterOrders,
+  initialRecentConsultations,
 }: CustomerSearchProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
   const [showResults, setShowResults] = useState(false)
-  const [recentConsultations, setRecentConsultations] = useState<RecentConsultation[]>([])
-  const [loadingRecent, setLoadingRecent] = useState(true)
-  const [fitterOrders, setFitterOrders] = useState<FitterOrder[]>([])
-  const [loadingOrders, setLoadingOrders] = useState(true)
-
-  useEffect(() => {
-    const fetchRecent = async () => {
-      const { consultations } = await getRecentConsultations(5)
-      setRecentConsultations(consultations)
-      setLoadingRecent(false)
-    }
-    fetchRecent()
-  }, [])
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const { orders } = await getFitterOrders(10)
-      setFitterOrders(orders)
-      setLoadingOrders(false)
-    }
-    fetchOrders()
-  }, [])
+  const [recentConsultations] = useState<RecentConsultation[]>(initialRecentConsultations)
+  const [fitterOrders] = useState<FitterOrder[]>(initialFitterOrders)
 
   const handleSelectOrder = (order: FitterOrder) => {
     router.push(`/workspace/order-summary/${order.id}`)
@@ -169,7 +159,7 @@ export function CustomerSearch({
 
         {!showResults && (
           <div className="space-y-6">
-            {!loadingOrders && fitterOrders.length > 0 && (
+            {fitterOrders.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-sans text-xs uppercase tracking-widest text-[#444748] flex justify-between items-center">
                   Order Monitoring
@@ -185,7 +175,7 @@ export function CustomerSearch({
               </div>
             )}
 
-            {!loadingRecent && activeConsultations.length > 0 && (
+            {activeConsultations.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-sans text-xs uppercase tracking-widest text-[#444748] flex justify-between items-center">
                   Konsultasi Terakhir

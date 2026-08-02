@@ -79,14 +79,26 @@ export async function middleware(request: NextRequest) {
     return withRefreshedCookies(NextResponse.redirect(new URL(rule.loginPath, request.url)))
   }
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  // Sprint O.3 (TTFB) — 'name' added alongside the 'role' this query
+  // already selected (same single round trip, no added cost) so identity
+  // can be forwarded to Server Components below instead of them repeating
+  // this exact auth.getUser()+profiles lookup a second time.
+  const { data: profile } = await supabase.from('profiles').select('role, name').eq('id', user.id).single()
   const role = normalizeRole(profile?.role)
 
   if (!role || !rule.roles.includes(role)) {
     return withRefreshedCookies(NextResponse.rewrite(new URL('/access-denied', request.url)))
   }
 
-  return response
+  // Forward the identity middleware already verified as request headers, so
+  // a Server Component can read it via next/headers instead of re-querying
+  // Supabase. Route matcher guarantees middleware always runs first for
+  // every path a Server Component would read these from.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-user-id', user.id)
+  requestHeaders.set('x-user-name', profile?.name ?? '')
+  requestHeaders.set('x-user-role', role)
+  return withRefreshedCookies(NextResponse.next({ request: { headers: requestHeaders } }))
 }
 
 // Scopes Middleware to exactly the protected app prefixes — /production,

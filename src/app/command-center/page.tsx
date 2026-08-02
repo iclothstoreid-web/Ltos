@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getCurrentUser, getCurrentUserProfile } from '@/lib/rbac/session'
 import { OwnerCommandCenter } from '@/components/command-center/OwnerCommandCenter/OwnerCommandCenter'
 import { EngineOverviewSection } from '@/components/command-center/OwnerCommandCenter/EngineOverviewSection'
 import { getBottleneckSeverityByHours, QUEUE_WORKSPACE_URL } from '@/lib/ltos'
@@ -29,14 +30,17 @@ import { getCapacityDashboard, getKpiDashboard, getOperatorKpiList, getDivisiKpi
 export default async function CommandCenterPage() {
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // Sprint O.5 — identity already verified by middleware for this route
+  // (matcher covers /command-center/:path*); reads the forwarded headers
+  // instead of repeating auth.getUser() + a self profiles lookup. Kept as
+  // two separate calls (not one profile-only check) to preserve the
+  // original distinction: redirect only on "not authenticated", never on
+  // "authenticated but no profiles row" (profile?.name already tolerated
+  // that below via its 'Pemilik' fallback).
+  const user = await getCurrentUser()
   if (!user) redirect('/owner/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const profile = await getCurrentUserProfile()
 
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)

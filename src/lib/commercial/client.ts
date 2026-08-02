@@ -8,17 +8,39 @@ import type { CommercialRules, DiscountType, OrderInvoice, OrderPayment, Payment
 // duplicated here); this module only persists that already-computed
 // PriceSnapshot and layers discount/KOL/override/payments on top of it.
 
+// In-flight coalescing for upsertOrderQuotation/getOrderInvoice below: React
+// Strict Mode replays mount effects once in dev, and TransactionGarmentsPanel
+// + PaymentSummaryCard both independently read get_order_invoice for the same
+// order on page load. Neither is a bug in the calling code, so rather than
+// touch component lifecycle, concurrent calls for the same key here share one
+// in-flight request. Each entry is cleared as soon as it settles, so a later
+// call (a real refresh, e.g. after record_order_payment) always hits the
+// network fresh — this only dedupes calls that overlap in time.
+const inFlightUpsertQuotation = new Map<string, Promise<void>>()
+
 export async function upsertOrderQuotation(
   supabase: SupabaseClient,
   orderId: string,
   snapshot: PriceSnapshot
 ): Promise<void> {
-  const { error } = await supabase.rpc('upsert_order_quotation', {
-    p_order_id: orderId,
-    p_line_items: snapshot.lines,
-    p_subtotal: snapshot.total,
-  })
-  if (error) throw error
+  const existing = inFlightUpsertQuotation.get(orderId)
+  if (existing) return existing
+
+  const promise = (async () => {
+    const { error } = await supabase.rpc('upsert_order_quotation', {
+      p_order_id: orderId,
+      p_line_items: snapshot.lines,
+      p_subtotal: snapshot.total,
+    })
+    if (error) throw error
+  })()
+
+  inFlightUpsertQuotation.set(orderId, promise)
+  try {
+    await promise
+  } finally {
+    inFlightUpsertQuotation.delete(orderId)
+  }
 }
 
 export async function applyOrderDiscount(
@@ -93,10 +115,24 @@ export async function recordOrderPayment(
   return data as OrderPayment
 }
 
+const inFlightOrderInvoice = new Map<string, Promise<OrderInvoice>>()
+
 export async function getOrderInvoice(supabase: SupabaseClient, orderId: string): Promise<OrderInvoice> {
-  const { data, error } = await supabase.rpc('get_order_invoice', { p_order_id: orderId })
-  if (error) throw error
-  return data as OrderInvoice
+  const existing = inFlightOrderInvoice.get(orderId)
+  if (existing) return existing
+
+  const promise = (async () => {
+    const { data, error } = await supabase.rpc('get_order_invoice', { p_order_id: orderId })
+    if (error) throw error
+    return data as OrderInvoice
+  })()
+
+  inFlightOrderInvoice.set(orderId, promise)
+  try {
+    return await promise
+  } finally {
+    inFlightOrderInvoice.delete(orderId)
+  }
 }
 
 // Commercial Rules (Runtime Configuration) — see
