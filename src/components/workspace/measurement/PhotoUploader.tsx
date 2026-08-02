@@ -62,7 +62,10 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onU
     }
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        // ideal (not exact) aspectRatio — biases the stream toward portrait
+        // framing for full-body shots without hard-failing on devices/
+        // webcams that can't natively deliver 9:16.
+        video: { facingMode: { ideal: 'environment' }, aspectRatio: { ideal: 9 / 16 } },
         audio: false,
       })
       setPreview(null)
@@ -103,11 +106,29 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onU
     onUploadStateChange?.(true)
     setUploadError(null)
     try {
+      // Root-cause audit (2026-07-28) proved the upload code path itself
+      // correct end-to-end (real device/network could not be reproduced) —
+      // this diagnostic snapshot is what would have made that provable from
+      // a single production occurrence instead of a multi-hour repro effort.
+      const { data: { session } } = await supabase.auth.getSession()
+      const expiresAt = session?.expires_at ?? null
+      console.info('[PhotoUploader] pre-upload diagnostics', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        hasSession: Boolean(session),
+        hasAccessToken: Boolean(session?.access_token),
+        jwtExpiresAt: expiresAt ? new Date(expiresAt * 1000).toISOString() : null,
+        jwtSecondsUntilExpiry: expiresAt ? expiresAt - Math.floor(Date.now() / 1000) : null,
+      })
+
       const url = await uploadConsultationPhoto(supabase, { consultationId, slot: 'front', file })
       setPreview(url)
       await onUploaded(url)
-    } catch {
-      setUploadError(UPLOAD_ERROR_MESSAGE)
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err)
+      console.error('uploadConsultationPhoto failed:', err)
+      setUploadError(`${UPLOAD_ERROR_MESSAGE} (${detail})`)
     } finally {
       setUploading(false)
       onUploadStateChange?.(false)
@@ -158,7 +179,7 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onU
 
       {stream ? (
         <div className="space-y-2">
-          <div className="aspect-square bg-black border-[0.5px] border-[#c4c7c7] overflow-hidden relative">
+          <div className="relative mx-auto w-auto h-[70vh] max-h-[640px] min-h-[360px] aspect-[9/16] bg-black border-[0.5px] border-[#c4c7c7] overflow-hidden">
             <video
               ref={videoRef}
               autoPlay
@@ -186,7 +207,7 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onU
         </div>
       ) : capturedFrame ? (
         <div className="space-y-2">
-          <div className="aspect-square bg-[#f0f3ff] border-[0.5px] border-dashed border-[#c4c7c7] overflow-hidden relative">
+          <div className="relative mx-auto w-auto h-[70vh] max-h-[640px] min-h-[360px] aspect-[9/16] bg-[#f0f3ff] border-[0.5px] border-dashed border-[#c4c7c7] overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, not a remote/optimizable asset */}
             <img
               src={capturedFrame}

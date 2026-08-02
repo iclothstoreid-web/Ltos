@@ -40,14 +40,6 @@ export function OptionGroup({ label, options, selected, onSelect, onViewSpec, al
         <div className="space-y-2">
           {options.length === 0 && <EmptyOptionsState label={label} />}
           <CatalogGrid>
-            {allowNone && (
-              <CatalogCard
-                name="(None)"
-                icon="block"
-                selected={isNoneSelection(selected)}
-                onSelect={() => onSelect(NONE_SELECTION)}
-              />
-            )}
             {options.map(option => (
               <CatalogCard
                 key={option.id}
@@ -59,6 +51,14 @@ export function OptionGroup({ label, options, selected, onSelect, onViewSpec, al
                 onViewSpec={onViewSpec ? () => onViewSpec(option) : undefined}
               />
             ))}
+            {allowNone && (
+              <CatalogCard
+                name="(None)"
+                icon="block"
+                selected={isNoneSelection(selected)}
+                onSelect={() => onSelect(NONE_SELECTION)}
+              />
+            )}
           </CatalogGrid>
         </div>
       )}
