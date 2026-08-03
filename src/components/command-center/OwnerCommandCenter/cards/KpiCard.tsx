@@ -2,10 +2,15 @@ export function KpiCard({
   label,
   value,
   format = 'number',
+  caption,
 }: {
   label: string
   value: number | null | undefined
   format?: 'number' | 'currency'
+  // Optional supporting fact directly under the figure (e.g. the rule that
+  // explains it) — additive/backward-compatible, every existing caller
+  // renders exactly as before when omitted.
+  caption?: string
 }) {
   const safeValue = value ?? 0
   const displayValue =
@@ -19,6 +24,7 @@ export function KpiCard({
 
       <p className="relative text-label text-secondary uppercase tracking-[0.24em]">{label}</p>
       <p className="relative font-serif text-title text-on-surface text-[28px] mt-2">{displayValue}</p>
+      {caption && <p className="relative text-body text-secondary/80 mt-1.5 leading-snug">{caption}</p>}
     </div>
   )
 }
