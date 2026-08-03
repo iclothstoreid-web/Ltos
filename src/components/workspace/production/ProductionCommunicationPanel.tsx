@@ -59,34 +59,34 @@ export function ProductionCommunicationPanel({ supabase, orderId, initialMessage
   }
 
   return (
-    <div className="bg-white/70 rounded-2xl border-[0.5px] border-[#c6c6cc]/40 shadow-sm p-6">
-      <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-4">
+    <div className="bg-white/70 rounded-2xl border-[0.5px] border-outline-variant/40 shadow-sm p-6">
+      <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary mb-4">
         Komunikasi Order
       </p>
 
       <div className="max-h-64 overflow-y-auto space-y-3 mb-4 pr-1">
         {messages.length === 0 && (
-          <p className="font-hanken text-sm text-[#46464c]">Belum ada komunikasi untuk order ini.</p>
+          <p className="font-hanken text-sm text-secondary">Belum ada komunikasi untuk order ini.</p>
         )}
         {messages.map(message => (
           <div key={message.id}>
             <div className="flex items-baseline gap-2 mb-0.5">
-              <span className="font-hanken text-[10px] uppercase tracking-widest text-[#755b00]">
+              <span className="font-hanken text-[10px] uppercase tracking-widest text-amber-mid">
                 {SENDER_ROLE_LABELS[message.sender_role]}
               </span>
               {message.sender_name && (
-                <span className="font-hanken text-[11px] text-[#46464c]">{message.sender_name}</span>
+                <span className="font-hanken text-[11px] text-secondary">{message.sender_name}</span>
               )}
-              <span className="font-hanken text-[11px] text-[#46464c]/70">{formatTime(message.created_at)}</span>
+              <span className="font-hanken text-[11px] text-secondary/70">{formatTime(message.created_at)}</span>
             </div>
-            <p className="font-hanken text-sm text-[#161b29] bg-[#FDFCF7] rounded-xl px-3 py-2 whitespace-pre-wrap">
+            <p className="font-hanken text-sm text-on-surface bg-surface-01 rounded-xl px-3 py-2 whitespace-pre-wrap">
               {message.body}
             </p>
           </div>
         ))}
       </div>
 
-      {error && <p className="font-hanken text-xs text-red-600 mb-2">{error}</p>}
+      {error && <p className="font-hanken text-xs text-error mb-2">{error}</p>}
 
       <div className="space-y-3">
         <OperatorAutocomplete
@@ -108,15 +108,15 @@ export function ProductionCommunicationPanel({ supabase, orderId, initialMessage
             placeholder={composerOperator ? 'Tulis pesan...' : 'Pilih nama operator dahulu...'}
             rows={2}
             disabled={!composerOperator}
-            className="flex-1 border-b border-[#c6c6cc] bg-transparent py-2 font-hanken text-sm text-[#161b29]
-                       outline-none resize-none focus:border-[#755b00] transition-colors disabled:opacity-40"
+            className="flex-1 border-b border-outline-variant bg-transparent py-2 font-hanken text-sm text-on-surface
+                       outline-none resize-none focus:border-amber-mid transition-colors disabled:opacity-40"
           />
           <button
             type="button"
             disabled={sending || !body.trim() || !composerOperator}
             onClick={handleSend}
-            className="px-5 py-2 bg-[#161b29] text-white font-hanken text-xs uppercase tracking-widest
-                       hover:bg-[#755b00] transition-colors disabled:opacity-40"
+            className="px-5 py-2 bg-on-surface text-white font-hanken text-xs uppercase tracking-widest
+                       hover:bg-amber-mid transition-colors disabled:opacity-40"
           >
             Kirim
           </button>

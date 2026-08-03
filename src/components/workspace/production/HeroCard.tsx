@@ -29,13 +29,13 @@ export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }
   const [showPhoto, setShowPhoto] = useState(false)
 
   return (
-    <div className="bg-[#fbf9fc] rounded-2xl p-5 shadow-[0px_4px_20px_rgba(14,19,32,0.04)] border border-[#c6c6cc]/30 space-y-4">
+    <div className="bg-surface rounded-2xl p-5 shadow-[0px_4px_20px_rgba(14,19,32,0.04)] border border-outline-variant/30 space-y-4">
       <div className="flex items-start gap-4">
         <button
           type="button"
           onClick={() => customerPhotoUrl && setShowPhoto(true)}
           disabled={!customerPhotoUrl}
-          className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#161b29] text-white flex items-center justify-center font-caslon text-2xl disabled:cursor-default"
+          className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-on-surface text-white flex items-center justify-center font-caslon text-2xl disabled:cursor-default"
         >
           {customerPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
@@ -50,32 +50,32 @@ export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }
         </button>
         <div className="flex-1 space-y-1 min-w-0">
           <div className="flex justify-between items-center">
-            <span className="font-jetbrains text-[10px] tracking-widest text-[#755b00] bg-[#fed977] px-2 py-0.5 rounded uppercase">
+            <span className="font-jetbrains text-[10px] tracking-widest text-amber-mid bg-warm-gold/25 px-2 py-0.5 rounded uppercase">
               {STATUS_LABELS[currentStatus]}
             </span>
-            <span className="font-jetbrains text-[10px] tracking-widest text-[#76777d]">
+            <span className="font-jetbrains text-[10px] tracking-widest text-secondary/80">
               #{packet.order_number}
             </span>
           </div>
-          <h2 className="font-caslon text-2xl text-[#161b29] truncate">
+          <h2 className="font-caslon text-2xl text-on-surface truncate">
             {packet.customer_name || 'Pelanggan'}
           </h2>
           {packet.design && (
-            <p className="font-hanken text-sm text-[#46464c] truncate">
+            <p className="font-hanken text-sm text-secondary truncate">
               {packet.design.model} &middot; {packet.design.fabric} &middot; {packet.design.color}
             </p>
           )}
         </div>
       </div>
 
-      <div className="h-[1px] bg-[#c6c6cc]/50" />
+      <div className="h-[1px] bg-outline-variant/50" />
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="font-jetbrains text-[10px] tracking-widest text-[#76777d] uppercase mb-1">
+          <p className="font-jetbrains text-[10px] tracking-widest text-secondary/80 uppercase mb-1">
             Target Selesai
           </p>
-          <p className="font-hanken font-semibold text-[#161b29]">
+          <p className="font-hanken font-semibold text-on-surface">
             {new Date(packet.estimated_completion).toLocaleDateString('id-ID', {
               day: 'numeric',
               month: 'short',
@@ -84,16 +84,16 @@ export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }
           </p>
         </div>
         <div className="text-right">
-          <p className="font-jetbrains text-[10px] tracking-widest text-[#76777d] uppercase mb-1">
+          <p className="font-jetbrains text-[10px] tracking-widest text-secondary/80 uppercase mb-1">
             Progres
           </p>
-          <p className="font-hanken font-semibold text-[#161b29]">{progressPct}%</p>
+          <p className="font-hanken font-semibold text-on-surface">{progressPct}%</p>
         </div>
       </div>
 
-      <div className="w-full bg-[#e9e7eb] h-1.5 rounded-full overflow-hidden">
+      <div className="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
         <div
-          className="bg-[#755b00] h-full rounded-full transition-all duration-500"
+          className="bg-amber-mid h-full rounded-full transition-all duration-500"
           style={{ width: `${progressPct}%` }}
         />
       </div>

@@ -69,7 +69,7 @@ export function PackingVideoUploader({
 
   return (
     <div>
-      <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-2">
+      <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-2">
         Video Packing
       </label>
 
@@ -81,7 +81,7 @@ export function PackingVideoUploader({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="font-hanken text-xs text-[#755b00] hover:underline disabled:opacity-60"
+            className="font-hanken text-xs text-amber-mid hover:underline disabled:opacity-60"
           >
             {uploading ? 'Mengunggah...' : 'Ganti Video'}
           </button>
@@ -91,17 +91,17 @@ export function PackingVideoUploader({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="w-full aspect-video bg-[#efedf0] border-[0.5px] border-dashed border-[#c6c6cc]
+          className="w-full aspect-video bg-surface-container border-[0.5px] border-dashed border-outline-variant
                      flex flex-col items-center justify-center gap-1 group cursor-pointer
-                     hover:bg-[#efedf0] transition-colors disabled:opacity-60"
+                     hover:bg-surface-container transition-colors disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-[#c6c6cc] group-hover:text-[#755b00] transition-colors">
+          <span className="material-symbols-outlined text-outline-variant group-hover:text-amber-mid transition-colors">
             videocam
           </span>
-          <p className="text-[10px] text-[#46464c] uppercase tracking-widest">
+          <p className="text-[10px] text-secondary uppercase tracking-widest">
             {uploading ? 'Mengunggah...' : 'Unggah Video Packing'}
           </p>
-          <p className="text-[9px] text-[#76777d]">mp4 / mov, maks 50MB</p>
+          <p className="text-[9px] text-secondary/80">mp4 / mov, maks 50MB</p>
         </button>
       )}
 
@@ -113,7 +113,7 @@ export function PackingVideoUploader({
         onChange={e => handleFile(e.target.files?.[0])}
       />
 
-      {error && <p className="font-hanken text-[10px] text-red-600 mt-1">{error}</p>}
+      {error && <p className="font-hanken text-[10px] text-error mt-1">{error}</p>}
     </div>
   )
 }

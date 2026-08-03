@@ -17,14 +17,14 @@ export function ReferenceModelCard({ design }: ReferenceModelCardProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="font-caslon text-xl text-[#161b29] px-1">Model Referensi</h3>
-      <div className="bg-[#fbf9fc] rounded-2xl p-5 shadow-sm border border-[#c6c6cc]/30">
-        <p className="font-hanken font-semibold text-[#161b29] mb-3">{design.model}</p>
+      <h3 className="font-caslon text-xl text-on-surface px-1">Model Referensi</h3>
+      <div className="bg-surface rounded-2xl p-5 shadow-sm border border-outline-variant/30">
+        <p className="font-hanken font-semibold text-on-surface mb-3">{design.model}</p>
         <div className="flex flex-wrap gap-2">
           {chips.map(chip => (
             <span
               key={chip}
-              className="font-jetbrains text-[10px] tracking-widest uppercase text-[#46464c] bg-[#efedf0] px-2 py-1 rounded"
+              className="font-jetbrains text-[10px] tracking-widest uppercase text-secondary bg-surface-container px-2 py-1 rounded"
             >
               {chip}
             </span>

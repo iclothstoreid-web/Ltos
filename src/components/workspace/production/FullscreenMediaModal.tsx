@@ -28,15 +28,15 @@ export function FullscreenMediaModal({ kind, src, alt, onClose, children }: Full
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-      <div className="bg-[#fbf9fc] rounded-2xl w-full max-w-3xl h-[85vh] sm:h-[80vh] flex flex-col shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#c6c6cc]/50 flex-shrink-0">
-          <p className="font-hanken text-sm text-[#161b29] truncate pr-2">{alt || 'Pratinjau'}</p>
+      <div className="bg-surface rounded-2xl w-full max-w-3xl h-[85vh] sm:h-[80vh] flex flex-col shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/50 flex-shrink-0">
+          <p className="font-hanken text-sm text-on-surface truncate pr-2">{alt || 'Pratinjau'}</p>
           <div className="flex items-center gap-3 flex-shrink-0">
             {kind === 'image' && (
               <button
                 type="button"
                 onClick={() => setZoomed(z => !z)}
-                className="material-symbols-outlined text-[#76777d] hover:text-[#161b29] transition-colors"
+                className="material-symbols-outlined text-secondary/80 hover:text-on-surface transition-colors"
                 aria-label={zoomed ? 'Perkecil' : 'Perbesar'}
               >
                 {zoomed ? 'zoom_out' : 'zoom_in'}
@@ -45,7 +45,7 @@ export function FullscreenMediaModal({ kind, src, alt, onClose, children }: Full
             <button
               type="button"
               onClick={onClose}
-              className="material-symbols-outlined text-[#76777d] hover:text-[#161b29] transition-colors"
+              className="material-symbols-outlined text-secondary/80 hover:text-on-surface transition-colors"
               aria-label="Tutup"
             >
               close
@@ -59,7 +59,7 @@ export function FullscreenMediaModal({ kind, src, alt, onClose, children }: Full
           }`}
         >
           {kind === 'detail' && (
-            <div className="w-full h-full overflow-auto bg-[#fbf9fc]">{children}</div>
+            <div className="w-full h-full overflow-auto bg-surface">{children}</div>
           )}
 
           {kind === 'image' && (
@@ -81,7 +81,7 @@ export function FullscreenMediaModal({ kind, src, alt, onClose, children }: Full
                 href={src}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-hanken text-xs text-[#755b00] hover:underline text-center py-2 bg-white border-t border-[#c6c6cc]/50"
+                className="font-hanken text-xs text-amber-mid hover:underline text-center py-2 bg-white border-t border-outline-variant/50"
               >
                 Buka File di Tab Baru
               </a>

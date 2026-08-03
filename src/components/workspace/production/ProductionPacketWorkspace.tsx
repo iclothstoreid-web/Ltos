@@ -267,7 +267,7 @@ export function ProductionPacketWorkspace({
   const nextStageLabel = nextStage ? STAGE_LABELS[nextStage] : null
 
   return (
-    <div className="min-h-screen bg-[#FDFCF7]">
+    <div className="min-h-screen bg-surface-01">
       <ExitConfirmModal open={showExitConfirm} onCancel={dismissExitConfirm} />
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <HeroCard packet={packet} currentStatus={currentRecord?.status} customerPhotoUrl={customerPhotoUrl} />
@@ -302,20 +302,20 @@ export function ProductionPacketWorkspace({
         )}
 
         {!currentRecord && (
-          <div className="bg-white/70 border-[0.5px] border-[#c6c6cc]/40 shadow-sm p-6 text-center">
-            <p className="font-caslon text-lg text-[#161b29]">Produksi Selesai</p>
-            <p className="font-hanken text-xs text-[#46464c] mt-1">
+          <div className="bg-white/70 border-[0.5px] border-outline-variant/40 shadow-sm p-6 text-center">
+            <p className="font-caslon text-lg text-on-surface">Produksi Selesai</p>
+            <p className="font-hanken text-xs text-secondary mt-1">
               Semua 8 tahap produksi telah diselesaikan.
             </p>
           </div>
         )}
 
         {currentRecord && (
-          <div className="bg-white/70 rounded-2xl border-[0.5px] border-[#c6c6cc]/40 shadow-sm p-6">
-            <p className="font-caslon text-lg text-[#161b29] mb-1">
+          <div className="bg-white/70 rounded-2xl border-[0.5px] border-outline-variant/40 shadow-sm p-6">
+            <p className="font-caslon text-lg text-on-surface mb-1">
               {STAGE_LABELS[currentRecord.stage]}
             </p>
-            <p className="font-hanken text-xs text-[#46464c] mb-6">
+            <p className="font-hanken text-xs text-secondary mb-6">
               {currentRecord.status === 'pending'
                 ? 'Scan QR Produksi — mulai pekerjaan'
                 : 'Scan QR Penyelesaian — selesaikan pekerjaan'}
@@ -338,8 +338,8 @@ export function ProductionPacketWorkspace({
                 isFinishing ||
                 isPacking ||
                 isShipping ? (
-                  <p className="font-hanken text-sm text-[#46464c]">
-                    Divisi: <strong className="text-[#161b29]">{STAGE_LABELS[currentRecord.stage]}</strong>
+                  <p className="font-hanken text-sm text-secondary">
+                    Divisi: <strong className="text-on-surface">{STAGE_LABELS[currentRecord.stage]}</strong>
                   </p>
                 ) : (
                   <DivisionSelect value={division} onChange={setDivision} />
@@ -352,8 +352,8 @@ export function ProductionPacketWorkspace({
                     type="button"
                     onClick={handleStart}
                     disabled={submitting}
-                    className="w-full bg-[#161b29] text-white py-3 font-hanken text-sm font-semibold
-                               uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-40"
+                    className="w-full bg-on-surface text-white py-3 font-hanken text-sm font-semibold
+                               uppercase tracking-widest hover:bg-amber-mid transition-colors disabled:opacity-40"
                   >
                     Mulai Pekerjaan
                   </button>
@@ -363,7 +363,7 @@ export function ProductionPacketWorkspace({
 
             {currentRecord.status === 'in_progress' && (
               <div className="space-y-5">
-                <p className="font-hanken text-xs text-[#46464c] pb-4 border-b border-[#c6c6cc]">
+                <p className="font-hanken text-xs text-secondary pb-4 border-b border-outline-variant">
                   Dikerjakan oleh <strong>{currentRecord.operator_name}</strong> &middot;{' '}
                   {currentRecord.division}
                 </p>
@@ -374,7 +374,7 @@ export function ProductionPacketWorkspace({
                     scans, so this is the only place left that can still show
                     it afterwards. */}
                 {evidenceUploadError && (
-                  <p className="font-hanken text-xs text-red-600">{evidenceUploadError}</p>
+                  <p className="font-hanken text-xs text-error">{evidenceUploadError}</p>
                 )}
 
                 {isMaterialPrep && (
@@ -456,7 +456,7 @@ export function ProductionPacketWorkspace({
                   usesCustomPanelShell ? (
                     <>
                       <div>
-                        <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+                        <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
                           {isCutting
                             ? 'Catatan Pemotongan'
                             : isSewing
@@ -475,8 +475,8 @@ export function ProductionPacketWorkspace({
                           value={notes}
                           onChange={e => setNotes(e.target.value)}
                           rows={3}
-                          className="w-full border-b border-[#c6c6cc] bg-transparent py-2 font-hanken
-                                     text-sm text-[#161b29] outline-none resize-none focus:border-[#755b00]
+                          className="w-full border-b border-outline-variant bg-transparent py-2 font-hanken
+                                     text-sm text-on-surface outline-none resize-none focus:border-amber-mid
                                      transition-colors"
                           placeholder={
                             isShipping
@@ -511,8 +511,8 @@ export function ProductionPacketWorkspace({
                         type="button"
                         onClick={() => setShowCompletionScan(true)}
                         disabled={evidenceUploading}
-                        className="w-full flex items-center justify-center gap-2 bg-[#161b29] text-white
-                                   font-hanken font-semibold py-3.5 rounded-2xl hover:bg-[#755b00]
+                        className="w-full flex items-center justify-center gap-2 bg-on-surface text-white
+                                   font-hanken font-semibold py-3.5 rounded-2xl hover:bg-amber-mid
                                    transition-colors disabled:opacity-40"
                       >
                         <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
@@ -521,7 +521,7 @@ export function ProductionPacketWorkspace({
                     </>
                   ) : (
                     <div className="text-center py-6">
-                      <p className="font-hanken text-sm text-[#46464c] mb-4">
+                      <p className="font-hanken text-sm text-secondary mb-4">
                         Operator selesai bekerja? Scan QR Penyelesaian untuk mencatat jam selesai
                         dan membuka Bukti Foto &amp; Checklist Akhir.
                       </p>
@@ -529,8 +529,8 @@ export function ProductionPacketWorkspace({
                         type="button"
                         onClick={() => setShowCompletionScan(true)}
                         disabled={evidenceUploading}
-                        className="w-full flex items-center justify-center gap-2 bg-[#161b29] text-white
-                                   font-hanken font-semibold py-3.5 rounded-2xl hover:bg-[#755b00]
+                        className="w-full flex items-center justify-center gap-2 bg-on-surface text-white
+                                   font-hanken font-semibold py-3.5 rounded-2xl hover:bg-amber-mid
                                    transition-colors disabled:opacity-40"
                       >
                         <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
@@ -563,15 +563,15 @@ export function ProductionPacketWorkspace({
 
                     {!usesCustomPanelShell && (
                       <div>
-                        <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+                        <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
                           Catatan
                         </label>
                         <textarea
                           value={notes}
                           onChange={e => setNotes(e.target.value)}
                           rows={3}
-                          className="w-full border-b border-[#c6c6cc] bg-transparent py-2 font-hanken
-                                     text-sm text-[#161b29] outline-none resize-none focus:border-[#755b00]
+                          className="w-full border-b border-outline-variant bg-transparent py-2 font-hanken
+                                     text-sm text-on-surface outline-none resize-none focus:border-amber-mid
                                      transition-colors"
                           placeholder={
                             isMaterialPrep
@@ -594,7 +594,7 @@ export function ProductionPacketWorkspace({
                     )}
 
                     {submitError && (
-                      <p className="font-hanken text-xs text-red-600">{submitError}</p>
+                      <p className="font-hanken text-xs text-error">{submitError}</p>
                     )}
 
                     {isMaterialPrep ||
@@ -618,8 +618,8 @@ export function ProductionPacketWorkspace({
                         type="button"
                         onClick={() => handleComplete()}
                         disabled={!canApprove || submitting}
-                        className="w-full bg-[#161b29] text-white py-3 font-hanken text-sm font-semibold
-                                   uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-40"
+                        className="w-full bg-on-surface text-white py-3 font-hanken text-sm font-semibold
+                                   uppercase tracking-widest hover:bg-amber-mid transition-colors disabled:opacity-40"
                       >
                         {isShipping ? 'Approve Shipping' : 'Selesai'}
                       </button>
@@ -696,7 +696,7 @@ export function ProductionPacketWorkspace({
 
         {completedRecords.length > 0 && (
           <div>
-            <p className="font-hanken text-xs uppercase tracking-widest text-[#46464c] mb-3">
+            <p className="font-hanken text-xs uppercase tracking-widest text-secondary mb-3">
               Riwayat &middot; {completedRecords.length} tahap
             </p>
             <div className="space-y-3">

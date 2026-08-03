@@ -23,15 +23,15 @@ export function QcDecisionPanel({
   onAlterCategoryChange,
 }: QcDecisionPanelProps) {
   return (
-    <div className="pt-4 border-t border-[#c6c6cc]">
-      <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+    <div className="pt-4 border-t border-outline-variant">
+      <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
         Kategori Temuan
       </label>
       <select
         value={alterCategory}
         onChange={e => onAlterCategoryChange(e.target.value)}
-        className="w-full py-2 bg-transparent border-b border-[#c6c6cc] focus:border-[#755b00]
-                   outline-none font-hanken text-sm text-[#161b29] transition-colors"
+        className="w-full py-2 bg-transparent border-b border-outline-variant focus:border-amber-mid
+                   outline-none font-hanken text-sm text-on-surface transition-colors"
       >
         <option value="">Pilih kategori...</option>
         {returnReasons.map(item => (
@@ -41,7 +41,7 @@ export function QcDecisionPanel({
           </option>
         ))}
       </select>
-      <p className="font-hanken text-xs text-[#76777d] mt-1">
+      <p className="font-hanken text-xs text-secondary/80 mt-1">
         Wajib diisi jika mengembalikan tahap ini ke Penjahitan.
       </p>
     </div>

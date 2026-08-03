@@ -40,8 +40,8 @@ export default async function ProductionPacketPage({ params }: Props) {
   return (
     <ProductionAccessGate orderId={params.orderId} isInProgress={isInProgress}>
       {!packet ? (
-        <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center p-6">
-          <p className="font-sans text-sm text-[#444748]">
+        <div className="min-h-screen bg-surface-01 flex items-center justify-center p-6">
+          <p className="font-hanken text-sm text-secondary">
             Production Packet tidak ditemukan untuk order ini.
           </p>
         </div>

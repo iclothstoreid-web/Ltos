@@ -25,23 +25,23 @@ export function CustomerReferenceCard({ documents }: CustomerReferenceCardProps)
   if (documents.length === 0) return null
 
   return (
-    <div className="bg-[#fbf9fc] rounded-2xl p-6 shadow-sm border border-[#c6c6cc]/30 space-y-4">
-      <h3 className="font-caslon text-xl text-[#161b29]">Referensi Customer</h3>
+    <div className="bg-surface rounded-2xl p-6 shadow-sm border border-outline-variant/30 space-y-4">
+      <h3 className="font-caslon text-xl text-on-surface">Referensi Customer</h3>
       <ul className="space-y-2">
         {documents.map(doc => (
           <li
             key={doc.id}
-            className="flex items-center gap-3 p-3 bg-[#FDFCF7] rounded-xl"
+            className="flex items-center gap-3 p-3 bg-surface-01 rounded-xl"
           >
-            <span className="material-symbols-outlined text-[18px] text-[#755b00]">description</span>
-            <span className="flex-1 font-hanken text-sm text-[#161b29] truncate">{doc.name}</span>
-            <span className="font-jetbrains text-[9px] tracking-widest uppercase text-[#76777d] bg-[#efedf0] px-2 py-1 rounded">
+            <span className="material-symbols-outlined text-[18px] text-amber-mid">description</span>
+            <span className="flex-1 font-hanken text-sm text-on-surface truncate">{doc.name}</span>
+            <span className="font-jetbrains text-[9px] tracking-widest uppercase text-secondary/80 bg-surface-container px-2 py-1 rounded">
               {doc.category}
             </span>
             <button
               type="button"
               onClick={() => setPreview(doc)}
-              className="font-hanken text-xs text-[#755b00] hover:underline flex-shrink-0"
+              className="font-hanken text-xs text-amber-mid hover:underline flex-shrink-0"
             >
               Lihat
             </button>

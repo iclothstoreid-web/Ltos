@@ -32,24 +32,24 @@ export function DigitalHandoverCard({ record }: DigitalHandoverCardProps) {
   const checklistEntries = record.checklist ? Object.entries(record.checklist) : []
 
   return (
-    <div className="border border-[#c6c6cc]/60 bg-white/60 p-4">
+    <div className="border border-outline-variant/60 bg-white/60 p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="font-hanken text-sm font-semibold text-[#161b29]">
+        <p className="font-hanken text-sm font-semibold text-on-surface">
           {STAGE_LABELS[record.stage]}
           {record.attempt > 1 ? ` (Percobaan ${record.attempt})` : ''}
         </p>
         <span
           className={`font-hanken text-[9px] uppercase tracking-widest px-2 py-0.5 ${
             record.decision === 'alter'
-              ? 'bg-[#ba1a1a]/10 text-[#ba1a1a]'
-              : 'bg-[#161b29]/10 text-[#161b29]'
+              ? 'bg-error/10 text-error'
+              : 'bg-on-surface/10 text-on-surface'
           }`}
         >
           {record.decision === 'alter' ? 'Alter' : 'Selesai'}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 font-hanken text-xs text-[#46464c] mb-3">
+      <div className="grid grid-cols-2 gap-2 font-hanken text-xs text-secondary mb-3">
         <span>Operator: {record.operator_name || '—'}</span>
         <span>Divisi: {record.division || '—'}</span>
         <span>Jam Mulai: {formatTime(record.started_at)}</span>
@@ -61,10 +61,10 @@ export function DigitalHandoverCard({ record }: DigitalHandoverCardProps) {
 
       {checklistEntries.length > 0 && (
         <div className="mb-3">
-          <p className="font-hanken text-[9px] uppercase tracking-widest text-[#46464c] mb-1">
+          <p className="font-hanken text-[9px] uppercase tracking-widest text-secondary mb-1">
             Checklist
           </p>
-          <ul className="font-hanken text-xs text-[#46464c] space-y-0.5">
+          <ul className="font-hanken text-xs text-secondary space-y-0.5">
             {checklistEntries.map(([item, done]) => (
               <li key={item}>
                 {done ? '✓' : '✗'} {item}
@@ -84,13 +84,13 @@ export function DigitalHandoverCard({ record }: DigitalHandoverCardProps) {
       )}
 
       {record.alter_category && (
-        <p className="font-hanken text-xs text-[#ba1a1a] mb-1">
+        <p className="font-hanken text-xs text-error mb-1">
           Kategori Temuan: {record.alter_category}
         </p>
       )}
 
       {record.notes && (
-        <p className="font-hanken text-xs text-[#46464c] italic">&quot;{record.notes}&quot;</p>
+        <p className="font-hanken text-xs text-secondary italic">&quot;{record.notes}&quot;</p>
       )}
     </div>
   )

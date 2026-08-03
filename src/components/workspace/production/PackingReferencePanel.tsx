@@ -19,19 +19,19 @@ export function PackingReferencePanel({ stageRecords }: PackingReferencePanelPro
     .sort((a, b) => b.attempt - a.attempt)[0]
 
   return (
-    <div className="pb-6 border-b border-[#c6c6cc]">
+    <div className="pb-6 border-b border-outline-variant">
       <div className="flex items-center justify-between mb-3">
-        <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
+        <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">
           Data Acuan Finishing
         </p>
-        <span className="font-hanken text-[9px] uppercase tracking-widest text-[#76777d] bg-[#efedf0] px-2 py-0.5 rounded">
+        <span className="font-hanken text-[9px] uppercase tracking-widest text-secondary/80 bg-surface-container px-2 py-0.5 rounded">
           Hanya Baca
         </span>
       </div>
       {finishingRecord ? (
         <DigitalHandoverCard record={finishingRecord} />
       ) : (
-        <p className="font-hanken text-xs text-[#46464c]">Belum ada data finishing.</p>
+        <p className="font-hanken text-xs text-secondary">Belum ada data finishing.</p>
       )}
     </div>
   )

@@ -173,15 +173,15 @@ export function MaterialPreparationCard({
   }
 
   return (
-    <div className="mb-6 pb-6 border-b border-[#c6c6cc] space-y-5">
-      <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">Persiapan Bahan</p>
+    <div className="mb-6 pb-6 border-b border-outline-variant space-y-5">
+      <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">Persiapan Bahan</p>
 
       {loadingCatalog && (
-        <p className="font-hanken text-xs text-[#76777d]">Memuat katalog Inventory...</p>
+        <p className="font-hanken text-xs text-secondary/80">Memuat katalog Inventory...</p>
       )}
 
       {!loadingCatalog && categoryGroups.length === 0 && (
-        <p className="font-hanken text-xs text-[#76777d]">
+        <p className="font-hanken text-xs text-secondary/80">
           Belum ada Material Category dengan material aktif di Inventory.
         </p>
       )}
@@ -193,14 +193,14 @@ export function MaterialPreparationCard({
           : undefined
         return (
           <div key={group.categoryId}>
-            <label className="font-hanken text-xs text-[#161b29] font-semibold block mb-1">
+            <label className="font-hanken text-xs text-on-surface font-semibold block mb-1">
               {group.categoryName}
             </label>
             <select
               value={state.materialId ?? ''}
               onChange={e => setMaterial(group.categoryId, e.target.value, group.materials)}
-              className="w-full py-2 mb-2 bg-transparent border-b border-[#c6c6cc] focus:border-[#755b00]
-                         outline-none font-hanken text-sm text-[#161b29] transition-colors"
+              className="w-full py-2 mb-2 bg-transparent border-b border-outline-variant focus:border-amber-mid
+                         outline-none font-hanken text-sm text-on-surface transition-colors"
             >
               <option value="">— None —</option>
               {group.materials.map(o => (
@@ -218,7 +218,7 @@ export function MaterialPreparationCard({
                   value={state.quantity ?? ''}
                   onChange={e => setQuantity(group.categoryId, e.target.value === '' ? null : Number(e.target.value))}
                   placeholder={`Jumlah (${stockInfo?.unit ?? ''})`}
-                  className="w-full p-2 font-hanken text-sm text-[#161b29] border border-[#c6c6cc] outline-none focus:border-[#755b00]"
+                  className="w-full p-2 font-hanken text-sm text-on-surface border border-outline-variant outline-none focus:border-amber-mid"
                 />
               </div>
             )}
@@ -226,14 +226,14 @@ export function MaterialPreparationCard({
         )
       })}
 
-      {error && <p className="font-hanken text-xs text-red-600">{error}</p>}
+      {error && <p className="font-hanken text-xs text-error">{error}</p>}
 
       <button
         type="button"
         onClick={handleReserve}
         disabled={saving || loadingCatalog || categoryGroups.length === 0}
-        className="w-full bg-[#161b29] text-white py-3 font-hanken text-sm font-semibold
-                   uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-50"
+        className="w-full bg-on-surface text-white py-3 font-hanken text-sm font-semibold
+                   uppercase tracking-widest hover:bg-amber-mid transition-colors disabled:opacity-50"
       >
         {saving ? 'Menyimpan...' : savedOnce ? 'Perbarui Reservasi' : 'Reserve Material'}
       </button>

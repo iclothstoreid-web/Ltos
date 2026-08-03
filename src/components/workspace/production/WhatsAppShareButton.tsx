@@ -55,14 +55,14 @@ export function WhatsAppShareButton({ orderNumber, size = 'a4' }: WhatsAppShareB
         type="button"
         onClick={handleShare}
         disabled={sharing}
-        className="w-full flex items-center justify-center gap-2 bg-transparent text-[#161b29] py-3
-                   font-hanken text-sm font-semibold uppercase tracking-widest border border-[#c6c6cc]/60
-                   hover:border-[#161b29] transition-colors disabled:opacity-40"
+        className="w-full flex items-center justify-center gap-2 bg-transparent text-on-surface py-3
+                   font-hanken text-sm font-semibold uppercase tracking-widest border border-outline-variant/60
+                   hover:border-on-surface transition-colors disabled:opacity-40"
       >
         <span className="material-symbols-outlined text-lg">share</span>
         {sharing ? 'Menyiapkan...' : 'Share WhatsApp'}
       </button>
-      {notice && <p className="font-hanken text-xs text-[#46464c] mt-2">{notice}</p>}
+      {notice && <p className="font-hanken text-xs text-secondary mt-2">{notice}</p>}
     </div>
   )
 }

@@ -128,11 +128,11 @@ export function QrScanModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-      <div className="bg-[#fbf9fc] rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-caslon text-lg text-[#161b29]">{title}</h3>
-            <p className="font-hanken text-xs text-[#46464c] mt-1">{description}</p>
+            <h3 className="font-caslon text-lg text-on-surface">{title}</h3>
+            <p className="font-hanken text-xs text-secondary mt-1">{description}</p>
           </div>
           {dismissible && (
             <button
@@ -141,7 +141,7 @@ export function QrScanModal({
                 stopCamera()
                 onClose()
               }}
-              className="material-symbols-outlined text-[#76777d] hover:text-[#161b29] transition-colors"
+              className="material-symbols-outlined text-secondary/80 hover:text-on-surface transition-colors"
             >
               close
             </button>
@@ -155,10 +155,10 @@ export function QrScanModal({
             <canvas ref={canvasRef} className="hidden" />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-2/3 aspect-square border-2 border-white/60 rounded-xl relative">
-                <div className="absolute top-0 left-0 w-5 h-5 border-t-4 border-l-4 border-[#fed977] -mt-1 -ml-1" />
-                <div className="absolute top-0 right-0 w-5 h-5 border-t-4 border-r-4 border-[#fed977] -mt-1 -mr-1" />
-                <div className="absolute bottom-0 left-0 w-5 h-5 border-b-4 border-l-4 border-[#fed977] -mb-1 -ml-1" />
-                <div className="absolute bottom-0 right-0 w-5 h-5 border-b-4 border-r-4 border-[#fed977] -mb-1 -mr-1" />
+                <div className="absolute top-0 left-0 w-5 h-5 border-t-4 border-l-4 border-warm-gold -mt-1 -ml-1" />
+                <div className="absolute top-0 right-0 w-5 h-5 border-t-4 border-r-4 border-warm-gold -mt-1 -mr-1" />
+                <div className="absolute bottom-0 left-0 w-5 h-5 border-b-4 border-l-4 border-warm-gold -mb-1 -ml-1" />
+                <div className="absolute bottom-0 right-0 w-5 h-5 border-b-4 border-r-4 border-warm-gold -mb-1 -mr-1" />
               </div>
             </div>
           </div>
@@ -167,11 +167,11 @@ export function QrScanModal({
         {(manualMode || cameraError) && (
           <div className="space-y-2">
             {cameraError && !manualMode && (
-              <p className="font-hanken text-xs text-[#ba1a1a]">
+              <p className="font-hanken text-xs text-error">
                 Kamera tidak tersedia — gunakan input manual.
               </p>
             )}
-            <label className="font-jetbrains text-[10px] uppercase tracking-widest text-[#76777d] block">
+            <label className="font-jetbrains text-[10px] uppercase tracking-widest text-secondary/80 block">
               Nomor / Kode QR
             </label>
             <input
@@ -179,21 +179,21 @@ export function QrScanModal({
               value={manualValue}
               onChange={e => setManualValue(e.target.value)}
               placeholder="Tempel atau ketik kode QR..."
-              className="w-full py-2 px-3 bg-white border border-[#c6c6cc] rounded-lg outline-none
-                         font-hanken text-sm text-[#161b29] focus:border-[#755b00] transition-colors"
+              className="w-full py-2 px-3 bg-white border border-outline-variant rounded-lg outline-none
+                         font-hanken text-sm text-on-surface focus:border-amber-mid transition-colors"
             />
             <button
               type="button"
               onClick={handleManualSubmit}
-              className="w-full bg-[#161b29] text-white font-hanken font-semibold py-3 rounded-xl
-                         hover:bg-[#755b00] transition-colors"
+              className="w-full bg-on-surface text-white font-hanken font-semibold py-3 rounded-xl
+                         hover:bg-amber-mid transition-colors"
             >
               Verifikasi
             </button>
           </div>
         )}
 
-        {error && <p className="font-hanken text-xs text-[#ba1a1a] text-center">{error}</p>}
+        {error && <p className="font-hanken text-xs text-error text-center">{error}</p>}
 
         {!cameraError && (
           <button
@@ -202,8 +202,8 @@ export function QrScanModal({
               setError(null)
               setManualMode(m => !m)
             }}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-[#161b29]
-                       text-[#161b29] font-hanken font-semibold hover:bg-[#161b29]/5 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-on-surface
+                       text-on-surface font-hanken font-semibold hover:bg-on-surface/5 transition-colors"
           >
             <span className="material-symbols-outlined text-lg">keyboard</span>
             {manualMode ? 'Gunakan Kamera' : 'Input Nomor'}

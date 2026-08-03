@@ -16,42 +16,42 @@ interface MaterialSpecCardProps {
 // Logistics card).
 export function MaterialSpecCard({ design, consultationNotes }: MaterialSpecCardProps) {
   return (
-    <div className="bg-[#fbf9fc] rounded-2xl p-6 shadow-sm border border-[#c6c6cc]/30 space-y-6">
-      <h3 className="font-caslon text-xl text-[#161b29]">Spesifikasi Material</h3>
+    <div className="bg-surface rounded-2xl p-6 shadow-sm border border-outline-variant/30 space-y-6">
+      <h3 className="font-caslon text-xl text-on-surface">Spesifikasi Material</h3>
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 bg-[#FDFCF7] rounded-xl">
-            <p className="font-jetbrains text-[10px] tracking-widest text-[#76777d] uppercase mb-1">
+          <div className="p-3 bg-surface-01 rounded-xl">
+            <p className="font-jetbrains text-[10px] tracking-widest text-secondary/80 uppercase mb-1">
               Jenis Kain
             </p>
-            <p className="font-hanken font-semibold text-[#161b29]">{design?.fabric || '—'}</p>
+            <p className="font-hanken font-semibold text-on-surface">{design?.fabric || '—'}</p>
           </div>
-          <div className="p-3 bg-[#FDFCF7] rounded-xl">
-            <p className="font-jetbrains text-[10px] tracking-widest text-[#76777d] uppercase mb-1">
+          <div className="p-3 bg-surface-01 rounded-xl">
+            <p className="font-jetbrains text-[10px] tracking-widest text-secondary/80 uppercase mb-1">
               Warna
             </p>
-            <p className="font-hanken font-semibold text-[#161b29]">{design?.color || '—'}</p>
+            <p className="font-hanken font-semibold text-on-surface">{design?.color || '—'}</p>
           </div>
-          <div className="p-3 bg-[#FDFCF7] rounded-xl">
-            <p className="font-jetbrains text-[10px] tracking-widest text-[#76777d] uppercase mb-1">
+          <div className="p-3 bg-surface-01 rounded-xl">
+            <p className="font-jetbrains text-[10px] tracking-widest text-secondary/80 uppercase mb-1">
               Panjang
             </p>
-            <p className="font-hanken font-semibold text-[#161b29]">—</p>
+            <p className="font-hanken font-semibold text-on-surface">—</p>
           </div>
-          <div className="p-3 bg-[#FDFCF7] rounded-xl">
-            <p className="font-jetbrains text-[10px] tracking-widest text-[#76777d] uppercase mb-1">
+          <div className="p-3 bg-surface-01 rounded-xl">
+            <p className="font-jetbrains text-[10px] tracking-widest text-secondary/80 uppercase mb-1">
               Benang
             </p>
-            <p className="font-hanken font-semibold text-[#161b29]">—</p>
+            <p className="font-hanken font-semibold text-on-surface">—</p>
           </div>
         </div>
 
         {consultationNotes && (
-          <div className="p-4 border-l-4 border-[#755b00] bg-[#755b00]/5 rounded-r-xl">
-            <p className="font-jetbrains text-[10px] tracking-widest text-[#755b00] uppercase mb-1">
+          <div className="p-4 border-l-4 border-amber-mid bg-amber-mid/5 rounded-r-xl">
+            <p className="font-jetbrains text-[10px] tracking-widest text-amber-mid uppercase mb-1">
               Catatan Khusus
             </p>
-            <p className="font-hanken text-[#1b1b1e]">{consultationNotes}</p>
+            <p className="font-hanken text-on-surface">{consultationNotes}</p>
           </div>
         )}
       </div>

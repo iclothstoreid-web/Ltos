@@ -35,37 +35,37 @@ export function ShippingReferencePanel({
     .sort((a, b) => b.attempt - a.attempt)[0]
 
   return (
-    <div className="pb-6 border-b border-[#c6c6cc] space-y-6">
+    <div className="pb-6 border-b border-outline-variant space-y-6">
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
+          <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">
             Data Acuan Packing
           </p>
-          <span className="font-hanken text-[9px] uppercase tracking-widest text-[#76777d] bg-[#efedf0] px-2 py-0.5 rounded">
+          <span className="font-hanken text-[9px] uppercase tracking-widest text-secondary/80 bg-surface-container px-2 py-0.5 rounded">
             Hanya Baca
           </span>
         </div>
         {packingRecord ? (
           <DigitalHandoverCard record={packingRecord} />
         ) : (
-          <p className="font-hanken text-xs text-[#46464c]">Belum ada data packing.</p>
+          <p className="font-hanken text-xs text-secondary">Belum ada data packing.</p>
         )}
       </div>
 
       <div>
-        <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-3">
+        <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary mb-3">
           Data Pengiriman
         </p>
         <div className="space-y-4">
           <div>
-            <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+            <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
               Ekspedisi
             </label>
             <select
               value={courier}
               onChange={e => onCourierChange(e.target.value)}
-              className="w-full py-2 bg-transparent border-b border-[#c6c6cc] focus:border-[#755b00]
-                         outline-none font-hanken text-sm text-[#161b29] transition-colors"
+              className="w-full py-2 bg-transparent border-b border-outline-variant focus:border-amber-mid
+                         outline-none font-hanken text-sm text-on-surface transition-colors"
             >
               <option value="">Pilih ekspedisi</option>
               {COURIERS.map(c => (
@@ -76,7 +76,7 @@ export function ShippingReferencePanel({
             </select>
           </div>
           <div>
-            <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+            <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
               Nomor Resi
             </label>
             <input
@@ -84,8 +84,8 @@ export function ShippingReferencePanel({
               value={trackingNumber}
               onChange={e => onTrackingNumberChange(e.target.value)}
               placeholder="Masukkan nomor resi..."
-              className="w-full border-b border-[#c6c6cc] bg-transparent py-2 font-hanken
-                         text-sm text-[#161b29] outline-none focus:border-[#755b00] transition-colors"
+              className="w-full border-b border-outline-variant bg-transparent py-2 font-hanken
+                         text-sm text-on-surface outline-none focus:border-amber-mid transition-colors"
             />
           </div>
         </div>

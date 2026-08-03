@@ -30,31 +30,31 @@ export function PatternReferenceCard({ patternFormulation, stageRecords }: Patte
     .sort((a, b) => b.attempt - a.attempt)[0]
 
   const body = (
-    <div className="mb-6 pb-6 border-b border-[#c6c6cc]">
+    <div className="mb-6 pb-6 border-b border-outline-variant">
       <div className="flex items-center justify-between mb-3">
-        <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
+        <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">
           Data Acuan Formulasi Pola
         </p>
         <div className="flex items-center gap-2">
           {patternFormulation && (
-            <span className="material-symbols-outlined text-[16px] text-[#76777d]">open_in_full</span>
+            <span className="material-symbols-outlined text-[16px] text-secondary/80">open_in_full</span>
           )}
-          <span className="font-hanken text-[9px] uppercase tracking-widest text-[#76777d] bg-[#efedf0] px-2 py-0.5 rounded">
+          <span className="font-hanken text-[9px] uppercase tracking-widest text-secondary/80 bg-surface-container px-2 py-0.5 rounded">
             Hanya Baca
           </span>
         </div>
       </div>
 
       {!patternFormulation ? (
-        <p className="font-hanken text-xs text-[#46464c]">Belum ada data formulasi pola.</p>
+        <p className="font-hanken text-xs text-secondary">Belum ada data formulasi pola.</p>
       ) : (
         <div className="space-y-4">
-          <p className="font-hanken text-sm text-[#161b29]">
+          <p className="font-hanken text-sm text-on-surface">
             Template:{' '}
             <strong>{PATTERN_TEMPLATE_LABELS[patternFormulation.template]}</strong>
           </p>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-hanken text-xs text-[#46464c]">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-hanken text-xs text-secondary">
             {Object.entries(patternFormulation.pattern_measurements).map(([key, value]) => (
               <span key={key}>
                 {FIELD_LABELS[key as keyof typeof FIELD_LABELS]}: {value || '—'} cm
@@ -63,11 +63,11 @@ export function PatternReferenceCard({ patternFormulation, stageRecords }: Patte
           </div>
 
           {formulationRecord?.notes && (
-            <div className="p-3 border-l-4 border-[#755b00] bg-[#755b00]/5 rounded-r-xl">
-              <p className="font-hanken text-[9px] uppercase tracking-widest text-[#755b00] mb-1">
+            <div className="p-3 border-l-4 border-amber-mid bg-amber-mid/5 rounded-r-xl">
+              <p className="font-hanken text-[9px] uppercase tracking-widest text-amber-mid mb-1">
                 Catatan Formulator
               </p>
-              <p className="font-hanken text-xs text-[#1b1b1e]">{formulationRecord.notes}</p>
+              <p className="font-hanken text-xs text-on-surface">{formulationRecord.notes}</p>
             </div>
           )}
         </div>

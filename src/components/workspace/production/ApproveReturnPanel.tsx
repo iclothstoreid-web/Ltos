@@ -31,7 +31,7 @@ export function ApproveReturnPanel({
         type="button"
         onClick={onApprove}
         disabled={submitting || !canApprove}
-        className="w-full bg-[#755b00] hover:bg-[#5f4a00] text-white font-hanken font-semibold py-4
+        className="w-full bg-amber-mid hover:bg-amber-mid/85 text-white font-hanken font-semibold py-4
                    rounded-2xl shadow-lg active:scale-[0.98] transition-all tracking-wide disabled:opacity-40"
       >
         {nextStageLabel ? `Setujui & Serahkan ke ${nextStageLabel}` : 'Setujui'}
@@ -40,13 +40,13 @@ export function ApproveReturnPanel({
         type="button"
         onClick={onReturn}
         disabled={submitting || !canReturn}
-        className="w-full bg-transparent border-2 border-[#161b29] text-[#161b29] font-hanken
+        className="w-full bg-transparent border-2 border-on-surface text-on-surface font-hanken
                    font-semibold py-3.5 rounded-2xl active:scale-[0.98] transition-all disabled:opacity-40"
       >
         {returnLabel}
       </button>
       {!canReturn && (
-        <p className="font-hanken text-xs text-[#76777d] text-center">
+        <p className="font-hanken text-xs text-secondary/80 text-center">
           Isi Catatan terlebih dahulu untuk mengembalikan tahap ini.
         </p>
       )}

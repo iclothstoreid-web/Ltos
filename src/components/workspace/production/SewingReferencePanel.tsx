@@ -24,19 +24,19 @@ export function SewingReferencePanel({ patternFormulation, stageRecords }: Sewin
     <div className="space-y-6">
       <PatternReferenceCard patternFormulation={patternFormulation} stageRecords={stageRecords} />
 
-      <div className="pb-6 border-b border-[#c6c6cc]">
+      <div className="pb-6 border-b border-outline-variant">
         <div className="flex items-center justify-between mb-3">
-          <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
+          <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">
             Konfirmasi Pemotongan Kain
           </p>
-          <span className="font-hanken text-[9px] uppercase tracking-widest text-[#76777d] bg-[#efedf0] px-2 py-0.5 rounded">
+          <span className="font-hanken text-[9px] uppercase tracking-widest text-secondary/80 bg-surface-container px-2 py-0.5 rounded">
             Hanya Baca
           </span>
         </div>
         {cuttingRecord ? (
           <DigitalHandoverCard record={cuttingRecord} />
         ) : (
-          <p className="font-hanken text-xs text-[#46464c]">Belum ada data pemotongan kain.</p>
+          <p className="font-hanken text-xs text-secondary">Belum ada data pemotongan kain.</p>
         )}
       </div>
     </div>

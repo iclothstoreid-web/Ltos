@@ -15,7 +15,7 @@ export default function ProductionScanEntryPage() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-[#FDFCF7] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-surface-01 flex items-center justify-center p-6">
       <AssignedJobsPanel />
 
       {/* App identity, shown above the (always-open, non-dismissible) scan

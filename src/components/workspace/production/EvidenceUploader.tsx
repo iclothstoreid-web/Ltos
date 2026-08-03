@@ -64,16 +64,16 @@ export function EvidenceUploader({
 
   return (
     <div>
-      <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-2">
+      <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-2">
         Bukti Foto
       </label>
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="w-full aspect-video bg-[#efedf0] border-[0.5px] border-dashed border-[#c6c6cc]
+        className="w-full aspect-video bg-surface-container border-[0.5px] border-dashed border-outline-variant
                    flex flex-col items-center justify-center gap-1 group cursor-pointer
-                   hover:bg-[#efedf0] transition-colors relative overflow-hidden disabled:opacity-60"
+                   hover:bg-surface-container transition-colors relative overflow-hidden disabled:opacity-60"
       >
         <input
           ref={inputRef}
@@ -92,17 +92,17 @@ export function EvidenceUploader({
           />
         ) : (
           <>
-            <span className="material-symbols-outlined text-[#c6c6cc] group-hover:text-[#755b00] transition-colors">
+            <span className="material-symbols-outlined text-outline-variant group-hover:text-amber-mid transition-colors">
               add_a_photo
             </span>
-            <p className="text-[10px] text-[#46464c] uppercase tracking-widest">
+            <p className="text-[10px] text-secondary uppercase tracking-widest">
               {uploading ? 'Mengunggah...' : 'Ambil Foto'}
             </p>
           </>
         )}
       </button>
       {error && (
-        <p className="font-hanken text-[10px] text-red-600 mt-1">{error}</p>
+        <p className="font-hanken text-[10px] text-error mt-1">{error}</p>
       )}
     </div>
   )

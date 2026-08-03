@@ -138,12 +138,12 @@ export function OperatorAutocomplete({
   }
 
   const isDark = variant === 'dark'
-  const hintColor = isDark ? 'text-white/50' : 'text-[#46464c]'
-  const valueColor = isDark ? 'text-white' : 'text-[#161b29]'
-  const borderColor = isDark ? 'border-white/20' : 'border-[#c6c6cc]'
-  const focusBorder = isDark ? 'focus:border-white' : 'focus:border-[#755b00]'
-  const placeholderColor = isDark ? 'placeholder:text-white/30' : 'placeholder:text-[#46464c]/40'
-  const linkColor = isDark ? 'text-[#e9c176]' : 'text-[#755b00]'
+  const hintColor = isDark ? 'text-white/50' : 'text-secondary'
+  const valueColor = isDark ? 'text-white' : 'text-on-surface'
+  const borderColor = isDark ? 'border-white/20' : 'border-outline-variant'
+  const focusBorder = isDark ? 'focus:border-white' : 'focus:border-amber-mid'
+  const placeholderColor = isDark ? 'placeholder:text-white/30' : 'placeholder:text-secondary/40'
+  const linkColor = isDark ? 'text-warm-gold' : 'text-amber-mid'
 
   if (value) {
     return (
@@ -190,31 +190,31 @@ export function OperatorAutocomplete({
       {showResults && (
         <div
           className={`absolute z-10 left-0 right-0 ${dropUp ? 'bottom-full mb-1' : 'mt-1'}
-                     bg-white border border-[#c6c6cc]/60 shadow-md max-h-64 overflow-y-auto`}
+                     bg-white border border-outline-variant/60 shadow-md max-h-64 overflow-y-auto`}
         >
           {results.map(op => (
             <button
               key={op.id}
               type="button"
               onClick={() => handleSelect(op)}
-              className="w-full text-left px-4 py-2 font-hanken text-sm text-[#161b29] hover:bg-[#efedf0] transition-colors"
+              className="w-full text-left px-4 py-2 font-hanken text-sm text-on-surface hover:bg-surface-container transition-colors"
             >
               {op.nama}
               {op.divisi && (
-                <span className="block font-hanken text-[10px] text-[#46464c]">{op.divisi}</span>
+                <span className="block font-hanken text-[10px] text-secondary">{op.divisi}</span>
               )}
             </button>
           ))}
 
           {!loading && query.trim().length > 0 && (
-            <div className="px-4 py-2 border-t border-[#c6c6cc]/40">
-              <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+            <div className="px-4 py-2 border-t border-outline-variant/40">
+              <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
                 Divisi Operator Baru
               </label>
               <select
                 value={newDivisionId}
                 onChange={e => setNewDivisionId(e.target.value)}
-                className="w-full py-1 mb-2 bg-transparent border-b border-[#c6c6cc] outline-none font-hanken text-sm text-[#161b29]"
+                className="w-full py-1 mb-2 bg-transparent border-b border-outline-variant outline-none font-hanken text-sm text-on-surface"
               >
                 <option value="">Tidak ditentukan</option>
                 {divisions.map(d => (
@@ -226,7 +226,7 @@ export function OperatorAutocomplete({
               <button
                 type="button"
                 onClick={handleCreateNew}
-                className="w-full text-left font-hanken text-xs font-semibold text-[#755b00] hover:underline transition-colors uppercase tracking-widest"
+                className="w-full text-left font-hanken text-xs font-semibold text-amber-mid hover:underline transition-colors uppercase tracking-widest"
               >
                 + Tambah operator baru &quot;{query.trim()}&quot;
               </button>

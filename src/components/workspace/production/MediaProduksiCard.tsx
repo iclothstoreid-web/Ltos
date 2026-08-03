@@ -29,41 +29,41 @@ export function MediaProduksiCard({
 
   return (
     <div className="space-y-4">
-      <h3 className="font-caslon text-xl text-[#161b29]">Media Produksi</h3>
+      <h3 className="font-caslon text-xl text-on-surface">Media Produksi</h3>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-[#fbf9fc] rounded-2xl border border-[#c6c6cc]/30 p-3 space-y-2">
-          <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 p-3 space-y-2">
+          <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">
             Customer Photo
           </p>
           <button
             type="button"
             onClick={() => customerPhotoUrl && setShowPhoto(true)}
             disabled={!customerPhotoUrl}
-            className="w-full aspect-square rounded-xl overflow-hidden bg-[#efedf0] flex items-center justify-center disabled:cursor-default"
+            className="w-full aspect-square rounded-xl overflow-hidden bg-surface-container flex items-center justify-center disabled:cursor-default"
           >
             {customerPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
               <img src={customerPhotoUrl} alt="Foto Pelanggan" className="w-full h-full object-cover" />
             ) : (
-              <span className="material-symbols-outlined text-[#c6c6cc]">person</span>
+              <span className="material-symbols-outlined text-outline-variant">person</span>
             )}
           </button>
         </div>
 
-        <div className="bg-[#fbf9fc] rounded-2xl border border-[#c6c6cc]/30 p-3 space-y-2">
-          <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">AI Render</p>
-          <div className="w-full aspect-square rounded-xl bg-[#efedf0] flex flex-col items-center justify-center gap-1">
-            <span className="material-symbols-outlined text-[#c6c6cc]">auto_awesome</span>
-            <p className="font-hanken text-[9px] text-[#76777d] text-center px-2">Coming in Phase 2</p>
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 p-3 space-y-2">
+          <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">AI Render</p>
+          <div className="w-full aspect-square rounded-xl bg-surface-container flex flex-col items-center justify-center gap-1">
+            <span className="material-symbols-outlined text-outline-variant">auto_awesome</span>
+            <p className="font-hanken text-[9px] text-secondary/80 text-center px-2">Coming in Phase 2</p>
           </div>
         </div>
       </div>
 
       <CustomerReferenceCard documents={customerReferences} />
 
-      <div className="bg-[#fbf9fc] rounded-2xl border border-[#c6c6cc]/30 p-4 space-y-2">
-        <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c]">
+      <div className="bg-surface rounded-2xl border border-outline-variant/30 p-4 space-y-2">
+        <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">
           Packing Video
         </p>
         {packingVideoUrl ? (
@@ -79,7 +79,7 @@ export function MediaProduksiCard({
             </span>
           </button>
         ) : (
-          <p className="font-hanken text-xs text-[#46464c]">Belum ada video packing.</p>
+          <p className="font-hanken text-xs text-secondary">Belum ada video packing.</p>
         )}
       </div>
 

@@ -85,18 +85,18 @@ export function PatternFormulationPanel({
   return (
     <div>
       {lockedMeasurements && (
-        <div className="mb-6 pb-6 border-b border-[#c6c6cc]">
-          <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-2">
+        <div className="mb-6 pb-6 border-b border-outline-variant">
+          <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary mb-2">
             Ukuran Tubuh (Terkunci)
           </p>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-hanken text-xs text-[#46464c]">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-hanken text-xs text-secondary">
             {(Object.keys(FIELD_LABELS) as Array<MeasurementKey>).map(key => (
               <span key={key}>
                 {FIELD_LABELS[key]}: {lockedMeasurements[key] || '—'} cm
               </span>
             ))}
           </div>
-          <div className="mt-3 pt-3 border-t border-[#c6c6cc]/60 flex gap-6 font-hanken text-xs text-[#46464c]">
+          <div className="mt-3 pt-3 border-t border-outline-variant/60 flex gap-6 font-hanken text-xs text-secondary">
             <span>
               Model Potongan:{' '}
               {lockedMeasurements.cuttingModel ? CUTTING_MODEL_LABELS[lockedMeasurements.cuttingModel] : '—'}
@@ -111,14 +111,14 @@ export function PatternFormulationPanel({
         </div>
       )}
 
-      <label className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] block mb-1">
+      <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
         Template
       </label>
       <select
         value={template}
         onChange={e => handleTemplateChange(e.target.value as PatternTemplate)}
-        className="w-full py-2 mb-6 bg-transparent border-b border-[#c6c6cc] focus:border-[#755b00]
-                   outline-none font-hanken text-sm text-[#161b29] transition-colors"
+        className="w-full py-2 mb-6 bg-transparent border-b border-outline-variant focus:border-amber-mid
+                   outline-none font-hanken text-sm text-on-surface transition-colors"
       >
         {TEMPLATES.map(t => (
           <option key={t} value={t}>
@@ -127,7 +127,7 @@ export function PatternFormulationPanel({
         ))}
       </select>
 
-      <p className="font-hanken text-[10px] uppercase tracking-widest text-[#46464c] mb-3">
+      <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary mb-3">
         Ukuran Pola
       </p>
       <div className="space-y-2 mb-6">
@@ -145,8 +145,8 @@ export function PatternFormulationPanel({
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="w-full bg-[#161b29] text-white py-3 font-hanken text-sm font-semibold
-                   uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-50"
+        className="w-full bg-on-surface text-white py-3 font-hanken text-sm font-semibold
+                   uppercase tracking-widest hover:bg-amber-mid transition-colors disabled:opacity-50"
       >
         {saving ? 'Menyimpan...' : 'Simpan Formulasi Pola'}
       </button>

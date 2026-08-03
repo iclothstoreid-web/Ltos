@@ -66,15 +66,15 @@ export function PatternFormulationCard({
   }
 
   return (
-    <div className="bg-[#fbf9fc] rounded-2xl p-6 shadow-sm border border-[#c6c6cc]/30">
+    <div className="bg-surface rounded-2xl p-6 shadow-sm border border-outline-variant/30">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-caslon text-xl text-[#161b29]">📐 Formulasi Pola</h3>
+        <h3 className="font-caslon text-xl text-on-surface">Formulasi Pola</h3>
         {patternFormulation && (
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setDialogOpen(true)}
-              className="material-symbols-outlined text-[#76777d] hover:text-[#161b29] transition-colors"
+              className="material-symbols-outlined text-secondary/80 hover:text-on-surface transition-colors"
               aria-label="Print"
               title="Print"
             >
