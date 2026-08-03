@@ -45,10 +45,11 @@ export function CommunicationsCenter({ profileId, profileName, orders, stageGrou
       <div className="flex-1 flex flex-col min-w-0">
         <OwnerTopBar profileName={profileName} onMenuClick={() => setMobileNavOpen(true)} />
 
-        <main className="flex-1 px-6 md:px-10 py-8 max-w-[1440px] w-full mx-auto flex flex-col min-h-0">
-          <div className="mb-6">
-            <h1 className="font-serif text-headline text-on-surface font-normal">Komunikasi</h1>
-            <p className="text-body text-secondary mt-1">
+        <main className="flex-1 px-4 sm:px-6 md:px-10 py-6 sm:py-10 max-w-[1440px] w-full mx-auto flex flex-col min-h-0">
+          <div className="mb-6 shrink-0">
+            <p className="text-label text-secondary uppercase tracking-widest mb-3">Komunikasi</p>
+            <h1 className="font-serif text-heading-md text-text-primary leading-[1.2] font-normal">Komunikasi Order</h1>
+            <p className="text-body-md text-secondary mt-3 leading-relaxed max-w-[60ch]">
               Satu thread komunikasi per Order, dilihat per Order atau per Stage operasional.
             </p>
           </div>
