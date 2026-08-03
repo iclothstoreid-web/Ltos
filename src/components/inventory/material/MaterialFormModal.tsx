@@ -86,7 +86,7 @@ export function MaterialFormModal({ categories, material, defaultCategoryId, onC
       <div className="bg-surface rounded-2xl w-full max-w-md border border-outline-variant/40 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-5 flex items-center justify-between border-b border-outline-variant/30 sticky top-0 bg-surface z-10">
           <h3 className="font-serif text-title text-on-surface">{material ? 'Edit Material' : 'Tambah Item'}</h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-surface-container-low rounded-full text-secondary" aria-label="Tutup">
+          <button onClick={onClose} className="p-1.5 hover:bg-surface-low rounded-full text-secondary" aria-label="Tutup">
             <X size={18} />
           </button>
         </div>

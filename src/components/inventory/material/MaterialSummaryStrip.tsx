@@ -25,7 +25,7 @@ export function MaterialSummaryStrip({
   reservedMaterial: number
 }) {
   return (
-    <div className="flex items-center gap-6 flex-wrap px-5 py-3 mb-6 rounded-xl border border-outline-variant/40 bg-surface-container-low/60">
+    <div className="flex items-center gap-6 flex-wrap px-5 py-3 mb-6 rounded-xl border border-outline-variant/40 bg-surface-low/60">
       <StripStat label="Total Material" value={totalMaterial} unit="kategori" />
       <span className="w-px h-4 bg-outline-variant/50" />
       <StripStat label="Total Item" value={totalItem} unit="item" />

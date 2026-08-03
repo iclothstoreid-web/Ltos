@@ -56,33 +56,33 @@ export function EstimatePrintView({
   return (
     <div
       id="material-estimate-print-area"
-      className="fixed top-0 -left-[9999px] w-[794px] bg-white text-[#1b1b1c] p-12 font-sans"
+      className="fixed top-0 -left-[9999px] w-[794px] bg-white text-on-surface p-12 font-sans"
     >
-      <div className="flex items-center justify-between pb-6 border-b-2 border-[#1b1b1c]">
+      <div className="flex items-center justify-between pb-6 border-b-2 border-on-surface">
         <div>
           <p className="font-serif text-2xl tracking-tight">LOCAL TAILOR</p>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-[#5a5a5a] mt-1">Estimasi Biaya Material — Dokumen Internal</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-secondary mt-1">Estimasi Biaya Material — Dokumen Internal</p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-widest text-[#5a5a5a]">Nomor Estimasi</p>
+          <p className="text-[10px] uppercase tracking-widest text-secondary">Nomor Estimasi</p>
           <p className="text-sm font-medium">{nomorEstimasi}</p>
-          <p className="text-[10px] uppercase tracking-widest text-[#5a5a5a] mt-2">Tanggal</p>
+          <p className="text-[10px] uppercase tracking-widest text-secondary mt-2">Tanggal</p>
           <p className="text-sm font-medium">{today}</p>
         </div>
       </div>
 
       <div className="mt-6 mb-8 grid grid-cols-3 gap-6">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-[#5a5a5a]">Nama Estimasi</p>
+          <p className="text-[10px] uppercase tracking-widest text-secondary">Nama Estimasi</p>
           <p className="text-xl font-serif mt-1">{estimateName || 'Tanpa nama'}</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-[#5a5a5a]">Produk</p>
+          <p className="text-[10px] uppercase tracking-widest text-secondary">Produk</p>
           <p className="text-sm font-medium mt-1">{produk || '—'}</p>
         </div>
         {customer && (
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-[#5a5a5a]">Customer</p>
+            <p className="text-[10px] uppercase tracking-widest text-secondary">Customer</p>
             <p className="text-sm font-medium mt-1">{customer}</p>
           </div>
         )}
@@ -90,7 +90,7 @@ export function EstimatePrintView({
 
       <table className="w-full text-sm border-collapse mb-8">
         <thead>
-          <tr className="border-b border-[#1b1b1c]">
+          <tr className="border-b border-on-surface">
             <th className="text-left font-bold uppercase text-[10px] tracking-widest py-2">Kategori</th>
             <th className="text-left font-bold uppercase text-[10px] tracking-widest py-2">Material</th>
             <th className="text-right font-bold uppercase text-[10px] tracking-widest py-2">Qty</th>
@@ -101,11 +101,11 @@ export function EstimatePrintView({
         </thead>
         <tbody>
           {materialRows.map(row => (
-            <tr key={row.id} className="border-b border-[#e5e5e5]">
-              <td className="py-2 text-[#5a5a5a]">{row.categoryName}</td>
+            <tr key={row.id} className="border-b border-outline-variant">
+              <td className="py-2 text-secondary">{row.categoryName}</td>
               <td className="py-2">{row.materialName}</td>
               <td className="py-2 text-right">{row.quantity.toLocaleString('id-ID')}</td>
-              <td className="py-2 pl-2 text-[#5a5a5a]">{row.unit}</td>
+              <td className="py-2 pl-2 text-secondary">{row.unit}</td>
               <td className="py-2 text-right">{rupiah(row.price)}</td>
               <td className="py-2 text-right font-medium">{rupiah(row.subtotal)}</td>
             </tr>
@@ -122,7 +122,7 @@ export function EstimatePrintView({
       {additionalCosts.length > 0 && (
         <table className="w-full text-sm border-collapse mb-8">
           <thead>
-            <tr className="border-b border-[#1b1b1c]">
+            <tr className="border-b border-on-surface">
               <th className="text-left font-bold uppercase text-[10px] tracking-widest py-2">Nama Biaya</th>
               <th className="text-left font-bold uppercase text-[10px] tracking-widest py-2">Keterangan</th>
               <th className="text-right font-bold uppercase text-[10px] tracking-widest py-2">Nominal</th>
@@ -130,9 +130,9 @@ export function EstimatePrintView({
           </thead>
           <tbody>
             {additionalCosts.map(cost => (
-              <tr key={cost.id} className="border-b border-[#e5e5e5]">
+              <tr key={cost.id} className="border-b border-outline-variant">
                 <td className="py-2">{cost.name}</td>
-                <td className="py-2 text-[#5a5a5a]">{cost.notes}</td>
+                <td className="py-2 text-secondary">{cost.notes}</td>
                 <td className="py-2 text-right font-medium">{rupiah(cost.nominal)}</td>
               </tr>
             ))}
@@ -146,19 +146,19 @@ export function EstimatePrintView({
         </table>
       )}
 
-      <div className="flex items-center justify-between py-5 px-6 bg-[#1b1b1c] text-white mb-8">
+      <div className="flex items-center justify-between py-5 px-6 bg-on-surface text-white mb-8">
         <p className="text-xs uppercase tracking-[0.2em] font-bold">Grand Total</p>
         <p className="text-2xl font-serif">{rupiah(grandTotal)}</p>
       </div>
 
       <table className="w-full text-sm border-collapse mb-8">
         <tbody>
-          <tr className="border-b border-[#e5e5e5]">
-            <td className="py-2 font-bold uppercase text-[10px] tracking-widest text-[#5a5a5a]">Estimasi Harga Jual</td>
+          <tr className="border-b border-outline-variant">
+            <td className="py-2 font-bold uppercase text-[10px] tracking-widest text-secondary">Estimasi Harga Jual</td>
             <td className="py-2 text-right font-medium">{rupiah(hargaJual)}</td>
           </tr>
           <tr>
-            <td className="py-2 font-bold uppercase text-[10px] tracking-widest text-[#5a5a5a]">Margin</td>
+            <td className="py-2 font-bold uppercase text-[10px] tracking-widest text-secondary">Margin</td>
             <td className="py-2 text-right font-medium">{rupiah(marginRp)} ({marginPercent.toFixed(1)}%)</td>
           </tr>
         </tbody>
@@ -166,7 +166,7 @@ export function EstimatePrintView({
 
       {catatan && (
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-[#5a5a5a] mb-1">Catatan</p>
+          <p className="text-[10px] uppercase tracking-widest text-secondary mb-1">Catatan</p>
           <p className="text-sm whitespace-pre-wrap">{catatan}</p>
         </div>
       )}

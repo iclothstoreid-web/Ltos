@@ -64,7 +64,7 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
       <div className="fixed inset-y-0 right-0 w-full max-w-[480px] bg-surface shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.15)] z-50 border-l border-outline-variant/50 flex flex-col animate-slide-up">
         <div className="px-6 py-6 flex items-center justify-between border-b border-outline-variant/30 bg-surface/95 backdrop-blur-sm sticky top-0 z-10">
           <h3 className="font-serif text-title font-bold text-on-surface">Detail Material</h3>
-          <button onClick={onClose} className="p-2 hover:bg-surface-container-low rounded-full transition-colors text-secondary" aria-label="Tutup">
+          <button onClick={onClose} className="p-2 hover:bg-surface-low rounded-full transition-colors text-secondary" aria-label="Tutup">
             <X size={20} />
           </button>
         </div>
@@ -120,7 +120,7 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
                 </div>
               </div>
 
-              <div className="bg-surface-container-low rounded-2xl p-6 mb-8 border border-outline-variant/30">
+              <div className="bg-surface-low rounded-2xl p-6 mb-8 border border-outline-variant/30">
                 <div className="flex items-center justify-between mb-6">
                   <h4 className="font-bold text-on-surface text-[11px] uppercase tracking-widest">Inventaris Real-time</h4>
                   <span className={`text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${
@@ -229,7 +229,7 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
               ) : (
                 <div className="space-y-3">
                   {movements.map(m => (
-                    <div key={m.id} className="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4">
+                    <div key={m.id} className="bg-surface-low border border-outline-variant/30 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-body font-bold text-on-surface">{MOVEMENT_TYPE_LABEL[m.movement_type]}</span>
                         <span className="text-body font-bold text-on-surface">
@@ -263,7 +263,7 @@ export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onS
           </button>
           <button
             onClick={onEdit}
-            className="col-span-4 py-3 border border-outline-variant/60 rounded-xl hover:bg-surface-container-low text-secondary transition-all flex items-center justify-center gap-2"
+            className="col-span-4 py-3 border border-outline-variant/60 rounded-xl hover:bg-surface-low text-secondary transition-all flex items-center justify-center gap-2"
           >
             <Pencil size={16} />
             <span className="text-label uppercase tracking-widest">Edit Material</span>

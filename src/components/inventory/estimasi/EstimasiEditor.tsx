@@ -300,7 +300,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
                       key={t.id}
                       type="button"
                       onClick={() => applyTemplate(t)}
-                      className="w-full text-left px-4 py-2 text-body text-secondary hover:bg-surface-container-low hover:text-on-surface transition-colors"
+                      className="w-full text-left px-4 py-2 text-body text-secondary hover:bg-surface-low hover:text-on-surface transition-colors"
                     >
                       {t.name}
                       <span className="block text-label text-secondary/60">{t.materialRows.length} material</span>
@@ -318,7 +318,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
           const resolved = resolveMaterial(row.materialId)
           const subtotal = (Number(row.quantity) || 0) * (resolved?.price ?? 0)
           return (
-            <div key={row.id} className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-4">
+            <div key={row.id} className="bg-surface-low rounded-xl border border-outline-variant/30 p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <select
                   value={row.categoryId}
@@ -380,7 +380,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
         Tambah Material
       </button>
 
-      <div className="bg-surface-container-low rounded-2xl p-6 mb-8 border border-outline-variant/30">
+      <div className="bg-surface-low rounded-2xl p-6 mb-8 border border-outline-variant/30">
         <h4 className="font-bold text-on-surface text-[11px] uppercase tracking-widest mb-5">Ringkasan</h4>
 
         <div className="flex items-center justify-between py-2 border-b border-outline-variant/20">
@@ -424,7 +424,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
 
       <div className="space-y-3 mb-4">
         {additionalCosts.map(cost => (
-          <div key={cost.id} className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-4">
+          <div key={cost.id} className="bg-surface-low rounded-xl border border-outline-variant/30 p-4">
             <div className="flex items-start gap-3 mb-3">
               <input
                 value={cost.name}
@@ -484,7 +484,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
           onChange={e => setCatatan(e.target.value)}
           rows={3}
           placeholder="Keterangan tambahan untuk estimasi ini..."
-          className="w-full border border-outline-variant/40 rounded-xl bg-surface-container-low p-3 text-body text-on-surface placeholder:text-secondary/50 outline-none focus:border-primary transition-colors resize-none"
+          className="w-full border border-outline-variant/40 rounded-xl bg-surface-low p-3 text-body text-on-surface placeholder:text-secondary/50 outline-none focus:border-primary transition-colors resize-none"
         />
       </div>
 
@@ -522,7 +522,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
           type="button"
           onClick={handlePrint}
           disabled={exporting !== null}
-          className="flex items-center justify-center gap-2 py-3 border border-outline-variant/60 rounded-xl hover:bg-surface-container-low text-secondary transition-all disabled:opacity-50"
+          className="flex items-center justify-center gap-2 py-3 border border-outline-variant/60 rounded-xl hover:bg-surface-low text-secondary transition-all disabled:opacity-50"
         >
           <Printer size={16} />
           <span className="text-label uppercase tracking-widest">{exporting === 'print' ? 'Menyiapkan...' : 'Print'}</span>
@@ -531,7 +531,7 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
           type="button"
           onClick={handleCreatePdf}
           disabled={exporting !== null}
-          className="flex items-center justify-center gap-2 py-3 border border-outline-variant/60 rounded-xl hover:bg-surface-container-low text-secondary transition-all disabled:opacity-50"
+          className="flex items-center justify-center gap-2 py-3 border border-outline-variant/60 rounded-xl hover:bg-surface-low text-secondary transition-all disabled:opacity-50"
         >
           <FileDown size={16} />
           <span className="text-label uppercase tracking-widest">{exporting === 'pdf' ? 'Membuat PDF...' : 'Create PDF'}</span>

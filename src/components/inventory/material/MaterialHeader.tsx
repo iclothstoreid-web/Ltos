@@ -59,7 +59,7 @@ export function MaterialHeader({ search, onSearchChange, filter, onFilterChange,
             value={search}
             onChange={e => onSearchChange(e.target.value)}
             placeholder="Cari material atau SKU..."
-            className="w-full bg-surface-container-low border border-outline-variant/40 rounded-xl py-2.5 pl-11 pr-4 text-body focus:outline-none focus:ring-2 focus:ring-primary/15 placeholder:text-secondary/50 transition-all"
+            className="w-full bg-surface-low border border-outline-variant/40 rounded-xl py-2.5 pl-11 pr-4 text-body focus:outline-none focus:ring-2 focus:ring-primary/15 placeholder:text-secondary/50 transition-all"
           />
         </div>
 
@@ -87,7 +87,7 @@ export function MaterialHeader({ search, onSearchChange, filter, onFilterChange,
                       setFilterOpen(false)
                     }}
                     className={`w-full text-left px-4 py-2 text-body transition-colors ${
-                      filter === option.value ? 'text-primary font-medium bg-primary/5' : 'text-secondary hover:bg-surface-container-low hover:text-on-surface'
+                      filter === option.value ? 'text-primary font-medium bg-primary/5' : 'text-secondary hover:bg-surface-low hover:text-on-surface'
                     }`}
                   >
                     {option.label}
