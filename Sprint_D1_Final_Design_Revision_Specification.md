@@ -2,7 +2,7 @@
 
 ## Owner Decision Room — Locked Implementation Specification
 
-Status: FROZEN. This document is the single implementation specification for the LTOS Owner Decision Room. It supersedes all prior Sprint D.1 exploration artifacts. No further design revision is authorized until implementation review.
+Status: FROZEN. This document is the single implementation specification for the LTOS Owner Decision Room. It supersedes all prior Sprint D.1 exploration artifacts. Sprint D.1 Phase 4 review is APPROVED. The Owner Decision Room design is READY FOR IMPLEMENTATION. No further design revision is authorized before implementation review.
 
 ---
 
@@ -72,7 +72,17 @@ No rule below originates outside these sources.
 
 ---
 
-## 5. Navigation Refinements
+## 5. Behavior DNA (Final)
+
+- **State.** Only four states are ever shown on this surface: waiting, in progress, at risk, resolved. Each must reflect the genuine current condition of real data — never a decorative or invented technical state (no "syncing," no manufactured "almost there"). The Quiet Ledger's alarm-red status dot may render only when the underlying signal genuinely qualifies as a promise at real risk of being broken; a routine or low-stakes signal is never dramatized to look at-risk, and a genuinely at-risk signal is never softened to look routine. The Procession's stage counts must reflect real production-stage data at all times; no stage may visually imply progress that has not actually happened.
+- **Transition.** Moving between Threshold, Decision, Periphery, and Record must never feel abrupt or ground-shifting, and never so slow that the transition itself becomes a performance. When the primary action is pressed, any resulting change on the surface is felt only after the action registers — cause before effect, never the reverse, and never simultaneous with the click.
+- **Reveal.** On arrival, the Threshold and the hero render as the surface's first content; the Quiet Ledger, Procession, and agenda are present but do not animate, highlight, or otherwise compete for attention at the same instant as the hero. Detail beyond what the hero's supporting paragraph states (e.g., the full order-level breakdown behind the headline recommendation) is reached only through the primary action or a "lihat →" link — never shown pre-emptively. Nothing on this surface re-notifies, blinks, or nudges after its initial reveal.
+- **Feedback.** Pressing the primary action produces feedback proportional to what was actually just committed — a plain, definite confirmation once the commitment is genuinely secured, never shown a beat early, and never theatrical. The "lihat →" links, being low-stakes, require no more than a quiet, immediate acknowledgment of navigation; silence beyond that is correct and sufficient.
+- **Tempo.** If committing the primary action requires real processing time, that time is shown honestly — never faked as instant, never artificially slowed for effect. This surface asks the owner for exactly one decision; it never introduces a second request for attention elsewhere on the same surface, and never re-asks the same decision twice in one visit.
+
+---
+
+## 6. Navigation Refinements
 
 - Any persistent navigation rail on this surface renders as a narrow, mostly-empty icon rail: icons only, no text labels, no section names, no active-state text.
 - No owner-profile or account widget is included on this surface. Identity is already established by the Threshold greeting and is not repeated as a separate chrome element.
@@ -81,7 +91,7 @@ No rule below originates outside these sources.
 
 ---
 
-## 6. Hero Refinements
+## 7. Hero Refinements
 
 - The hero is a single dominant card with soft rounded corners and a paper-like, diffused shadow only.
 - The hero surface carries only the abstract treatment specified in Light DNA above. No photography, stock imagery, or illustration is placed on the hero surface, or anywhere else on this screen.
@@ -90,12 +100,36 @@ No rule below originates outside these sources.
 
 ---
 
-## 7. Known Tool Limitations
+## 8. Empty State — Decision Surface (Final)
 
-- Figma: no complete Owner Decision Room file exists. The prior build was interrupted mid-section and never completed. Figma MCP connectivity is live and authenticated, so this is a content-availability gap, not an access or quota failure. The connected Figma seat is View-tier (starter plan), which would in any case restrict direct file creation/editing through this connection.
-- Stitch: the generation run introduced two artifacts outside the source of truth — a fully labeled navigation sidebar with an owner-profile widget, and a malformed text render (a broken icon-label string) inside that sidebar. Both are tool-generated defects, resolved by Section 5 above, and are excluded from this specification.
-- Stitch: the generation run substituted a photographic image for the specified abstract hero texture. This is a tool interpretation gap, resolved by Section 6 above.
+Applies when there is no recommendation today (no order genuinely needs artisan assignment, and no other candidate decision qualifies as the surface's one Lead moment).
+
+- The hero renders as a fully composed, deliberate state — not a grayed-out, disabled, or partially-populated version of the populated hero. Card surface, corner treatment, shadow, and abstract light treatment remain exactly as specified in Light DNA and Section 7; nothing about the container signals "waiting for content."
+- The small uppercase label above the headline is retained, restating its role honestly (naming the surface's state, not the absence of one).
+- The serif headline is retained at the same size and weight as the populated recommendation headline — carrying the plain, true statement that nothing requires the owner's decision today. It is not shrunk, muted, or demoted, since Volume 06 requires the empty state to carry "the same quiet dignity" as a populated surface.
+- No primary action button is rendered. A button exists only to invite a commitment (Volume 06, Button DNA); with no decision to commit to, no button belongs on the surface.
+- The hairline divider and decision note beneath are either omitted together or retained to state a plain confirming fact; the surface is never left with a broken or half-empty gap where the action and note would otherwise sit.
+- The Quiet Ledger, Procession, and footer are unaffected by the hero's empty state and continue to render under Sections 4–5 exactly as specified — an empty hero reflects only the absence of one dominant decision, not the absence of other true, unrelated facts.
 
 ---
 
-**Sprint D.1 Phase 3: COMPLETE. Specification frozen.**
+## 9. Known Limitations & Validation Disclosure
+
+**Tool limitations:**
+- Figma: no complete Owner Decision Room file exists. The prior build was interrupted mid-section and never completed. Figma MCP connectivity is live and authenticated, so this is a content-availability gap, not an access or quota failure. The connected Figma seat is View-tier (starter plan), which would in any case restrict direct file creation/editing through this connection.
+- Stitch: the generation run introduced two artifacts outside the source of truth — a fully labeled navigation sidebar with an owner-profile widget, and a malformed text render (a broken icon-label string) inside that sidebar. Both are tool-generated defects, resolved by Section 6 above, and are excluded from this specification.
+- Stitch: the generation run substituted a photographic image for the specified abstract hero texture. This is a tool interpretation gap, resolved by Section 7 above.
+
+**Validation disclosure — principles specified but not yet exercised in a built artifact:**
+
+This document is a text specification. No code implementation of the Owner Decision Room exists. Consistent with Volume 08's own disclosure standard, the following is the honest accounting of what remains unexercised:
+
+- Material DNA, Light DNA, Typography DNA, Atmosphere DNA (Sections 1–4): verified buildable through one Stitch visual exploration only — not yet exercised in a shipped or production artifact.
+- Behavior DNA — State, Transition, Reveal, Feedback, Tempo (Section 5): specified in this document for the first time; no interaction has been built anywhere, so none of these five rules has been exercised in any artifact. This is the same status Volume 08 originally recorded for Volume 05 ("Informed but not yet exercised — no interaction was built"), and it remains true today; only the specification, not an implementation, now exists.
+- Navigation Refinements (Section 6) and Hero Refinements (Section 7): the sidebar defect and photographic substitution found during Stitch exploration are corrected here in specification form only. No corrected artifact has been built or verified.
+- Empty State — Decision Surface (Section 8): specified for the first time in this document; has never been exercised in any built artifact.
+- No claim of completion is made for anything beyond this written specification. Readiness assessed here is specification-readiness, not shipped-artifact verification.
+
+---
+
+**Sprint D.1 Phase 4: APPROVED. Owner Decision Room design READY FOR IMPLEMENTATION. Specification frozen.**
