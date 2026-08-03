@@ -22,7 +22,7 @@ export function JourneyPhoto({ src, alt, className = '' }: JourneyPhotoProps) {
       <div
         role="img"
         aria-label={alt}
-        className={`bg-gradient-to-br from-primary/15 via-[#151c27]/5 to-primary/10 ${className}`}
+        className={`bg-gradient-to-br from-primary/15 via-on-surface/5 to-primary/10 ${className}`}
       />
     )
   }

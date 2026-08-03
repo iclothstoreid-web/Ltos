@@ -29,7 +29,7 @@ export function SectionShell({
     'px-6',
     SPACING_CLASS[spacing],
     'max-w-2xl mx-auto',
-    divider && 'border-t border-[#151c27]/10',
+    divider && 'border-t border-on-surface/10',
     centered && 'text-center',
     className,
   ]

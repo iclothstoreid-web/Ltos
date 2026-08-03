@@ -28,7 +28,7 @@ export function OrderSummarySection({ design, notes }: OrderSummarySectionProps)
       <SectionEyebrow>Ringkasan Pesanan</SectionEyebrow>
       <dl className="space-y-4">
         {rows.map(row => (
-          <div key={row.label} className="flex justify-between gap-6 border-b border-[#151c27]/8 pb-3">
+          <div key={row.label} className="flex justify-between gap-6 border-b border-on-surface/8 pb-3">
             <dt className="font-sans text-sm text-secondary shrink-0">{row.label}</dt>
             <dd className="font-sans text-sm text-on-surface text-right">{row.value || '—'}</dd>
           </div>

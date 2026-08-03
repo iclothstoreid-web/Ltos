@@ -104,7 +104,7 @@ export function ShareMomentSection({
               type="button"
               onClick={onClick}
               aria-label={label}
-              className={`rounded-full border border-[#151c27]/15 flex items-center justify-center text-secondary hover:text-primary hover:border-primary/40 transition-colors ${
+              className={`rounded-full border border-on-surface/15 flex items-center justify-center text-secondary hover:text-primary hover:border-primary/40 transition-colors ${
                 isProminent ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-11 h-11'
               }`}
             >

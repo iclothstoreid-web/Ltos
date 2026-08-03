@@ -25,7 +25,7 @@ export function JourneyTimeline({ currentMilestone, isComplete = false }: Journe
               <div className="flex items-center w-full">
                 <div
                   className={`flex-1 h-px ${
-                    milestone.id === 1 ? 'invisible' : isPast || isCurrent ? 'bg-primary' : 'bg-[#151c27]/10'
+                    milestone.id === 1 ? 'invisible' : isPast || isCurrent ? 'bg-primary' : 'bg-on-surface/10'
                   }`}
                 />
                 <div
@@ -34,12 +34,12 @@ export function JourneyTimeline({ currentMilestone, isComplete = false }: Journe
                       ? 'bg-primary'
                       : isCurrent
                         ? 'bg-primary animate-pulse-dot'
-                        : 'bg-[#151c27]/15'
+                        : 'bg-on-surface/15'
                   }`}
                 />
                 <div
                   className={`flex-1 h-px ${
-                    milestone.id === 5 ? 'invisible' : isPast ? 'bg-primary' : 'bg-[#151c27]/10'
+                    milestone.id === 5 ? 'invisible' : isPast ? 'bg-primary' : 'bg-on-surface/10'
                   }`}
                 />
               </div>

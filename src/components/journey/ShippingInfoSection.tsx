@@ -28,7 +28,7 @@ export function ShippingInfoSection({
 }: ShippingInfoSectionProps) {
   return (
     <SectionShell>
-      <div className="border border-[#151c27]/10 p-6 sm:p-8">
+      <div className="border border-on-surface/10 p-6 sm:p-8">
         <div className="flex items-center gap-3 mb-6">
           <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse-dot shrink-0" />
           <p className="font-fraunces text-lg text-on-surface">{statusLabel}</p>

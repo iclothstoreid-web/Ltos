@@ -28,7 +28,7 @@ export function MilestoneHero({
     return (
       <section className="relative w-full aspect-[4/5] sm:aspect-[16/10] overflow-hidden">
         <JourneyPhoto src={imageSrc} alt={imageAlt} className="absolute inset-0 w-full h-full" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#FDFCF8] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-01 via-transparent to-transparent" />
         <div className="absolute inset-x-6 bottom-8 sm:inset-x-10 sm:bottom-10">
           {eyebrow && (
             <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-secondary mb-3">{eyebrow}</p>

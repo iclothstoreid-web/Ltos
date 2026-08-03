@@ -30,7 +30,7 @@ export function VideoFinishingSection({ title, videoSrc, posterSrc, caption }: V
           onError={() => setFailed(true)}
         />
       ) : (
-        <div className="w-full aspect-[4/5] sm:aspect-[16/10] bg-gradient-to-br from-primary/15 via-[#151c27]/5 to-primary/10 flex items-center justify-center">
+        <div className="w-full aspect-[4/5] sm:aspect-[16/10] bg-gradient-to-br from-primary/15 via-on-surface/5 to-primary/10 flex items-center justify-center">
           <div className="w-14 h-14 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
             <svg viewBox="0 0 24 24" className="w-5 h-5 fill-primary translate-x-[1px]">
               <path d="M8 5v14l11-7z" />
