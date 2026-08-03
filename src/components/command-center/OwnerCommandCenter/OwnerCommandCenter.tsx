@@ -15,6 +15,7 @@ import { EngineOverviewSection, type EngineOverviewSectionProps } from './Engine
 import { DecisionCardsSection } from './DecisionCards'
 import { OrderDetailModal } from './OrderDetailModal'
 import { CommercialTypeSummarySection } from './CommercialTypeSummarySection'
+import { TransactionKPISection } from './TransactionKPISection'
 import type {
   OperationalAlertCardData,
   CommercialAlertCardData,
@@ -22,6 +23,7 @@ import type {
   BusinessInsightCardData,
 } from '@/lib/decision/types'
 import type { CommercialTypeSummaryRow } from '@/lib/commercial/transactionSummary'
+import type { MultiGarmentKpiData } from '@/lib/commercial/multiGarmentKPIs'
 
 export type OwnerCommandCenterProps = {
   profileName: string
@@ -72,6 +74,8 @@ export type OwnerCommandCenterProps = {
   }
   // Milestone A — Commercial Type Engine
   commercialTypeSummary: CommercialTypeSummaryRow[]
+  // Milestone B — Multi-Garment Transaction Engine
+  multiGarmentKpis: MultiGarmentKpiData
 }
 
 export function OwnerCommandCenter({
@@ -87,6 +91,7 @@ export function OwnerCommandCenter({
   agendaItems,
   decisionCards,
   commercialTypeSummary,
+  multiGarmentKpis,
 }: OwnerCommandCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   // Sprint N.2 — same OrderDetailModal instance BottleneckPanel/Decision
@@ -138,6 +143,8 @@ export function OwnerCommandCenter({
           />
 
           <CommercialTypeSummarySection rows={commercialTypeSummary} onSelectOrder={setSelectedOrderId} />
+
+          <TransactionKPISection data={multiGarmentKpis} />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             <section className="lg:col-span-7 space-y-10">

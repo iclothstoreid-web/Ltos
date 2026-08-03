@@ -8,6 +8,7 @@ import type { BottleneckItem } from '@/components/command-center/OwnerCommandCen
 import type { AgendaItem } from '@/components/command-center/OwnerCommandCenter/AgendaPanel'
 import { getCommercialSummary } from '@/lib/commercial/summary'
 import { getCommercialTypeSummary } from '@/lib/commercial/transactionSummary'
+import { getMultiGarmentKPIs } from '@/lib/commercial/multiGarmentKPIs'
 import { PAYMENT_STATUS_LABELS } from '@/lib/commercial/types'
 import { getOwnerSummary, getSlaRiskOrders } from '@/lib/decision/client'
 import { computeTodaysActions } from '@/lib/decision/actions'
@@ -101,7 +102,7 @@ export default async function CommandCenterPage() {
   // Sprint K Dashboard Integration: every number the Engine Overview section
   // needs, reusing the exact RPCs/queries Decision Center, KPI Operator, and
   // Commercial Center already fetch server-side — no new RPC.
-  const [commercialSummary, ownerSummary, slaRiskOrders, capacityDashboard, kpiDashboard, operators, divisiRows, commercialTypeSummary] =
+  const [commercialSummary, ownerSummary, slaRiskOrders, capacityDashboard, kpiDashboard, operators, divisiRows, commercialTypeSummary, multiGarmentKpis] =
     await Promise.all([
       getCommercialSummary(supabase),
       getOwnerSummary(supabase),
@@ -111,6 +112,7 @@ export default async function CommandCenterPage() {
       getOperatorKpiList(supabase),
       getDivisiKpiList(supabase),
       getCommercialTypeSummary(supabase),
+      getMultiGarmentKPIs(supabase),
     ])
 
   // Internal 8-stage production workflow now populates production_stage_records
@@ -534,6 +536,7 @@ export default async function CommandCenterPage() {
         businessInsight: businessInsightCardData,
       }}
       commercialTypeSummary={commercialTypeSummary}
+      multiGarmentKpis={multiGarmentKpis}
     />
   )
 }
