@@ -8,6 +8,7 @@ import { OrderDetailModal } from './OrderDetailModal'
 import { OperatorDetailModal } from '@/components/owner/kpi-operator/OperatorDetailModal'
 import { OperatorStatCard } from '@/components/owner/kpi-operator/OperatorStatCard'
 import { TodaysActionSection } from '@/components/owner/decision-center/TodaysActionSection'
+import { ServiceAvailabilitySection } from '@/components/owner/decision-center/ServiceAvailabilitySection'
 import { CATEGORY_LABEL, CATEGORY_ORDER } from '@/components/owner/decision-center/BottleneckBoard'
 import { PRIORITY_HEADING, PRIORITY_ORDER } from '@/components/owner/decision-center/BusinessPriorityBoard'
 import { computeTodaysActions } from '@/lib/decision/actions'
@@ -214,6 +215,13 @@ export function EngineOverviewSection({
           </div>
         </div>
       </div>
+
+      {/* Sprint N.2 item 5 (Owner Intelligence) -- "Order Acceptance Check":
+          same green/yellow/red signal Decision Center already renders
+          (compute_service_validation_signals via get_owner_summary,
+          already fetched above as ownerSummary), surfaced on the main
+          dashboard too so Owner sees it without a second page. */}
+      <ServiceAvailabilitySection data={ownerSummary.service_availability} />
 
       {selectedOrderId && <OrderDetailModal orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />}
       {selectedOperatorId && (
