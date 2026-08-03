@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { summarizePerformance } from '@/lib/kpi/performanceMetrics'
 import type { OperatorKpiRow, OperatorPerformanceRecord } from '@/lib/kpi/types'
 
@@ -11,6 +12,39 @@ function formatDuration(minutes: number | null): string {
 
 function formatPct(pct: number | null): string {
   return pct == null ? '—' : `${pct.toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`
+}
+
+// Sprint N.2 item 6 (Owner Intelligence) -- "Operator Performance
+// comparison": every metric this table needs was already computed
+// (summarizePerformance) and rendered side-by-side per operator; the one
+// gap the roadmap doc names is sortability. Client-side only -- no new
+// RPC/query, same rows, same summarizePerformance() call.
+type SortKey = 'nama' | 'primaryTaskMinutes' | 'alterCount' | 'returnRatePct' | 'productivity' | 'utilization'
+
+const SORT_LABEL: Record<SortKey, string> = {
+  nama: 'Nama Operator',
+  primaryTaskMinutes: 'Primary Task Time',
+  alterCount: 'Alter',
+  returnRatePct: 'Return Rate',
+  productivity: 'Productivity',
+  utilization: 'Utilization',
+}
+
+function sortValue(key: SortKey, op: OperatorKpiRow, summary: ReturnType<typeof summarizePerformance>): number | string {
+  switch (key) {
+    case 'nama':
+      return op.nama.toLowerCase()
+    case 'primaryTaskMinutes':
+      return summary.primaryTaskMinutes ?? op.avg_duration_minutes ?? -1
+    case 'alterCount':
+      return summary.alterCount
+    case 'returnRatePct':
+      return summary.returnRatePct ?? -1
+    case 'productivity':
+      return summary.productivity || op.order_selesai
+    case 'utilization':
+      return op.capacity_utilization_pct ?? -1
+  }
 }
 
 // Daftar Operator table -- reads get_operator_kpi_list() (Sprint G) as-is.
@@ -30,6 +64,18 @@ export function OperatorKpiTable({
   onSelectOperator: (operatorId: string) => void
   title?: string
 }) {
+  const [sortKey, setSortKey] = useState<SortKey>('nama')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  const toggleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDir(dir => (dir === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
   const recordsByOperator = new Map<string, OperatorPerformanceRecord[]>()
   for (const record of performanceRecords) {
     if (!record.operator_id) continue
@@ -37,6 +83,15 @@ export function OperatorKpiTable({
     records.push(record)
     recordsByOperator.set(record.operator_id, records)
   }
+
+  const rows = operators
+    .map(op => ({ op, summary: summarizePerformance(recordsByOperator.get(op.operator_id) || []) }))
+    .sort((a, b) => {
+      const va = sortValue(sortKey, a.op, a.summary)
+      const vb = sortValue(sortKey, b.op, b.summary)
+      const cmp = typeof va === 'string' && typeof vb === 'string' ? va.localeCompare(vb) : (va as number) - (vb as number)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
 
   return (
     <section>
@@ -56,27 +111,25 @@ export function OperatorKpiTable({
             <table className="w-full min-w-[1320px] border-collapse">
               <thead>
                 <tr className="bg-on-surface/5 border-b border-outline-variant/80">
-                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Nama Operator
-                  </th>
-                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Primary Task Time
-                  </th>
-                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Alter
-                  </th>
+                  {(['nama', 'primaryTaskMinutes', 'alterCount'] as SortKey[]).map(key => (
+                    <th key={key} className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
+                      <button type="button" onClick={() => toggleSort(key)} className="inline-flex items-center gap-1 hover:text-on-surface">
+                        {SORT_LABEL[key]}
+                        {sortKey === key && <span aria-hidden="true">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                      </button>
+                    </th>
+                  ))}
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
                     Alter Time
                   </th>
-                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Return Rate
-                  </th>
-                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Productivity
-                  </th>
-                  <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
-                    Utilization
-                  </th>
+                  {(['returnRatePct', 'productivity', 'utilization'] as SortKey[]).map(key => (
+                    <th key={key} className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
+                      <button type="button" onClick={() => toggleSort(key)} className="inline-flex items-center gap-1 hover:text-on-surface">
+                        {SORT_LABEL[key]}
+                        {sortKey === key && <span aria-hidden="true">{sortDir === 'asc' ? '▲' : '▼'}</span>}
+                      </button>
+                    </th>
+                  ))}
                   <th className="text-left px-5 py-3 text-label text-secondary uppercase tracking-widest whitespace-nowrap">
                     Weekly / Monthly
                   </th>
@@ -86,10 +139,8 @@ export function OperatorKpiTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {operators.map(op => (
-                  (() => {
-                    const summary = summarizePerformance(recordsByOperator.get(op.operator_id) || [])
-                    return <tr
+                {rows.map(({ op, summary }) => (
+                    <tr
                     key={op.operator_id}
                     onClick={() => onSelectOperator(op.operator_id)}
                     tabIndex={0}
@@ -134,7 +185,6 @@ export function OperatorKpiTable({
                       </span>
                     </td>
                   </tr>
-                  })()
                 ))}
               </tbody>
             </table>
