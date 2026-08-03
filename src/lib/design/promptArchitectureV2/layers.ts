@@ -31,10 +31,18 @@ import { compressPrompt, type PromptSection } from '@/lib/design/promptBuilder/c
 // MasterRenderRecipe itself — a business-logic change this sprint's brief
 // explicitly rules out ("Jangan redesign business logic").
 
+// Face Identity Preservation (2026-08-03) — strengthened in place, same
+// constant, same always-applied Priority 0 slot (route.ts's
+// requiredPriorityZeroIds, compression.ts's Phase 4 "never truncated, never
+// dropped" gate). No new DNA/Recipe/Knowledge/config was added: identity
+// already outranks every other render concern structurally (this is the one
+// layer a render is refused rather than sent without), so the fix is the
+// wording itself — explicit facial-expression coverage plus an explicit
+// anti-beautification clause, which nothing in the pipeline stated before.
 export const LAYER1_IDENTITY_TEMPLATE = [
-  'Keep exactly the same person.',
-  'Do not change: face, age, skin, hair, beard, body, body proportion, pose, perspective, lighting, background.',
-  'Maintain original identity.',
+  'Preserve the customer\'s identity exactly.',
+  'Do not modify facial features, facial expression, hairstyle, skin tone, age, beard, body, body proportions, pose, perspective, lighting, or background.',
+  'Do not beautify or enhance the customer\'s appearance: no skin smoothing, no facial retouching, no idealized or improved features.',
   'Only replace clothing.',
 ].join(' ')
 
