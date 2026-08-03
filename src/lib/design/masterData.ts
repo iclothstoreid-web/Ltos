@@ -1,6 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AiDesignDna } from './aiDna/types'
-import { markDnaNeedsRegeneration } from './aiDna/types'
+import {
+  DEFAULT_AI_DESIGN_DNA,
+  MODEL_THOBE_QUALITY_LOCK_RULES,
+  MODEL_THOBE_QUALITY_NEGATIVE_RULES,
+  LOOK_CUTTING_FIT_LOCK_RULES,
+  LOOK_CUTTING_FIT_NEGATIVE_RULES,
+} from './aiDna/types'
 import type { RenderRecipe } from './renderRecipe/types'
 
 // Single reusable structure for the whole Product Knowledge Base — Model
@@ -201,12 +207,35 @@ export async function createMasterDataOption(
     .limit(1)
     .maybeSingle()
 
+  // Quality Foundation is layered in here, explicitly, only for Base Hero
+  // Model — every other category leaves `ai_dna` unset and gets the plain
+  // DB column default (Identity Knowledge only). See aiDna/types.ts's
+  // MODEL_THOBE_QUALITY_LOCK_RULES/_NEGATIVE_RULES for why this can't live
+  // in the column default itself: that default is category-agnostic. Look
+  // Cutting Fit Knowledge is layered in the same way, only for 'look_cutting'
+  // — see aiDna/types.ts's LOOK_CUTTING_FIT_LOCK_RULES/_NEGATIVE_RULES.
+  const ai_dna: AiDesignDna | undefined =
+    params.category === 'model_thobe'
+      ? {
+          ...DEFAULT_AI_DESIGN_DNA,
+          lockRules: [...DEFAULT_AI_DESIGN_DNA.lockRules, ...MODEL_THOBE_QUALITY_LOCK_RULES],
+          negativeRules: [...DEFAULT_AI_DESIGN_DNA.negativeRules, ...MODEL_THOBE_QUALITY_NEGATIVE_RULES],
+        }
+      : params.category === 'look_cutting'
+      ? {
+          ...DEFAULT_AI_DESIGN_DNA,
+          lockRules: [...DEFAULT_AI_DESIGN_DNA.lockRules, ...LOOK_CUTTING_FIT_LOCK_RULES],
+          negativeRules: [...DEFAULT_AI_DESIGN_DNA.negativeRules, ...LOOK_CUTTING_FIT_NEGATIVE_RULES],
+        }
+      : undefined
+
   const { error } = await supabase.from('design_master_options').insert({
     category: params.category,
     name: params.name.trim(),
     metadata: params.metadata ?? {},
     price: params.price ?? 0,
     sort_order: (existing?.sort_order ?? 0) + 1,
+    ...(ai_dna ? { ai_dna } : {}),
   })
 
   if (error) throw error
@@ -219,13 +248,15 @@ export interface UpdateMasterDataOptionParams {
   selling_points?: string[]
   internal_notes?: string
   price?: number
-  // The row's current photo_url/ai_dna before this edit — passed in by the
-  // caller (already holds the full row in memory) rather than re-fetched
-  // here, purely so this function can detect a Hero Image change and flip
-  // AI DNA to Needs Review (Sprint R-06 — previously "Needs Regeneration")
-  // in the same write (Task 8). Omit either to
-  // skip that check (e.g. price-only callers).
-  currentPhotoUrl?: string | null
+  // Hero Image Internal Separation — `photo_url` (catalog thumbnail) no
+  // longer has any bearing on AI Design DNA/`ai_dna.metadata.sourceImage`
+  // (the internal Render Engine reference): they are uploaded through
+  // separate actions now (MasterDataManager's photo picker vs
+  // AiDesignDnaSection's own Hero Image Internal picker). The old Task 8
+  // "photo_url changed -> flip ai_dna to Needs Review" coupling (and its
+  // `currentPhotoUrl` param) is gone — `currentAiDna` below is only ever
+  // written when it actually differs from `original.ai_dna` (see `patch`
+  // below), same Safe Save treatment as every other field.
   currentAiDna?: AiDesignDna
   // Render Recipe editor (Reference-First Cleanup) — same Safe Save
   // treatment as `currentAiDna` above: diffed against `original.render_recipe`
@@ -281,13 +312,7 @@ export async function updateMasterDataOption(
 ): Promise<void> {
   const { original } = params
   const nextPhotoUrl = params.photo_url ?? null
-  const heroImageChanged =
-    params.currentAiDna !== undefined && nextPhotoUrl !== (params.currentPhotoUrl ?? original.photo_url)
   const nextAiDna = params.currentAiDna
-    ? heroImageChanged
-      ? markDnaNeedsRegeneration(params.currentAiDna)
-      : params.currentAiDna
-    : undefined
 
   const nextName = params.name.trim()
   const nextMetadata = params.metadata ?? {}
@@ -515,10 +540,15 @@ export async function swapMasterDataOptionOrder(
 // distinct concern from production evidence.
 export async function uploadMasterDataPhoto(
   supabase: SupabaseClient,
-  params: { category: MasterDataCategory; id: string; file: File }
+  // `variant` — Hero Image Internal Separation: an optional filename suffix
+  // so the internal AI reference photo (variant: 'hero') uploads to its own
+  // Storage path instead of overwriting the catalog thumbnail at the same
+  // `${category}/${id}.${ext}` path a plain call (no variant) still uses.
+  params: { category: MasterDataCategory; id: string; file: File; variant?: string }
 ): Promise<string> {
   const ext = params.file.name.split('.').pop() || 'jpg'
-  const path = `${params.category}/${params.id}.${ext}`
+  const suffix = params.variant ? `-${params.variant}` : ''
+  const path = `${params.category}/${params.id}${suffix}.${ext}`
 
   const { error } = await supabase.storage
     .from('master-data-photos')

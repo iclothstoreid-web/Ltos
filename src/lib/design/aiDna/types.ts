@@ -60,6 +60,12 @@ export interface AiDesignDna {
 // the data-cleanup migration to backfill existing rows whose arrays are
 // still empty. An owner can Add/Edit/Delete/Reorder from here via the
 // Master Data Editor; this is only the starting point, not a fixed list.
+// Identity Knowledge only (garment structure/identity preservation) — every
+// category gets this, including Collar/Cuff/Placket/Pocket/Material/Color/
+// Accessory/Embroidery/Handmade Zig-Zag/Look Cutting. Render-quality content
+// does NOT belong here — see MODEL_THOBE_QUALITY_LOCK_RULES below. Look
+// Cutting additionally gets its own Fit Knowledge — see
+// LOOK_CUTTING_FIT_LOCK_RULES below.
 export const DEFAULT_LOCK_RULES: string[] = [
   'Preserve garment silhouette exactly.',
   'Preserve garment proportion exactly.',
@@ -90,6 +96,94 @@ export const DEFAULT_NEGATIVE_RULES: string[] = [
   'Do not introduce artifacts.',
 ]
 
+// Quality Foundation — belongs ONLY to Base Hero Model (category
+// 'model_thobe'). The Hero Image on Model Thobe is Source of Truth for the
+// whole garment's structure, so it is also the only item whose render
+// quality anchors the entire render (every other category is composited
+// against it, never rendered as a standalone photorealistic subject the
+// same way). Every other category — Kerah, Manset, Plaket, Saku, Material,
+// Warna Material, Aksesori, Bordir, Handmade Zig-Zag — stays Identity
+// Knowledge only (DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES above) and must
+// NOT inherit this block. Look Cutting is the one exception: it stays out of
+// THIS block (Quality Foundation is Base Hero Model-only) but gets its own
+// separate Fit Knowledge block — see LOOK_CUTTING_FIT_LOCK_RULES below.
+// Merged in only by
+// masterData.ts's createMasterDataOption when category === 'model_thobe';
+// never added to DEFAULT_AI_DESIGN_DNA/the DB column default, since that
+// default is category-agnostic and applies to every insert.
+//
+// Authoring discipline for this block and for Model Thobe's
+// `referenceInstruction` free text: describe fabric behaviour, never name a
+// render technique — no "subsurface scattering", no "wet reflection".
+// Specular highlight is only ever written as natural light behaviour on
+// textile (e.g. "soft highlight where light catches the fabric weave"),
+// never as a lighting/shader effect. No marketing language. Reference-First
+// still holds — every rule here constrains how the Hero Image is rendered,
+// it never invents garment content the photo doesn't show.
+export const MODEL_THOBE_QUALITY_LOCK_RULES: string[] = [
+  'Preserve realistic fabric drape.',
+  'Preserve realistic garment behaviour under natural movement and gravity.',
+  'Preserve realistic fabric thickness.',
+  'Preserve realistic fold formation.',
+  'Preserve realistic fabric tension across seams and stress points.',
+  'Preserve clean tailoring lines.',
+  'Preserve sharp construction detail.',
+  'Preserve realistic textile appearance.',
+  'Preserve realistic light interaction on the fabric surface.',
+  'Preserve realistic seam definition.',
+  'Preserve realistic textile texture.',
+  'Preserve proportional garment balance.',
+  'Preserve photorealistic garment appearance.',
+]
+
+export const MODEL_THOBE_QUALITY_NEGATIVE_RULES: string[] = [
+  'Do not render plastic-looking fabric.',
+  'Do not render synthetic glossy surfaces.',
+  'Do not over-smooth textile texture.',
+  'Do not generate unrealistic folds.',
+  'Do not disconnect garment parts.',
+  'Do not distort garment proportions.',
+  'Do not create inconsistent seam alignment.',
+  'Do not hallucinate construction details.',
+  'Do not apply stylized rendering.',
+  'Do not produce a CGI-like appearance.',
+]
+
+// Fit Knowledge — belongs ONLY to category 'look_cutting'. Look Cutting
+// controls ONLY how the garment fits and drapes on the customer's EXISTING
+// body (silhouette, ease, drape, fold, tension) — it must never influence
+// body shape or any other design component (Kerah, Manset, Plaket, Saku,
+// Material, Warna, Aksesori, Bordir, Handmade Zig-Zag). Merged in only by
+// masterData.ts's createMasterDataOption when category === 'look_cutting',
+// same mechanism as MODEL_THOBE_QUALITY_LOCK_RULES/_NEGATIVE_RULES above —
+// never added to DEFAULT_AI_DESIGN_DNA/the DB column default, since that
+// default is category-agnostic and applies to every insert.
+//
+// This is the boundary shared by every Fit (Slim/Standard/Regular). The
+// amount of ease and character of drape that distinguishes one Fit from
+// another belongs in that item's own admin-authored `referenceInstruction`
+// free text, not here — see AiDesignDnaSection.tsx's Look Cutting authoring
+// caption.
+export const LOOK_CUTTING_FIT_LOCK_RULES: string[] = [
+  'Apply the selected garment fit consistently across the entire thobe.',
+  'Adjust only the garment silhouette.',
+  "Control garment ease relative to the customer's existing body.",
+  'Generate natural fabric drape.',
+  'Maintain realistic folds and fabric tension.',
+  "Preserve proportionality to the customer's existing body and pose.",
+  'Ensure smooth fit transitions across shoulders, chest, waist, sleeves, and hem.',
+  'Produce a physically plausible tailored garment.',
+]
+
+export const LOOK_CUTTING_FIT_NEGATIVE_RULES: string[] = [
+  'Do not modify body shape or proportions.',
+  'Do not create unrealistic tightness or looseness.',
+  'Do not stretch or shrink the garment unnaturally.',
+  'Do not generate exaggerated folds or floating fabric.',
+  'Do not modify garment length or sleeve length.',
+  'Do not modify collar, cuffs, material, color, embroidery, placket, pockets, buttons, or any design element unrelated to garment fit.',
+]
+
 // Matches the DB column default on design_master_options.ai_dna exactly —
 // every INSERT (through this app or any future one) gets this shape for
 // free at the database level, so no code path can ever create an item
@@ -110,27 +204,31 @@ export const DEFAULT_AI_DESIGN_DNA: AiDesignDna = {
   },
 }
 
-// Hero Image was replaced — per the brief, flip status to Needs Review
-// (Sprint R-06 — previously labeled "Needs Regeneration") and never delete
-// the existing DNA content. Only meaningful once something has actually
-// been generated (`draft`/`approved`); a `pending` item has no DNA yet, so
-// there's nothing to review and it stays `pending` until it's generated
-// for the first time.
+// Manual "flip to Needs Review" transition — kept for any future caller
+// that wants to force a re-review without discarding existing DNA content.
+// Since Hero Image Internal Separation, nothing in the app calls this
+// automatically anymore: `photo_url` (catalog thumbnail) no longer has any
+// relationship to `ai_dna.metadata.sourceImage` (the internal Render Engine
+// reference), so a catalog photo change is no longer treated as a Hero
+// Image change (see masterData.ts's updateMasterDataOption). Only
+// meaningful once something has actually been generated (`draft`/
+// `approved`); a `pending` item has no DNA yet, so there's nothing to
+// review and it stays `pending` until it's generated for the first time.
 export function markDnaNeedsRegeneration(dna: AiDesignDna): AiDesignDna {
   if (dna.status !== 'draft' && dna.status !== 'approved') return dna
   return { ...dna, status: 'needs_regeneration', version: dna.version + 1 }
 }
 
-// AI DNA generated — freezes the Hero Image (`photo_url`) of that moment
+// AI DNA generated — freezes the Hero Image Internal photo of that moment
 // into `metadata.sourceImage` as the Official Reference Image (Design
-// Knowledge Pipeline V1, decision 14). This is a snapshot, not a live
-// pointer: `photo_url` may keep changing afterwards (decision 4), but
-// `sourceImage` only moves the next time this function runs — i.e. the next
-// generate — and Hero Image changing in between instead routes through
-// markDnaNeedsRegeneration above, never through here. Only a draft-worthy
-// transition: reaching `approved` requires the separate markDnaApproved
-// step below (AI Asset Lifecycle sprint) — generating alone is not
-// approving.
+// Knowledge Pipeline V1, decision 14; Hero Image Internal Separation
+// sprint: the photo passed in is now uploaded through its own dedicated
+// picker in AiDesignDnaSection, never the catalog `photo_url`). This is a
+// snapshot, not a live pointer — `sourceImage` only moves the next time
+// this function runs, i.e. the next time an Owner uploads/activates a new
+// Hero Image Internal. Only a draft-worthy transition: reaching `approved`
+// requires the separate markDnaApproved step below (AI Asset Lifecycle
+// sprint) — generating alone is not approving.
 export function markDnaGenerated(dna: AiDesignDna, photoUrl: string | null): AiDesignDna {
   const now = new Date().toISOString()
   return {

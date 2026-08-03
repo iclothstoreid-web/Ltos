@@ -24,7 +24,7 @@ import type { Material } from '@/lib/inventory/types'
 import { fetchMaterialColorsForMaterial } from '@/lib/design/materialColors'
 import type { MaterialColor } from '@/lib/design/materialColors'
 import { AiDesignDnaSection } from './AiDesignDnaSection'
-import { markDnaGenerated, markDnaNeedsRegeneration, markDnaApproved } from '@/lib/design/aiDna/types'
+import { markDnaGenerated, markDnaApproved } from '@/lib/design/aiDna/types'
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
 import { RenderRecipeSection } from './RenderRecipeSection'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
@@ -104,10 +104,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const [editingSellingPoints, setEditingSellingPoints] = useState<string[]>([])
   const [editingInternalNotes, setEditingInternalNotes] = useState('')
   const [editingPrice, setEditingPrice] = useState('')
-  // Original photo_url/ai_dna as of when this edit session opened — kept
-  // separate from `editingPhotoUrl` (which mutates on a new upload) so
-  // updateMasterDataOption can detect a real Hero Image change (Task 8).
-  const [editingOriginalPhotoUrl, setEditingOriginalPhotoUrl] = useState<string | null>(null)
   // Sprint PR-05 (Master Data Integrity) — the FULL row exactly as read
   // when this edit session opened, never mutated afterwards. Passed to
   // updateMasterDataOption as `original` for both dirty-field diffing
@@ -126,6 +122,10 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  // Hero Image Internal Separation — mirrors `uploadingPhoto` above, but for
+  // the dedicated internal Render Engine reference photo AiDesignDnaSection
+  // uploads on its own (never the catalog `photo_url`).
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const photoInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -227,7 +227,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingSellingPoints(option.selling_points?.length ? option.selling_points : [])
     setEditingInternalNotes(option.internal_notes ?? '')
     setEditingPrice(String(option.price ?? 0))
-    setEditingOriginalPhotoUrl(option.photo_url ?? null)
     setEditingAiDna(option.ai_dna ?? null)
     setEditingRenderRecipe(option.render_recipe ?? null)
     setEditingOriginal(option)
@@ -245,10 +244,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     try {
       const url = await uploadMasterDataPhoto(supabase, { category: editingCategory, id: editingId, file })
       setEditingPhotoUrl(url)
-      // Instant feedback only — the authoritative flip (Task 8) happens
-      // server-side in updateMasterDataOption when Simpan is pressed,
-      // comparing against editingOriginalPhotoUrl.
-      setEditingAiDna(prev => (prev ? markDnaNeedsRegeneration(prev) : prev))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal mengunggah foto.')
     } finally {
@@ -256,23 +251,30 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     }
   }
 
-  // Aktifkan Hero Image sebagai Reference (Master Data UI Cleanup, Sprint
-  // R-06.1) — collapses the old two-step Generate Quick DNA + Approve flow
-  // into one action. Freezes the Hero Image currently shown in this edit
-  // session (`editingPhotoUrl`) into `ai_dna.metadata.sourceImage` AND
-  // advances status straight to 'approved' in the same click — chaining
+  // Hero Image Internal Separation — replaces the old "activate whatever the
+  // catalog photo currently is" flow. Uploads to its own Storage path
+  // (`variant: 'hero'`, masterData.ts) so it never overwrites/depends on the
+  // catalog `photo_url` a Customer/Fitter sees in Design Studio, then
+  // freezes that upload into `ai_dna.metadata.sourceImage` and advances
+  // status straight to 'approved' in the same action — chaining
   // markDnaGenerated then markDnaApproved (both unchanged, aiDna/types.ts)
   // is what still lets aiAssetComposer's isAiAssetActive() gate work for
-  // this item going forward; only the UI decision (one button instead of
-  // two) changed. `approvedBy` stays null — no user-identity context
-  // available in this component, same as before. Session-local like every
-  // other editing* field, persisted when handleSaveEdit calls
-  // updateMasterDataOption below.
-  function handleActivateHeroImageReference() {
-    setEditingAiDna(prev => {
-      if (!prev) return prev
-      return markDnaApproved(markDnaGenerated(prev, editingPhotoUrl), null)
-    })
+  // this item going forward, exactly as before. `approvedBy` stays null —
+  // no user-identity context available in this component, same as before.
+  // Session-local like every other editing* field, persisted when
+  // handleSaveEdit calls updateMasterDataOption below.
+  async function handleActivateHeroImageReference(file: File) {
+    if (!editingId) return
+    setUploadingHeroImage(true)
+    setError(null)
+    try {
+      const url = await uploadMasterDataPhoto(supabase, { category: editingCategory, id: editingId, file, variant: 'hero' })
+      setEditingAiDna(prev => (prev ? markDnaApproved(markDnaGenerated(prev, url), null) : prev))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal mengunggah Hero Image Internal.')
+    } finally {
+      setUploadingHeroImage(false)
+    }
   }
 
   // Reference-First Cleanup — session-local field editors, same "update the
@@ -315,7 +317,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
         selling_points: editingSellingPoints.map(point => point.trim()).filter(Boolean),
         internal_notes: editingInternalNotes,
         price: Number(editingPrice) || 0,
-        currentPhotoUrl: editingOriginalPhotoUrl,
         currentAiDna: editingAiDna ?? undefined,
         currentRenderRecipe: editingRenderRecipe ?? undefined,
         ...(editingCategory === 'bahan' ? { material_id: editingMaterialId } : {}),
@@ -725,7 +726,8 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                 {editingAiDna && (
                   <AiDesignDnaSection
                     dna={editingAiDna}
-                    heroImageUrl={editingPhotoUrl}
+                    category={editingCategory}
+                    uploadingHeroImage={uploadingHeroImage}
                     onActivateHeroImageReference={handleActivateHeroImageReference}
                     onReferenceInstructionChange={handleReferenceInstructionChange}
                     onRenderNotesChange={handleRenderNotesChange}
