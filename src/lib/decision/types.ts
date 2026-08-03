@@ -185,6 +185,16 @@ export interface CommercialDecisionItem {
   reason: string
 }
 
+// Sprint N.1 item 4 (Owner Intelligence) -- Payment Aging bucket counts,
+// computed from the full outstanding population (not just the top-5
+// preview list outstandingItems below).
+export interface PaymentAgingBuckets {
+  days0to7: number
+  days8to14: number
+  days15to30: number
+  daysOver30: number
+}
+
 export interface CommercialAlertCardData {
   outstandingPayment: number
   dpOutstandingCount: number
@@ -195,6 +205,7 @@ export interface CommercialAlertCardData {
   outstandingItems: CommercialDecisionItem[]
   highDiscountItems: CommercialDecisionItem[]
   highOverrideItems: CommercialDecisionItem[]
+  agingBuckets: PaymentAgingBuckets
 }
 
 export interface InventoryDecisionItem {

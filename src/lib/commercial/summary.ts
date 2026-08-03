@@ -8,6 +8,10 @@ export interface OutstandingPaymentRow {
   customerName: string
   outstandingAmount: number
   paymentStatus: PaymentStatus
+  // Sprint N.1 item 4 (Owner Intelligence) -- Payment Aging. quotations.created_at
+  // already existed (the query below already ordered by it); just now selected
+  // so callers can bucket "how long has this been outstanding" client-side.
+  createdAt: string
 }
 
 // Sprint N.2 Task 2 (Commercial Decision) -- same row shape reused for both
@@ -37,6 +41,7 @@ export interface CommercialSummary {
 type QuotationRow = {
   id: string
   order_id: string
+  created_at: string
   total: number | null
   subtotal: number | null
   discount_amount: number | null
@@ -77,7 +82,7 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
       supabase
         .from('quotations')
         .select(
-          'id, order_id, total, subtotal, discount_amount, override_amount, override_reason, orders!inner(order_number, customers(name))'
+          'id, order_id, created_at, total, subtotal, discount_amount, override_amount, override_reason, orders!inner(order_number, customers(name))'
         )
         // Milestone A (Commercial Type Engine): 'not_billable' quotations
         // (KOL/Sponsor/Warranty/Internal Sample — see
@@ -135,6 +140,7 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
         customerName,
         outstandingAmount: outstanding,
         paymentStatus: getPaymentStatus(total, paid),
+        createdAt: quotation.created_at,
       })
     }
 

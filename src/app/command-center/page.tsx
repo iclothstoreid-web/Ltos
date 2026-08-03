@@ -428,6 +428,23 @@ export default async function CommandCenterPage() {
       amount: r.outstandingAmount,
       reason: 'Order melewati SLA dengan pembayaran belum lunas',
     }))
+  // Sprint N.1 item 4 (Owner Intelligence) -- Payment Aging. REUSE only:
+  // commercialSummary.outstandingRows already carries createdAt (just added
+  // to the select in summary.ts), bucketed client-side against the same
+  // age ranges the roadmap doc names, over the full outstanding population
+  // (not the sliced top-5 preview list below).
+  const agingDays = (createdAt: string) => (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)
+  const agingBuckets = commercialSummary.outstandingRows.reduce(
+    (buckets, row) => {
+      const days = agingDays(row.createdAt)
+      if (days <= 7) buckets.days0to7 += 1
+      else if (days <= 14) buckets.days8to14 += 1
+      else if (days <= 30) buckets.days15to30 += 1
+      else buckets.daysOver30 += 1
+      return buckets
+    },
+    { days0to7: 0, days8to14: 0, days15to30: 0, daysOver30: 0 }
+  )
   const commercialAlertCardData = {
     outstandingPayment: commercialSummary.outstandingPayment,
     dpOutstandingCount: commercialSummary.dpOutstandingCount,
@@ -442,6 +459,7 @@ export default async function CommandCenterPage() {
       amount: r.outstandingAmount,
       reason: PAYMENT_STATUS_LABELS[r.paymentStatus],
     })),
+    agingBuckets,
     highDiscountItems: commercialSummary.highDiscountRows.slice(0, 5),
     highOverrideItems: commercialSummary.highOverrideRows.slice(0, 5),
   }

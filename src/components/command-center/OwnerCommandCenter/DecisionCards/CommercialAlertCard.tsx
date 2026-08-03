@@ -70,6 +70,29 @@ export function CommercialAlertCard({ data, onSelectOrder }: CommercialAlertCard
               {formatRupiah(data.outstandingPayment)}
             </span>
           </div>
+          {(data.agingBuckets.days0to7 > 0 ||
+            data.agingBuckets.days8to14 > 0 ||
+            data.agingBuckets.days15to30 > 0 ||
+            data.agingBuckets.daysOver30 > 0) && (
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              <div className="rounded-[8px] bg-on-surface/5 px-2 py-1.5 text-center">
+                <p className="text-label text-secondary uppercase tracking-widest text-[10px]">0-7 Hari</p>
+                <p className="text-body font-medium text-on-surface tabular-nums">{data.agingBuckets.days0to7}</p>
+              </div>
+              <div className="rounded-[8px] bg-on-surface/5 px-2 py-1.5 text-center">
+                <p className="text-label text-secondary uppercase tracking-widest text-[10px]">8-14 Hari</p>
+                <p className="text-body font-medium text-on-surface tabular-nums">{data.agingBuckets.days8to14}</p>
+              </div>
+              <div className="rounded-[8px] bg-[#f3e6c8] px-2 py-1.5 text-center">
+                <p className="text-label text-[#7a5a12] uppercase tracking-widest text-[10px]">15-30 Hari</p>
+                <p className="text-body font-medium text-[#7a5a12] tabular-nums">{data.agingBuckets.days15to30}</p>
+              </div>
+              <div className="rounded-[8px] bg-[#f3d6d3] px-2 py-1.5 text-center">
+                <p className="text-label text-[#8a2c22] uppercase tracking-widest text-[10px]">&gt;30 Hari</p>
+                <p className="text-body font-medium text-[#8a2c22] tabular-nums">{data.agingBuckets.daysOver30}</p>
+              </div>
+            </div>
+          )}
           {data.outstandingItems.length > 0 && (
             <CommercialItemList items={data.outstandingItems} onSelectOrder={onSelectOrder} />
           )}
