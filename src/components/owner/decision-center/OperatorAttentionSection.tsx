@@ -10,6 +10,14 @@ const BUCKET_HEADING: Record<Bucket, string> = {
   normal: 'Operator Normal',
   idle: 'Operator Idle',
 }
+// Same status-dot idiom as the Status SLA / Business Priority boards above --
+// over_capacity is attention (warm-gold), not alarm (Volume 02 reserves
+// error-red for the single most consequential failure elsewhere on screen).
+const BUCKET_DOT: Record<Bucket, string> = {
+  over_capacity: 'bg-warm-gold',
+  normal: 'bg-primary',
+  idle: 'bg-secondary/50',
+}
 
 // Over Capacity threshold (>100% utilisasi) matches Sprint H's
 // get_capacity_warning() operator_overload signal exactly -- not a new
@@ -52,7 +60,10 @@ export function OperatorAttentionSection({
               className="rounded-[14px] border border-outline-variant/85 bg-surface/45 elev-1 overflow-hidden"
             >
               <div className="px-5 py-4 border-b border-outline-variant/80 flex items-center justify-between">
-                <p className="text-body font-medium text-on-surface">{BUCKET_HEADING[bucket]}</p>
+                <p className="flex items-center gap-2 text-body font-medium text-on-surface">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${BUCKET_DOT[bucket]}`} aria-hidden="true" />
+                  {BUCKET_HEADING[bucket]}
+                </p>
                 <span className="text-label text-secondary">{rows.length}</span>
               </div>
 

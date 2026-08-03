@@ -4,9 +4,17 @@ import type { SlaRiskLevel, SlaRiskOrder } from '@/lib/decision/types'
 
 const RISK_ORDER: SlaRiskLevel[] = ['over_sla', 'risk', 'on_track']
 const RISK_HEADING: Record<SlaRiskLevel, string> = {
-  over_sla: '🔴 Order Over SLA',
-  risk: '🟡 Order Risk SLA',
-  on_track: '🟢 Order On Track',
+  over_sla: 'Order Over SLA',
+  risk: 'Order Risk SLA',
+  on_track: 'Order On Track',
+}
+// Volume 02 Color DNA tokens replacing the old 🔴🟡🟢 emoji markers --
+// same three-tier signal (alarm/attention/calm), rendered as the same dot
+// idiom TodaysActionSection already uses (SEVERITY_DOT) rather than emoji.
+const RISK_DOT: Record<SlaRiskLevel, string> = {
+  over_sla: 'bg-error',
+  risk: 'bg-warm-gold',
+  on_track: 'bg-primary',
 }
 
 function formatRemaining(hours: number): string {
@@ -50,7 +58,10 @@ export function PriorityTodaySection({
               className="rounded-[14px] border border-outline-variant/85 bg-surface/45 elev-1 overflow-hidden"
             >
               <div className="px-5 py-4 border-b border-outline-variant/80 flex items-center justify-between">
-                <p className="text-body font-medium text-on-surface">{RISK_HEADING[level]}</p>
+                <p className="flex items-center gap-2 text-body font-medium text-on-surface">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${RISK_DOT[level]}`} aria-hidden="true" />
+                  {RISK_HEADING[level]}
+                </p>
                 <span className="text-label text-secondary">{bucket.length}</span>
               </div>
 

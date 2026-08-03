@@ -4,9 +4,16 @@ import type { BusinessPriority, SlaRiskOrder } from '@/lib/decision/types'
 
 export const PRIORITY_ORDER: BusinessPriority[] = ['critical', 'high', 'normal']
 export const PRIORITY_HEADING: Record<BusinessPriority, string> = {
-  critical: '⛔ Prioritas Kritis',
-  high: '🔺 Prioritas Tinggi',
-  normal: '➖ Prioritas Normal',
+  critical: 'Prioritas Kritis',
+  high: 'Prioritas Tinggi',
+  normal: 'Prioritas Normal',
+}
+// Volume 02 Color DNA tokens replacing the old ⛔🔺➖ emoji markers -- same
+// three-tier signal, same dot idiom as PriorityTodaySection/TodaysActionSection.
+export const PRIORITY_DOT: Record<BusinessPriority, string> = {
+  critical: 'bg-error',
+  high: 'bg-warm-gold',
+  normal: 'bg-secondary/50',
 }
 
 // Milestone 4 (Priority & Capacity Engine), Section "Business Priority" --
@@ -42,7 +49,10 @@ export function BusinessPriorityBoard({
               className="rounded-[14px] border border-outline-variant/85 bg-surface/45 elev-1 overflow-hidden"
             >
               <div className="px-5 py-4 border-b border-outline-variant/80 flex items-center justify-between">
-                <p className="text-body font-medium text-on-surface">{PRIORITY_HEADING[level]}</p>
+                <p className="flex items-center gap-2 text-body font-medium text-on-surface">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${PRIORITY_DOT[level]}`} aria-hidden="true" />
+                  {PRIORITY_HEADING[level]}
+                </p>
                 <span className="text-label text-secondary">{bucket.length}</span>
               </div>
 

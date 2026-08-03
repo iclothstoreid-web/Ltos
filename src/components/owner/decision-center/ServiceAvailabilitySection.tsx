@@ -13,10 +13,11 @@ const STATUS_LABEL: Record<'green' | 'yellow' | 'red', string> = {
   yellow: 'Warning',
   red: 'Unavailable',
 }
+// Volume 02 Color DNA tokens replacing the old ad-hoc #dce9df/#f3e6c8/#f3d6d3 hex.
 const STATUS_CLASS: Record<'green' | 'yellow' | 'red', string> = {
-  green: 'bg-[#dce9df] text-[#1c5a34]',
-  yellow: 'bg-[#f3e6c8] text-[#7a5a12]',
-  red: 'bg-[#f3d6d3] text-[#8a2c22]',
+  green: 'bg-primary/10 text-primary',
+  yellow: 'bg-warm-gold/15 text-warm-gold',
+  red: 'bg-error/10 text-error',
 }
 
 // Section 4 (Sprint I brief): get_owner_summary().service_availability, one

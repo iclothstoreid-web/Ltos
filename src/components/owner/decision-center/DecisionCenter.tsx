@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { LeftSidebar } from '@/components/command-center/OwnerCommandCenter/LeftSidebar'
 import { OwnerTopBar } from '@/components/command-center/OwnerCommandCenter/OwnerTopBar'
 import { OrderDetailModal } from '@/components/command-center/OwnerCommandCenter/OrderDetailModal'
+import { KpiCard } from '@/components/command-center/OwnerCommandCenter/cards/KpiCard'
 import { OperatorDetailModal } from '@/components/owner/kpi-operator/OperatorDetailModal'
 import { BottleneckSummary } from '@/components/owner/kpi-operator/BottleneckSummary'
 import type { OwnerSummary, SlaRiskOrder } from '@/lib/decision/types'
@@ -71,6 +72,17 @@ export function DecisionCenter({ profileName, ownerSummary, slaRiskOrders, opera
               Prioritas order, operator yang butuh perhatian, titik lambat produksi, dan ketersediaan layanan — semua
               dalam satu layar.
             </p>
+            <div className="w-16 h-px bg-warm-gold mt-6" />
+          </section>
+
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+            <KpiCard label="Order On Track" value={ownerSummary.sla_risk.total_on_track} />
+            <KpiCard label="Order Risk SLA" value={ownerSummary.sla_risk.total_risk} />
+            <KpiCard label="Order Over SLA" value={ownerSummary.sla_risk.total_over_sla} />
+            <KpiCard
+              label="Operator Over Capacity"
+              value={ownerSummary.capacity_warning.operator_overload.length}
+            />
           </section>
 
           <PriorityTodaySection orders={slaRiskOrders} onSelectOrder={setSelectedOrderId} />

@@ -2,14 +2,15 @@
 
 import type { TodaysAction } from '@/lib/decision/types'
 
+// Volume 02 Color DNA tokens replacing the old ad-hoc #8a2c22/#7a5a12 hex.
 const SEVERITY_BORDER: Record<TodaysAction['severity'], string> = {
-  critical: 'border-l-[#8a2c22]',
-  warning: 'border-l-[#7a5a12]',
+  critical: 'border-l-error',
+  warning: 'border-l-warm-gold',
   info: 'border-l-outline-variant',
 }
 const SEVERITY_DOT: Record<TodaysAction['severity'], string> = {
-  critical: 'bg-[#8a2c22]',
-  warning: 'bg-[#7a5a12]',
+  critical: 'bg-error',
+  warning: 'bg-warm-gold',
   info: 'bg-secondary/60',
 }
 

@@ -8,9 +8,10 @@ const SERVICE_LEVEL_LABELS: Record<ServiceLevel, string> = {
   standard: 'Standard',
 }
 
+// Volume 02 Color DNA tokens replacing the old ad-hoc #8a2c22/#7a5a12 hex.
 const PRIORITY_BADGE: Record<BusinessPriority, string> = {
-  critical: 'text-[#8a2c22] border-[#8a2c22]/40',
-  high: 'text-[#7a5a12] border-[#7a5a12]/40',
+  critical: 'text-error border-error/40 bg-error/5',
+  high: 'text-warm-gold border-warm-gold/40 bg-warm-gold/5',
   normal: 'text-secondary border-outline-variant',
 }
 
