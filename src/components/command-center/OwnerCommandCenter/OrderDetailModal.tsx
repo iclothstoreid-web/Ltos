@@ -50,6 +50,21 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+// Sprint N.1 item 2 (Owner Intelligence) -- Production Timeline dwell time.
+// REUSE only: started_at/completed_at already ride on every StageRecord
+// get_production_packet returns, just never surfaced as a duration next to
+// Timeline Produksi's existing status dots. completed_at absent (stage still
+// in_progress) measures against now() instead, so an ongoing stage shows its
+// running dwell time, not nothing.
+function formatStageDuration(startedAt: string | null, completedAt: string | null): string | null {
+  if (!startedAt) return null
+  const endMs = completedAt ? new Date(completedAt).getTime() : Date.now()
+  const minutes = (endMs - new Date(startedAt).getTime()) / 60000
+  if (!Number.isFinite(minutes) || minutes < 0) return null
+  if (minutes < 60) return `${Math.round(minutes)} mnt`
+  return `${(minutes / 60).toLocaleString('id-ID', { maximumFractionDigits: 1 })} jam`
+}
+
 // Owner OS's "Detail Order" overlay — opened by clicking a customer row in
 // BottleneckPanel. get_production_packet already assembles almost everything
 // needed (customer/design/measurements incl. Cutting Model + Finishing
@@ -237,10 +252,14 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
                     ? [...records].sort((a, b) => b.attempt - a.attempt)[0]
                     : null
                   const status = latest?.status ?? 'pending'
+                  const duration = latest ? formatStageDuration(latest.started_at, latest.completed_at) : null
                   return (
                     <div key={stage} className="flex items-center gap-2">
                       <span className={`w-2.5 h-2.5 rounded-full ${STAGE_STATUS_DOT[status]}`} />
                       <span className="font-hanken text-xs text-[#46464c]">{STAGE_LABELS[stage]}</span>
+                      {duration && (
+                        <span className="font-hanken text-[10px] text-[#8a8a92]">· {duration}</span>
+                      )}
                     </div>
                   )
                 })}
