@@ -17,7 +17,10 @@ function durationMinutes(record: OperatorPerformanceRecord): number | null {
   return Number.isFinite(duration) && duration >= 0 ? duration : null
 }
 
-function startOfWeek(date: Date): Date {
+// Exported for Sprint N.3's Rework Rate Overview (period grouping) so it
+// reuses the exact same week boundary this file already uses for
+// weeklyProductivity, instead of a second, possibly-drifting definition.
+export function startOfWeek(date: Date): Date {
   const value = new Date(date)
   const day = value.getDay()
   const diff = day === 0 ? -6 : 1 - day

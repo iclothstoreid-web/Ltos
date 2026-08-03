@@ -6,6 +6,7 @@ import type {
   MaterialOrderUsage,
   MaterialUsageRanking,
   MaterialUsageStatus,
+  OrderMaterialCost,
   OrderMaterialUsage,
   StockMovement,
 } from './types'
@@ -267,6 +268,37 @@ export async function fetchOrderMaterialUsage(supabase: SupabaseClient, orderId:
     netQty: Math.max(entry.reserved - entry.released, 0),
     status: usageStatus(entry.reserved, entry.released),
   }))
+}
+
+// Sprint N.3 (Margin Per Order Foundation) — Cost(actual) for one order.
+// Reuses the exact same table/filter shape as fetchOrderMaterialUsage above
+// (material_stock_movements scoped to order_id), narrowed to 'stock_out'
+// only -- the one movement_type save_material_preparation() writes for a
+// real physical deduction (see 20260819000000_move_inventory_consumption_to_production.sql).
+// Manual Stock Keluar from Inventory Hub also uses 'stock_out' but never
+// sets order_id, so this filter cannot pick up unrelated manual movements.
+// price is read-time joined from `materials` (never denormalized, same
+// ADR-014 convention material_cost_templates already follows) -- this is a
+// plain table read, no new RPC, no new table.
+export async function fetchOrderMaterialCost(supabase: SupabaseClient, orderId: string): Promise<OrderMaterialCost> {
+  const { data, error } = await supabase
+    .from('material_stock_movements')
+    .select('quantity, materials(price)')
+    .eq('order_id', orderId)
+    .eq('movement_type', 'stock_out')
+
+  if (error) throw error
+  const rows = data ?? []
+  if (rows.length === 0) return { hasData: false, totalCost: 0 }
+
+  const totalCost = rows.reduce((sum, row) => {
+    const material = Array.isArray(row.materials) ? row.materials[0] : row.materials
+    const price = Number(material?.price ?? 0)
+    const quantity = Number(row.quantity ?? 0)
+    return sum + price * quantity
+  }, 0)
+
+  return { hasData: true, totalCost }
 }
 
 // "Digunakan di Fitter App" badge (Material Workspace card) — which

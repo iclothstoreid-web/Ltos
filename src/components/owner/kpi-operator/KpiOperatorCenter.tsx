@@ -19,6 +19,7 @@ import { DivisiKpiGrid } from './DivisiKpiGrid'
 import { DivisiMembersModal } from './DivisiMembersModal'
 import { OperatorKpiTable } from './OperatorKpiTable'
 import { OperatorDetailModal } from './OperatorDetailModal'
+import { ReworkRateOverview } from './ReworkRateOverview'
 
 export type KpiOperatorCenterProps = {
   profileName: string
@@ -103,6 +104,13 @@ export function KpiOperatorCenter({
           <BottleneckSummary data={bottleneckDashboard} />
 
           <DivisiKpiGrid divisiRows={divisiRows} onSelectDivisi={setSelectedDivision} />
+
+          <ReworkRateOverview
+            operators={operators}
+            divisiRows={divisiRows}
+            performanceRecords={performanceRecords}
+            onSelectDivisi={setSelectedDivision}
+          />
 
           <OperatorKpiTable
             operators={operators}

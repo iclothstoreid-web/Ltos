@@ -14,6 +14,8 @@ import {
 import type { DiscountType, OrderInvoice } from '@/lib/commercial/types'
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS } from '@/lib/commercial/types'
 import { COMMERCIAL_TYPE_LABELS, requiresInvoice } from '@/lib/commercial/commercialType'
+import { fetchOrderMaterialCost } from '@/lib/inventory/materials'
+import type { OrderMaterialCost } from '@/lib/inventory/types'
 import { PaymentTimeline } from './PaymentTimeline'
 
 interface OrderCommercialSectionProps {
@@ -30,6 +32,7 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
   const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [invoice, setInvoice] = useState<OrderInvoice | null>(null)
+  const [materialCost, setMaterialCost] = useState<OrderMaterialCost | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -73,6 +76,17 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
         if (!cancelled) setError('Gagal memuat data komersial.')
       } finally {
         if (!cancelled) setLoading(false)
+      }
+      // Sprint N.3 (Margin Per Order Foundation) -- fetched independently of
+      // the invoice above so a failure here never blocks the existing
+      // pricing/payment UI. Not part of `refresh()` (discount/KOL/override
+      // never change material cost, only price), only the initial load.
+      try {
+        const cost = await fetchOrderMaterialCost(supabase, orderId)
+        if (!cancelled) setMaterialCost(cost)
+      } catch (err) {
+        console.error('[command-center] load material cost failed', err)
+        if (!cancelled) setMaterialCost(null)
       }
     }
     load()
@@ -209,6 +223,26 @@ export function OrderCommercialSection({ orderId, productionStarted = false, del
             <span className="text-right text-[#161b29]">{formatRupiah(invoice.balance_due)}</span>
             <span className="text-[#46464c]">Status</span>
             <span className="text-right text-[#161b29]">{PAYMENT_STATUS_LABELS[invoice.payment_status]}</span>
+          </div>
+
+          {/* Sprint N.3 (Margin Per Order Foundation) -- Cost(actual) from
+              material_stock_movements (fetchOrderMaterialCost), read-time
+              joined against materials.price. Labeled "Margin Material", never
+              "Margin"/"Profit", since labor cost has no tracking anywhere in
+              this repo -- this is a material-cost-only figure, not full
+              profit. Orders with no Persiapan Bahan stock_out row yet (not
+              prepared, or pre-migration) show "No Material Cost Data",
+              never Rp0, so an untracked order can never look free to make. */}
+          <div className="mb-4 font-hanken text-xs">
+            <span className="text-[10px] uppercase tracking-widest text-[#46464c]">Margin Material</span>
+            {materialCost?.hasData ? (
+              <p className="text-sm text-[#161b29] font-semibold mt-0.5">
+                {formatRupiah(invoice.total - materialCost.totalCost)}
+              </p>
+            ) : (
+              <p className="text-sm text-[#46464c] mt-0.5">No Material Cost Data</p>
+            )}
+            <p className="text-[10px] text-[#46464c] italic mt-0.5">Labor cost belum termasuk.</p>
           </div>
 
           {invoice.invoice_notes && (

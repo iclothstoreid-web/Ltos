@@ -97,6 +97,15 @@ export interface OrderMaterialUsage {
   status: MaterialUsageStatus
 }
 
+// Sprint N.3 (Margin Per Order Foundation) — Cost(actual) for one order.
+// hasData=false means no material_stock_movements 'stock_out' row exists yet
+// for this order (not prepared through Persiapan Bahan, or a pre-migration
+// order) — callers must show "no data", never Rp0, for that case.
+export interface OrderMaterialCost {
+  hasData: boolean
+  totalCost: number
+}
+
 // Material Intelligence (Sprint I.1) — "perlu perhatian" list. Same
 // ratio/reorder-qty shape Command Center's page.tsx composes inline for the
 // Inventory Alert Decision Card, extracted so both can share one definition.
