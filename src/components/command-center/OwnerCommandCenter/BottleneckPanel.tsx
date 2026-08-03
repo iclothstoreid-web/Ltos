@@ -18,6 +18,15 @@ export type BottleneckItem = {
   reason: string
   suggestedAction: string
   workspaceUrl: string
+  // Sprint N.1 (Owner Intelligence, item 1) — sourced from
+  // get_sla_risk_orders' estimated_completion, undefined/null for rows not
+  // backed by a real order (e.g. low-stock material rows).
+  estimatedCompletion?: string | null
+}
+
+function formatEstimatedCompletion(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 const SEVERITY_RANK: Record<BottleneckSeverity, number> = {
@@ -87,6 +96,11 @@ export function BottleneckPanel({ items }: { items: BottleneckItem[] }) {
 
                     <div className="col-span-2">
                       <p className="text-body text-secondary truncate">{it.order}</p>
+                      {formatEstimatedCompletion(it.estimatedCompletion) && (
+                        <p className="text-label text-secondary/80 mt-0.5 truncate">
+                          Estimasi: {formatEstimatedCompletion(it.estimatedCompletion)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="col-span-3">

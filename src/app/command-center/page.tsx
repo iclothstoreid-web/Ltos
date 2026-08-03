@@ -115,6 +115,15 @@ export default async function CommandCenterPage() {
       getMultiGarmentKPIs(supabase),
     ])
 
+  // Sprint N.1 (Owner Intelligence, item 1 — Estimated Completion Date on
+  // Dashboard): get_sla_risk_orders already computes estimated_completion
+  // per order; this just makes it a lookup so Bottleneck Panel and
+  // Production Live Kanban can attach it to their existing rows below. No
+  // new RPC/query — slaRiskOrders is already fetched above.
+  const estimatedCompletionByOrderId = new Map(
+    slaRiskOrders.map(o => [o.order_id, o.estimated_completion])
+  )
+
   // Internal 8-stage production workflow now populates production_stage_records
   // — this is the real runtime source of truth for where an order currently
   // sits (orders.current_state only ever reaches 'order'/'follow_up', see
@@ -195,6 +204,7 @@ export default async function CommandCenterPage() {
       order: order?.order_number || '—',
       customer: c?.name || 'Unknown',
       waitingSince: row.started_at || row.created_at,
+      estimatedCompletion: estimatedCompletionByOrderId.get(row.order_id) ?? null,
     }
   }
   const cuttingOrders = (activeStageRecords || [])
@@ -232,6 +242,7 @@ export default async function CommandCenterPage() {
       reason: 'Order dikonfirmasi, menunggu penugasan artisan',
       suggestedAction: 'Tugaskan Artisan',
       workspaceUrl: `/workspace/order-created/${o.id}`,
+      estimatedCompletion: estimatedCompletionByOrderId.get(o.id) ?? null,
     })),
     ...(consultationsInReview || []).map(c => ({
       id: `review-${c.id}`,
@@ -251,6 +262,7 @@ export default async function CommandCenterPage() {
       reason: 'Quotation belum disetujui customer',
       suggestedAction: 'Review Quotation',
       workspaceUrl: `/workspace/quotation/${o.id}`,
+      estimatedCompletion: estimatedCompletionByOrderId.get(o.id) ?? null,
     })),
     ...qcRecords.map(r => ({
       id: `qc-${r.id}`,
@@ -261,6 +273,7 @@ export default async function CommandCenterPage() {
       reason: 'QC menumpuk, order menunggu inspeksi',
       suggestedAction: 'Proses QC',
       workspaceUrl: `/workspace/qc/${r.id}`,
+      estimatedCompletion: r.estimatedCompletion,
     })),
     ...(vipOrdersWaiting || []).map(o => ({
       id: `vip-${o.id}`,
@@ -271,6 +284,7 @@ export default async function CommandCenterPage() {
       reason: 'Customer VIP menunggu, prioritaskan',
       suggestedAction: 'Lihat Order',
       workspaceUrl: vipWorkspaceUrl(o.current_state, o.id),
+      estimatedCompletion: estimatedCompletionByOrderId.get(o.id) ?? null,
     })),
     ...lowStockMaterials.map(m => {
       const category = Array.isArray(m.material_categories) ? m.material_categories[0] : m.material_categories
@@ -514,11 +528,16 @@ export default async function CommandCenterPage() {
       bottleneckItems={bottleneckItems}
       executiveBrief={executiveBrief}
       productionColumns={{
-        waiting: (ordersAwaiting || []).map(o => ({ id: o.id, order: o.order_number, customer: customerName(o) })),
+        waiting: (ordersAwaiting || []).map(o => ({
+          id: o.id,
+          order: o.order_number,
+          customer: customerName(o),
+          estimatedCompletion: estimatedCompletionByOrderId.get(o.id) ?? null,
+        })),
         cutting: cuttingOrders,
         sewing: sewingOrders,
-        qc: qcRecords.map(({ id, order, customer }) => ({ id, order, customer })),
-        ready: shippingReadyRecords.map(({ id, order, customer }) => ({ id, order, customer })),
+        qc: qcRecords.map(({ id, order, customer, estimatedCompletion }) => ({ id, order, customer, estimatedCompletion })),
+        ready: shippingReadyRecords.map(({ id, order, customer, estimatedCompletion }) => ({ id, order, customer, estimatedCompletion })),
       }}
       artisanCards={(artisans || []).map(a => ({
         id: a.id,

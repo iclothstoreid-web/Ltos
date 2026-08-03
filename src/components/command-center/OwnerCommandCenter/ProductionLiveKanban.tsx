@@ -1,12 +1,21 @@
+// Sprint N.1 (Owner Intelligence, item 1) — optional so every existing
+// caller/column keeps working unchanged when it's absent.
+type KanbanItem = { id: string; order: string; customer: string; estimatedCompletion?: string | null }
+
+function formatEstimatedCompletion(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 export function ProductionLiveKanban({
   columns,
 }: {
   columns: {
-    waiting: Array<{ id: string; order: string; customer: string }>
-    cutting: Array<{ id: string; order: string; customer: string }>
-    sewing: Array<{ id: string; order: string; customer: string }>
-    qc: Array<{ id: string; order: string; customer: string }>
-    ready: Array<{ id: string; order: string; customer: string }>
+    waiting: KanbanItem[]
+    cutting: KanbanItem[]
+    sewing: KanbanItem[]
+    qc: KanbanItem[]
+    ready: KanbanItem[]
   }
 }) {
   const columnList = [
@@ -41,6 +50,11 @@ export function ProductionLiveKanban({
                     >
                       <p className="text-body font-medium text-on-surface truncate">{it.order}</p>
                       <p className="text-body text-secondary truncate">{it.customer}</p>
+                      {formatEstimatedCompletion(it.estimatedCompletion) && (
+                        <p className="text-label text-secondary/70 mt-0.5 truncate">
+                          Estimasi: {formatEstimatedCompletion(it.estimatedCompletion)}
+                        </p>
+                      )}
                     </div>
                   ))
                 )}
