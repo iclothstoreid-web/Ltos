@@ -1,21 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LeftSidebar } from './LeftSidebar'
 import { OwnerTopBar } from './OwnerTopBar'
-import { SummaryCards } from './SummaryCards'
-import { CrmSnapshot } from './CrmSnapshot'
-import { BottleneckPanel, BottleneckItem } from './BottleneckPanel'
 import { ExecutiveBriefing } from './ExecutiveBriefing'
+import { QuietLedger } from './QuietLedger'
 import { ProductionLiveKanban } from './ProductionLiveKanban'
-import { ArtisanPerformanceGrid } from './ArtisanPerformanceGrid'
 import { AgendaPanel, AgendaItem } from './AgendaPanel'
-import { ClockCalendar } from './widgets/ClockCalendar'
-import { EngineOverviewSection, type EngineOverviewSectionProps } from './EngineOverviewSection'
-import { DecisionCardsSection } from './DecisionCards'
-import { OrderDetailModal } from './OrderDetailModal'
-import { CommercialTypeSummarySection } from './CommercialTypeSummarySection'
-import { TransactionKPISection } from './TransactionKPISection'
+import type { EngineOverviewSectionProps } from './EngineOverviewSection'
+import type { BottleneckItem } from './BottleneckPanel'
 import type {
   OperationalAlertCardData,
   CommercialAlertCardData,
@@ -48,6 +41,7 @@ export type OwnerCommandCenterProps = {
   executiveBrief: {
     recommendationTitle: string
     recommendationBody: string
+    hasRecommendation: boolean
   }
   productionColumns: {
     waiting: Array<{ id: string; order: string; customer: string }>
@@ -78,101 +72,112 @@ export type OwnerCommandCenterProps = {
   multiGarmentKpis: MultiGarmentKpiData
 }
 
+// Sprint D.1 Phase 5 — Owner Decision Room implementation. Composition now
+// follows the locked Sequence DNA (Design Language Volume 03 SS5, spec SS4):
+// Threshold -> Decision (hero) -> Periphery (Quiet Ledger) -> Record
+// (Procession + Agenda) -> Close. Every number rendered below still comes
+// from the same props CommandCenterPage (src/app/command-center/page.tsx)
+// already computed — no new query, RPC, or business rule was added; only
+// composition, density, and styling changed. Sections that no longer appear
+// in this composition (Engine Overview, Summary Cards, CRM Snapshot,
+// Decision Cards, Commercial Type Summary, Transaction KPI, the old boxed
+// Bottleneck Panel, Artisan Grid, Clock/Calendar widget) are unchanged files
+// elsewhere in this directory; simply no longer rendered on this one screen,
+// per the approved Atmosphere DNA ("no dashboard grid of equal-weight
+// widgets"). LeftSidebar/OwnerTopBar are shared chrome across six other
+// Owner OS pages (Commercial/Decision/KPI Operator/KPI Fitter/Communications
+// Center) and are out of this sprint's scope; left unchanged.
 export function OwnerCommandCenter({
   profileName,
   todayLabel,
-  engineOverview,
-  summary,
-  crmSnapshot,
-  bottleneckItems,
   executiveBrief,
+  engineOverview,
   productionColumns,
-  artisanCards,
   agendaItems,
   decisionCards,
-  commercialTypeSummary,
-  multiGarmentKpis,
 }: OwnerCommandCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  // Sprint N.2 — same OrderDetailModal instance BottleneckPanel/Decision
-  // Center already each own locally; Decision Cards get their own here so
-  // "deep link ke order terkait" opens the existing Detail Order overlay
-  // instead of a new one.
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+
+  // Close signature clock — mirrors ClockCalendar's hydration-safe pattern
+  // (starts null, fills in on mount) so server-rendered markup never shows a
+  // timestamp that would mismatch the client's first render. Minute-only,
+  // not per-second, per Behavior DNA Tempo ("never perform busyness").
+  const [now, setNow] = useState<Date | null>(null)
+  useEffect(() => {
+    setNow(new Date())
+    const timer = setInterval(() => setNow(new Date()), 60_000)
+    return () => clearInterval(timer)
+  }, [])
+  const timeLabel = now ? now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '--:--'
+
+  const focusLine = executiveBrief.hasRecommendation
+    ? `Fokus utama hari ini: ${executiveBrief.recommendationTitle}.`
+    : 'Tidak ada yang memerlukan keputusan Anda hari ini.'
 
   return (
-      <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
+    <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
       <LeftSidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
-
 
       <div className="flex-1 flex flex-col min-w-0">
         <OwnerTopBar profileName={profileName} onMenuClick={() => setMobileNavOpen(true)} />
 
-        <main className="flex-1 px-4 sm:px-6 md:px-10 py-6 sm:py-10 max-w-[1440px] w-full mx-auto">
-          <section className="mb-10">
-            <p className="text-label text-secondary uppercase tracking-widest mb-3">
-              {todayLabel}
-            </p>
-            <div className="mt-8">
-              <h1 className="font-serif text-heading-md text-text-primary leading-[1.2] font-normal">
-                Selamat Pagi,
-              </h1>
-              <p className="text-body-md text-secondary mt-3 leading-relaxed max-w-[52ch]">
-                Apa yang perlu Anda perhatikan hari ini?
-              </p>
-            </div>
-
+        <main className="flex-1 px-4 sm:px-6 md:px-10 py-6 sm:py-10 max-w-[1200px] w-full mx-auto">
+          {/* Threshold */}
+          <section className="mb-16 sm:mb-20">
+            <p className="text-label text-secondary uppercase tracking-widest">{todayLabel}</p>
+            <h1 className="font-serif text-heading-md text-text-primary leading-[1.2] font-normal mt-6">
+              Selamat Pagi, {profileName}.
+            </h1>
+            <p className="text-body-md text-secondary mt-3 leading-relaxed max-w-[55ch]">{focusLine}</p>
+            <div className="w-16 h-px bg-warm-gold mt-8" />
           </section>
 
-          <EngineOverviewSection {...engineOverview} />
-
-          <section className="mb-10">
-            <SummaryCards {...summary} />
+          {/* The Decision (hero) */}
+          <section className="mb-16 sm:mb-24">
+            <ExecutiveBriefing
+              title={executiveBrief.recommendationTitle}
+              body={executiveBrief.recommendationBody}
+              hasRecommendation={executiveBrief.hasRecommendation}
+            />
           </section>
 
-          <section className="mb-10">
-            <CrmSnapshot {...crmSnapshot} />
+          {/* Periphery — Quiet Ledger */}
+          <section className="mb-14 sm:mb-16">
+            <QuietLedger
+              commercial={{
+                outstandingPayment: engineOverview.commercial.outstandingPayment,
+                dpOutstandingCount: engineOverview.commercial.dpOutstandingCount,
+                overdueCount: decisionCards.commercialAlert.overdueCount,
+              }}
+              bottleneck={{
+                stage: engineOverview.ownerSummary.bottleneck.most_backlogged_stage,
+                count: engineOverview.ownerSummary.bottleneck.most_backlogged_stage_count,
+                overSlaCount: engineOverview.ownerSummary.sla_risk.total_over_sla,
+              }}
+              inventory={{
+                lowStockCount: decisionCards.inventoryAlert.lowStockCount,
+                outOfStockCount: decisionCards.inventoryAlert.outOfStockCount,
+                mostCriticalItem: decisionCards.inventoryAlert.mostCriticalItem,
+              }}
+            />
           </section>
 
-          <DecisionCardsSection
-            operationalAlert={decisionCards.operationalAlert}
-            commercialAlert={decisionCards.commercialAlert}
-            inventoryAlert={decisionCards.inventoryAlert}
-            businessInsight={decisionCards.businessInsight}
-            onSelectOrder={setSelectedOrderId}
-          />
+          {/* Record — Procession + Agenda */}
+          <section className="mb-10">
+            <ProductionLiveKanban columns={productionColumns} />
+          </section>
 
-          <CommercialTypeSummarySection rows={commercialTypeSummary} onSelectOrder={setSelectedOrderId} />
+          <section className="mb-16 sm:mb-20">
+            <AgendaPanel items={agendaItems} />
+          </section>
 
-          <TransactionKPISection data={multiGarmentKpis} />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            <section className="lg:col-span-7 space-y-10">
-              <BottleneckPanel items={bottleneckItems} />
-
-              <ExecutiveBriefing title={executiveBrief.recommendationTitle} body={executiveBrief.recommendationBody} />
-
-              <ProductionLiveKanban columns={productionColumns} />
-
-              <ArtisanPerformanceGrid artisans={artisanCards} />
-            </section>
-
-            <aside className="lg:col-span-5">
-              <div className="lg:sticky lg:top-[84px] space-y-6">
-                <ClockCalendar />
-                <AgendaPanel items={agendaItems} />
-              </div>
-            </aside>
-          </div>
+          {/* Close */}
+          <footer className="border-t border-warm-gold/40 pt-6 flex items-center justify-between gap-4">
+            <p className="text-label text-secondary/80 uppercase tracking-widest">LTOS — Owner OS</p>
+            <p className="text-label text-secondary/80 tabular-nums">{timeLabel}</p>
+          </footer>
         </main>
       </div>
-
-      {selectedOrderId && (
-        <OrderDetailModal orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />
-      )}
     </div>
   )
 }
-
-
-

@@ -313,15 +313,21 @@ export default async function CommandCenterPage() {
 
   const newLeadsCount = (consultationsToday || []).filter(c => c.status === 'check_in').length
 
+  // Sprint D.1 Phase 5 — hasRecommendation is the same ordersWaitingCount > 0
+  // condition already used to choose the copy below, exposed as its own
+  // field so the Decision surface can render the approved Empty State
+  // (Design Language Volume 06 SS10) instead of inferring it from title text.
   const executiveBrief =
     ordersWaitingCount > 0
       ? {
           recommendationTitle: `${ordersWaitingCount} order menunggu penugasan artisan`,
           recommendationBody: `Ada ${ordersWaitingCount} order yang sudah dikonfirmasi tetapi belum ditugaskan ke artisan. Assign artisan untuk melanjutkan ke tahap produksi.`,
+          hasRecommendation: true,
         }
       : {
           recommendationTitle: 'Semua order berjalan sesuai jadwal',
           recommendationBody: 'Tidak ada order yang menunggu keputusan Anda saat ini.',
+          hasRecommendation: false,
         }
 
   const todayLabel = new Date().toLocaleDateString('id-ID', {
