@@ -13,6 +13,7 @@ import { ProductionJourneyTimeline } from './ProductionJourneyTimeline'
 import { SystemLogisticsCard } from './SystemLogisticsCard'
 import { OrderCommunicationPanel } from './OrderCommunicationPanel'
 import { OrderCreatedFooter } from './OrderCreatedFooter'
+import { TransactionGarmentsPanel } from './TransactionGarmentsPanel'
 
 interface OrderCreatedWorkspaceProps {
   order: Order
@@ -22,6 +23,9 @@ interface OrderCreatedWorkspaceProps {
   fitterName: string
   profileId: string
   initialMessages: CommunicationMessage[]
+  // Milestone B (Multi-Garment) — every order belongs to exactly one
+  // transaction since Milestone A, so this is never null in practice.
+  transactionId: string
 }
 
 export function OrderCreatedWorkspace({
@@ -31,6 +35,7 @@ export function OrderCreatedWorkspace({
   fitterName,
   profileId,
   initialMessages,
+  transactionId,
 }: OrderCreatedWorkspaceProps) {
   return (
     <div className="min-h-screen bg-[#FDFCF8] font-sans text-[#151c27] pb-32">
@@ -63,6 +68,13 @@ export function OrderCreatedWorkspace({
           <SystemLogisticsCard orderId={order.id} orderNumber={order.order_number} />
         </aside>
       </main>
+
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pb-16">
+        <h2 className="font-sans text-xs font-bold text-[#151c27] uppercase tracking-widest mb-4">
+          Transaksi & Garmen Lain
+        </h2>
+        <TransactionGarmentsPanel transactionId={transactionId} currentOrderId={order.id} />
+      </section>
 
       <section className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pb-16">
         <OrderCommunicationPanel

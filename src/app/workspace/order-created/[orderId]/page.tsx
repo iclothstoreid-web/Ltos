@@ -63,6 +63,7 @@ export default async function OrderCreatedPage({ params }: Props) {
       fitterName={fitterName}
       profileId={userId}
       initialMessages={initialMessages}
+      transactionId={order.transaction_id}
     />
   )
 }

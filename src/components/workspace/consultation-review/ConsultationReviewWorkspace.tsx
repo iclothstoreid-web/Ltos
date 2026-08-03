@@ -25,6 +25,9 @@ import { EstimationCard } from './EstimationCard'
 import { EventInformationCard } from './EventInformationCard'
 import { EstimationValidationCard } from './EstimationValidationCard'
 import { DocumentUploader } from './DocumentUploader'
+import { OpenTransactionPrompt } from './OpenTransactionPrompt'
+import { ExistingGarmentList } from './ExistingGarmentList'
+import type { OpenTransactionForCustomer } from '@/lib/transaction/types'
 import {
   decodeFitterEnhancements,
   encodeFitterEnhancements,
@@ -110,6 +113,24 @@ export function ConsultationReviewWorkspace({
   // createOrderFromConsultation below, locked in on the transaction at
   // Create Order time.
   const [commercialType, setCommercialType] = useState<CommercialType>('normal')
+
+  // Milestone B (Multi-Garment, Scenario 4 — Returning Customer flow): the
+  // Fitter always chooses whether this garment joins a running OPEN
+  // transaction or starts a new one. `existingTransaction` stays null (and
+  // createOrderFromConsultation gets no existingTransactionId) unless the
+  // Fitter explicitly picks one from OpenTransactionPrompt below.
+  const [existingTransaction, setExistingTransaction] = useState<OpenTransactionForCustomer | null>(null)
+  const [transactionDecided, setTransactionDecided] = useState(false)
+
+  function handleSelectExistingTransaction(transaction: OpenTransactionForCustomer) {
+    setExistingTransaction(transaction)
+    setTransactionDecided(true)
+  }
+
+  function handleCreateNewTransaction() {
+    setExistingTransaction(null)
+    setTransactionDecided(true)
+  }
 
   async function persistEnhancements(patch: Partial<FitterEnhancements>) {
     const next = { ...enhancements, ...patch }
@@ -250,6 +271,7 @@ export function ConsultationReviewWorkspace({
         estimationValidation: estimationValidationResult,
         fabricQuantityMeters,
         commercialType,
+        existingTransactionId: existingTransaction?.transaction_id ?? null,
         userId,
       })
 
@@ -265,6 +287,26 @@ export function ConsultationReviewWorkspace({
   return (
     <div className="min-h-screen bg-[#FDFCF8] font-sans text-[#151c27] pb-32">
       <TopNavBar fitterInitial={fitterName.charAt(0).toUpperCase()} />
+
+      {!transactionDecided && (
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pt-8">
+          <OpenTransactionPrompt
+            customerId={consultation.customers.id}
+            consultationId={consultation.id}
+            onSelectExisting={handleSelectExistingTransaction}
+            onCreateNew={handleCreateNewTransaction}
+          />
+        </div>
+      )}
+
+      {existingTransaction && (
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pt-8">
+          <ExistingGarmentList
+            transactionNumber={existingTransaction.transaction_number}
+            garments={existingTransaction.orders}
+          />
+        </div>
+      )}
 
       <main className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 lg:py-16 flex flex-col md:flex-row gap-8">
         <aside className="w-full md:w-1/4 flex flex-col gap-8">
