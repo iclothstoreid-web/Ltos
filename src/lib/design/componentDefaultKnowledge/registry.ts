@@ -5,14 +5,32 @@ import { EMPTY_COMPONENT_DEFAULT_KNOWLEDGE, type ComponentDefaultKnowledge } fro
 // Cutting, Kerah/Collar, Manset/Cuff, Plaket/Front Placket, Saku/Chest
 // Pocket, Bahan, Warna Bahan, Aksesori, Bordir, Handmade Zig-Zag) — every
 // category gets a slot up front so a future sprint can populate any of them
-// without touching this module's shape again. No content is seeded here
-// (locked brief: "Jangan mengisi data default apa pun" / "Jangan mengisi
-// data komponen") — every slot starts as EMPTY_COMPONENT_DEFAULT_KNOWLEDGE.
+// without touching this module's shape again.
+//
+// Front Placket ('plaket') Component Identity Knowledge (2026-08-04) — the
+// first category populated: structural geometry/construction facts every
+// Front Placket variant inherits (Asil/Badr/Fakhr/Sudas Plaket and any
+// future variant, e.g. Hexagon, which stores only its own delta on top of
+// this). Deliberately identity-only — no Hero Image, no referenceInstruction,
+// no lockRules, no negativeRules, per the locked brief. Every other
+// category's slot stays EMPTY_COMPONENT_DEFAULT_KNOWLEDGE — no content
+// seeded ("Jangan mengisi data default apa pun" beyond what was explicitly
+// requested for this one category).
 export const COMPONENT_DEFAULT_KNOWLEDGE: Record<MasterDataCategory, ComponentDefaultKnowledge> =
   MASTER_DATA_CATEGORIES.reduce((acc, category) => {
     acc[category] = EMPTY_COMPONENT_DEFAULT_KNOWLEDGE
     return acc
   }, {} as Record<MasterDataCategory, ComponentDefaultKnowledge>)
+
+COMPONENT_DEFAULT_KNOWLEDGE.plaket = {
+  ...EMPTY_COMPONENT_DEFAULT_KNOWLEDGE,
+  identity: {
+    length: '40 cm',
+    width: '6 cm',
+    position: 'Center Front',
+    construction: 'Vertical front placket extending from the collar to the upper abdomen.',
+  },
+}
 
 export function getComponentDefaultKnowledge(category: MasterDataCategory): ComponentDefaultKnowledge {
   return COMPONENT_DEFAULT_KNOWLEDGE[category] ?? EMPTY_COMPONENT_DEFAULT_KNOWLEDGE

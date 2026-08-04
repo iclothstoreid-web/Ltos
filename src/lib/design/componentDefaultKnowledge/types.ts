@@ -22,14 +22,25 @@
 // Composer does not consume that resolved value yet this sprint — only
 // lockRules/negativeRules are wired into composeRenderRecipe (see
 // recipeComposer/composer.ts's own comment on this).
+//
+// `identity` — Component Identity Knowledge (2026-08-04): structured
+// geometry/construction facts about the category itself (e.g. Front
+// Placket's Length/Width/Position/Construction) — deliberately separate
+// from referenceInstruction/lockRules/negativeRules (never Hero Image, never
+// prose reference instruction, never a Lock/Negative Rule). Untyped
+// Record<string, unknown>, same convention as RenderRecipe.garment (see
+// renderRecipe/types.ts), since different categories describe different
+// facts (Front Placket's Length/Width don't apply to, say, Material Color).
 export interface ComponentDefaultKnowledge {
   referenceInstruction: string | null
   lockRules: string[]
   negativeRules: string[]
+  identity: Record<string, unknown>
 }
 
 export const EMPTY_COMPONENT_DEFAULT_KNOWLEDGE: ComponentDefaultKnowledge = {
   referenceInstruction: null,
   lockRules: [],
   negativeRules: [],
+  identity: {},
 }

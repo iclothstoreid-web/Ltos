@@ -23,7 +23,11 @@ export type ComponentKnowledgeDelta = ComponentDefaultKnowledge
 // Composer has always had. `referenceInstruction` is resolved here (delta
 // wins, category default is the fallback) so the merge rule exists and is
 // tested, but no caller reads it yet this sprint (see types.ts's own
-// comment) — infrastructure only, per the locked brief.
+// comment) — infrastructure only, per the locked brief. `identity` merges
+// key-by-key, delta wins per key (same "more specific wins" precedent as
+// dnaResolver/resolver.ts's buildGarmentSpec) — a variant with no identity
+// delta of its own (every current Front Placket item) simply inherits the
+// category default unchanged.
 export function resolveComponentKnowledge(
   category: MasterDataCategory,
   delta: ComponentKnowledgeDelta
@@ -33,5 +37,6 @@ export function resolveComponentKnowledge(
     referenceInstruction: delta.referenceInstruction ?? base.referenceInstruction,
     lockRules: Array.from(new Set([...base.lockRules, ...delta.lockRules])),
     negativeRules: Array.from(new Set([...base.negativeRules, ...delta.negativeRules])),
+    identity: { ...base.identity, ...delta.identity },
   }
 }

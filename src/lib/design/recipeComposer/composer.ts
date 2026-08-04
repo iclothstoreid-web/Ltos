@@ -268,6 +268,7 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
       referenceInstruction: null,
       lockRules: entry.recipe.lockRules,
       negativeRules: entry.recipe.negativeRules,
+      identity: {},
     })
   )
 
@@ -286,6 +287,25 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     ])
   )
 
+  // Component Identity Knowledge (2026-08-04) — every variant in a category
+  // inherits that category's identity facts (e.g. every Front Placket
+  // variant gets Length/Width/Position/Construction) without needing its own
+  // copy anywhere. Namespaced under the category key so two categories can
+  // never collide on the same fact name inside the shared `garment` bag
+  // (mergeRecordField below resolves same-key collisions to ONE winning
+  // value, which would silently drop one category's identity entirely if
+  // two categories both wrote to, say, a flat `length` key — namespacing
+  // avoids that by construction). Applied after mergeRecordField, not
+  // through it, so it can never be dropped by garment's own priority/Anchor
+  // collision rule (see resolveRecipeConflict) — identity always survives.
+  const componentIdentity: Record<string, unknown> = {}
+  sorted.forEach((entry, index) => {
+    const identity = resolvedComponentKnowledge[index].identity
+    if (Object.keys(identity).length > 0) {
+      componentIdentity[entry.category] = identity
+    }
+  })
+
   // GlobalRenderPolicy overlaps RenderRecipe on exactly 3 fields (camera,
   // pose, lighting) — policy supplies the baseline there and any item's own
   // Render Recipe overrides it key-by-key, since a specific Component
@@ -302,7 +322,7 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     focus: mergeRecordField('focus', sorted),
     fabricBehavior: mergeRecordField('fabricBehavior', sorted),
     visibilityRules: mergeRecordField('visibilityRules', sorted),
-    garment: mergeRecordField('garment', sorted),
+    garment: { ...mergeRecordField('garment', sorted), ...componentIdentity },
     fabricIdentity: mergeRecordField('fabricIdentity', sorted),
     stitching: mergeRecordField('stitching', sorted),
     embroidery: mergeRecordField('embroidery', sorted),
@@ -404,6 +424,32 @@ export function composeRenderRecipeTrace(input: ComposeRenderRecipeInput): Recip
   const trace = {} as RecipeComposerTrace
   RECIPE_RECORD_FIELDS.forEach((field) => {
     trace[field] = traceRecordField(field, sorted)
+  })
+
+  // Component Identity Knowledge (2026-08-04) — mirrors composeRenderRecipe's
+  // own post-merge injection (see that function's own comment) so this trace
+  // stays a faithful account of the real composed output, not an
+  // approximation of it. `resolvedFrom` points at the entry whose category
+  // this identity belongs to — it is synthesized from Component Default
+  // Knowledge, not read off that entry's own recipe.garment, but attributing
+  // it to that entry is the accurate "why is this here" answer for the
+  // debug viewer.
+  sorted.forEach((entry) => {
+    const identity = resolveComponentKnowledge(entry.category, {
+      referenceInstruction: null,
+      lockRules: [],
+      negativeRules: [],
+      identity: {},
+    }).identity
+    if (Object.keys(identity).length > 0) {
+      trace.garment.push({
+        key: entry.category,
+        value: identity,
+        resolvedFrom: toRecipeSource(entry),
+        overriddenBy: null,
+        overriddenSources: [],
+      })
+    }
   })
 
   return trace
