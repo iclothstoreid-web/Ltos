@@ -1,4 +1,5 @@
 import { DEFAULT_LOCK_RULES, DEFAULT_NEGATIVE_RULES } from '@/lib/design/aiDna/types'
+import { resolveComponentKnowledge } from '@/lib/design/componentDefaultKnowledge/resolver'
 import type { GlobalRenderPolicy, MasterRenderRecipe, RecipeSource, RenderRecipeEntry } from './types'
 
 // Recipe Composer Foundation (Sprint AI-05) — real normalize/validate/
@@ -250,11 +251,39 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
   // Master Items are involved. `Set` dedup below makes this behaviorally
   // identical to before: previously every entry's own copy of these same
   // strings collapsed into one anyway.
+  //
+  // Component Default Knowledge layer (infrastructure sprint, 2026-08-04) —
+  // one level more specific than the Engine's global DEFAULT_LOCK_RULES/
+  // DEFAULT_NEGATIVE_RULES above: a per-CATEGORY baseline (Front Placket,
+  // Collar, ...) every variant in that category inherits, with each entry's
+  // own recipe.lockRules/negativeRules as ITS Delta Knowledge on top (Front
+  // Placket -> Hexagon stores only what's specific to Hexagon). Every
+  // category's Component Default Knowledge is empty this sprint (see
+  // componentDefaultKnowledge/registry.ts) — resolveComponentKnowledge
+  // still runs per entry so the merge path is real and ready, but with an
+  // empty base it is a no-op: `entry.recipe.lockRules` passes through
+  // unchanged, same as before this layer existed.
+  const resolvedComponentKnowledge = sorted.map((entry) =>
+    resolveComponentKnowledge(entry.category, {
+      referenceInstruction: null,
+      lockRules: entry.recipe.lockRules,
+      negativeRules: entry.recipe.negativeRules,
+    })
+  )
+
   const negativeRules = Array.from(
-    new Set([...DEFAULT_NEGATIVE_RULES, ...policy.negativeRules, ...sorted.flatMap((entry) => entry.recipe.negativeRules)])
+    new Set([
+      ...DEFAULT_NEGATIVE_RULES,
+      ...policy.negativeRules,
+      ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.negativeRules),
+    ])
   )
   const lockRules = Array.from(
-    new Set([...DEFAULT_LOCK_RULES, ...policy.lockRules, ...sorted.flatMap((entry) => entry.recipe.lockRules)])
+    new Set([
+      ...DEFAULT_LOCK_RULES,
+      ...policy.lockRules,
+      ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.lockRules),
+    ])
   )
 
   // GlobalRenderPolicy overlaps RenderRecipe on exactly 3 fields (camera,
