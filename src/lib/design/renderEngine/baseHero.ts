@@ -15,17 +15,21 @@
 // approval gate, and is never selected per-order — route.ts includes it
 // unconditionally (when set) for every render.
 //
-// No existing upload was available to seed this from: as of this revision,
-// neither live model_thobe row (Saudi Modern, Dubai Kandora Series) has an
-// `ai_dna.metadata.sourceImage` set (both null — the old "Aktifkan Hero
-// Image Internal" flow was never actually completed for either), so there is
-// nothing to migrate without creating a NEW upload, which the brief
-// explicitly forbids ("Tidak ada duplicate upload"). This ships `null` —
-// structurally ready, functionally a no-op — until an owner uploads one real
-// image to Supabase Storage and this constant is pointed at its public URL.
+// No existing upload was available to seed this from at the time this
+// module was written: neither live model_thobe row (Saudi Modern, Dubai
+// Kandora Series) ever had an `ai_dna.metadata.sourceImage` set (both
+// null — the old "Aktifkan Hero Image Internal" flow was never actually
+// completed for either), so there was nothing to migrate without creating a
+// NEW upload, which the brief explicitly forbade ("Tidak ada duplicate
+// upload"). This shipped `null` — structurally ready, functionally a no-op —
+// until an owner uploaded one real image to Supabase Storage and pointed
+// this constant at its public URL.
 //
-// To activate: upload the image to the `master-data-photos` bucket (or a
-// dedicated bucket/path of your choosing) via the Supabase dashboard or CLI,
-// then set GLOBAL_BASE_HERO_IMAGE_URL to its public URL. No other code
-// change is required — route.ts already reads this constant.
-export const GLOBAL_BASE_HERO_IMAGE_URL: string | null = null
+// Activated 2026-08-04 — image uploaded manually (owner, via Supabase
+// Dashboard, not through any app upload flow — no admin UI writes this
+// bucket path) to `master-data-photos/base-foto/base-hero.jpg` (verified via
+// `storage.objects`: 3,447,182 bytes, image/jpeg, matches the local source
+// file byte-for-byte). This is the first and only value this constant has
+// ever held besides `null`.
+export const GLOBAL_BASE_HERO_IMAGE_URL: string | null =
+  'https://vdgkbzpdgmlzyxaiznka.supabase.co/storage/v1/object/public/master-data-photos/base-foto/base-hero.jpg'
