@@ -43,11 +43,15 @@ export interface AiDesignDna {
   // Image mechanism, this is simply the full descriptive text, the role the
   // old narrative fields used to play.
   referenceInstruction: string | null
-  // Positive constraints ("Preserve garment silhouette exactly.") — CRUD +
-  // reorder in the Master Data Editor, seeded from DEFAULT_LOCK_RULES.
+  // Positive constraints beyond the Engine's own DEFAULT_LOCK_RULES (which
+  // Recipe Composer now merges in at compose time, not stored here — Delta
+  // Knowledge decision, 2026-08-04) — CRUD + reorder in the Master Data
+  // Editor. Empty for a component with no override; a category extension
+  // (e.g. MODEL_THOBE_QUALITY_LOCK_RULES) or a genuine per-item custom rule
+  // is the only content that belongs here.
   lockRules: string[]
-  // Negative constraints ("Do not change customer identity.") — CRUD +
-  // reorder in the Master Data Editor, seeded from DEFAULT_NEGATIVE_RULES.
+  // Negative constraints beyond the Engine's own DEFAULT_NEGATIVE_RULES —
+  // same Delta Knowledge treatment as lockRules above.
   negativeRules: string[]
   // Optional admin-facing note (e.g. "why this Lock Rule was added," known
   // render quirks) — never serialized into the GPT payload.
@@ -184,16 +188,33 @@ export const LOOK_CUTTING_FIT_NEGATIVE_RULES: string[] = [
   'Do not modify collar, cuffs, material, color, embroidery, placket, pockets, buttons, or any design element unrelated to garment fit.',
 ]
 
-// Matches the DB column default on design_master_options.ai_dna exactly —
-// every INSERT (through this app or any future one) gets this shape for
-// free at the database level, so no code path can ever create an item
-// without a DNA object (see migration add_ai_design_dna_to_master_options).
+// Engine/Repository split (Delta Knowledge decision, 2026-08-04) — this is
+// now the DELTA-ONLY seed for a freshly created item, not a copy of the
+// Global Default Policy. `lockRules`/`negativeRules` start empty on
+// purpose: DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES stay the single Engine
+// source (consumed once, at compose time, by recipeComposer/composer.ts's
+// composeRenderRecipe — see its own comment), never copied into a row
+// again. A component only ever stores what genuinely differs from that
+// Engine default (a category extension like MODEL_THOBE_QUALITY_LOCK_RULES/
+// LOOK_CUTTING_FIT_LOCK_RULES, or a real per-item override) — masterData.ts's
+// createMasterDataOption spreads this object then layers those extensions
+// straight on top, so it now produces delta-only arrays with no code change
+// of its own required there.
+//
+// NOT the live DB column default (that column predates lockRules/
+// referenceInstruction entirely — `information_schema.columns` shows it
+// still building the old 5-narrative-field shape with `negativeRules: []`
+// and no `lockRules` key at all — a pre-existing staleness this task does
+// not touch, since altering the column default is a schema change and the
+// locked scope forbids that; every insert path that matters (createMasterDataOption)
+// already sends `ai_dna` or a category-specific object explicitly rather than
+// relying on that stale default).
 export const DEFAULT_AI_DESIGN_DNA: AiDesignDna = {
   status: 'pending',
   version: 1,
   referenceInstruction: null,
-  lockRules: [...DEFAULT_LOCK_RULES],
-  negativeRules: [...DEFAULT_NEGATIVE_RULES],
+  lockRules: [],
+  negativeRules: [],
   renderNotes: null,
   placement: null,
   metadata: {

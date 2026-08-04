@@ -1,3 +1,4 @@
+import { DEFAULT_LOCK_RULES, DEFAULT_NEGATIVE_RULES } from '@/lib/design/aiDna/types'
 import type { GlobalRenderPolicy, MasterRenderRecipe, RecipeSource, RenderRecipeEntry } from './types'
 
 // Recipe Composer Foundation (Sprint AI-05) — real normalize/validate/
@@ -238,11 +239,22 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     priority: entry.priority,
   }))
 
+  // Engine Default Policy (Delta Knowledge decision, 2026-08-04) — Identity
+  // Knowledge's DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES used to be copied
+  // into every row's own ai_dna.lockRules/negativeRules (the repository
+  // audit that motivated this change found 94.6%/89.0% of all loaded rule
+  // text was that exact duplicate). Repository rows now store Delta
+  // Knowledge only (empty unless a component has a genuine override); this
+  // is the one place — same merge point GlobalRenderPolicy already used —
+  // where the Engine default is added back in, once, regardless of which
+  // Master Items are involved. `Set` dedup below makes this behaviorally
+  // identical to before: previously every entry's own copy of these same
+  // strings collapsed into one anyway.
   const negativeRules = Array.from(
-    new Set([...policy.negativeRules, ...sorted.flatMap((entry) => entry.recipe.negativeRules)])
+    new Set([...DEFAULT_NEGATIVE_RULES, ...policy.negativeRules, ...sorted.flatMap((entry) => entry.recipe.negativeRules)])
   )
   const lockRules = Array.from(
-    new Set([...policy.lockRules, ...sorted.flatMap((entry) => entry.recipe.lockRules)])
+    new Set([...DEFAULT_LOCK_RULES, ...policy.lockRules, ...sorted.flatMap((entry) => entry.recipe.lockRules)])
   )
 
   // GlobalRenderPolicy overlaps RenderRecipe on exactly 3 fields (camera,
