@@ -44,8 +44,9 @@ import { validateRenderRequest } from '../src/lib/design/promptArchitectureV2/re
 import { getRenderRunMode, isDebugMode } from '../src/lib/design/promptArchitectureV2/debugMode'
 import { generateRegressionReportMarkdown, type ScenarioRunResult } from '../src/lib/design/promptArchitectureV2/regressionReport'
 import type { PromptVersion } from '../src/lib/design/promptArchitectureV2/versions'
-import { composeAiAssets, applyAssetInstructions, validateModelReferenceAvailable } from '../src/lib/design/aiAssetComposer/composer'
+import { composeAiAssets, applyAssetInstructions } from '../src/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '../src/lib/design/capabilityEngine/engine'
+import { GLOBAL_BASE_HERO_IMAGE_URL } from '../src/lib/design/renderEngine/baseHero'
 
 const ROOT = path.resolve(__dirname, '..')
 const RENDER_TESTING_DIR = path.join(ROOT, 'render-testing')
@@ -207,6 +208,9 @@ async function runScenario(
       unresolvedComponents.push({ itemId: selection.componentId as string, category: selection.componentType as string, reason: 'not_found' })
       return
     }
+    // Architecture Lock (2026-08-04) — Model Thobe is catalog-only now,
+    // excluded from DNA resolution entirely (mirrors route.ts exactly).
+    if (option.category === 'model_thobe') return
     const input: DNAResolverInput = { itemId: option.id, category: option.category, aiDna: option.ai_dna, renderRecipe: option.render_recipe }
     const { recipe, ready, errors } = resolveDNA(input)
     if (ready && recipe) {
@@ -220,30 +224,28 @@ async function runScenario(
   const masterRecipe = entries.length > 0 ? composeRenderRecipe({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY }) : null
   const instruction = buildRenderInstruction(masterRecipe)
 
-  const modelThobeEntry = resolved.find(({ option }) => option.category === 'model_thobe')
-  const modelThobeSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'model_thobe')
-  const modelThobeOptionRaw = modelThobeSelection ? (rowsById.get(modelThobeSelection.componentId as string) ?? null) : null
   const collarSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'kerah')
   const collarOptionRaw = collarSelection ? (rowsById.get(collarSelection.componentId as string) ?? null) : null
   const composedAssets = composeAiAssets({
     customerPhotoUrl: customer.photoUrl,
-    modelThobeOption: modelThobeOptionRaw,
     collarOption: collarOptionRaw,
   })
-  const referenceImageUrls = composedAssets.urls
-  const modelReferenceValidation = validateModelReferenceAvailable({ modelThobeOption: modelThobeOptionRaw, composed: composedAssets })
+  // Global Base Hero (Architecture Lock, 2026-08-04) — mirrors route.ts's
+  // insertion exactly.
+  const baseHeroAvailable = GLOBAL_BASE_HERO_IMAGE_URL !== null
+  const referenceImageUrls = GLOBAL_BASE_HERO_IMAGE_URL
+    ? [composedAssets.urls[0], GLOBAL_BASE_HERO_IMAGE_URL, ...composedAssets.urls.slice(1)]
+    : composedAssets.urls
 
   // AI Capability Engine (Sprint AI-R3) — same gate as route.ts/debug route.
-  const modelThobeDnaResult = dnaValidatorResults.find((d) => d.itemId === modelThobeOptionRaw?.id)
-  const otherComponentDnaResults = dnaValidatorResults
-    .filter((d) => d.itemId !== modelThobeOptionRaw?.id)
+  // Architecture Lock (2026-08-04) removed Model Thobe from this input.
+  const componentDnaResults = dnaValidatorResults
+    .filter((d) => d.category !== 'model_thobe')
     .map((d) => ({ itemId: d.itemId, category: d.category, valid: d.valid }))
   const capability = evaluateCapability({
     customerPhotoPresent: !!customer.photoUrl,
-    modelThobeSelected: !!modelThobeOptionRaw,
-    modelThobeDnaValid: modelThobeDnaResult?.valid ?? false,
-    modelReferenceAvailable: modelReferenceValidation.valid,
-    otherComponentDnaResults,
+    baseHeroAvailable,
+    componentDnaResults,
     unresolvedComponents,
   })
 
@@ -268,7 +270,6 @@ async function runScenario(
   const renderRequestValidator = validateRenderRequest({
     customerPhotoUrl: customer.photoUrl,
     referenceImageUrls,
-    modelThobePresent: !!modelThobeEntry,
     prompt,
     usesEdit,
     endpoint: usesEdit ? 'images.edit' : 'images.generate',

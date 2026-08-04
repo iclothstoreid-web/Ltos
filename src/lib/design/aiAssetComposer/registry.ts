@@ -3,29 +3,27 @@ import { REFERENCE_PRIORITY, type ReferenceType, type ReferenceRole } from './ty
 
 // Reference Category Registry (Sprint R-05, Phase 3) — the ONE place a
 // reference-eligible category's type/role/priority/instruction text are
-// declared together. Before this sprint, every one of the 4 implemented
-// categories (Model Thobe/Kerah/Plaket/Saku) was named individually in at
-// least 3 places: composeAiAssets' descriptor-building, referenceBacked
-// Categories' Set-building, and applyAssetInstructions' caveat-appending
-// (all in composer.ts) — plus route.ts's own selection-lookup and asset-
-// instruction-layer construction. Adding a 5th category (Cuff Reference,
-// referenced as a real future item in composer.ts's Phase 6 extension-point
-// comment) meant touching all of those independently, with no compiler
-// check that any of them stayed in sync.
+// declared together. Before Sprint R-05, every implemented category was
+// named individually in at least 3 places: composeAiAssets' descriptor-
+// building, referenceBackedCategories' Set-building, and
+// applyAssetInstructions' caveat-appending (all in composer.ts) — plus
+// route.ts's own selection-lookup and asset-instruction-layer construction.
+// Adding a category meant touching all of those independently, with no
+// compiler check that any of them stayed in sync.
 //
 // Every consumer below now loops over REFERENCE_CATEGORY_REGISTRY instead
 // of naming categories individually — adding a category means adding ONE
 // entry here, nothing else. `idSuffix` is kept stable rather than derived
 // from `category` so existing layerReport ids (Sprint R-04) and any
-// external code matching on `asset_instruction:model` etc. keep working
+// external code matching on `asset_instruction:collar` etc. keep working
 // unchanged — this registry is a pure internal refactor, not a rename.
-
-// The exact instruction GPT Image needs alongside a Model Thobe AI Asset so
-// it doesn't copy that specific reference photo's collar/cuff/pocket/
-// color/fabric onto a customer who chose different DNA for those — this
-// text is what the SILHOUETTE role is FOR (see types.ts).
-export const MODEL_REFERENCE_SILHOUETTE_INSTRUCTION =
-  'The attached reference image is provided ONLY to describe the overall silhouette, garment proportion, garment length, and natural drape of the thobe. Do NOT copy or preserve the collar, cuffs, pockets, placket, embroidery, buttons, fabric texture, or color from the reference image. Those elements are defined separately by the selected Design DNA and must follow the customer\'s chosen configuration. Apply only the overall garment shape from the reference while preserving the customer\'s identity completely.'
+//
+// Architecture Lock (2026-08-04) — the model_thobe entry (MODEL_THOBE type,
+// SILHOUETTE role, MODEL_REFERENCE_SILHOUETTE_INSTRUCTION) that used to be
+// declared here first is REMOVED. Model Thobe no longer contributes any AI
+// Asset — see aiAssetComposer/types.ts's header comment for where that
+// render-quality-anchoring role went (GLOBAL_BASE_HERO_IMAGE_URL, Render
+// Engine ownership, outside this registry).
 
 // The exact instruction GPT Image needs alongside a Collar AI Asset —
 // collar GEOMETRY only, everything else (fabric/color/stitching/lighting/
@@ -57,17 +55,9 @@ export interface ReferenceCategoryDefinition {
 
 // Declared order is preserved everywhere this registry is iterated
 // (composer.ts's caveat-appending, route.ts's layer construction) — same
-// Model > Collar > Plaket > Pocket order the pipeline has always used.
+// Collar > Plaket > Pocket order the pipeline has always used (Model was
+// first before the Architecture Lock revision removed it, see header).
 export const REFERENCE_CATEGORY_REGISTRY: ReferenceCategoryDefinition[] = [
-  {
-    category: 'model_thobe',
-    type: 'MODEL_THOBE',
-    role: 'SILHOUETTE',
-    priority: REFERENCE_PRIORITY.MODEL_THOBE ?? 100,
-    idSuffix: 'model',
-    instructionLabel: 'Model Reference Instruction',
-    instruction: MODEL_REFERENCE_SILHOUETTE_INSTRUCTION,
-  },
   {
     category: 'kerah',
     type: 'COLLAR_REFERENCE',

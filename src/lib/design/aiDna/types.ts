@@ -43,14 +43,14 @@ export interface AiDesignDna {
   // Image mechanism, this is simply the full descriptive text, the role the
   // old narrative fields used to play.
   referenceInstruction: string | null
-  // Positive constraints beyond the Engine's own DEFAULT_LOCK_RULES (which
-  // Recipe Composer now merges in at compose time, not stored here — Delta
-  // Knowledge decision, 2026-08-04) — CRUD + reorder in the Master Data
-  // Editor. Empty for a component with no override; a category extension
-  // (e.g. MODEL_THOBE_QUALITY_LOCK_RULES) or a genuine per-item custom rule
-  // is the only content that belongs here.
+  // Positive constraints beyond the Engine's own Global Render Policy
+  // (renderEngine/globalRenderPolicy.ts, which Recipe Composer merges in at
+  // compose time, not stored here — Delta Knowledge decision, 2026-08-04) —
+  // CRUD + reorder in the Master Data Editor. Empty for a component with no
+  // override; a category extension (e.g. LOOK_CUTTING_FIT_LOCK_RULES below)
+  // or a genuine per-item custom rule is the only content that belongs here.
   lockRules: string[]
-  // Negative constraints beyond the Engine's own DEFAULT_NEGATIVE_RULES —
+  // Negative constraints beyond the Engine's own Global Render Policy —
   // same Delta Knowledge treatment as lockRules above.
   negativeRules: string[]
   // Optional admin-facing note (e.g. "why this Lock Rule was added," known
@@ -60,106 +60,33 @@ export interface AiDesignDna {
   metadata: AiDesignDnaMetadata
 }
 
-// Seed content for a new item's Lock Rules / Negative Rules — also used by
-// the data-cleanup migration to backfill existing rows whose arrays are
-// still empty. An owner can Add/Edit/Delete/Reorder from here via the
-// Master Data Editor; this is only the starting point, not a fixed list.
-// Identity Knowledge only (garment structure/identity preservation) — every
-// category gets this, including Collar/Cuff/Placket/Pocket/Material/Color/
-// Accessory/Embroidery/Handmade Zig-Zag/Look Cutting. Render-quality content
-// does NOT belong here — see MODEL_THOBE_QUALITY_LOCK_RULES below. Look
-// Cutting additionally gets its own Fit Knowledge — see
-// LOOK_CUTTING_FIT_LOCK_RULES below.
-export const DEFAULT_LOCK_RULES: string[] = [
-  'Preserve garment silhouette exactly.',
-  'Preserve garment proportion exactly.',
-  'Preserve garment length exactly.',
-  'Preserve seam alignment.',
-  'Preserve natural drape.',
-  'Preserve natural fold behaviour.',
-  'Preserve component scale.',
-  'Preserve relative placement of every component.',
-  'Preserve garment construction integrity.',
-  'Do not distort garment geometry.',
-  'Do not modify garment structure.',
-  'Keep the reference image as the primary visual source.',
-]
-
-export const DEFAULT_NEGATIVE_RULES: string[] = [
-  'Do not change customer identity.',
-  'Do not change body shape.',
-  'Do not change facial structure.',
-  'Do not change skin tone.',
-  'Do not crop garment.',
-  'Do not change garment silhouette.',
-  'Do not generate additional components.',
-  'Do not remove selected components.',
-  'Do not modify garment proportions.',
-  'Do not alter reference garment structure.',
-  'Do not change perspective unnaturally.',
-  'Do not introduce artifacts.',
-]
-
-// Quality Foundation — belongs ONLY to Base Hero Model (category
-// 'model_thobe'). The Hero Image on Model Thobe is Source of Truth for the
-// whole garment's structure, so it is also the only item whose render
-// quality anchors the entire render (every other category is composited
-// against it, never rendered as a standalone photorealistic subject the
-// same way). Every other category — Kerah, Manset, Plaket, Saku, Material,
-// Warna Material, Aksesori, Bordir, Handmade Zig-Zag — stays Identity
-// Knowledge only (DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES above) and must
-// NOT inherit this block. Look Cutting is the one exception: it stays out of
-// THIS block (Quality Foundation is Base Hero Model-only) but gets its own
-// separate Fit Knowledge block — see LOOK_CUTTING_FIT_LOCK_RULES below.
-// Merged in only by
-// masterData.ts's createMasterDataOption when category === 'model_thobe';
-// never added to DEFAULT_AI_DESIGN_DNA/the DB column default, since that
-// default is category-agnostic and applies to every insert.
-//
-// Authoring discipline for this block and for Model Thobe's
-// `referenceInstruction` free text: describe fabric behaviour, never name a
-// render technique — no "subsurface scattering", no "wet reflection".
-// Specular highlight is only ever written as natural light behaviour on
-// textile (e.g. "soft highlight where light catches the fabric weave"),
-// never as a lighting/shader effect. No marketing language. Reference-First
-// still holds — every rule here constrains how the Hero Image is rendered,
-// it never invents garment content the photo doesn't show.
-export const MODEL_THOBE_QUALITY_LOCK_RULES: string[] = [
-  'Preserve realistic fabric drape.',
-  'Preserve realistic garment behaviour under natural movement and gravity.',
-  'Preserve realistic fabric thickness.',
-  'Preserve realistic fold formation.',
-  'Preserve realistic fabric tension across seams and stress points.',
-  'Preserve clean tailoring lines.',
-  'Preserve sharp construction detail.',
-  'Preserve realistic textile appearance.',
-  'Preserve realistic light interaction on the fabric surface.',
-  'Preserve realistic seam definition.',
-  'Preserve realistic textile texture.',
-  'Preserve proportional garment balance.',
-  'Preserve photorealistic garment appearance.',
-]
-
-export const MODEL_THOBE_QUALITY_NEGATIVE_RULES: string[] = [
-  'Do not render plastic-looking fabric.',
-  'Do not render synthetic glossy surfaces.',
-  'Do not over-smooth textile texture.',
-  'Do not generate unrealistic folds.',
-  'Do not disconnect garment parts.',
-  'Do not distort garment proportions.',
-  'Do not create inconsistent seam alignment.',
-  'Do not hallucinate construction details.',
-  'Do not apply stylized rendering.',
-  'Do not produce a CGI-like appearance.',
-]
+// Render Engine Knowledge Refactor (2026-08-04) — this file used to define
+// DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES here as "Identity Knowledge,"
+// merged by recipeComposer/composer.ts alongside DEFAULT_GLOBAL_RENDER_POLICY
+// (recipeComposer/types.ts) — two separate Engine-default sources, both
+// unconditionally merged into every render, with real content overlap (both
+// carried garment-geometry/structure constraints in different wording) and
+// several lines that duplicated Identity Lock's own template verbatim ("Do
+// not change customer identity/body shape/facial structure/skin tone/
+// perspective" — see promptArchitectureV2/layers.ts's LAYER1_IDENTITY_
+// TEMPLATE, which already states all of this and is not touched by this
+// refactor). Both retired from here: their real (non-duplicate) content is
+// now Global Render Policy's job, consolidated into ONE Engine source —
+// see renderEngine/globalRenderPolicy.ts. Composer.ts's merge now reads
+// only `policy.lockRules`/`policy.negativeRules`, no second source. Quality-
+// target content (what used to be called "Quality Foundation" both here and
+// in recipeComposer/types.ts) now lives in renderEngine/qualityFoundation.ts
+// — a third, distinct Engine responsibility, never mixed with the other two
+// again. Look Cutting's own Fit Knowledge extension (LOOK_CUTTING_FIT_LOCK_
+// RULES below) is unaffected — it was always a category-specific delta on
+// top of the Engine default, not part of the Engine default itself.
 
 // Fit Knowledge — belongs ONLY to category 'look_cutting'. Look Cutting
 // controls ONLY how the garment fits and drapes on the customer's EXISTING
 // body (silhouette, ease, drape, fold, tension) — it must never influence
 // body shape or any other design component (Kerah, Manset, Plaket, Saku,
 // Material, Warna, Aksesori, Bordir, Handmade Zig-Zag). Merged in only by
-// masterData.ts's createMasterDataOption when category === 'look_cutting',
-// same mechanism as MODEL_THOBE_QUALITY_LOCK_RULES/_NEGATIVE_RULES above —
+// masterData.ts's createMasterDataOption when category === 'look_cutting' —
 // never added to DEFAULT_AI_DESIGN_DNA/the DB column default, since that
 // default is category-agnostic and applies to every insert.
 //
@@ -191,11 +118,11 @@ export const LOOK_CUTTING_FIT_NEGATIVE_RULES: string[] = [
 // Engine/Repository split (Delta Knowledge decision, 2026-08-04) — this is
 // now the DELTA-ONLY seed for a freshly created item, not a copy of the
 // Global Default Policy. `lockRules`/`negativeRules` start empty on
-// purpose: DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES stay the single Engine
-// source (consumed once, at compose time, by recipeComposer/composer.ts's
-// composeRenderRecipe — see its own comment), never copied into a row
-// again. A component only ever stores what genuinely differs from that
-// Engine default (a category extension like MODEL_THOBE_QUALITY_LOCK_RULES/
+// purpose: Global Render Policy (renderEngine/globalRenderPolicy.ts) stays
+// the single Engine source (consumed once, at compose time, by
+// recipeComposer/composer.ts's composeRenderRecipe — see its own comment),
+// never copied into a row again. A component only ever stores what
+// genuinely differs from that Engine default (a category extension like
 // LOOK_CUTTING_FIT_LOCK_RULES, or a real per-item override) — masterData.ts's
 // createMasterDataOption spreads this object then layers those extensions
 // straight on top, so it now produces delta-only arrays with no code change

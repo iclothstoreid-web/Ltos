@@ -92,7 +92,7 @@ interface DebugResponse {
       included: boolean
       framing: { ok: true; framing: 'full_body' | 'half_body' | 'unclear'; reasoning: string } | { ok: false; error: string } | null
     }
-    modelThobeReference: { itemId: string | null; name: string | null; url: string | null; included: boolean; note: string | null }
+    baseHeroModel: { url: string | null; configured: boolean; included: boolean; note: string | null }
     excludedByDesign: string[]
   }
   aiResponse: {
@@ -175,7 +175,7 @@ interface DebugResponse {
     missingDNA: string[]
     strategy: {
       includeCustomerPhoto: boolean
-      includeModelReference: boolean
+      includeBaseHero: boolean
       includeDna: boolean
       includeIdentityLock: boolean
       sendToOpenAI: boolean
@@ -398,7 +398,7 @@ export default function RenderDebugPage() {
                 )}
                 <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-600">
                   <span>Customer Photo: {result.capability.strategy.includeCustomerPhoto ? '✅' : '—'}</span>
-                  <span>Model Reference: {result.capability.strategy.includeModelReference ? '✅' : '—'}</span>
+                  <span>Base Hero Model: {result.capability.strategy.includeBaseHero ? '✅' : '—'}</span>
                   <span>DNA: {result.capability.strategy.includeDna ? '✅' : '—'}</span>
                   <span>Identity Lock: {result.capability.strategy.includeIdentityLock ? '✅' : '—'}</span>
                 </div>
@@ -762,20 +762,20 @@ export default function RenderDebugPage() {
                 </div>
               )}
               <div>
-                Model Thobe Reference:{' '}
-                <StatusBadge status={result.referenceImages.modelThobeReference.included ? 'PASS' : 'INFO'} />{' '}
-                {result.referenceImages.modelThobeReference.name ?? '—'}
+                Base Hero Model (Global Canvas):{' '}
+                <StatusBadge status={result.referenceImages.baseHeroModel.included ? 'PASS' : 'INFO'} />{' '}
+                {result.referenceImages.baseHeroModel.configured ? 'configured' : 'not configured'}
               </div>
-              {result.referenceImages.modelThobeReference.url && (
+              {result.referenceImages.baseHeroModel.url && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={result.referenceImages.modelThobeReference.url}
-                  alt="Model Thobe reference"
+                  src={result.referenceImages.baseHeroModel.url}
+                  alt="Base Hero Model"
                   className="h-32 rounded-lg border object-cover"
                 />
               )}
-              {result.referenceImages.modelThobeReference.note && (
-                <div className="text-amber-700">{result.referenceImages.modelThobeReference.note}</div>
+              {result.referenceImages.baseHeroModel.note && (
+                <div className="text-amber-700">{result.referenceImages.baseHeroModel.note}</div>
               )}
               <div className="text-gray-500">
                 Excluded by design (text-only, tidak pernah jadi image input): {result.referenceImages.excludedByDesign.join(', ') || '—'}

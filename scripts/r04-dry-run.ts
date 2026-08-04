@@ -39,7 +39,6 @@ import { DEFAULT_RENDER_RECIPE } from '../src/lib/design/renderRecipe/types'
 import type { MasterDataCategory } from '../src/lib/design/masterData'
 import { LAYER1_IDENTITY_TEMPLATE } from '../src/lib/design/promptArchitectureV2/layers'
 import {
-  MODEL_REFERENCE_SILHOUETTE_INSTRUCTION,
   COLLAR_REFERENCE_SHAPE_INSTRUCTION,
   PLAKET_REFERENCE_SHAPE_INSTRUCTION,
   POCKET_REFERENCE_SHAPE_INSTRUCTION,
@@ -329,8 +328,9 @@ const masterRecipe: MasterRenderRecipe = {
   composedAt: new Date().toISOString(),
 }
 
-const ALL_ASSET_INSTRUCTIONS: Record<'model' | 'collar' | 'plaket' | 'pocket', AssetInstructionLayer> = {
-  model: { id: 'asset_instruction:model', label: 'Model Reference Instruction', content: MODEL_REFERENCE_SILHOUETTE_INSTRUCTION },
+// Architecture Lock (2026-08-04) — 'model' key removed; Model Thobe no
+// longer contributes an asset instruction (see aiAssetComposer/registry.ts).
+const ALL_ASSET_INSTRUCTIONS: Record<'collar' | 'plaket' | 'pocket', AssetInstructionLayer> = {
   collar: { id: 'asset_instruction:collar', label: 'Collar Reference Instruction', content: COLLAR_REFERENCE_SHAPE_INSTRUCTION },
   plaket: { id: 'asset_instruction:plaket', label: 'Plaket Reference Instruction', content: PLAKET_REFERENCE_SHAPE_INSTRUCTION },
   pocket: { id: 'asset_instruction:pocket', label: 'Pocket Reference Instruction', content: POCKET_REFERENCE_SHAPE_INSTRUCTION },
@@ -404,9 +404,9 @@ const before = runScenario('SCENARIO A — BEFORE (no Hero Image active, full fa
 // guarantee, not a bug.
 // ---------------------------------------------------------------------
 const after = runScenario(
-  'SCENARIO B — AFTER (Model Thobe + Kerah + Plaket + Saku all Hero-Image-backed)',
-  new Set<MasterDataCategory>(['model_thobe', 'kerah', 'plaket', 'saku']),
-  [ALL_ASSET_INSTRUCTIONS.model, ALL_ASSET_INSTRUCTIONS.collar, ALL_ASSET_INSTRUCTIONS.plaket, ALL_ASSET_INSTRUCTIONS.pocket],
+  'SCENARIO B — AFTER (Kerah + Plaket + Saku all Hero-Image-backed; Model Thobe catalog-only, Architecture Lock 2026-08-04)',
+  new Set<MasterDataCategory>(['kerah', 'plaket', 'saku']),
+  [ALL_ASSET_INSTRUCTIONS.collar, ALL_ASSET_INSTRUCTIONS.plaket, ALL_ASSET_INSTRUCTIONS.pocket],
 )
 
 if (before.ok && after.ok) {

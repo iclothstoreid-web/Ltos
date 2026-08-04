@@ -16,10 +16,14 @@
 // as classifyCustomerPhotoFraming — an AI call, opt-in, informational only).
 // Deterministically, the only thing checkable without AI is whether the
 // full-body/no-crop framing INSTRUCTION actually made it into the outgoing
-// prompt text — i.e. whether DEFAULT_GLOBAL_RENDER_POLICY's camera/quality
-// locks survived Prompt Builder -> Serializer/Compression instead of being
-// silently dropped (which is exactly the bug class Sprint AI-R2 fixed once
-// already). That is what `bodyFramingLockPresent` checks below.
+// prompt text — i.e. whether Global Render Recipe's Visibility content
+// (renderEngine/globalRenderRecipe.ts's GLOBAL_RENDER_RECIPE_VISIBILITY,
+// merged into DEFAULT_GLOBAL_RENDER_POLICY.visibilityRules,
+// recipeComposer/types.ts — split out from Camera by this same refactor's
+// review revision, 2026-08-04) survived Prompt Builder -> Serializer/
+// Compression instead of being silently dropped (which is exactly the bug
+// class Sprint AI-R2 fixed once already). That is what
+// `bodyFramingLockPresent` checks below.
 //
 // Sprint AI-R3 (AI Capability Engine) update: this module used to also gate
 // on Model Reference availability (added in the prior "Reference DNA
@@ -31,6 +35,12 @@
 // real, well-formed request to OpenAI (non-empty prompt, no serialization
 // bugs, correct model/endpoint/fidelity/count) — those are request-shape
 // correctness, not render-quality grading, so they still block on FAIL.
+//
+// Architecture Lock (2026-08-04) — the `model_thobe_present` check that
+// used to sit here is REMOVED for the same reason: Model Thobe is
+// catalog-only now (thumbnail/name/description/selling point), no longer
+// an Anchor Prompt Assembly requires. Its presence or absence has no
+// bearing on request correctness anymore.
 
 export interface RenderRequestValidatorCheck {
   id: string
@@ -48,19 +58,29 @@ export interface RenderRequestValidatorResult {
 export interface RenderRequestValidatorInput {
   customerPhotoUrl: string | null | undefined
   referenceImageUrls: string[]
-  modelThobePresent: boolean
   prompt: string | null | undefined
   usesEdit: boolean
   endpoint: string
   model: string
   imageCount: number
   /** Substrings expected to survive into the final prompt if the full-body/
-   *  identity lock text made it through. Defaults to the exact phrases
-   *  DEFAULT_GLOBAL_RENDER_POLICY (recipeComposer/types.ts) sets. */
+   *  no-crop framing text made it through. Defaults to the exact phrases
+   *  Global Render Recipe (renderEngine/globalRenderRecipe.ts) sets on
+   *  DEFAULT_GLOBAL_RENDER_POLICY.visibilityRules (recipeComposer/types.ts —
+   *  moved off `.camera` by this same refactor's review revision, since
+   *  Camera and Visibility are now separate fields with separate
+   *  responsibility). Render Engine Knowledge Refactor (2026-08-04) — the
+   *  previous default
+   *  ('full body', 'locked') checked 'locked' against the old
+   *  `quality.lock: '...identity and pose locked...'` text, which was
+   *  itself a duplicate of Identity Lock's own template and has been
+   *  retired (see aiDna/types.ts). This check's real purpose per the
+   *  comment above is full-body/no-crop framing specifically, so both
+   *  substrings now check that framing text directly. */
   framingLockSubstrings?: string[]
 }
 
-const DEFAULT_FRAMING_LOCK_SUBSTRINGS = ['full body', 'locked']
+const DEFAULT_FRAMING_LOCK_SUBSTRINGS = ['full body', 'no crop']
 
 function containsLiteral(text: string, literal: string): boolean {
   return new RegExp(`\\b${literal}\\b`, 'i').test(text)
@@ -82,12 +102,6 @@ export function validateRenderRequest(input: RenderRequestValidatorInput): Rende
       label: 'Reference image ada',
       status: input.referenceImageUrls.length > 0 ? 'PASS' : 'FAIL',
       reason: `${input.referenceImageUrls.length} reference image(s).`,
-    },
-    {
-      id: 'model_thobe_present',
-      label: 'Model Thobe ada',
-      status: input.modelThobePresent ? 'PASS' : 'FAIL',
-      reason: input.modelThobePresent ? 'Model Thobe (Anchor) ada di selection.' : 'Tidak ada komponen model_thobe.',
     },
     {
       id: 'prompt_not_empty',

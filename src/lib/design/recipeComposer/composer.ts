@@ -1,4 +1,3 @@
-import { DEFAULT_LOCK_RULES, DEFAULT_NEGATIVE_RULES } from '@/lib/design/aiDna/types'
 import { resolveComponentKnowledge } from '@/lib/design/componentDefaultKnowledge/resolver'
 import type { GlobalRenderPolicy, MasterRenderRecipe, RecipeSource, RenderRecipeEntry } from './types'
 
@@ -240,29 +239,35 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     priority: entry.priority,
   }))
 
-  // Engine Default Policy (Delta Knowledge decision, 2026-08-04) — Identity
-  // Knowledge's DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES used to be copied
-  // into every row's own ai_dna.lockRules/negativeRules (the repository
-  // audit that motivated this change found 94.6%/89.0% of all loaded rule
-  // text was that exact duplicate). Repository rows now store Delta
-  // Knowledge only (empty unless a component has a genuine override); this
-  // is the one place — same merge point GlobalRenderPolicy already used —
-  // where the Engine default is added back in, once, regardless of which
-  // Master Items are involved. `Set` dedup below makes this behaviorally
-  // identical to before: previously every entry's own copy of these same
-  // strings collapsed into one anyway.
+  // Engine Default Policy (Delta Knowledge decision, 2026-08-04; Render
+  // Engine Knowledge Refactor, same day) — Identity Knowledge's rule set
+  // used to be copied into every row's own ai_dna.lockRules/negativeRules
+  // (the repository audit that motivated the Delta Knowledge decision found
+  // 94.6%/89.0% of all loaded rule text was that exact duplicate).
+  // Repository rows now store Delta Knowledge only (empty unless a
+  // component has a genuine override); `policy.lockRules`/`policy.
+  // negativeRules` (DEFAULT_GLOBAL_RENDER_POLICY, recipeComposer/types.ts)
+  // is the Engine's ONE default source — Global Render Policy
+  // (renderEngine/globalRenderPolicy.ts) is what actually populates it. A
+  // second, separate Engine-default array used to exist here too
+  // (aiDna/types.ts's DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES) — retired
+  // by the Render Engine Knowledge Refactor specifically because two
+  // Engine-level sources both merging unconditionally into every render is
+  // the same "hides a duplicate the Set silently absorbs" problem the
+  // Delta Knowledge decision fixed for per-item rows; `Set` dedup below is
+  // unchanged, but now dedupes against only ONE Engine source, not two.
   //
   // Component Default Knowledge layer (infrastructure sprint, 2026-08-04) —
-  // one level more specific than the Engine's global DEFAULT_LOCK_RULES/
-  // DEFAULT_NEGATIVE_RULES above: a per-CATEGORY baseline (Front Placket,
-  // Collar, ...) every variant in that category inherits, with each entry's
-  // own recipe.lockRules/negativeRules as ITS Delta Knowledge on top (Front
-  // Placket -> Hexagon stores only what's specific to Hexagon). Every
-  // category's Component Default Knowledge is empty this sprint (see
-  // componentDefaultKnowledge/registry.ts) — resolveComponentKnowledge
-  // still runs per entry so the merge path is real and ready, but with an
-  // empty base it is a no-op: `entry.recipe.lockRules` passes through
-  // unchanged, same as before this layer existed.
+  // one level more specific than the Engine's global policy above: a
+  // per-CATEGORY baseline (Front Placket, Collar, ...) every variant in
+  // that category inherits, with each entry's own recipe.lockRules/
+  // negativeRules as ITS Delta Knowledge on top (Front Placket -> Hexagon
+  // stores only what's specific to Hexagon). Every category's Component
+  // Default Knowledge is empty this sprint (see componentDefaultKnowledge/
+  // registry.ts) — resolveComponentKnowledge still runs per entry so the
+  // merge path is real and ready, but with an empty base it is a no-op:
+  // `entry.recipe.lockRules` passes through unchanged, same as before this
+  // layer existed.
   const resolvedComponentKnowledge = sorted.map((entry) =>
     resolveComponentKnowledge(entry.category, {
       referenceInstruction: null,
@@ -273,18 +278,10 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
   )
 
   const negativeRules = Array.from(
-    new Set([
-      ...DEFAULT_NEGATIVE_RULES,
-      ...policy.negativeRules,
-      ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.negativeRules),
-    ])
+    new Set([...policy.negativeRules, ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.negativeRules)])
   )
   const lockRules = Array.from(
-    new Set([
-      ...DEFAULT_LOCK_RULES,
-      ...policy.lockRules,
-      ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.lockRules),
-    ])
+    new Set([...policy.lockRules, ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.lockRules)])
   )
 
   // Component Identity Knowledge (2026-08-04) — every variant in a category
@@ -306,22 +303,27 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     }
   })
 
-  // GlobalRenderPolicy overlaps RenderRecipe on exactly 3 fields (camera,
-  // pose, lighting) — policy supplies the baseline there and any item's own
-  // Render Recipe overrides it key-by-key, since a specific Component
-  // Recipe is more authoritative than the global default. Composition/
-  // focus/fabricBehavior/visibilityRules/garment/fabricIdentity/stitching/
-  // embroidery have no policy equivalent (not on GlobalRenderPolicy at
-  // all), so they come only from entries. Background/quality/style have no
-  // RenderRecipe equivalent, so they come only from policy.
+  // GlobalRenderPolicy overlaps RenderRecipe on 5 fields now (camera, pose,
+  // lighting, composition, visibilityRules — extended from 3 to 5 by the
+  // Render Engine Knowledge Refactor's review revision, 2026-08-04, so
+  // Global Render Recipe's Composition/Visibility content has a field to
+  // reach: see recipeComposer/types.ts's GlobalRenderPolicy interface) —
+  // policy supplies the baseline there and any item's own Render Recipe
+  // overrides it key-by-key, since a specific Component Recipe is more
+  // authoritative than the global default. Same merge shape as camera/
+  // pose/lighting always used, nothing new invented. Focus/fabricBehavior/
+  // garment/fabricIdentity/stitching/embroidery still have no policy
+  // equivalent (not on GlobalRenderPolicy at all), so they come only from
+  // entries. Background/quality/style have no RenderRecipe equivalent, so
+  // they come only from policy.
   return {
     camera: { ...normalizeRecord(policy.camera), ...mergeRecordField('camera', sorted) },
     pose: { ...normalizeRecord(policy.pose), ...mergeRecordField('pose', sorted) },
     lighting: { ...normalizeRecord(policy.lighting), ...mergeRecordField('lighting', sorted) },
-    composition: mergeRecordField('composition', sorted),
+    composition: { ...normalizeRecord(policy.composition), ...mergeRecordField('composition', sorted) },
     focus: mergeRecordField('focus', sorted),
     fabricBehavior: mergeRecordField('fabricBehavior', sorted),
-    visibilityRules: mergeRecordField('visibilityRules', sorted),
+    visibilityRules: { ...normalizeRecord(policy.visibilityRules), ...mergeRecordField('visibilityRules', sorted) },
     garment: { ...mergeRecordField('garment', sorted), ...componentIdentity },
     fabricIdentity: mergeRecordField('fabricIdentity', sorted),
     stitching: mergeRecordField('stitching', sorted),

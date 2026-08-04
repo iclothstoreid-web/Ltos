@@ -27,10 +27,15 @@ export const CAPABILITY_STARS: Record<CapabilityMode, string> = {
 // a permanent template unrelated to capability grading, so it stays `true`
 // whenever a render is attempted at all (every mode except BLOCKED); this
 // sprint's brief never asks to weaken identity protection at lower quality
-// tiers, only to stop hard-failing on a missing Model Reference/partial DNA.
+// tiers, only to stop hard-failing on a missing reference/partial DNA.
+//
+// `includeModelReference` renamed to `includeBaseHero` (Architecture Lock,
+// 2026-08-04) — Model Thobe no longer contributes a reference image; the
+// render-quality-anchoring role is now GLOBAL_BASE_HERO_IMAGE_URL
+// (renderEngine/baseHero.ts), a Render Engine singleton.
 export interface RenderStrategy {
   includeCustomerPhoto: boolean
-  includeModelReference: boolean
+  includeBaseHero: boolean
   includeDna: boolean
   includeIdentityLock: boolean
   sendToOpenAI: boolean
@@ -44,9 +49,11 @@ export interface CapabilityResult {
   missingReferences: string[]
   missingDNA: string[]
   strategy: RenderStrategy
-  /** Non-null only when mode === 'BLOCKED' — the one of 3 conditions that
-   *  tripped it (Customer Photo / Model Thobe not selected / Anchor DNA
-   *  empty). This is now the ONLY thing allowed to stop a render before
-   *  OpenAI, per Phase 4 of the brief. */
+  /** Non-null only when mode === 'BLOCKED' — the one of 2 conditions that
+   *  tripped it (Customer Photo missing / a selected component's DNA could
+   *  not be resolved). Architecture Lock (2026-08-04) removed the old
+   *  Model-Thobe-Anchor-specific conditions — Model Thobe no longer
+   *  contributes DNA, so it can no longer block a render either; this is
+   *  the ONLY thing allowed to stop a render before OpenAI. */
   blockedReason: string | null
 }

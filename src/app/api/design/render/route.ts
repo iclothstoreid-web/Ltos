@@ -14,13 +14,13 @@ import { DEFAULT_MODEL } from '@/lib/ai/services/image'
 import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '@/lib/ai/renderSession/service'
 import {
   composeAiAssets,
-  validateModelReferenceAvailable,
   validateCollarReference,
   validatePlaketReference,
   validatePocketReference,
   referenceBackedCategories,
 } from '@/lib/design/aiAssetComposer/composer'
 import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
+import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
 import type { AssetInstructionLayer } from '@/lib/design/promptBuilder/compression'
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
@@ -309,6 +309,20 @@ export async function POST(req: NextRequest) {
         return
       }
 
+      // Architecture Lock (2026-08-04) — Model Thobe is catalog-only now
+      // (thumbnail/name/description/selling point). It never contributes
+      // Hero Image, Reference Instruction, Lock Rules, or Negative Rules to
+      // Prompt Assembly, so it's excluded from DNA resolution entirely here
+      // — never resolved, never pushed to `resolved` (so it never reaches
+      // Recipe Composer's `entries`), and never a possible
+      // `componentsMissing`/`unresolvedComponents` entry (so a pending/
+      // invalid Model Thobe DNA can no longer block a render either — see
+      // capabilityEngine/engine.ts).
+      if (option.category === 'model_thobe') {
+        debugLog(`  ├─ ${selection.componentType} → "${option.name}" [category=model_thobe] — catalog-only, excluded from Prompt Assembly`)
+        return
+      }
+
       debugLog(`  ├─ ${selection.componentType} → "${option.name}" [category=${option.category}]`)
       debugLog(`  │    ai_dna.status=${option.ai_dna.status}  render_recipe.status=${option.render_recipe.status}`)
 
@@ -340,14 +354,8 @@ export async function POST(req: NextRequest) {
   // silently continues past — see the module doc comment on
   // EvaluateCapabilityInput.unresolvedComponents.
   // ---------------------------------------------------------------------
-  const modelThobeSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'model_thobe')
-  const modelThobeOptionRaw = modelThobeSelection ? (rowsById.get(modelThobeSelection.componentId) ?? null) : null
-  const modelThobeDnaValidation = modelThobeOptionRaw
-    ? validateComponentDna({ itemId: modelThobeOptionRaw.id, category: modelThobeOptionRaw.category, aiDna: modelThobeOptionRaw.ai_dna })
-    : null
-
-  const otherComponentDnaResults = componentSelections
-    .filter((s) => s.componentId !== modelThobeSelection?.componentId)
+  const componentDnaResults = componentSelections
+    .filter((s) => rowsById.get(s.componentId)?.category !== 'model_thobe')
     .map((s) => rowsById.get(s.componentId))
     .filter((option): option is MasterDataOption => !!option)
     .map((option) => {
@@ -356,22 +364,17 @@ export async function POST(req: NextRequest) {
     })
 
   // AI Asset Library — kerah (Collar), plaket (Placket), and saku (Pocket)
-  // all reuse the same "found regardless of resolve success" raw lookup as
-  // Model Thobe above, since each of these references is optional
+  // each reuse the same "found regardless of resolve success" raw lookup
   // (validateCollarReference/validatePlaketReference/validatePocketReference
   // never block a render — Sprint AI Stability Phase 2 extended Plaket/
   // Pocket onto the exact mechanism Collar already used).
   //
   // Sprint R-05 (Phase 3) — loops over REFERENCE_CATEGORY_REGISTRY instead
-  // of one hardcoded `find()` block per category; model_thobe's own lookup
-  // stays a named variable above since `modelThobeSelection` (not just its
-  // resolved option) is read again by `otherComponentDnaResults`.
+  // of one hardcoded `find()` block per category. Model Thobe no longer has
+  // an entry in that registry (Architecture Lock, 2026-08-04), so this loop
+  // no longer needs a model_thobe special case at all.
   const referenceOptionByCategory = new Map<string, MasterDataOption | null>()
   REFERENCE_CATEGORY_REGISTRY.forEach((def) => {
-    if (def.category === 'model_thobe') {
-      referenceOptionByCategory.set(def.category, modelThobeOptionRaw)
-      return
-    }
     const selection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === def.category)
     referenceOptionByCategory.set(def.category, selection ? (rowsById.get(selection.componentId) ?? null) : null)
   })
@@ -382,24 +385,38 @@ export async function POST(req: NextRequest) {
   const composedAssets = profiler.mark('asset_composer', () =>
     composeAiAssets({
       customerPhotoUrl,
-      modelThobeOption: modelThobeOptionRaw,
       collarOption: collarOptionRaw,
       plaketOption: plaketOptionRaw,
       pocketOption: pocketOptionRaw,
     }),
   )
 
+  // Global Base Hero (Architecture Lock, 2026-08-04) — the sole Global
+  // Canvas owned by the Render Engine, always included when configured,
+  // independent of which components were selected. composeAiAssets itself
+  // is untouched; this augments its output only, inserted right after the
+  // customer photo and before every AI-Asset-Composer-produced reference,
+  // per the locked pipeline order (Customer Photo + Base Hero Model +
+  // Component Identity Knowledge + Component Variant Knowledge + Material +
+  // Color). No-op while renderEngine/baseHero.ts's constant is null (no
+  // image has been uploaded yet).
+  const baseHeroAvailable = GLOBAL_BASE_HERO_IMAGE_URL !== null
+  const referenceImageUrls = GLOBAL_BASE_HERO_IMAGE_URL
+    ? [composedAssets.urls[0], GLOBAL_BASE_HERO_IMAGE_URL, ...composedAssets.urls.slice(1)]
+    : composedAssets.urls
+
   // Reference Image diagnostics (Sprint PR-01, P6; extended Sprint AI
-  // Stability Phase 2) — validateModelReferenceAvailable/
-  // validateCollarReference/validatePlaketReference/validatePocketReference
-  // already existed (or now mirror what already existed) but were never
-  // called anywhere in production; wiring them in is what turns "reference
-  // image silently omitted" into a reported reason.
-  const modelReferenceStatus = validateModelReferenceAvailable({ modelThobeOption: modelThobeOptionRaw, composed: composedAssets })
+  // Stability Phase 2) — validateCollarReference/validatePlaketReference/
+  // validatePocketReference already existed (or now mirror what already
+  // existed) but were never called anywhere in production; wiring them in
+  // is what turns "reference image silently omitted" into a reported
+  // reason. Model Reference's equivalent diagnostic is gone along with the
+  // concept itself — Base Hero availability is just `baseHeroAvailable`
+  // above, a plain boolean, since it isn't tied to any MasterDataOption.
   const collarReferenceStatus = validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
   const plaketReferenceStatus = validatePlaketReference({ plaketOption: plaketOptionRaw, composed: composedAssets })
   const pocketReferenceStatus = validatePocketReference({ pocketOption: pocketOptionRaw, composed: composedAssets })
-  debugLog(`Model Reference: ${modelReferenceStatus.valid ? '✅' : '—'} ${modelReferenceStatus.reason}`)
+  debugLog(`Base Hero Model: ${baseHeroAvailable ? '✅ configured' : '— not configured (renderEngine/baseHero.ts)'}`)
   debugLog(`Collar Reference: ${collarReferenceStatus.valid ? '✅' : '—'} ${collarReferenceStatus.reason}`)
   debugLog(`Plaket Reference: ${plaketReferenceStatus.valid ? '✅' : '—'} ${plaketReferenceStatus.reason}`)
   debugLog(`Pocket Reference: ${pocketReferenceStatus.valid ? '✅' : '—'} ${pocketReferenceStatus.reason}`)
@@ -423,10 +440,8 @@ export async function POST(req: NextRequest) {
   const capability = profiler.mark('capability_engine', () =>
     evaluateCapability({
       customerPhotoPresent: !!customerPhotoUrl,
-      modelThobeSelected: !!modelThobeOptionRaw,
-      modelThobeDnaValid: modelThobeDnaValidation?.valid ?? false,
-      modelReferenceAvailable: !!composedAssets.modelReference,
-      otherComponentDnaResults,
+      baseHeroAvailable,
+      componentDnaResults,
       unresolvedComponents,
     }),
   )
@@ -435,11 +450,11 @@ export async function POST(req: NextRequest) {
   debugLog(`Mode: ${capability.mode} | Score: ${capability.capabilityScore}% | Quality: ${capability.qualityLevel}/5`)
   debugLog(`Warnings: [${capability.warnings.join(' | ') || 'none'}]`)
 
-  // Fail Fast (P3/P8): a selected component that never resolved, an invalid
-  // Model Thobe DNA, a missing Model Thobe, or a missing Customer Photo are
-  // now the ONLY conditions allowed to stop a render before OpenAI — but
-  // unlike before Sprint PR-01, "a selected component never resolved" is
-  // one of them. No more rendering ahead with a silently-dropped component.
+  // Fail Fast (P3/P8): a selected component that never resolved, or a
+  // missing Customer Photo, are now the ONLY conditions allowed to stop a
+  // render before OpenAI (Architecture Lock, 2026-08-04, removed the old
+  // Model-Thobe-Anchor conditions — see capabilityEngine/engine.ts). No
+  // more rendering ahead with a silently-dropped component.
   if (capability.mode === 'BLOCKED') {
     debugLog(`  ❌ BLOCKED — ${capability.blockedReason}`)
     outcome = {
@@ -463,7 +478,7 @@ export async function POST(req: NextRequest) {
   // download with those CPU-bound stages instead of paying for both in
   // sequence (previously: image.ts only started this fetch AFTER prompt
   // compression fully finished).
-  const referenceImagesPromise = profiler.markAsync('reference_image_fetch', () => prefetchReferenceImages(composedAssets.urls))
+  const referenceImagesPromise = profiler.markAsync('reference_image_fetch', () => prefetchReferenceImages(referenceImageUrls))
   // Suppress Node's "unhandled promise rejection" warning for the case where
   // an earlier stage below returns/throws before this is ever awaited (e.g.
   // Prompt Compression rejects the render) — the real rejection is still
@@ -514,12 +529,12 @@ export async function POST(req: NextRequest) {
   }
 
   // AI Asset Composer already ran (STAGE 2.5, alongside the Capability
-  // Engine) — reused here, not recomputed. `referenceImageUrls` naturally
-  // reflects capability.strategy.includeModelReference: composeAiAssets
-  // only includes the Model Reference URL when one was actually approved
-  // and active, so a HIGH/STANDARD/LIMITED render simply omits it instead
-  // of failing.
-  const referenceImageUrls = composedAssets.urls
+  // Engine) — reused here, not recomputed. `referenceImageUrls` (computed
+  // above, right after composedAssets) naturally reflects
+  // capability.strategy.includeBaseHero: the Global Base Hero slot is
+  // included whenever GLOBAL_BASE_HERO_IMAGE_URL is configured, independent
+  // of Collar/Plaket/Pocket AI Asset availability, which composeAiAssets
+  // still gates per-item exactly as before.
 
   logStage('🔵', 'STAGE 5: PROMPT SERIALIZER (uncompressed, diagnostic only)')
   // Sprint O.1 (Task 3, Audit Duplicate Work) — this uncompressed
@@ -595,19 +610,33 @@ export async function POST(req: NextRequest) {
   }
 
   // Phase 5 (Sprint PR-04, extended Sprint R-04) — final safety net before
-  // the OpenAI call. Identity/Negative Rules/Model Thobe/Material/Material
-  // Color are always required once Capability Engine hasn't already blocked
-  // the render; Look Cutting and each AI Asset Instruction are only
-  // required when applicable to THIS request (Look Cutting is a legitimate
-  // "(None)" optional field — design-studio/types.ts's OPTIONAL_FIELDS; an
-  // Asset Instruction is only meaningful when its reference was actually
-  // composed in — see composedAssets above).
+  // the OpenAI call. Identity/Negative Rules/Lock Rules/Quality Foundation/
+  // Global Render Recipe/Material/Material Color are always required once
+  // Capability Engine hasn't already blocked the render; Look Cutting and
+  // each AI Asset Instruction are only required when applicable to THIS
+  // request (Look Cutting is a legitimate "(None)" optional field —
+  // design-studio/types.ts's OPTIONAL_FIELDS; an Asset Instruction is only
+  // meaningful when its reference was actually composed in — see
+  // composedAssets above).
+  // Architecture Lock (2026-08-04) — 'model_thobe' removed from this list.
+  // It's excluded from `entries` entirely now (catalog-only), so it can
+  // never appear in layerReport — requiring it here would hard-fail every
+  // render.
+  // Engine Priority Refactor (2026-08-04) — 'quality_foundation'/
+  // 'global_render_recipe' added: both are now Priority 0
+  // (promptBuilder/compression.ts's buildPromptLayers) and, like Identity/
+  // Material/Material Color, always have non-empty content on every render
+  // (renderEngine/qualityFoundation.ts, renderEngine/globalRenderRecipe.ts —
+  // fixed Engine defaults, never per-item-dependent) — same explicit
+  // defense-in-depth convention already applied to the other always-present
+  // Priority 0 layers, not a new kind of check.
   const lookCuttingSelected = entries.some((e) => e.category === 'look_cutting')
   const requiredPriorityZeroIds = [
     'identity',
     'negative_rules',
     'lock_rules',
-    'model_thobe',
+    'quality_foundation',
+    'global_render_recipe',
     'material',
     'material_color',
     ...(lookCuttingSelected ? ['look_cutting'] : []),
@@ -685,7 +714,7 @@ export async function POST(req: NextRequest) {
       componentsMissing,
       capability,
       referenceImageStatus: {
-        modelReference: modelReferenceStatus,
+        baseHeroAvailable,
         collarReference: collarReferenceStatus,
         plaketReference: plaketReferenceStatus,
         pocketReference: pocketReferenceStatus,

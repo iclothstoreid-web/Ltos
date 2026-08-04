@@ -2,8 +2,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AiDesignDna } from './aiDna/types'
 import {
   DEFAULT_AI_DESIGN_DNA,
-  MODEL_THOBE_QUALITY_LOCK_RULES,
-  MODEL_THOBE_QUALITY_NEGATIVE_RULES,
   LOOK_CUTTING_FIT_LOCK_RULES,
   LOOK_CUTTING_FIT_NEGATIVE_RULES,
 } from './aiDna/types'
@@ -207,25 +205,21 @@ export async function createMasterDataOption(
     .limit(1)
     .maybeSingle()
 
-  // Quality Foundation is layered in here, explicitly, only for Base Hero
-  // Model — every other category leaves `ai_dna` unset and gets the plain
-  // DB column default. See aiDna/types.ts's MODEL_THOBE_QUALITY_LOCK_RULES/
-  // _NEGATIVE_RULES for why this can't live in the column default itself:
-  // that default is category-agnostic. Look Cutting Fit Knowledge is
-  // layered in the same way, only for 'look_cutting' — see aiDna/types.ts's
-  // LOOK_CUTTING_FIT_LOCK_RULES/_NEGATIVE_RULES. Delta Knowledge decision
-  // (2026-08-04) — DEFAULT_AI_DESIGN_DNA.lockRules/negativeRules are now
-  // `[]` (Identity Knowledge lives only in Recipe Composer's Engine merge,
-  // see composer.ts), so spreading it below already produces a delta-only
-  // array (just the category extension) with no logic change needed here.
+  // Look Cutting Fit Knowledge is layered in here, explicitly, only for
+  // 'look_cutting' — see aiDna/types.ts's LOOK_CUTTING_FIT_LOCK_RULES/
+  // _NEGATIVE_RULES. Every other category (including model_thobe, since the
+  // Architecture Lock revision, 2026-08-04) leaves `ai_dna` unset and gets
+  // the plain DB column default — model_thobe no longer gets a Quality
+  // Foundation extension here; that content now lives in
+  // DEFAULT_GLOBAL_RENDER_POLICY (recipeComposer/types.ts), applied to every
+  // render regardless of which Model Thobe is selected. Delta Knowledge
+  // decision (2026-08-04) — DEFAULT_AI_DESIGN_DNA.lockRules/negativeRules
+  // are now `[]` (Identity Knowledge lives only in Recipe Composer's Engine
+  // merge, see composer.ts), so spreading it below already produces a
+  // delta-only array (just the category extension) with no logic change
+  // needed here.
   const ai_dna: AiDesignDna | undefined =
-    params.category === 'model_thobe'
-      ? {
-          ...DEFAULT_AI_DESIGN_DNA,
-          lockRules: [...DEFAULT_AI_DESIGN_DNA.lockRules, ...MODEL_THOBE_QUALITY_LOCK_RULES],
-          negativeRules: [...DEFAULT_AI_DESIGN_DNA.negativeRules, ...MODEL_THOBE_QUALITY_NEGATIVE_RULES],
-        }
-      : params.category === 'look_cutting'
+    params.category === 'look_cutting'
       ? {
           ...DEFAULT_AI_DESIGN_DNA,
           lockRules: [...DEFAULT_AI_DESIGN_DNA.lockRules, ...LOOK_CUTTING_FIT_LOCK_RULES],

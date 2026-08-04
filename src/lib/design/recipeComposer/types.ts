@@ -1,5 +1,14 @@
 import type { MasterDataCategory } from '@/lib/design/masterData'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
+import { QUALITY_FOUNDATION } from '@/lib/design/renderEngine/qualityFoundation'
+import { GLOBAL_RENDER_POLICY_LOCK_RULES, GLOBAL_RENDER_POLICY_NEGATIVE_RULES } from '@/lib/design/renderEngine/globalRenderPolicy'
+import {
+  GLOBAL_RENDER_RECIPE_CAMERA,
+  GLOBAL_RENDER_RECIPE_VISIBILITY,
+  GLOBAL_RENDER_RECIPE_LIGHTING,
+  GLOBAL_RENDER_RECIPE_COMPOSITION,
+  GLOBAL_RENDER_RECIPE_BACKGROUND,
+} from '@/lib/design/renderEngine/globalRenderRecipe'
 
 // Recipe Composer — the ONLY layer allowed to combine multiple Master
 // Items' Render Recipes (+ the Global Render Policy) into one Master
@@ -20,6 +29,14 @@ export interface GlobalRenderPolicy {
   camera: Record<string, unknown>
   pose: Record<string, unknown>
   lighting: Record<string, unknown>
+  // Composition/Visibility (Render Engine Knowledge Refactor review revision,
+  // 2026-08-04) — added so Global Render Recipe's Composition and Visibility
+  // content has an actual field to be assigned to. Merged into
+  // MasterRenderRecipe.composition/.visibilityRules by composer.ts the same
+  // "policy baseline, item overrides" way camera/pose/lighting already are
+  // — see composeRenderRecipe's own comment.
+  composition: Record<string, unknown>
+  visibilityRules: Record<string, unknown>
   background: Record<string, unknown>
   quality: Record<string, unknown>
   style: Record<string, unknown>
@@ -31,37 +48,47 @@ export interface GlobalRenderPolicy {
   lockRules: string[]
 }
 
-// Sprint AI-R2 (Part 1-3) — the ONE place this "applies to every render"
-// singleton policy actually gets populated. Root cause of the reported
-// half-body crop bug (confirmed by reading the pipeline, not assumed): before
-// this sprint every field below was `{}`/`[]`, so NOTHING anywhere in the
-// live pipeline ever told GPT Image to keep the shot full-body — no item's
-// Render Recipe sets `camera` either (see Sprint AI-R1's audit). GPT Image
-// then picked its own default framing, which is commonly half-body for a
-// person-centric edit. `camera`/`quality` stay short on purpose: both share
-// Prompt Compression's ~55-token "Other" bucket with lighting/background/
-// stitching/embroidery (src/lib/design/promptBuilder/compression.ts) — a
-// longer instruction here risks being silently truncated once components
-// start populating those other fields too. `negativeRules` carries the bulk
-// of the Identity Lock / Garment Lock constraints instead, since it has its
-// own dedicated ~50-token budget AND is the one mechanism GPT Image actually
-// has for negative instructions (serializeOpenAI turns it into an explicit
-// "Avoid: ..." clause — GPT Image has no separate negative-prompt param).
+// Sprint AI-R2 (Part 1-3) established this singleton policy as the ONE
+// place a render-quality/scene default is populated (root cause fix for a
+// real half-body-crop bug — GPT Image had nothing telling it to keep the
+// shot full-body). Its CONTENT has since been reorganized twice:
+//   - Architecture Lock (2026-08-04) moved what was then called "Quality
+//     Foundation" here from the model_thobe row's own ai_dna, so it applies
+//     to every render regardless of selection, not just when a specific
+//     Model Thobe is picked.
+//   - Render Engine Knowledge Refactor (2026-08-04, same day) — that single
+//     "Quality Foundation" blob mixed 3 genuinely different responsibilities
+//     (quality target, garment constraint, and scene) in one place, and
+//     duplicated content that belonged in `aiDna/types.ts`'s Engine defaults
+//     (removed, see that file) or in Identity Lock's own template
+//     (promptArchitectureV2/layers.ts, untouched). It is now composed from 3
+//     single-responsibility Render Engine sources, each documenting its own
+//     scope/exclusions and its own content decisions:
+//     `renderEngine/qualityFoundation.ts` (quality field),
+//     `renderEngine/globalRenderPolicy.ts` (lockRules/negativeRules), and
+//     `renderEngine/globalRenderRecipe.ts` (camera/visibilityRules/
+//     lighting/composition/background).
+//   - Review revision (2026-08-04, same day) — Camera and Visibility were
+//     one field (Camera carried both viewing angle and body-framing
+//     extent); split into 2 per review. Composition was defined but had no
+//     GlobalRenderPolicy field to be assigned to; the interface (and
+//     composer.ts's policy-overlap merge) was extended to include it and
+//     Visibility, per explicit review instruction to wire Composition into
+//     Recipe Composer. composer.ts's merge ALGORITHM is unchanged — camera/
+//     pose/lighting already merged "policy baseline, item overrides";
+//     composition/visibilityRules now follow the identical pattern, no new
+//     logic invented.
 export const DEFAULT_GLOBAL_RENDER_POLICY: GlobalRenderPolicy = {
-  camera: { framing: 'full body head-to-toe, feet visible, original camera framing, no crop' },
+  camera: GLOBAL_RENDER_RECIPE_CAMERA,
   pose: {},
-  lighting: {},
-  background: {},
-  quality: { lock: 'identity and pose locked — only clothing changes' },
+  lighting: GLOBAL_RENDER_RECIPE_LIGHTING,
+  composition: GLOBAL_RENDER_RECIPE_COMPOSITION,
+  visibilityRules: GLOBAL_RENDER_RECIPE_VISIBILITY,
+  background: GLOBAL_RENDER_RECIPE_BACKGROUND,
+  quality: { foundation: QUALITY_FOUNDATION.join(' ') },
   style: {},
-  negativeRules: [
-    'body crop, half-body, missing feet, wrong framing',
-    'face, age, body shape, hairstyle, beard, skin tone, expression, ethnicity changed',
-    'camera, lighting, background changed',
-    'thobe replaced by shirt, polo, hoodie, t-shirt, jacket, tunic',
-    'short sleeves, low collar, non-Saudi silhouette',
-  ],
-  lockRules: [],
+  negativeRules: [...GLOBAL_RENDER_POLICY_NEGATIVE_RULES],
+  lockRules: [...GLOBAL_RENDER_POLICY_LOCK_RULES],
 }
 
 // One Master Item's Render Recipe plus the ordering info Recipe Composer

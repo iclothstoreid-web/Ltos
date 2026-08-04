@@ -174,16 +174,36 @@ export function buildCompressedSections(instruction: RenderInstruction): PromptS
 
 export type PromptLayerPriority = 0 | 1 | 2
 
-// Priority 0 — Identity Lock, Model Thobe, Look Cutting, Material, Material
-// Color. Never truncated, never dropped by compressPromptByLayers; if they
-// cannot all fit, the whole render is refused (see compressPromptByLayers).
+// Priority 0 — Identity Lock; Global Render Policy (Negative Rules/Lock
+// Rules); active AI Asset Instructions; Quality Foundation; Global Render
+// Recipe (Camera/Lighting/Composition/Background+Shadow/Visibility); Look
+// Cutting/Material/Material Color. Never truncated, never dropped by
+// compressPromptByLayers; if they cannot all fit, the whole render is
+// refused (see compressPromptByLayers).
+//
+// Engine Priority Refactor (2026-08-04) — Quality Foundation and Global
+// Render Recipe were Priority 2 (folded into Visual Description) until this
+// revision. Both are 2 of the 4 locked Render Engine pillars (Base Hero
+// Model/Quality Foundation/Global Render Policy/Global Render Recipe) —
+// Foundation content the Architecture Lock requires to always reach GPT
+// Image, not mood/framing that is acceptable to lose under budget pressure.
+// Promoted to Priority 0, positioned immediately after Global Render Policy
+// (negative_rules/lock_rules) and before every Component Knowledge layer
+// (asset instructions, Look Cutting/Material/Material Color, Priority 1
+// selected components) — see buildPromptLayers' push order. Base Hero Model
+// itself has no text layer here at all (route.ts inserts it directly into
+// `referenceImageUrls`, outside the text-priority system entirely) — it was
+// never subject to Prompt Compression in the first place.
+//
 // Priority 1 — Selected Components (Collar/Cuff/Pocket/Placket/Embroidery/
 // Accessory) that the customer actually picked (skipped automatically for
 // "(None)" — that component simply never produces a layer, see
 // buildPromptLayers). Compressed/dropped only after Priority 2 is exhausted.
-// Priority 2 — Visual Description (camera/lighting/composition/background/
-// quality/pose/visibility/negativeRules): narrative/mood only, nothing here
-// is a component identity. Compressed first.
+// Priority 2 — Visual Description: only `pose` remains here post-refactor
+// (camera/lighting/composition/background/visibilityRules/quality all moved
+// to Priority 0 above) — narrative/mood only, not a locked Engine pillar,
+// not a component identity. Compressed first; currently always empty in
+// practice since no Engine or per-item source populates `pose` yet.
 export interface PromptLayer {
   id: string
   label: string
@@ -269,16 +289,43 @@ function formatEntryContent(entry: RenderRecipeEntry): string {
 // pressure is a correctness bug (GPT Image free to swap the whole garment),
 // not a quality tradeoff. Sprint R-04 moves it to its own layer (see
 // buildNegativeRulesContent / the 'negative_rules' layer below).
+//
+// Engine Priority Refactor (2026-08-04) — visibilityRules/camera/lighting/
+// composition/background/quality all moved OUT of this function to
+// buildGlobalRenderRecipeContent/buildQualityFoundationContent below (both
+// now Priority 0). `pose` is the only field left here: it is not one of the
+// 4 locked Render Engine pillars (Base Hero Model/Quality Foundation/Global
+// Render Policy/Global Render Recipe), so it stays P2 — acceptable to
+// compress/drop under budget pressure, unlike the content that moved out.
 function buildVisualDescriptionContent(masterRecipe: MasterRenderRecipe | null): string {
   if (!masterRecipe) return ''
+  return formatRecord(masterRecipe.pose)
+}
+
+// Quality Foundation (Priority 0, Engine Priority Refactor 2026-08-04) — one
+// of the 4 locked Render Engine pillars (renderEngine/qualityFoundation.ts).
+// Sourced from `masterRecipe.quality` — policy-only field, no per-item
+// override exists for it (see recipeComposer/composer.ts's composeRenderRecipe:
+// `quality: normalizeRecord(policy.quality)`).
+function buildQualityFoundationContent(masterRecipe: MasterRenderRecipe | null): string {
+  if (!masterRecipe) return ''
+  return formatRecord(masterRecipe.quality)
+}
+
+// Global Render Recipe (Priority 0, Engine Priority Refactor 2026-08-04) —
+// one of the 4 locked Render Engine pillars (renderEngine/
+// globalRenderRecipe.ts): Camera + Lighting + Composition + Background
+// (Shadow lives inside it, same field — see globalRenderRecipe.ts's own
+// comment) + Visibility. Each field is "policy baseline, item overrides"
+// (composer.ts), same merge shape camera/pose/lighting always used.
+function buildGlobalRenderRecipeContent(masterRecipe: MasterRenderRecipe | null): string {
+  if (!masterRecipe) return ''
   const parts = [
-    formatRecord(masterRecipe.pose),
-    formatRecord(masterRecipe.visibilityRules),
     formatRecord(masterRecipe.camera),
     formatRecord(masterRecipe.lighting),
     formatRecord(masterRecipe.composition),
     formatRecord(masterRecipe.background),
-    formatRecord(masterRecipe.quality),
+    formatRecord(masterRecipe.visibilityRules),
   ].filter(Boolean)
 
   return parts.join(', ')
@@ -288,10 +335,11 @@ function buildVisualDescriptionContent(masterRecipe: MasterRenderRecipe | null):
 // own Priority 0 layer. Same "Avoid: ..." phrasing GPT Image needs (no
 // dedicated negative-prompt parameter — see serializer.ts's own rationale),
 // just no longer sharing P2's compression fate. Empty when nothing has
-// contributed a negative rule yet (GlobalRenderPolicy always has 5 by
-// default, so in practice this is non-empty on every real render — see
-// route.ts's requiredPriorityZeroIds, which only requires this layer when
-// masterRecipe actually produced at least one).
+// contributed a negative rule yet (Global Render Policy, renderEngine/
+// globalRenderPolicy.ts, always has at least a few by default, so in
+// practice this is non-empty on every real render — see route.ts's
+// requiredPriorityZeroIds, which only requires this layer when masterRecipe
+// actually produced at least one).
 function buildNegativeRulesContent(masterRecipe: MasterRenderRecipe | null): string {
   const negatives = (masterRecipe?.negativeRules ?? []).filter(Boolean)
   return negatives.length > 0 ? `Avoid: ${negatives.join(', ')}.` : ''
@@ -327,11 +375,13 @@ export interface AssetInstructionLayer {
 
 export interface BuildPromptLayersInput {
   entries: RenderRecipeEntry[]
-  // Only read for the Priority 2 Visual Description layer (camera/lighting/
-  // composition/background/quality/pose/visibilityRules) and the Priority 0
-  // Negative Rules layer (negativeRules) — Recipe Composer's own merge is
-  // unchanged and still the source for those fields; Priority 0/1 DNA
-  // layers below never read from it.
+  // Read for: Priority 0 Negative Rules/Lock Rules (negativeRules/
+  // lockRules), Priority 0 Quality Foundation (quality), Priority 0 Global
+  // Render Recipe (camera/lighting/composition/background/visibilityRules),
+  // and Priority 2 Visual Description (pose only, post Engine Priority
+  // Refactor). Recipe Composer's own merge is unchanged and still the
+  // source for those fields; Priority 0/1 DNA layers below (P0_DNA_SLOTS,
+  // SELECTED_COMPONENT_CATEGORIES) never read from it, only from `entries`.
   masterRecipe: MasterRenderRecipe | null
   identityTemplate: string
   // Sprint R-04 — caller-supplied (route.ts already knows which AI Assets
@@ -375,6 +425,20 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
   // same Priority 0 treatment as Negative Rules; see buildLockRulesContent's
   // doc comment.
   layers.push({ id: 'lock_rules', label: 'Lock Rules (Constraint)', priority: 0, content: buildLockRulesContent(masterRecipe) })
+
+  // Engine Priority Refactor (2026-08-04) — Quality Foundation and Global
+  // Render Recipe, the remaining 2 of the 4 locked Render Engine pillars
+  // (Global Render Policy is negative_rules/lock_rules above; Base Hero
+  // Model has no text layer at all, see PromptLayerPriority's doc comment).
+  // Pushed here, immediately after Global Render Policy and before every
+  // Component Knowledge layer below (asset instructions, Look Cutting/
+  // Material/Material Color, Priority 1 selected components) — matches the
+  // locked ordering: Global Render Policy highest, then the rest of Engine
+  // Knowledge, then Component Knowledge, never the reverse. Content only
+  // (isi knowledge) is unchanged from the prior revision — only the
+  // priority tier and position moved.
+  layers.push({ id: 'quality_foundation', label: 'Quality Foundation', priority: 0, content: buildQualityFoundationContent(masterRecipe) })
+  layers.push({ id: 'global_render_recipe', label: 'Global Render Recipe', priority: 0, content: buildGlobalRenderRecipeContent(masterRecipe) })
 
   // Sprint R-04 — AI Asset caveat instructions, now real Priority 0 layers
   // instead of text appended after compression finished (see
@@ -549,7 +613,7 @@ export function compressPromptByLayers(layers: PromptLayer[], totalBudget = DEFA
     return {
       ok: false,
       compressed: '',
-      error: `Priority 0 (Identity Lock/Negative Rules/AI Asset Instructions aktif/Model Thobe/Look Cutting/Material/Material Color) membutuhkan ${p0Tokens} token, melebihi budget ${totalBudget} token. Render dibatalkan — Prompt Compression tidak diizinkan menghapus konten Priority 0 untuk memuatnya.`,
+      error: `Priority 0 (Identity Lock/Global Render Policy/AI Asset Instructions aktif/Quality Foundation/Global Render Recipe/Look Cutting/Material/Material Color) membutuhkan ${p0Tokens} token, melebihi budget ${totalBudget} token. Render dibatalkan — Prompt Compression tidak diizinkan menghapus konten Priority 0 untuk memuatnya.`,
       totalTokens: p0Tokens,
       layerReport: report,
     }
@@ -579,13 +643,16 @@ export interface PriorityZeroValidation {
 // Phase 5 (Sprint PR-04) — final safety net immediately before the OpenAI
 // call. `requiredIds` is supplied by the caller, not re-derived here: only
 // the caller (route.ts) knows which Priority 0 layers were actually
-// applicable to THIS request (Identity/Model Thobe/Material/Material Color
-// are always required once Capability Engine hasn't already blocked the
-// render; Look Cutting is required only when the customer selected a real
-// one — it is a legitimate "(None)" optional field, so its absence on its
-// own is not an error). A layer missing here means it had empty content or
-// (in principle) failed to survive compression — either way, the request
-// must be cancelled rather than sent to OpenAI without it.
+// applicable to THIS request (Identity/Negative Rules/Lock Rules/Quality
+// Foundation/Global Render Recipe/Material/Material Color are always
+// required once Capability Engine hasn't already blocked the render — the
+// last 2 by Engine Priority Refactor, 2026-08-04, same "always non-empty,
+// always Priority 0" guarantee identity/material already had; Look Cutting
+// is required only when the customer selected a real one — it is a
+// legitimate "(None)" optional field, so its absence on its own is not an
+// error). A layer missing here means it had empty content or (in principle)
+// failed to survive compression — either way, the request must be
+// cancelled rather than sent to OpenAI without it.
 export function validatePriorityZeroIntact(report: LayerTokenReport[], requiredIds: string[]): PriorityZeroValidation {
   const missing = requiredIds.filter((id) => {
     const entry = report.find((r) => r.id === id)

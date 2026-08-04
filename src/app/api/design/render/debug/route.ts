@@ -18,8 +18,9 @@ import { validatePromptLayers } from '@/lib/design/promptArchitectureV2/promptVa
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { validateRenderRequest } from '@/lib/design/promptArchitectureV2/renderValidator'
 import { getRenderRunMode, isDebugMode } from '@/lib/design/promptArchitectureV2/debugMode'
-import { composeAiAssets, applyAssetInstructions, validateModelReferenceAvailable, validateCollarReference } from '@/lib/design/aiAssetComposer/composer'
+import { composeAiAssets, applyAssetInstructions, validateCollarReference } from '@/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
+import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
 
 // DNA Debug Viewer pipeline endpoint (Sprint AI-R1) — a read-only audit twin
 // of /api/design/render/route.ts. It runs the EXACT same library calls
@@ -144,6 +145,26 @@ export async function POST(req: NextRequest) {
       return
     }
 
+    // Architecture Lock (2026-08-04) — Model Thobe is catalog-only now,
+    // excluded from DNA resolution entirely (mirrors route.ts exactly, so
+    // this audit twin stays accurate). Still reported in `resolvedDna` for
+    // visibility (so a debugging owner can see it was selected), but never
+    // reaches `resolved`/`entries` (Recipe Composer input) or
+    // `componentsMissing` (Capability Engine input) — a pending/invalid
+    // Model Thobe DNA can no longer block a render or contribute text.
+    if (option.category === 'model_thobe') {
+      resolvedDna.push({
+        componentType: selection.componentType,
+        componentId: selection.componentId,
+        category: option.category,
+        name: option.name,
+        ready: true,
+        errors: [],
+        garmentKeys: ['(catalog-only — excluded from Prompt Assembly)'],
+      })
+      return
+    }
+
     const input: DNAResolverInput = {
       itemId: option.id,
       category: option.category,
@@ -210,11 +231,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  const modelThobeEntry = resolved.find(({ option }) => option.category === 'model_thobe')
-  const anchorOverridden = overrides.some(
-    (override) => override.field === 'garment' && override.losers.some((loser) => loser.category === 'model_thobe'),
-  )
-
   // ---------------------------------------------------------------------
   // SECTION 4 — Prompt Builder + Serializer (uncompressed)
   // ---------------------------------------------------------------------
@@ -247,8 +263,9 @@ export async function POST(req: NextRequest) {
   // selected" vs "selected but DNA/Asset invalid" stay distinguishable in
   // both, from a single source instead of two independently-computed
   // near-duplicates (a redundancy this sprint's report flags and removes).
-  const modelThobeSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'model_thobe')
-  const modelThobeOptionRaw = modelThobeSelection ? (rowsById.get(modelThobeSelection.componentId) ?? null) : null
+  // Architecture Lock (2026-08-04) removed the model_thobe raw lookup that
+  // used to live here — Model Thobe no longer feeds the AI Asset Composer
+  // or Capability Engine at all, see below.
   const collarSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'kerah')
   const collarOptionRaw = collarSelection ? (rowsById.get(collarSelection.componentId) ?? null) : null
 
@@ -263,29 +280,32 @@ export async function POST(req: NextRequest) {
 
   const composedAssets = composeAiAssets({
     customerPhotoUrl,
-    modelThobeOption: modelThobeOptionRaw,
     collarOption: collarOptionRaw,
     otherSelectedCategories,
   })
-  const referenceImageUrls = composedAssets.urls
-  const modelReferenceValidation = validateModelReferenceAvailable({ modelThobeOption: modelThobeOptionRaw, composed: composedAssets })
+  // Global Base Hero (Architecture Lock, 2026-08-04) — mirrors route.ts's
+  // insertion exactly, so this audit twin's reported reference image list
+  // matches what production actually sends.
+  const baseHeroAvailable = GLOBAL_BASE_HERO_IMAGE_URL !== null
+  const referenceImageUrls = GLOBAL_BASE_HERO_IMAGE_URL
+    ? [composedAssets.urls[0], GLOBAL_BASE_HERO_IMAGE_URL, ...composedAssets.urls.slice(1)]
+    : composedAssets.urls
   const collarReferenceValidation = validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
 
   // ---------------------------------------------------------------------
   // AI Capability Engine (Sprint AI-R3) — the ONE place deciding render
-  // mode/quality/strategy for this scenario.
+  // mode/quality/strategy for this scenario. Architecture Lock (2026-08-04)
+  // removed Model Thobe from this input entirely — it can no longer block
+  // or downgrade a render.
   // ---------------------------------------------------------------------
-  const modelThobeDnaResult = dnaValidator.find((d) => d.itemId === modelThobeOptionRaw?.id)
-  const otherComponentDnaResults = dnaValidator
-    .filter((d) => d.itemId !== modelThobeOptionRaw?.id)
+  const componentDnaResults = dnaValidator
+    .filter((d) => d.category !== 'model_thobe')
     .map((d) => ({ itemId: d.itemId, category: d.category, valid: d.valid }))
 
   const capability = evaluateCapability({
     customerPhotoPresent: !!customerPhotoUrl,
-    modelThobeSelected: !!modelThobeOptionRaw,
-    modelThobeDnaValid: modelThobeDnaResult?.valid ?? false,
-    modelReferenceAvailable: modelReferenceValidation.valid,
-    otherComponentDnaResults,
+    baseHeroAvailable,
+    componentDnaResults,
     unresolvedComponents: componentsMissing.map((m) => ({ itemId: m.componentId, category: m.componentType, reason: m.reason })),
   })
 
@@ -301,12 +321,14 @@ export async function POST(req: NextRequest) {
       included: referenceImageUrls.includes(customerPhotoUrl),
       framing: customerPhotoFraming,
     },
-    modelThobeReference: {
-      itemId: composedAssets.modelReference?.itemId ?? modelThobeOptionRaw?.id ?? null,
-      name: modelThobeOptionRaw?.name ?? null,
-      url: composedAssets.modelReference?.url ?? null,
-      included: !!composedAssets.modelReference,
-      note: modelReferenceValidation.valid ? null : modelReferenceValidation.reason,
+    // Global Base Hero replaces the old per-order Model Thobe reference
+    // (Architecture Lock, 2026-08-04) — a Render Engine singleton, not tied
+    // to any MasterDataOption, so there's no itemId/name/validation here.
+    baseHeroModel: {
+      url: GLOBAL_BASE_HERO_IMAGE_URL,
+      configured: baseHeroAvailable,
+      included: baseHeroAvailable,
+      note: baseHeroAvailable ? null : 'Base Hero Model belum dikonfigurasi (renderEngine/baseHero.ts).',
     },
     // Architecture decision (aiAssetComposer/composer.ts), not a bug: every
     // other category only ever reaches the AI provider as text (via Render
@@ -323,21 +345,11 @@ export async function POST(req: NextRequest) {
   // + `catalogActive` are the two independent conditions that determine it
   // (see aiAssetComposer's `isAiAssetActive`) — surfaced separately so a
   // FAIL is diagnosable (not approved yet? or just deactivated in catalog?).
+  // Architecture Lock (2026-08-04) removed the MODEL_THOBE/SILHOUETTE entry
+  // that used to lead this list — Base Hero Model isn't a MasterDataOption-
+  // backed AI Asset, it's reported separately via referenceImages.baseHeroModel.
   // ---------------------------------------------------------------------
   const aiAssets = [
-    {
-      referenceType: 'MODEL_THOBE',
-      referenceRole: 'SILHOUETTE',
-      name: modelThobeOptionRaw?.name ?? null,
-      priority: 100,
-      status: composedAssets.modelReference ? 'ACTIVE' : 'INACTIVE',
-      aiDnaStatus: modelThobeOptionRaw?.ai_dna.status ?? null,
-      catalogActive: modelThobeOptionRaw?.is_active ?? null,
-      included: !!composedAssets.modelReference,
-      validation: modelReferenceValidation,
-      transferredGeometry: ['Silhouette', 'Proportion', 'Length', 'Drape'],
-      ignored: ['Color', 'Texture', 'Stitching', 'Collar', 'Cuff', 'Pocket', 'Background'],
-    },
     {
       referenceType: 'COLLAR_REFERENCE',
       referenceRole: 'COLLAR_SHAPE',
@@ -386,7 +398,6 @@ export async function POST(req: NextRequest) {
   const renderRequestValidator = validateRenderRequest({
     customerPhotoUrl,
     referenceImageUrls,
-    modelThobePresent: !!modelThobeEntry,
     prompt: activePrompt,
     usesEdit,
     endpoint: finalRequest.endpoint,
@@ -513,13 +524,10 @@ export async function POST(req: NextRequest) {
     },
     {
       id: 'anchor_not_overridden',
-      label: 'Model Thobe (Anchor) tidak di-override oleh Collar/Cuff/Pocket',
-      status: modelThobeEntry ? (anchorOverridden ? 'FAIL' : 'PASS') : 'INFO',
-      reason: !modelThobeEntry
-        ? 'Tidak ada komponen model_thobe pada selection ini.'
-        : anchorOverridden
-          ? `garment field di-override oleh: ${overrides.filter((o) => o.field === 'garment').map((o) => `${o.key}<-${o.winner?.category}`).join(', ')}`
-          : 'Tidak ada key garment milik Model Thobe yang kalah dari komponen lain.',
+      label: 'Model Thobe — Prompt Assembly participation',
+      status: 'INFO' as const,
+      reason:
+        'Model Thobe adalah catalog-only sejak Architecture Lock (2026-08-04) — tidak lagi menyumbang Hero Image, Reference Instruction, Lock Rules, atau Negative Rules ke Prompt Assembly, jadi tidak lagi bisa "menang" atau "kalah" collision di Recipe Composer.',
     },
     {
       id: 'render_recipe_ready',
@@ -536,10 +544,10 @@ export async function POST(req: NextRequest) {
       reason: referenceImages.customerPhoto.included ? 'customerPhotoUrl ada di referenceImages.' : 'customerPhotoUrl kosong.',
     },
     {
-      id: 'reference_image_included',
-      label: 'Reference Image (Model Thobe) ikut',
-      status: referenceImages.modelThobeReference.included ? 'PASS' : modelThobeEntry ? 'FAIL' : 'INFO',
-      reason: referenceImages.modelThobeReference.note ?? 'Model Thobe reference image terkirim.',
+      id: 'base_hero_included',
+      label: 'Base Hero Model (Global Canvas) ikut',
+      status: referenceImages.baseHeroModel.included ? 'PASS' : 'INFO',
+      reason: referenceImages.baseHeroModel.note ?? 'Base Hero Model terkirim.',
     },
     {
       id: 'collar_reference_available',

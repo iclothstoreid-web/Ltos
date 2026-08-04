@@ -6,9 +6,10 @@ import { REFERENCE_CATEGORY_REGISTRY } from './registry'
 // module. Sprint R-05 moved their canonical definition into registry.ts
 // (the Category Registry, Phase 3) so they live alongside the rest of each
 // category's metadata (type/role/priority) instead of only here; nothing
-// about their content or callers changed.
+// about their content or callers changed. MODEL_REFERENCE_SILHOUETTE_
+// INSTRUCTION removed from this list (Architecture Lock, 2026-08-04) along
+// with the model_thobe registry entry — see registry.ts's header comment.
 export {
-  MODEL_REFERENCE_SILHOUETTE_INSTRUCTION,
   COLLAR_REFERENCE_SHAPE_INSTRUCTION,
   PLAKET_REFERENCE_SHAPE_INSTRUCTION,
   POCKET_REFERENCE_SHAPE_INSTRUCTION,
@@ -20,7 +21,6 @@ export {
 // the pipeline, but composes IMAGES, not text:
 //
 //   Customer Photo -------------------------------------\
-//   Model Thobe   (approved AI Design DNA + Hero Image) --\
 //   Collar/Kerah  (approved AI Design DNA + Hero Image) ---- AI Asset Composer -> images.edit
 //   Plaket        (approved AI Design DNA + Hero Image) --/  (only when
 //   Saku/Pocket   (approved AI Design DNA + Hero Image) -/    APPROVED)
@@ -28,6 +28,19 @@ export {
 //                                                            an image; text-
 //                                                            only, via Recipe
 //                                                            Composer)
+//
+// Architecture Lock (2026-08-04) — Model Thobe used to sit at the top of
+// this list (approved AI Design DNA + Hero Image, exactly like Collar/
+// Plaket/Pocket below). It no longer contributes ANY AI Asset, text DNA, or
+// reference to Prompt Assembly at all — it is catalog-only now (thumbnail/
+// name/description/selling point). route.ts excludes it from DNA
+// resolution entirely before this function is ever called, so this module
+// never receives a Model Thobe option in the first place. The render-
+// quality-anchoring image role Model Thobe used to serve is now
+// GLOBAL_BASE_HERO_IMAGE_URL (renderEngine/baseHero.ts) — a single Render
+// Engine constant route.ts inserts directly into the outgoing image list,
+// unconditionally, outside this composer (it isn't per-order, so it needs
+// none of the machinery below).
 //
 // THE KEY RULE THIS SPRINT ADDS: an AI Asset is ACTIVE if and only if that
 // item's `ai_dna.status === 'approved'` (AND it is `is_active` in the
@@ -43,23 +56,15 @@ export {
 // never an independently-created entity (see AiDesignDnaSection.tsx /
 // MasterDataManager.tsx's Approve button, the only writer of `approved`).
 //
-// COLLAR_REFERENCE reuses the exact same mechanism Model Thobe already
-// established. No new DB column, no new table: "Design Master cukup
-// memiliki Hero Image, AI Design DNA, Status" — MasterDataOption already
-// has exactly those 3 things (photo_url, ai_dna, and ai_dna.status is the
-// Status). Only ONE kerah item is ever selectable per render (Design
-// Studio's design spec has a single `collar` field), so "no duplicate
-// collar reference" is a structural guarantee of this function's own input
-// shape (`collarOption` is one value, never an array), not something
-// validated after the fact.
-//
-// PLAKET_REFERENCE and POCKET_REFERENCE (Sprint AI Stability Phase 2) reuse
-// the identical mechanism again — `plaketOption`/`pocketOption` are single
-// values for the same structural reason `collarOption` is. Phase 1's audit
-// found both categories already had real, `approved` Hero Images sitting
-// unused in the database (Plaket) or approved DNA with no reference
-// implementation at all (Pocket) — this closes that gap; it does not add
-// any new DB column, table, or upload flow.
+// COLLAR_REFERENCE, PLAKET_REFERENCE, and POCKET_REFERENCE (Sprint AI
+// Stability Phase 2) all reuse the identical mechanism: `collarOption`/
+// `plaketOption`/`pocketOption` are single values (Design Studio's design
+// spec has one field per category), so "no duplicate reference" is a
+// structural guarantee of this function's own input shape, not something
+// validated after the fact. No new DB column, no new table: "Design Master
+// cukup memiliki Hero Image, AI Design DNA, Status" — MasterDataOption
+// already has exactly those 3 things (photo_url, ai_dna, and
+// ai_dna.status is the Status).
 //
 // Background and Mannequin have no reference category anywhere in this
 // codebase (confirmed: MASTER_DATA_CATEGORIES has no such entry) — their
@@ -73,7 +78,6 @@ export interface ExcludedReferenceCategory {
 
 export interface ComposedAiAssets {
   customerPhotoUrl: string
-  modelReference: ReferenceImageDescriptor | null
   collarReference: ReferenceImageDescriptor | null
   /** PLAKET_SHAPE — same 4-condition gate as collarReference (Sprint AI
    *  Stability Phase 2). */
@@ -81,7 +85,7 @@ export interface ComposedAiAssets {
   /** POCKET_SHAPE — same 4-condition gate as collarReference (Sprint AI
    *  Stability Phase 2). */
   pocketReference: ReferenceImageDescriptor | null
-  /** Sprint R-05 (Phase 2/3) — the same 4 descriptors above, keyed by
+  /** Sprint R-05 (Phase 2/3) — the same 3 descriptors above, keyed by
    *  category instead of by name. This is the ONE generic place every other
    *  "which categories have an active Hero Image right now" question gets
    *  answered from (referenceBackedCategories, applyAssetInstructions,
@@ -91,9 +95,11 @@ export interface ComposedAiAssets {
    *  them, prefer this map instead. */
   referencesByCategory: ReadonlyMap<MasterDataCategory, ReferenceImageDescriptor>
   /** Ordered: customer photo first, then every present AI Asset by
-   *  descending priority (Model Reference 100, Collar Reference 90, Plaket
-   *  Reference 80, Pocket Reference 70, ...) — same order the pipeline has
-   *  always sent images in. */
+   *  descending priority (Collar Reference 90, Plaket Reference 80, Pocket
+   *  Reference 70, ...) — same order the pipeline has always sent images
+   *  in. Global Base Hero (renderEngine/baseHero.ts) is NOT part of this
+   *  list — route.ts inserts it separately, right after customerPhotoUrl,
+   *  since it's a Render Engine singleton, not a per-order AI Asset. */
   urls: string[]
   excluded: ExcludedReferenceCategory[]
   // Asserted invariants — always 0, no reference category for either
@@ -110,14 +116,10 @@ export interface ComposedAiAssets {
 // additive, no restructuring required.
 export interface ComposeAiAssetsInput {
   customerPhotoUrl: string
-  /** The resolved Model Thobe MasterDataOption for this render, or null if
-   *  none was selected / it didn't resolve. Only its category is trusted
-   *  to be 'model_thobe' — the caller must have already filtered for that.
-   *  An AI Asset is composed in only if this item's `ai_dna.status ===
-   *  'approved'`, it is `is_active`, and it has a `sourceImage`. */
-  modelThobeOption: MasterDataOption | null
   /** The resolved Collar (kerah) MasterDataOption for this render, or null.
-   *  Same 3-condition gate as `modelThobeOption` above. */
+   *  An AI Asset is composed in only if this item's `ai_dna.status ===
+   *  'approved'`, it is `is_active`, it has a `sourceImage`, and its
+   *  Render Recipe isn't `empty`. */
   collarOption?: MasterDataOption | null
   /** The resolved Placket (plaket) MasterDataOption for this render, or
    *  null. Same 4-condition gate as `collarOption` (Sprint AI Stability
@@ -132,6 +134,10 @@ export interface ComposeAiAssetsInput {
   otherSelectedCategories?: MasterDataCategory[]
 }
 
+// model_thobe excluded permanently (Architecture Lock, 2026-08-04) — it is
+// catalog-only now, not even described to GPT as text via Recipe Composer,
+// so it must never appear in `excluded` either (that field means "described
+// as text instead of image," which no longer applies to it at all).
 const NON_REFERENCE_CATEGORIES: MasterDataCategory[] = MASTER_DATA_CATEGORIES.filter((c) => c !== 'model_thobe')
 
 // Single 4-condition gate every AI Asset must clear — approved + active +
@@ -139,8 +145,8 @@ const NON_REFERENCE_CATEGORIES: MasterDataCategory[] = MASTER_DATA_CATEGORIES.fi
 // (Sprint PR-01, P6: an approved DNA with no configured Render Recipe still
 // has nothing structured for Recipe Composer to merge, so sending its photo
 // as a reference without any accompanying recipe content would mislead
-// GPT Image rather than help it). Shared by Model, Collar, Plaket, and
-// Pocket below so the rule can only ever be expressed once.
+// GPT Image rather than help it). Shared by Collar, Plaket, and Pocket
+// below so the rule can only ever be expressed once.
 //
 // `metadata?.sourceImage` (Sprint R-02 fix, found while building the Lock
 // Rules token report) — some Repository rows were authored with a
@@ -169,10 +175,9 @@ function isAiAssetActive(option: MasterDataOption | null): boolean {
 // a 5th reference-eligible category no longer means adding a 5th copy of
 // this block — see registry.ts's header comment.
 export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
-  const { customerPhotoUrl, modelThobeOption, collarOption = null, plaketOption = null, pocketOption = null, otherSelectedCategories } = input
+  const { customerPhotoUrl, collarOption = null, plaketOption = null, pocketOption = null, otherSelectedCategories } = input
 
   const optionByCategory: Partial<Record<MasterDataCategory, MasterDataOption | null>> = {
-    model_thobe: modelThobeOption,
     kerah: collarOption,
     plaket: plaketOption,
     saku: pocketOption,
@@ -191,7 +196,6 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
     })
   })
 
-  const modelReference = referencesByCategory.get('model_thobe') ?? null
   const collarReference = referencesByCategory.get('kerah') ?? null
   const plaketReference = referencesByCategory.get('plaket') ?? null
   const pocketReference = referencesByCategory.get('saku') ?? null
@@ -212,7 +216,6 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
 
   return {
     customerPhotoUrl,
-    modelReference,
     collarReference,
     plaketReference,
     pocketReference,
@@ -225,13 +228,12 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
 }
 
 // Appends every applicable AI Asset instruction to a base prompt —
-// SILHOUETTE-only caveat when a Model AI Asset is included, COLLAR_SHAPE-
-// only caveat when a Collar AI Asset is included, PLAKET_SHAPE-only /
-// POCKET_SHAPE-only caveats likewise. Any combination, or none, may apply;
-// a render with no AI Asset at all gets no caveat, since there is nothing
-// to caveat. Sprint R-05 — loops over the registry (declared Model > Collar
-// > Plaket > Pocket, the same order this always appended in) instead of 4
-// hardcoded `if` statements.
+// COLLAR_SHAPE-only caveat when a Collar AI Asset is included, PLAKET_SHAPE-
+// only / POCKET_SHAPE-only caveats likewise. Any combination, or none, may
+// apply; a render with no AI Asset at all gets no caveat, since there is
+// nothing to caveat. Sprint R-05 — loops over the registry (declared
+// Collar > Plaket > Pocket, the same order this always appended in) instead
+// of hardcoded `if` statements.
 export function applyAssetInstructions(basePrompt: string, composed: ComposedAiAssets): string {
   let prompt = basePrompt
   REFERENCE_CATEGORY_REGISTRY.forEach((def) => {
@@ -257,9 +259,9 @@ export interface AiAssetValidation {
   reason: string
 }
 
-// The ONE validator both Model and Collar reference-availability checks
-// funnel through (unifying what used to be two near-duplicate functions —
-// see this sprint's report). `option` is the raw selected MasterDataOption
+// The ONE validator Collar/Plaket/Pocket reference-availability checks
+// funnel through (unifying what used to be near-duplicate functions — see
+// this sprint's report). `option` is the raw selected MasterDataOption
 // (regardless of whether it resolved for text-DNA purposes — an AI Asset's
 // availability is judged independently), `asset` is what composeAiAssets
 // actually produced for it (null unless the 3-condition gate passed).
@@ -294,17 +296,11 @@ export function validateAiAssetAvailable(params: {
   }
 }
 
-// "Model Reference tersedia -> PASS. Model Reference hilang -> FAIL. Tidak
-// boleh mengirim render tanpa Model Reference." — deterministic, no AI.
-export function validateModelReferenceAvailable(params: { modelThobeOption: MasterDataOption | null; composed: ComposedAiAssets }): AiAssetValidation {
-  return validateAiAssetAvailable({ option: params.modelThobeOption, asset: params.composed.modelReference, label: 'Model Reference' })
-}
-
 // "PASS: image exists, reference type = COLLAR_REFERENCE, reference role =
 // COLLAR_SHAPE, status = ACTIVE. FAIL: image missing, duplicate collar
-// reference, wrong component, inactive asset." Unlike Model Reference, this
-// is NEVER a render-blocking condition — a FAIL here just means the collar
-// AI Asset is omitted (`collarReference` is already null in that case);
+// reference, wrong component, inactive asset." NEVER a render-blocking
+// condition — a FAIL here just means the collar AI Asset is omitted
+// (`collarReference` is already null in that case);
 // the render proceeds on DNA alone. "Duplicate collar reference" is
 // impossible-by-construction (see this file's header comment) rather than
 // actually checked, since composeAiAssets only ever accepts one

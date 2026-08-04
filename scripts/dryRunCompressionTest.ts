@@ -26,7 +26,8 @@ import { validateComponentDna } from '../src/lib/design/promptArchitectureV2/dna
 import { evaluateCapability } from '../src/lib/design/capabilityEngine/engine'
 import type { UnresolvedComponent } from '../src/lib/design/capabilityEngine/engine'
 import { LAYER1_IDENTITY_TEMPLATE } from '../src/lib/design/promptArchitectureV2/layers'
-import { composeAiAssets, validateModelReferenceAvailable, validateCollarReference } from '../src/lib/design/aiAssetComposer/composer'
+import { composeAiAssets, validateCollarReference } from '../src/lib/design/aiAssetComposer/composer'
+import { GLOBAL_BASE_HERO_IMAGE_URL } from '../src/lib/design/renderEngine/baseHero'
 
 function stub(row: Record<string, unknown>): MasterDataOption {
   return {
@@ -141,6 +142,9 @@ function main() {
   const resolved: { option: MasterDataOption; recipe: RenderRecipe }[] = []
 
   SELECTIONS.forEach(({ componentType, option }) => {
+    // Architecture Lock (2026-08-04) — Model Thobe is catalog-only now,
+    // excluded from DNA resolution entirely (mirrors route.ts exactly).
+    if (option.category === 'model_thobe') return
     const input: DNAResolverInput = { itemId: option.id, category: option.category, aiDna: option.ai_dna, renderRecipe: option.render_recipe }
     const { recipe, ready, errors } = resolveDNA(input)
     if (!ready || !recipe) {
@@ -151,24 +155,20 @@ function main() {
   })
   console.log(`Resolved ${resolved.length}/${SELECTIONS.length}`)
 
-  const modelThobeOptionRaw = rowsById.get(SAUDI_MODERN.id) ?? null
-  const modelThobeDnaValidation = validateComponentDna({ itemId: modelThobeOptionRaw!.id, category: modelThobeOptionRaw!.category, aiDna: modelThobeOptionRaw!.ai_dna })
-  const otherComponentDnaResults = SELECTIONS.filter((s) => s.option.id !== SAUDI_MODERN.id).map((s) => {
+  const componentDnaResults = SELECTIONS.filter((s) => s.option.id !== SAUDI_MODERN.id).map((s) => {
     const v = validateComponentDna({ itemId: s.option.id, category: s.option.category, aiDna: s.option.ai_dna })
     return { itemId: s.option.id, category: s.option.category, valid: v.valid }
   })
   const collarOptionRaw = rowsById.get(BASIM_COLLAR.id) ?? null
-  const composedAssets = composeAiAssets({ customerPhotoUrl: CUSTOMER_PHOTO_URL, modelThobeOption: modelThobeOptionRaw, collarOption: collarOptionRaw })
-  validateModelReferenceAvailable({ modelThobeOption: modelThobeOptionRaw, composed: composedAssets })
+  const composedAssets = composeAiAssets({ customerPhotoUrl: CUSTOMER_PHOTO_URL, collarOption: collarOptionRaw })
+  const baseHeroAvailable = GLOBAL_BASE_HERO_IMAGE_URL !== null
   validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
 
   const unresolvedComponents: UnresolvedComponent[] = componentsMissing.map((m) => ({ itemId: m.componentId, category: m.componentType, reason: m.reason }))
   const capability = evaluateCapability({
     customerPhotoPresent: true,
-    modelThobeSelected: true,
-    modelThobeDnaValid: modelThobeDnaValidation.valid,
-    modelReferenceAvailable: !!composedAssets.modelReference,
-    otherComponentDnaResults,
+    baseHeroAvailable,
+    componentDnaResults,
     unresolvedComponents,
   })
   console.log(`CAPABILITY: mode=${capability.mode} score=${capability.capabilityScore}%`)
@@ -196,7 +196,7 @@ function main() {
   }
 
   const lookCuttingSelected = entries.some((e) => e.category === 'look_cutting')
-  const requiredPriorityZeroIds = ['identity', 'model_thobe', 'material', 'material_color', ...(lookCuttingSelected ? ['look_cutting'] : [])]
+  const requiredPriorityZeroIds = ['identity', 'material', 'material_color', ...(lookCuttingSelected ? ['look_cutting'] : [])]
   const priorityZeroCheck = validatePriorityZeroIntact(layerCompression.layerReport, requiredPriorityZeroIds)
   console.log(`\nPriority 0 intact: ${priorityZeroCheck.valid}`)
 
