@@ -246,15 +246,16 @@ export interface UpdateMasterDataOptionParams {
   selling_points?: string[]
   internal_notes?: string
   price?: number
-  // Hero Image Internal Separation — `photo_url` (catalog thumbnail) no
-  // longer has any bearing on AI Design DNA/`ai_dna.metadata.sourceImage`
-  // (the internal Render Engine reference): they are uploaded through
-  // separate actions now (MasterDataManager's photo picker vs
-  // AiDesignDnaSection's own Hero Image Internal picker). The old Task 8
-  // "photo_url changed -> flip ai_dna to Needs Review" coupling (and its
-  // `currentPhotoUrl` param) is gone — `currentAiDna` below is only ever
-  // written when it actually differs from `original.ai_dna` (see `patch`
-  // below), same Safe Save treatment as every other field.
+  // Component Hero Image = Catalog Photo (Architecture Lock, 2026-08-04) —
+  // `photo_url` (catalog thumbnail) IS the source AiDesignDnaSection's
+  // Activate action freezes into `ai_dna.metadata.sourceImage`; there is no
+  // second upload anymore. The old Task 8 "photo_url changed -> flip ai_dna
+  // to Needs Review" coupling (and its `currentPhotoUrl` param) is still
+  // gone — `currentAiDna` below is only ever written when it actually
+  // differs from `original.ai_dna` (see `patch` below), same Safe Save
+  // treatment as every other field. A catalog photo change does not
+  // auto-refresh an already-approved `sourceImage`; the owner re-activates
+  // explicitly (same snapshot-on-demand semantics as before).
   currentAiDna?: AiDesignDna
   // Render Recipe editor (Reference-First Cleanup) — same Safe Save
   // treatment as `currentAiDna` above: diffed against `original.render_recipe`
@@ -535,18 +536,19 @@ export async function swapMasterDataOptionOrder(
 
 // Foto — same upload shape as Production's uploadEvidencePhoto (deterministic
 // path + upsert + public URL), pointed at its own bucket since this is a
-// distinct concern from production evidence.
+// distinct concern from production evidence. Uploads the catalog thumbnail
+// only — the `variant: 'hero'` second-path capability this function used to
+// carry (a dedicated internal Render Engine reference photo, independent of
+// the catalog thumbnail) was removed with it: Component Hero Image = Catalog
+// Photo now (Architecture Lock, 2026-08-04), so there is no second image to
+// upload anymore. AiDesignDnaSection's Activate action reuses the URL this
+// function already returns.
 export async function uploadMasterDataPhoto(
   supabase: SupabaseClient,
-  // `variant` — Hero Image Internal Separation: an optional filename suffix
-  // so the internal AI reference photo (variant: 'hero') uploads to its own
-  // Storage path instead of overwriting the catalog thumbnail at the same
-  // `${category}/${id}.${ext}` path a plain call (no variant) still uses.
-  params: { category: MasterDataCategory; id: string; file: File; variant?: string }
+  params: { category: MasterDataCategory; id: string; file: File }
 ): Promise<string> {
   const ext = params.file.name.split('.').pop() || 'jpg'
-  const suffix = params.variant ? `-${params.variant}` : ''
-  const path = `${params.category}/${params.id}${suffix}.${ext}`
+  const path = `${params.category}/${params.id}.${ext}`
 
   const { error } = await supabase.storage
     .from('master-data-photos')

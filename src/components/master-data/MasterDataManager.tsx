@@ -122,10 +122,6 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
 
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  // Hero Image Internal Separation — mirrors `uploadingPhoto` above, but for
-  // the dedicated internal Render Engine reference photo AiDesignDnaSection
-  // uploads on its own (never the catalog `photo_url`).
-  const [uploadingHeroImage, setUploadingHeroImage] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const photoInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -251,30 +247,21 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     }
   }
 
-  // Hero Image Internal Separation — replaces the old "activate whatever the
-  // catalog photo currently is" flow. Uploads to its own Storage path
-  // (`variant: 'hero'`, masterData.ts) so it never overwrites/depends on the
-  // catalog `photo_url` a Customer/Fitter sees in Design Studio, then
-  // freezes that upload into `ai_dna.metadata.sourceImage` and advances
-  // status straight to 'approved' in the same action — chaining
-  // markDnaGenerated then markDnaApproved (both unchanged, aiDna/types.ts)
-  // is what still lets aiAssetComposer's isAiAssetActive() gate work for
-  // this item going forward, exactly as before. `approvedBy` stays null —
-  // no user-identity context available in this component, same as before.
-  // Session-local like every other editing* field, persisted when
-  // handleSaveEdit calls updateMasterDataOption below.
-  async function handleActivateHeroImageReference(file: File) {
-    if (!editingId) return
-    setUploadingHeroImage(true)
-    setError(null)
-    try {
-      const url = await uploadMasterDataPhoto(supabase, { category: editingCategory, id: editingId, file, variant: 'hero' })
-      setEditingAiDna(prev => (prev ? markDnaApproved(markDnaGenerated(prev, url), null) : prev))
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal mengunggah Hero Image Internal.')
-    } finally {
-      setUploadingHeroImage(false)
-    }
+  // Component Hero Image = Catalog Photo (Architecture Lock, 2026-08-04) —
+  // replaces the old dedicated-upload flow (`variant: 'hero'` Storage path)
+  // entirely. No file, no upload, no network call: this just freezes
+  // whatever `editingPhotoUrl` (the same catalog Foto shown above) already
+  // is into `ai_dna.metadata.sourceImage`, then advances status straight to
+  // 'approved' in the same action — chaining markDnaGenerated then
+  // markDnaApproved (both unchanged, aiDna/types.ts) is what still lets
+  // aiAssetComposer's isAiAssetActive() gate work for this item going
+  // forward, exactly as before. `approvedBy` stays null — no user-identity
+  // context available in this component, same as before. Session-local like
+  // every other editing* field, persisted when handleSaveEdit calls
+  // updateMasterDataOption below.
+  function handleActivateHeroImageReference() {
+    if (!editingId || !editingPhotoUrl) return
+    setEditingAiDna(prev => (prev ? markDnaApproved(markDnaGenerated(prev, editingPhotoUrl), null) : prev))
   }
 
   // Reference-First Cleanup — session-local field editors, same "update the
@@ -727,7 +714,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                   <AiDesignDnaSection
                     dna={editingAiDna}
                     category={editingCategory}
-                    uploadingHeroImage={uploadingHeroImage}
+                    photoUrl={editingPhotoUrl}
                     onActivateHeroImageReference={handleActivateHeroImageReference}
                     onReferenceInstructionChange={handleReferenceInstructionChange}
                     onRenderNotesChange={handleRenderNotesChange}

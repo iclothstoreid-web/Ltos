@@ -154,11 +154,11 @@ export const DEFAULT_AI_DESIGN_DNA: AiDesignDna = {
 
 // Manual "flip to Needs Review" transition — kept for any future caller
 // that wants to force a re-review without discarding existing DNA content.
-// Since Hero Image Internal Separation, nothing in the app calls this
-// automatically anymore: `photo_url` (catalog thumbnail) no longer has any
-// relationship to `ai_dna.metadata.sourceImage` (the internal Render Engine
-// reference), so a catalog photo change is no longer treated as a Hero
-// Image change (see masterData.ts's updateMasterDataOption). Only
+// Nothing in the app calls this automatically: even though Component Hero
+// Image = Catalog Photo now (Architecture Lock, 2026-08-04), a `photo_url`
+// change does not auto-flip an already-approved `sourceImage` — the owner
+// re-activates explicitly (AiDesignDnaSection's Activate button), same as
+// before this lock (see masterData.ts's updateMasterDataOption). Only
 // meaningful once something has actually been generated (`draft`/
 // `approved`); a `pending` item has no DNA yet, so there's nothing to
 // review and it stays `pending` until it's generated for the first time.
@@ -167,14 +167,15 @@ export function markDnaNeedsRegeneration(dna: AiDesignDna): AiDesignDna {
   return { ...dna, status: 'needs_regeneration', version: dna.version + 1 }
 }
 
-// AI DNA generated — freezes the Hero Image Internal photo of that moment
-// into `metadata.sourceImage` as the Official Reference Image (Design
-// Knowledge Pipeline V1, decision 14; Hero Image Internal Separation
-// sprint: the photo passed in is now uploaded through its own dedicated
-// picker in AiDesignDnaSection, never the catalog `photo_url`). This is a
-// snapshot, not a live pointer — `sourceImage` only moves the next time
-// this function runs, i.e. the next time an Owner uploads/activates a new
-// Hero Image Internal. Only a draft-worthy transition: reaching `approved`
+// AI DNA generated — freezes the Hero Image photo of that moment into
+// `metadata.sourceImage` as the Official Reference Image (Design Knowledge
+// Pipeline V1, decision 14; Component Hero Image = Catalog Photo,
+// Architecture Lock 2026-08-04: the photo passed in is the item's own
+// `photo_url`, never a separate upload — AiDesignDnaSection has no file
+// picker anymore). This is a snapshot, not a live pointer — `sourceImage`
+// only moves the next time this function runs, i.e. the next time an Owner
+// activates the Hero Image again (e.g. after changing the catalog photo).
+// Only a draft-worthy transition: reaching `approved`
 // requires the separate markDnaApproved step below (AI Asset Lifecycle
 // sprint) — generating alone is not approving.
 export function markDnaGenerated(dna: AiDesignDna, photoUrl: string | null): AiDesignDna {

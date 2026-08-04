@@ -1,6 +1,5 @@
 'use client'
 
-import { useRef } from 'react'
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
 import type { MasterDataCategory } from '@/lib/design/masterData'
 import { RuleListEditor } from './RuleListEditor'
@@ -8,8 +7,13 @@ import { RuleListEditor } from './RuleListEditor'
 interface AiDesignDnaSectionProps {
   dna: AiDesignDna
   category: MasterDataCategory
-  uploadingHeroImage: boolean
-  onActivateHeroImageReference: (file: File) => void
+  // Component Hero Image = Catalog Photo (Architecture Lock, 2026-08-04) —
+  // the same photo_url MasterDataManager already tracks as `editingPhotoUrl`
+  // for the Foto field above this section. No separate upload exists
+  // anymore, so this section only needs the URL to read/activate, never a
+  // File.
+  photoUrl: string | null
+  onActivateHeroImageReference: () => void
   onReferenceInstructionChange: (value: string) => void
   onRenderNotesChange: (value: string) => void
   onLockRulesChange: (items: string[]) => void
@@ -32,36 +36,36 @@ interface AiDesignDnaSectionProps {
 // (`onActivateHeroImageReference`, wired in MasterDataManager to call
 // markDnaGenerated then markDnaApproved in sequence).
 //
-// Hero Image Internal Separation — this section owns its own file picker
-// instead of reusing whatever the catalog "Foto" field (MasterDataManager's
-// `editingPhotoUrl`) currently holds. `photo_url` is the thumbnail a
-// Customer/Fitter sees in Design Studio's catalog; the image uploaded here
-// becomes `ai_dna.metadata.sourceImage`, the internal reference the Render
-// Engine sends to OpenAI — a Customer never sees it. The two are independent
-// uploads, so "already active" no longer means "matches the current catalog
-// photo" (there is nothing to compare against anymore) — it just means a
-// Hero Image Internal has been activated at all. The picker stays available
-// even when one is already active, since replacing it (e.g. swapping in a
-// plain Base Garment photo) is the whole point of this control.
+// Component Hero Image = Catalog Photo (Architecture Lock, 2026-08-04) —
+// replaces the old "Hero Image Internal Separation" design (a dedicated
+// second upload, independent of the catalog `photo_url`, so the internal AI
+// reference could differ from what a Customer/Fitter sees). That second
+// upload path is gone: there is no file picker here anymore. Activating
+// simply freezes whatever `photoUrl` (the same catalog photo shown in the
+// Foto field above) currently is into `ai_dna.metadata.sourceImage` — no
+// network call, no Storage write from this component. Clicking again after
+// the catalog photo changes re-freezes the new one, same snapshot semantics
+// as before (`sourceImage` only moves the next time this action runs).
 //
 // Architecture Lock (2026-08-04) — Model Thobe is EXCLUDED from this
 // control. Base Hero (the render-quality-anchoring reference that
 // accompanies every render) moved to Render Engine ownership
-// (renderEngine/baseHero.ts), not Master Data — Model Thobe is Identity
-// Knowledge only now, same as every other category. Every other category
-// (Kerah, Manset, Plaket, Saku, ...) keeps this control unchanged — their
-// Hero Image is genuinely per-item Identity Knowledge, not a global concern.
+// (renderEngine/baseHero.ts, GLOBAL_BASE_HERO_IMAGE_URL) — Model Thobe no
+// longer has a Hero Image Internal concept at all, catalog-only like the
+// rest of its own fields. Every other category (Kerah, Manset, Plaket,
+// Saku, ...) keeps this control — their Hero Image is genuinely per-item
+// Identity Knowledge, now sourced from the catalog photo instead of a
+// second upload.
 export function AiDesignDnaSection({
   dna,
   category,
-  uploadingHeroImage,
+  photoUrl,
   onActivateHeroImageReference,
   onReferenceInstructionChange,
   onRenderNotesChange,
   onLockRulesChange,
   onNegativeRulesChange,
 }: AiDesignDnaSectionProps) {
-  const heroImageInputRef = useRef<HTMLInputElement>(null)
   const isActiveReference = dna.status === 'approved' && !!dna.metadata?.sourceImage
   // Architecture Lock (2026-08-04) — Hero Image Internal is no longer a
   // Model Thobe concern; Base Hero is Render Engine ownership now (see
@@ -82,31 +86,23 @@ export function AiDesignDnaSection({
           {isActiveReference && (
             <span className="flex items-center gap-1.5 font-sans text-xs text-[#2e7d32]">
               <span className="material-symbols-outlined text-[16px]">check_circle</span>
-              Hero Image Internal aktif sebagai Reference
+              Hero Image aktif sebagai Reference
             </span>
           )}
           <button
             type="button"
-            onClick={() => heroImageInputRef.current?.click()}
-            disabled={uploadingHeroImage}
+            onClick={onActivateHeroImageReference}
+            disabled={!photoUrl}
             className="flex items-center gap-2 px-4 py-2 border-[0.5px] border-[#775a19] text-[#775a19]
                        font-sans text-xs uppercase tracking-widest hover:bg-[#775a19]/5 transition-colors
                        disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
-            <input
-              ref={heroImageInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={e => {
-                const file = e.target.files?.[0]
-                if (file) onActivateHeroImageReference(file)
-                e.target.value = ''
-              }}
-            />
             <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
-            {uploadingHeroImage ? 'Mengunggah...' : isActiveReference ? 'Ganti Hero Image Internal' : 'Aktifkan Hero Image Internal'}
+            {isActiveReference ? 'Perbarui dari Foto Katalog' : 'Aktifkan Hero Image dari Foto Katalog'}
           </button>
+          {!photoUrl && (
+            <span className="font-sans text-xs text-[#444748]/70">Unggah Foto Katalog terlebih dahulu.</span>
+          )}
         </div>
       )}
 
