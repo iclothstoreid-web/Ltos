@@ -71,7 +71,12 @@ export function EvidenceUploader({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="w-full aspect-video bg-surface-container border-[0.5px] border-dashed border-outline-variant
+        // Sprint UX-03.1 (Photo Display Consistency) — portrait aspect-[3/4]
+        // instead of aspect-video (16:9), matching the same standard
+        // measurement's PhotoUploader uses for its own photo preview, so
+        // Bukti Foto isn't cropped to a landscape sliver. Upload/capture
+        // logic (uploadEvidencePhoto, onChange) untouched.
+        className="w-full aspect-[3/4] bg-surface-container border-[0.5px] border-dashed border-outline-variant
                    flex flex-col items-center justify-center gap-1 group cursor-pointer
                    hover:bg-surface-container transition-colors relative overflow-hidden disabled:opacity-60"
       >

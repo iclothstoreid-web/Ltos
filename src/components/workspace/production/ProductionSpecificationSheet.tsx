@@ -121,13 +121,17 @@ export function ProductionSpecificationSheet({
           </p>
           <div>
             <p className="text-[9px] uppercase tracking-widest text-secondary mb-2">Foto Customer</p>
+            {/* Sprint UX-03.1 (Photo Display Consistency) — portrait
+                aspect-[3/4] instead of a 40x40 square, so the printed sheet
+                shows more of the customer's actual photo instead of a
+                center crop. Same static-PNG capture path, unchanged. */}
             {/* eslint-disable-next-line @next/next/no-img-element -- captured
                 by html2canvas into a static PNG, next/image's runtime
                 optimization doesn't apply here */}
             <img
               src={customerPhotoUrl}
               alt="Foto Customer"
-              className="w-40 h-40 object-cover rounded border border-outline-variant"
+              className="w-40 aspect-[3/4] object-cover rounded border border-outline-variant"
               crossOrigin="anonymous"
             />
           </div>

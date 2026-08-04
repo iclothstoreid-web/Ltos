@@ -236,7 +236,11 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onU
         </div>
       ) : preview ? (
         <div className="space-y-2">
-          <div className="aspect-square bg-[#f0f3ff] border-[0.5px] border-dashed border-[#c4c7c7] overflow-hidden relative">
+          {/* Sprint UX-03.1 (Photo Display Consistency) — matches the
+              camera-live/capture-confirm states below in aspect ratio
+              (aspect-[9/16]), so the photo doesn't visibly resize the
+              moment it finishes uploading. */}
+          <div className="relative mx-auto w-auto h-[70vh] max-h-[640px] min-h-[360px] aspect-[9/16] bg-[#f0f3ff] border-[0.5px] border-dashed border-[#c4c7c7] overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview, not a remote/optimizable asset */}
             <img
               src={preview}
@@ -262,7 +266,7 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onU
           </div>
         </div>
       ) : uploading ? (
-        <div className="aspect-square bg-[#f0f3ff] border-[0.5px] border-dashed border-[#c4c7c7] flex items-center justify-center">
+        <div className="relative mx-auto w-auto h-[70vh] max-h-[640px] min-h-[360px] aspect-[9/16] bg-[#f0f3ff] border-[0.5px] border-dashed border-[#c4c7c7] flex items-center justify-center">
           <p className="text-[10px] text-[#444748] uppercase tracking-widest">Mengunggah...</p>
         </div>
       ) : (

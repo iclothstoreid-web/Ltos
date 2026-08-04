@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import type { StageRecord } from '@/lib/production/types'
 import { STAGE_LABELS } from '@/lib/production/stageConfig'
+import { FullscreenMediaModal } from './FullscreenMediaModal'
 
 interface DigitalHandoverCardProps {
   record: StageRecord
@@ -30,6 +32,7 @@ function formatTime(value: string | null) {
 // Status. Used both as post-completion confirmation and in the Riwayat list.
 export function DigitalHandoverCard({ record }: DigitalHandoverCardProps) {
   const checklistEntries = record.checklist ? Object.entries(record.checklist) : []
+  const [showEvidence, setShowEvidence] = useState(false)
 
   return (
     <div className="border border-outline-variant/60 bg-white/60 p-4">
@@ -75,11 +78,31 @@ export function DigitalHandoverCard({ record }: DigitalHandoverCardProps) {
       )}
 
       {record.evidence_url && (
-        // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
-        <img
+        // Sprint UX-03.1 (Photo Display Consistency) — was a full-width,
+        // max-h-40 landscape strip with no way to see the whole photo.
+        // Portrait aspect-[3/4] thumbnail + tap-to-fullscreen (reusing the
+        // same FullscreenMediaModal every other production photo already
+        // uses), same evidence_url source, no new data/upload logic.
+        <button
+          type="button"
+          onClick={() => setShowEvidence(true)}
+          className="w-40 aspect-[3/4] rounded overflow-hidden mb-3"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL */}
+          <img
+            src={record.evidence_url}
+            alt={`Bukti ${STAGE_LABELS[record.stage]}`}
+            className="w-full h-full object-cover"
+          />
+        </button>
+      )}
+
+      {showEvidence && record.evidence_url && (
+        <FullscreenMediaModal
+          kind="image"
           src={record.evidence_url}
           alt={`Bukti ${STAGE_LABELS[record.stage]}`}
-          className="w-full max-h-40 object-cover mb-3"
+          onClose={() => setShowEvidence(false)}
         />
       )}
 

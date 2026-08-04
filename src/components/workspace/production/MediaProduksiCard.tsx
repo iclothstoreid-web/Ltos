@@ -40,7 +40,12 @@ export function MediaProduksiCard({
             type="button"
             onClick={() => customerPhotoUrl && setShowPhoto(true)}
             disabled={!customerPhotoUrl}
-            className="w-full aspect-square rounded-xl overflow-hidden bg-surface-container flex items-center justify-center disabled:cursor-default"
+            // Sprint UX-03.1 (Photo Display Consistency) — portrait
+            // aspect-[3/4] instead of aspect-square, so Foto Pelanggan (a
+            // full-body reference photo) isn't cropped down to its center
+            // square. AI Render's placeholder cell below matches the same
+            // ratio so the 2-column grid stays visually even.
+            className="w-full aspect-[3/4] rounded-xl overflow-hidden bg-surface-container flex items-center justify-center disabled:cursor-default"
           >
             {customerPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
@@ -53,7 +58,7 @@ export function MediaProduksiCard({
 
         <div className="bg-surface rounded-2xl border border-outline-variant/30 p-3 space-y-2">
           <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary">AI Render</p>
-          <div className="w-full aspect-square rounded-xl bg-surface-container flex flex-col items-center justify-center gap-1">
+          <div className="w-full aspect-[3/4] rounded-xl bg-surface-container flex flex-col items-center justify-center gap-1">
             <span className="material-symbols-outlined text-outline-variant">auto_awesome</span>
             <p className="font-hanken text-[9px] text-secondary/80 text-center px-2">Coming in Phase 2</p>
           </div>

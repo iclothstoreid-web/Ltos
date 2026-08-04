@@ -35,7 +35,12 @@ export function HeroCard({ packet, currentStatus = 'pending', customerPhotoUrl }
           type="button"
           onClick={() => customerPhotoUrl && setShowPhoto(true)}
           disabled={!customerPhotoUrl}
-          className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-on-surface text-white flex items-center justify-center font-caslon text-2xl disabled:cursor-default"
+          // Sprint UX-03.1 (Photo Display Consistency) — was w-16 h-16
+          // (square), cropping most of a full-body Foto Pelanggan down to a
+          // sliver. Portrait aspect-[3/4] shows more of the actual photo at
+          // the same compact header scale; the letter-avatar fallback still
+          // renders fine inside a taller box.
+          className="w-14 aspect-[3/4] rounded-lg overflow-hidden flex-shrink-0 bg-on-surface text-white flex items-center justify-center font-caslon text-2xl disabled:cursor-default"
         >
           {customerPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL

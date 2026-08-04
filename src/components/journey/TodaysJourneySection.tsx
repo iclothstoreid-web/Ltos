@@ -15,6 +15,10 @@ interface TodaysJourneySectionProps {
 // "Perjalanan Hari Ini" — real evidence photo + real date per stage reached,
 // told as a story rather than a production report (brief explicitly forbids
 // progress bars/percentages/technical status here).
+//
+// Sprint UX-03.1 (Photo Display Consistency) — portrait aspect-[3/4] instead
+// of aspect-[4/3] (landscape was cropping the evidence photo's vertical
+// extent), plus tap-to-fullscreen. Same evidence_url source, no new data.
 export function TodaysJourneySection({ updates }: TodaysJourneySectionProps) {
   if (updates.length === 0) return null
 
@@ -29,7 +33,8 @@ export function TodaysJourneySection({ updates }: TodaysJourneySectionProps) {
               <JourneyPhoto
                 src={update.evidence_url}
                 alt={STAGE_LABEL[update.stage]}
-                className="w-full aspect-[4/3] mb-4"
+                className="w-full aspect-[3/4] mb-4"
+                expandable
               />
               {date && (
                 <p className="font-sans text-[10px] uppercase tracking-widest text-secondary mb-2 text-center">
