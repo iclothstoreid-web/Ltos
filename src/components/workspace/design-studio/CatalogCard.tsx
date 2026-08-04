@@ -1,6 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import Image from 'next/image'
+import { supabaseImageLoader } from '@/lib/supabase/imageLoader'
 
 export type CatalogCardAvailabilityTone = 'positive' | 'warning' | 'negative' | 'neutral'
 
@@ -59,6 +61,11 @@ export function CatalogCard({
   onViewSpec,
   ariaLabel,
 }: CatalogCardProps) {
+  // A handful of legacy master-data photos exceed Supabase Storage's
+  // transform resolution limit (400 InvalidRequest). Falls back to the
+  // original untransformed URL on error instead of leaving the card blank.
+  const [transformFailed, setTransformFailed] = useState(false)
+
   return (
     <div className="relative group">
       <button
@@ -79,17 +86,20 @@ export function CatalogCard({
             known before the image finishes loading — avoids layout shift
             while the lazy-loaded photo streams in. */}
         <div
-          className="aspect-square flex items-center justify-center overflow-hidden"
+          className="relative aspect-square flex items-center justify-center overflow-hidden"
           style={{ backgroundColor: swatchColor || '#dce2f3' }}
         >
           {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL, lazy-loaded below
-            <img
+            <Image
+              key={transformFailed ? 'raw' : 'transformed'}
               src={imageUrl}
               alt={name}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full object-cover"
+              loader={transformFailed ? undefined : supabaseImageLoader}
+              unoptimized={transformFailed}
+              fill
+              sizes="(min-width: 1024px) 15vw, (min-width: 640px) 30vw, 45vw"
+              className="object-cover"
+              onError={() => setTransformFailed(true)}
             />
           ) : !swatchColor ? (
             <span className="material-symbols-outlined text-4xl text-[#775a19]/40 group-hover:text-[#775a19]/70 transition-colors">

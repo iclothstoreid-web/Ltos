@@ -1,6 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import type { MasterDataOption } from '@/lib/design/masterData'
+import { supabaseImageLoader } from '@/lib/supabase/imageLoader'
 
 interface SpecDetailModalProps {
   option: MasterDataOption | null
@@ -14,6 +17,15 @@ interface SpecDetailModalProps {
 // any camera logic. Purely additive — doesn't touch selection state, so the
 // Design Studio picking workflow itself is unchanged.
 export function SpecDetailModal({ option, onClose }: SpecDetailModalProps) {
+  // Mirrors CatalogCard's fallback: a handful of legacy master-data photos
+  // exceed Supabase Storage's transform resolution limit (400
+  // InvalidRequest) and must fall back to the untransformed URL. Resets
+  // whenever a different option's spec is opened.
+  const [transformFailed, setTransformFailed] = useState(false)
+  useEffect(() => {
+    setTransformFailed(false)
+  }, [option?.id])
+
   if (!option) return null
 
   const specEntries = Object.entries(option.metadata).filter(([key]) => key.trim().length > 0)
@@ -36,12 +48,19 @@ export function SpecDetailModal({ option, onClose }: SpecDetailModalProps) {
         </div>
 
         {option.photo_url && (
-          // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL
-          <img
-            src={option.photo_url}
-            alt={option.name}
-            className="w-full aspect-video object-cover rounded-lg border border-[#c4c7c7]/40"
-          />
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-[#c4c7c7]/40">
+            <Image
+              key={transformFailed ? 'raw' : 'transformed'}
+              src={option.photo_url}
+              alt={option.name}
+              loader={transformFailed ? undefined : supabaseImageLoader}
+              unoptimized={transformFailed}
+              fill
+              sizes="448px"
+              className="object-cover"
+              onError={() => setTransformFailed(true)}
+            />
+          </div>
         )}
 
         {specEntries.length > 0 && (
