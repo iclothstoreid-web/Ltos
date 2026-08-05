@@ -21,6 +21,8 @@ import {
 } from '@/lib/design/aiAssetComposer/composer'
 import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
+import { applyCollarComponentIdentity } from '@/lib/design/componentDefaultKnowledge/collar'
+import type { CollarConstructionType } from '@/lib/design/componentDefaultKnowledge/collar'
 import type { AssetInstructionLayer } from '@/lib/design/promptBuilder/compression'
 import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
@@ -490,12 +492,26 @@ export async function POST(req: NextRequest) {
   // Priority mirrors the caller's own selection order (model_thobe first,
   // per RenderRecipeEntry's own "Model before Collar before Pocket"
   // convention) — there is no other ordering signal available per request.
-  const entries: RenderRecipeEntry[] = resolved.map(({ option, recipe }, index) => ({
+  const rawEntries: RenderRecipeEntry[] = resolved.map(({ option, recipe }, index) => ({
     itemId: option.id,
     category: option.category,
     recipe,
     priority: index,
   }))
+
+  // Component Default Knowledge — Collar (locked brief, 2026-08-05). Recipe
+  // Composer below is unmodified and only ever resolves Component Default
+  // Knowledge by category (empty for 'kerah', see componentDefaultKnowledge/
+  // registry.ts); this injects the item's own construction_type-selected
+  // default (COLLAR_DEFAULT_1/COLLAR_DEFAULT_2) directly into its entry
+  // before Composer runs — see componentDefaultKnowledge/collar.ts's own
+  // comment for why this is safe to do without touching Composer itself.
+  const collarConstructionTypeByItemId = new Map<string, CollarConstructionType | null>(
+    resolved
+      .filter(({ option }) => option.category === 'kerah')
+      .map(({ option }) => [option.id, (option.construction_type as CollarConstructionType | null) ?? null])
+  )
+  const entries: RenderRecipeEntry[] = applyCollarComponentIdentity(rawEntries, collarConstructionTypeByItemId)
 
   logStage('🟣', 'STAGE 3: RECIPE COMPOSER — merging component recipes')
   debugLog(`Entries (priority order): ${entries.map((e) => `${e.category}#${e.priority}`).join(', ')}`)

@@ -32,6 +32,45 @@ COMPONENT_DEFAULT_KNOWLEDGE.plaket = {
   },
 }
 
+// Cuff ('manset'), Pocket ('saku'), Material ('bahan') Component Default
+// Knowledge (locked brief, 2026-08-05) — every variant/item in each category
+// inherits this identity unless a future sprint adds its own delta on top,
+// same "category baseline" role as Plaket above. `kerah` (Collar) is
+// deliberately NOT populated here — Collar has two construction-type-
+// dependent defaults (COLLAR_DEFAULT_1/COLLAR_DEFAULT_2), selected by each
+// item's own `construction_type` field rather than one fixed category
+// default; see componentDefaultKnowledge/collar.ts.
+COMPONENT_DEFAULT_KNOWLEDGE.manset = {
+  ...EMPTY_COMPONENT_DEFAULT_KNOWLEDGE,
+  identity: {
+    construction: 'Standard shirt cuff.',
+    position: 'Sleeve opening.',
+    closure: 'Single overlap cuff.',
+    symmetry: 'Left and right cuffs must be symmetrical.',
+  },
+}
+
+COMPONENT_DEFAULT_KNOWLEDGE.saku = {
+  ...EMPTY_COMPONENT_DEFAULT_KNOWLEDGE,
+  identity: {
+    construction: 'Patch pocket.',
+    position: 'Left chest.',
+    attachment: 'Topstitched onto garment body.',
+    symmetry: 'Pocket opening remains horizontal.',
+  },
+}
+
+COMPONENT_DEFAULT_KNOWLEDGE.bahan = {
+  ...EMPTY_COMPONENT_DEFAULT_KNOWLEDGE,
+  identity: {
+    surface: 'Fine plain weave.',
+    appearance: 'Smooth matte finish.',
+    texture: 'Very subtle fabric texture.',
+    drape: 'Soft natural drape.',
+    pattern: 'Solid without visible pattern.',
+  },
+}
+
 export function getComponentDefaultKnowledge(category: MasterDataCategory): ComponentDefaultKnowledge {
   return COMPONENT_DEFAULT_KNOWLEDGE[category] ?? EMPTY_COMPONENT_DEFAULT_KNOWLEDGE
 }

@@ -98,6 +98,13 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const [editingSupplier, setEditingSupplier] = useState('')
   const [editingKarakteristik, setEditingKarakteristik] = useState('')
   const [editingMaterialId, setEditingMaterialId] = useState<string | null>(null)
+  // Component Default Knowledge — Collar (locked brief, 2026-08-05). 'kerah'
+  // items only — engine-only field (never shown to the customer) deciding
+  // which Component Default Knowledge (COLLAR_DEFAULT_1/2, see
+  // componentDefaultKnowledge/collar.ts) the Render Assembly injects. Same
+  // session-local "set in startEdit, persisted on Simpan" pattern as
+  // editingMaterialId above.
+  const [editingConstructionType, setEditingConstructionType] = useState<'one_piece' | 'two_piece' | null>(null)
   const [materials, setMaterials] = useState<Material[]>([])
   const [materialColors, setMaterialColors] = useState<MaterialColor[]>([])
   const [loadingMaterialColors, setLoadingMaterialColors] = useState(false)
@@ -220,6 +227,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingMaterialId(isMaterial ? option.material_id : null)
     setMaterialColors([])
     if (isMaterial && option.material_id) refreshMaterialColors(option.material_id)
+    setEditingConstructionType(option.category === 'kerah' ? option.construction_type : null)
     setEditingSellingPoints(option.selling_points?.length ? option.selling_points : [])
     setEditingInternalNotes(option.internal_notes ?? '')
     setEditingPrice(String(option.price ?? 0))
@@ -307,6 +315,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
         currentAiDna: editingAiDna ?? undefined,
         currentRenderRecipe: editingRenderRecipe ?? undefined,
         ...(editingCategory === 'bahan' ? { material_id: editingMaterialId } : {}),
+        ...(editingCategory === 'kerah' ? { construction_type: editingConstructionType } : {}),
         original: editingOriginal,
       })
       setEditingId(null)
@@ -605,6 +614,27 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                           </div>
                         )}
                       </>
+                    )}
+
+                    {editingCategory === 'kerah' && (
+                      <div>
+                        <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+                          Construction Type <span className="normal-case">(Engine only — tidak tampil ke customer)</span>
+                        </p>
+                        <select
+                          value={editingConstructionType ?? ''}
+                          onChange={e =>
+                            setEditingConstructionType(
+                              e.target.value === '' ? null : (e.target.value as 'one_piece' | 'two_piece')
+                            )
+                          }
+                          className="w-full border-b border-[#c4c7c7] bg-transparent py-1 text-sm outline-none focus:border-[#775a19]"
+                        >
+                          <option value="">Belum diatur</option>
+                          <option value="one_piece">One-piece</option>
+                          <option value="two_piece">Two-piece</option>
+                        </select>
+                      </div>
                     )}
 
                     <div>

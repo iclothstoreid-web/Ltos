@@ -107,6 +107,14 @@ export interface MasterDataOption {
   // session saved in between) is refused rather than silently overwriting
   // whatever that other session wrote — see StaleMasterDataError.
   updated_at: string
+  // Component Default Knowledge — Collar (locked brief, 2026-08-05).
+  // 'kerah' items only — decides which category-level Component Default
+  // Knowledge (COLLAR_DEFAULT_1 one_piece / COLLAR_DEFAULT_2 two_piece, see
+  // componentDefaultKnowledge/collar.ts) the Render Assembly injects.
+  // Engine-only: never shown to the customer, never used for Design Studio
+  // selection. Nullable — an unset Kerah item just gets no Collar Component
+  // Default Knowledge injected (see collar.ts's getCollarDefaultKnowledge).
+  construction_type: 'one_piece' | 'two_piece' | null
 }
 
 export type MasterOptionsByCategory = Record<MasterDataCategory, MasterDataOption[]>
@@ -266,6 +274,9 @@ export interface UpdateMasterDataOptionParams {
   // `materials` row (Architecture Lock: DNA Color Repository + Material
   // Color Mapping). Omit to leave unchanged.
   material_id?: string | null
+  // 'kerah' items only — see MasterDataOption.construction_type. Omit to
+  // leave unchanged.
+  construction_type?: 'one_piece' | 'two_piece' | null
   // Sprint PR-05 (Master Data Integrity — Lost Update fix) — the full row
   // exactly as it was read when this edit session opened (MasterDataManager's
   // startEdit). Two things depend on it:
@@ -332,6 +343,9 @@ export async function updateMasterDataOption(
   if (nextPrice !== original.price) patch.price = nextPrice
   if (params.material_id !== undefined && params.material_id !== original.material_id) {
     patch.material_id = params.material_id
+  }
+  if (params.construction_type !== undefined && params.construction_type !== original.construction_type) {
+    patch.construction_type = params.construction_type
   }
   if (nextAiDna && !sameJson(nextAiDna, original.ai_dna)) patch.ai_dna = nextAiDna
   if (params.currentRenderRecipe && !sameJson(params.currentRenderRecipe, original.render_recipe)) {
