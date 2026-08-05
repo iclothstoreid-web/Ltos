@@ -21,6 +21,7 @@ import {
 } from '@/lib/design/aiAssetComposer/composer'
 import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
+import { GLOBAL_REFERENCE_POLICY_GEOMETRY } from '@/lib/design/renderEngine/globalReferencePolicy'
 import { applyCollarComponentIdentity } from '@/lib/design/componentDefaultKnowledge/collar'
 import type { CollarConstructionType } from '@/lib/design/componentDefaultKnowledge/collar'
 import type { AssetInstructionLayer } from '@/lib/design/promptBuilder/compression'
@@ -649,6 +650,24 @@ export async function POST(req: NextRequest) {
   const assetInstructionLayers: AssetInstructionLayer[] = REFERENCE_CATEGORY_REGISTRY.filter((def) =>
     composedAssets.referencesByCategory.has(def.category),
   ).map((def) => ({ id: `asset_instruction:${def.idSuffix}`, label: def.instructionLabel, content: def.instruction }))
+
+  // Reference Policy Refactor (Sprint A, 2026-08-05) — the shared framing
+  // every geometry-type AI Asset Instruction above now omits (hoisted to
+  // GLOBAL_REFERENCE_POLICY_GEOMETRY, renderEngine/globalReferencePolicy.ts)
+  // is sent here ONCE, as its own Priority 0 layer, instead of once per
+  // active geometry-type reference — no change to AI Asset Composer, no
+  // change to which/how many Hero Images are sent, only where this one
+  // shared sentence lives in the assembly. Gated the same way every
+  // asset_instruction layer already is: only when at least one geometry
+  // reference (Collar/Plaket/Pocket) is actually active this render, so a
+  // render with none of them selected pays nothing for it, same as before.
+  if (assetInstructionLayers.length > 0) {
+    assetInstructionLayers.unshift({
+      id: 'asset_instruction:global_reference_policy_geometry',
+      label: 'Global Reference Policy (Geometry)',
+      content: GLOBAL_REFERENCE_POLICY_GEOMETRY,
+    })
+  }
 
   // Layer-Based Prompt Compression (Sprint PR-04) — replaces the old fixed
   // Anchor/Material/Other/Negatives buckets, which truncated by raw word

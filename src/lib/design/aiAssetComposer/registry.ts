@@ -25,21 +25,32 @@ import { REFERENCE_PRIORITY, type ReferenceType, type ReferenceRole } from './ty
 // render-quality-anchoring role went (GLOBAL_BASE_HERO_IMAGE_URL, Render
 // Engine ownership, outside this registry).
 
-// The exact instruction GPT Image needs alongside a Collar AI Asset —
-// collar GEOMETRY only, everything else (fabric/color/stitching/lighting/
-// background) stays DNA-driven.
+// Component Reference Delta — Geometry (Sprint A, Reference Policy
+// Refactor, 2026-08-05). These 3 constants used to each hold the FULL
+// instruction text (framing + geometry list + ignore list, ~248 tokens
+// combined) — Priority 0 audit found the framing identical in intent across
+// all 3, now hoisted once to renderEngine/globalReferencePolicy.ts's
+// GLOBAL_REFERENCE_POLICY_GEOMETRY (sent as its own Priority 0 layer,
+// route.ts). What remains here is exactly what audit found to be genuine
+// per-category content — collar GEOMETRY only, everything else (fabric/
+// color/stitching/lighting/background) stays DNA-driven, same rule as
+// before, unchanged in meaning: only the (already shared, now-hoisted)
+// framing sentences are gone from this string, not any constraint.
 export const COLLAR_REFERENCE_SHAPE_INSTRUCTION =
-  'The attached collar reference image is provided ONLY to describe the collar shape and geometry. Transfer only: collar outline, collar curvature, collar opening, collar proportion, collar height. Do NOT copy: fabric texture, fabric color, stitching, lighting, wrinkles, shadows, background, photography style. The collar must still follow the selected AI Design DNA. This reference is only a geometric guide for the collar shape.'
+  'Transfer only: collar outline, collar curvature, collar opening, collar proportion, collar height. Do NOT copy: fabric texture, fabric color, stitching, lighting, wrinkles, shadows, background, photography style.'
 
 // Same mechanism as COLLAR_REFERENCE_SHAPE_INSTRUCTION, for Placket —
-// PLAKET_SHAPE geometry only (Sprint AI Stability Phase 2).
+// PLAKET_SHAPE geometry only (Sprint AI Stability Phase 2). Ignore list
+// deliberately NOT unified with Collar's — it genuinely differs ("stitching
+// thread color" vs Collar's plain "stitching"), so it stays Delta, not
+// hoisted into the shared Global layer.
 export const PLAKET_REFERENCE_SHAPE_INSTRUCTION =
-  'The attached placket reference image is provided ONLY to describe the placket shape and geometry. Transfer only: placket outline, placket opening length, placket width, button spacing, stitch-line geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style. The placket must still follow the selected AI Design DNA. This reference is only a geometric guide for the placket shape.'
+  'Transfer only: placket outline, placket opening length, placket width, button spacing, stitch-line geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style.'
 
 // Same mechanism as COLLAR_REFERENCE_SHAPE_INSTRUCTION, for Pocket —
 // POCKET_SHAPE geometry only (Sprint AI Stability Phase 2).
 export const POCKET_REFERENCE_SHAPE_INSTRUCTION =
-  'The attached pocket reference image is provided ONLY to describe the pocket shape and geometry. Transfer only: pocket outline, pocket placement, pocket proportion, pocket flap/opening geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style. The pocket must still follow the selected AI Design DNA. This reference is only a geometric guide for the pocket shape.'
+  'Transfer only: pocket outline, pocket placement, pocket proportion, pocket flap/opening geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style.'
 
 export interface ReferenceCategoryDefinition {
   category: MasterDataCategory
