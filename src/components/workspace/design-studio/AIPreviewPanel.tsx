@@ -37,7 +37,7 @@ interface AIPreviewPanelProps {
 const LOADING_STAGE_MESSAGES: { afterSeconds: number; text: string }[] = [
   { afterSeconds: 0, text: 'Menyiapkan detail desain dan foto Anda...' },
   { afterSeconds: 5, text: 'Mengirim permintaan ke AI Rendering Engine...' },
-  { afterSeconds: 12, text: 'AI sedang menyusun visual Anda — proses ini normalnya memakan waktu 60–80 detik.' },
+  { afterSeconds: 12, text: 'Local Tailor masih menyempurnakan detail Anda. Proses ini biasanya memakan waktu 60–80 detik.' },
   { afterSeconds: 45, text: 'Hampir selesai — AI masih menyempurnakan detail visual Anda...' },
 ]
 
