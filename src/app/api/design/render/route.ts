@@ -22,6 +22,7 @@ import {
 import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
 import { GLOBAL_REFERENCE_POLICY_GEOMETRY } from '@/lib/design/renderEngine/globalReferencePolicy'
+import { buildReferenceBindingMap } from '@/lib/design/renderEngine/referenceBindingMap'
 import { applyCollarComponentIdentity } from '@/lib/design/componentDefaultKnowledge/collar'
 import type { CollarConstructionType } from '@/lib/design/componentDefaultKnowledge/collar'
 import type { AssetInstructionLayer } from '@/lib/design/promptBuilder/compression'
@@ -666,6 +667,41 @@ export async function POST(req: NextRequest) {
       id: 'asset_instruction:global_reference_policy_geometry',
       label: 'Global Reference Policy (Geometry)',
       content: GLOBAL_REFERENCE_POLICY_GEOMETRY,
+    })
+  }
+
+  // Reference Binding Architecture V2 (2026-08-05) — root cause audit found
+  // OpenAI's images.edit has no label/role/id/metadata field for an
+  // individual image (verified against the installed SDK's own
+  // ImageEditParamsBase type: `image` is a plain `Uploadable[]`), and the
+  // prompt itself never bound a specific image to its role. This layer
+  // closes that gap: built ENTIRELY from which images are actually active
+  // this render (never a static "Image 1/2/3" list — see
+  // renderEngine/referenceBindingMap.ts's own doc comment), one role
+  // sentence per image, naming only what the image represents — no Lock
+  // Rules/Negative Rules/Quality/Camera/Lighting/Material/Color, and no
+  // detailed geometry (that stays exclusively in Component Delta below,
+  // never duplicated here). Broader condition than the geometry-policy
+  // block above: Customer Photo (and often Base Hero) are active even when
+  // zero geometry-type categories are selected, so this uses its own
+  // independent gate (`buildReferenceBindingMap` returns '' when nothing
+  // qualifies) rather than reusing `assetInstructionLayers.length > 0`.
+  // Unshifting AFTER the block above places this layer in front of
+  // Global Reference Policy Geometry (which is itself in front of every
+  // Component Delta) — Identity -> Reference Binding Map -> Global
+  // Reference Policy -> Component Delta, as required.
+  const referenceBindingMapContent = buildReferenceBindingMap({
+    customerPhoto: true,
+    baseHero: baseHeroAvailable,
+    collar: composedAssets.referencesByCategory.has('kerah'),
+    placket: composedAssets.referencesByCategory.has('plaket'),
+    pocket: composedAssets.referencesByCategory.has('saku'),
+  })
+  if (referenceBindingMapContent) {
+    assetInstructionLayers.unshift({
+      id: 'asset_instruction:reference_binding_map',
+      label: 'Reference Binding Map',
+      content: referenceBindingMapContent,
     })
   }
 
