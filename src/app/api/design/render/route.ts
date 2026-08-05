@@ -256,6 +256,33 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  // Material Resolver audit (2026-08-05) — same false-blocker pattern as
+  // warna_bahan above, one category over. 'bahan' (Material) rows source
+  // their real content from ai_dna (Hero Image/Reference Instruction/Lock
+  // Rules/Negative Rules) and Component Default Knowledge (Engine,
+  // componentDefaultKnowledge/registry.ts's `bahan` slot), never
+  // render_recipe — but render_recipe.status still sits at the DB default
+  // ('empty') forever for these rows since nothing in this app's UI ever
+  // writes it to 'configured' (RenderRecipeSection.tsx only displays status,
+  // never edits it). DNA Resolver's `validate()` (dnaResolver/resolver.ts,
+  // untouched by this fix) still treats that as "not ready" and blocks the
+  // render, even though ai_dna already has everything Material needs. Mark
+  // it ready IN-MEMORY ONLY (never persisted) — only when ai_dna itself
+  // already has real authored content (status !== 'pending', the exact same
+  // condition DNA Resolver's own aiDna check one field over already
+  // requires), so a genuinely-empty Material row is still correctly blocked.
+  // No extra Supabase fetch needed (unlike warna_bahan's dna_colors join) —
+  // Material's real content already lives on this same row's ai_dna. Does
+  // not touch DNA Resolver, Recipe Composer, Compression, or Component
+  // Default Knowledge at all.
+  rowsById.forEach((row) => {
+    if (row.category !== 'bahan' || row.ai_dna.status === 'pending') return
+    row.render_recipe = {
+      ...row.render_recipe,
+      status: row.render_recipe.status === 'empty' ? 'configured' : row.render_recipe.status,
+    }
+  })
+
   // DNA State (Task 1) — Sprint PR-01 (P7, Cache Invalidation) moved this
   // hash computation to AFTER the Supabase fetch above (it used to run
   // before, purely on the request body, so a cache hit could skip Supabase
