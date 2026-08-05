@@ -283,6 +283,38 @@ export async function POST(req: NextRequest) {
     }
   })
 
+  // Look Cutting Architecture Lock (2026-08-05) — Look Cutting is NOT a
+  // Visual Component: no Hero Image, no AI Asset, no Reference Image, no
+  // Component Default Knowledge (componentDefaultKnowledge/registry.ts's
+  // `look_cutting` slot stays EMPTY, untouched by this fix). It carries only
+  // Variant Delta Knowledge — silhouette/fit/ease/shaping text on ai_dna
+  // (referenceInstruction/lockRules/negativeRules) — the exact same "real
+  // content already lives on ai_dna, render_recipe/status is vestigial"
+  // shape as the bahan fix above, one category over. Unlike bahan though,
+  // Look Cutting's own `ai_dna.status` can ALSO be stuck at 'pending' even
+  // with real referenceInstruction text already authored (audited finding,
+  // "Slim Fit" — see RND-20260805-000007): the only UI path that ever
+  // advances ai_dna.status (AiDesignDnaSection's Activate button) is gated
+  // on a catalog photo Look Cutting was never meant to need, so status
+  // alone is not a trustworthy readiness signal here. Gate on the presence
+  // of real Variant Delta Knowledge instead (referenceInstruction — the
+  // same "don't bypass a genuinely-empty item" guard as warnaBahanRows' own
+  // `if (!colorText) return` above), then mark BOTH ai_dna.status and
+  // render_recipe.status ready IN-MEMORY ONLY, never persisted. Does not
+  // touch DNA Resolver, Recipe Composer, Compression, or Component Default
+  // Knowledge at all.
+  rowsById.forEach((row) => {
+    if (row.category !== 'look_cutting' || !row.ai_dna.referenceInstruction) return
+    row.ai_dna = {
+      ...row.ai_dna,
+      status: row.ai_dna.status === 'pending' ? 'draft' : row.ai_dna.status,
+    }
+    row.render_recipe = {
+      ...row.render_recipe,
+      status: row.render_recipe.status === 'empty' ? 'configured' : row.render_recipe.status,
+    }
+  })
+
   // DNA State (Task 1) — Sprint PR-01 (P7, Cache Invalidation) moved this
   // hash computation to AFTER the Supabase fetch above (it used to run
   // before, purely on the request body, so a cache hit could skip Supabase

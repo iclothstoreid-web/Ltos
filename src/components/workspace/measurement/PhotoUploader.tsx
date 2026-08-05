@@ -62,10 +62,23 @@ export function PhotoUploader({ consultationId, initialPhotoUrl, onUploaded, onU
     }
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        // ideal (not exact) aspectRatio — biases the stream toward portrait
-        // framing for full-body shots without hard-failing on devices/
-        // webcams that can't natively deliver 9:16.
-        video: { facingMode: { ideal: 'environment' }, aspectRatio: { ideal: 9 / 16 } },
+        // ideal (not exact) aspectRatio/width/height — biases the stream
+        // toward a sharp, portrait-framed full-body shot without hard-
+        // failing on devices/webcams that can't natively deliver 9:16 or
+        // 1080x1920. Camera Preview audit (2026-08-05) — width/height were
+        // previously unset entirely, which let some devices (confirmed:
+        // Poco X6, and tablets) negotiate a low default resolution instead
+        // of their real sensor output, then get stretched to fill the large
+        // preview box below (blurry) and cropped by a mismatched aspect
+        // ratio (zoomed-looking). `captureFrame()` draws the canvas at the
+        // stream's own native videoWidth/videoHeight, so this also fixes
+        // the resolution of the final uploaded photo, not just the preview.
+        video: {
+          facingMode: { ideal: 'environment' },
+          aspectRatio: { ideal: 9 / 16 },
+          width: { ideal: 1080 },
+          height: { ideal: 1920 },
+        },
         audio: false,
       })
       setPreview(null)

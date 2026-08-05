@@ -69,8 +69,13 @@ export function AiDesignDnaSection({
   const isActiveReference = dna.status === 'approved' && !!dna.metadata?.sourceImage
   // Architecture Lock (2026-08-04) — Hero Image Internal is no longer a
   // Model Thobe concern; Base Hero is Render Engine ownership now (see
-  // header comment). Every other category keeps the control.
-  const showHeroImageInternal = category !== 'model_thobe'
+  // header comment).
+  // Look Cutting Architecture Lock (2026-08-05) — Look Cutting is NOT a
+  // Visual Component either: no Hero Image, no AI Asset, no Reference
+  // Image, no Component Default Knowledge, ever. It carries only Variant
+  // Delta Knowledge (silhouette/fit/ease/shaping text below) — there is
+  // nothing for this control to activate. Every other category keeps it.
+  const showHeroImageInternal = category !== 'model_thobe' && category !== 'look_cutting'
   // Fit Knowledge authoring guidance is Look Cutting-only (see
   // aiDna/types.ts's LOOK_CUTTING_FIT_LOCK_RULES) — Look Cutting's
   // referenceInstruction must describe fit behaviour only (ease/drape per
