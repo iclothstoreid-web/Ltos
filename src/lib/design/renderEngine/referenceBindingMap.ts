@@ -30,11 +30,14 @@ export interface ReferenceBindingRoles {
   pocket: boolean
 }
 
-const CUSTOMER_PHOTO_BINDING = 'Customer Photo is the Identity Reference.'
-const BASE_HERO_BINDING = 'Base Hero is the Silhouette Reference.'
-const COLLAR_BINDING = 'Collar Hero is the Collar Geometry Reference.'
-const PLACKET_BINDING = 'Placket Hero is the Placket Geometry Reference.'
-const POCKET_BINDING = 'Pocket Hero is the Pocket Geometry Reference.'
+// Priority 0 Budget Reserve (2026-08-05) — "is the ... Reference." tightened
+// to "-> ... Reference." (5 words -> 4 per role). Same meaning (an image
+// maps to a role), same one-role-per-sentence shape, no role name changed.
+const CUSTOMER_PHOTO_BINDING = 'Customer Photo -> Identity Reference.'
+const BASE_HERO_BINDING = 'Base Hero -> Silhouette Reference.'
+const COLLAR_BINDING = 'Collar Hero -> Collar Geometry Reference.'
+const PLACKET_BINDING = 'Placket Hero -> Placket Geometry Reference.'
+const POCKET_BINDING = 'Pocket Hero -> Pocket Geometry Reference.'
 
 // Order matches the fixed order images are actually attached in (route.ts:
 // Customer -> Base Hero -> Collar -> Placket -> Pocket) so the Nth role

@@ -662,7 +662,12 @@ export async function POST(req: NextRequest) {
   // asset_instruction layer already is: only when at least one geometry
   // reference (Collar/Plaket/Pocket) is actually active this render, so a
   // render with none of them selected pays nothing for it, same as before.
-  if (assetInstructionLayers.length > 0) {
+  // Priority 0 Budget Reserve (2026-08-05) — gate widened to `||
+  // baseHeroAvailable`: this layer's content now also carries Base Hero's
+  // silhouette-only/ignore-the-person instruction (globalReferencePolicy.ts's
+  // own comment), and Base Hero is sent on every render independent of
+  // whether any Collar/Plaket/Pocket reference is active.
+  if (assetInstructionLayers.length > 0 || baseHeroAvailable) {
     assetInstructionLayers.unshift({
       id: 'asset_instruction:global_reference_policy_geometry',
       label: 'Global Reference Policy (Geometry)',
