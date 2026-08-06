@@ -298,6 +298,38 @@ export async function POST(req: NextRequest) {
     }
   })
 
+  // Collar (Kerah) false-blocker fix (Final Pipeline Validation, 2026-08-06)
+  // — the exact same pattern as the bahan fix immediately above, one
+  // category over. 'kerah' (Collar) rows source their real content from
+  // ai_dna (Hero Image/Reference Instruction/Component Rules), never
+  // render_recipe — but render_recipe.status still sits at the DB default
+  // ('empty') forever for rows nothing in this app's UI ever writes it to
+  // 'configured' for. This was a REAL, live blocker (audited finding,
+  // "Zirve Collar" — approved ai_dna with a real Hero Image, but empty
+  // render_recipe): DNA Resolver's `validate()` rejected the item outright
+  // (render blocked entirely, not just missing a reference image), AND —
+  // worse — aiAssetComposer/composer.ts's `isAiAssetActive()` reads this
+  // SAME `render_recipe.status !== 'empty'` condition as one of its own 4
+  // gates, so even a fully-approved Collar with a real uploaded Hero Image
+  // was silently excluded from the images actually sent to GPT Image. Mark
+  // it ready IN-MEMORY ONLY (never persisted) — only when ai_dna itself
+  // already has real authored content (status !== 'pending', the exact
+  // same condition the bahan fix above already requires), so a
+  // genuinely-empty Collar row is still correctly blocked, and
+  // isAiAssetActive's own separate `ai_dna.status === 'approved'`
+  // requirement still gates whether the Hero Image actually binds — this
+  // only removes the false blocker, it does not loosen approval. Does not
+  // touch DNA Resolver, Recipe Composer, Compression, Component Default
+  // Knowledge, or aiAssetComposer's own gate logic at all — only the
+  // render_recipe.status value both of those already read.
+  rowsById.forEach((row) => {
+    if (row.category !== 'kerah' || row.ai_dna.status === 'pending') return
+    row.render_recipe = {
+      ...row.render_recipe,
+      status: row.render_recipe.status === 'empty' ? 'configured' : row.render_recipe.status,
+    }
+  })
+
   // Look Cutting Architecture Lock (2026-08-05) — Look Cutting is NOT a
   // Visual Component: no Hero Image, no AI Asset, no Reference Image, no
   // Component Default Knowledge (componentDefaultKnowledge/registry.ts's
