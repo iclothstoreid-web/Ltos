@@ -31,7 +31,7 @@ import { validateComponentDna } from '../src/lib/design/promptValidation/dnaVali
 import { evaluateCapability } from '../src/lib/design/capabilityEngine/engine'
 import type { UnresolvedComponent } from '../src/lib/design/capabilityEngine/engine'
 import { IDENTITY_PRESERVATION } from '../src/lib/design/renderEngine/identityPreservation'
-import { composeAiAssets, validateCollarReference, validatePlaketReference, validatePocketReference, componentReferenceDeltas } from '../src/lib/design/aiAssetComposer/composer'
+import { composeAiAssets, validateCollarReference, validatePlaketReference, validatePocketReference } from '../src/lib/design/aiAssetComposer/composer'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '../src/lib/design/renderEngine/baseHero'
 import { buildReferenceBinding } from '../src/lib/design/renderEngine/referenceBinding'
 
@@ -184,15 +184,12 @@ function main() {
     placket: composedAssets.referencesByCategory.has('plaket'),
     pocket: composedAssets.referencesByCategory.has('saku'),
   })
-  const referenceDeltas = componentReferenceDeltas(composedAssets)
-
   const promptLayers = buildPromptLayers({
     entries,
     masterRecipe,
     identityPreservation: IDENTITY_PRESERVATION,
     referenceBinding: referenceBindingContent,
     referenceUsagePolicy: referenceUsagePolicyActive,
-    componentReferenceDeltas: referenceDeltas,
   })
   const layerCompression = compressPromptByLayers(promptLayers)
   console.log('\nLayer report (in final prompt order — 13 fixed sections + extension components):')

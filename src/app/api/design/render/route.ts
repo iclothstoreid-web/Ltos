@@ -18,7 +18,6 @@ import {
   validatePlaketReference,
   validatePocketReference,
   referenceBackedCategories,
-  componentReferenceDeltas,
 } from '@/lib/design/aiAssetComposer/composer'
 import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
@@ -672,11 +671,14 @@ export async function POST(req: NextRequest) {
 
   // Prompt Architecture Realignment (2026-08-06) — Reference Binding
   // (Section 2) and Reference Usage Policy (Section 3) are now fixed Engine
-  // sections at fixed positions, and each geometry-type category's own
-  // Component Reference Delta (the "Transfer only: .../Do NOT copy: ..."
-  // instruction, aiAssetComposer/registry.ts) is appended to that SAME
-  // category's own step (Collar/Placket/Pocket) instead of being
-  // concatenated as standalone caveats before any component's own section.
+  // sections at fixed positions. Final Repository Cleanup (2026-08-06) —
+  // each geometry-type category's own Component Reference Delta (the
+  // "Transfer only: .../Do NOT copy: ..." instruction, aiAssetComposer/
+  // registry.ts) is no longer appended to that category's own step —
+  // neither an Engine section nor Master Data, so it no longer belongs in
+  // the assembled prompt (see promptBuilder/compression.ts's
+  // buildComponentStepContent for the full rationale). Hero Image binding
+  // itself (Reference Binding/Reference Usage Policy) is unaffected.
   // See promptBuilder/compression.ts's own header comment for the full
   // fixed order.
   const referenceUsagePolicyActive = composedAssets.referencesByCategory.size > 0 || baseHeroAvailable
@@ -687,7 +689,6 @@ export async function POST(req: NextRequest) {
     placket: composedAssets.referencesByCategory.has('plaket'),
     pocket: composedAssets.referencesByCategory.has('saku'),
   })
-  const referenceDeltas = componentReferenceDeltas(composedAssets)
 
   // Layer-Based Prompt Compression — assembles the 13 fixed sections (see
   // promptBuilder/compression.ts) built from `entries` (per-item, pre-merge)
@@ -700,7 +701,6 @@ export async function POST(req: NextRequest) {
       identityPreservation: IDENTITY_PRESERVATION,
       referenceBinding: referenceBindingContent,
       referenceUsagePolicy: referenceUsagePolicyActive,
-      componentReferenceDeltas: referenceDeltas,
     })
     return compressPromptByLayers(promptLayers)
   })
@@ -723,22 +723,32 @@ export async function POST(req: NextRequest) {
   }
 
   // Final safety net before the OpenAI call. Identity Preservation/Scene
-  // Configuration/Garment Layout/Material/Color/Global Quality Rules/Final
+  // Configuration/Garment Layout/Color/Global Quality Rules/Final
   // Constraints are always required once Capability Engine hasn't already
-  // blocked the render — all 7 are fixed Engine defaults or unconditionally
-  // required Master Data (Material/Color), never per-item-optional. Look
-  // Cutting has no dedicated id anymore (folded into 'garment_layout' when
-  // selected — see compression.ts's buildGarmentLayoutContent), so it needs
-  // no separate conditional entry. Reference Binding / Reference Usage
-  // Policy are only required when applicable to THIS request (a render with
-  // no reference image active at all legitimately omits both).
+  // blocked the render — all fixed Engine defaults or unconditionally
+  // required Master Data (Color, which always has real content via the
+  // dna_colors merge). Look Cutting has no dedicated id anymore (folded
+  // into 'garment_layout' when selected — see compression.ts's
+  // buildGarmentLayoutContent), so it needs no separate conditional entry.
+  // Reference Binding / Reference Usage Policy are only required when
+  // applicable to THIS request (a render with no reference image active at
+  // all legitimately omits both).
+  //
+  // Final Repository Cleanup (2026-08-06) — 'material' removed from this
+  // unconditional list. Material's referenceInstruction/componentRules were
+  // cleared (no Material Prompt UAT exists yet — "lebih baik kosong
+  // daripada memakai prompt legacy"), so its layer is now legitimately
+  // empty for every row until real Prompt UAT is authored for it. Treating
+  // it as unconditionally required would reject every render with a 422
+  // starting now; instead it behaves like Collar/Placket/Pocket/Cuff —
+  // included when it has real content, silently omitted when it doesn't,
+  // never a hard blocker on its own.
   // 'model_thobe' is excluded from this list — it's excluded from `entries`
   // entirely (catalog-only), so it can never appear in layerReport.
   const requiredPriorityZeroIds = [
     'identity_preservation',
     'scene_configuration',
     'garment_layout',
-    'material',
     'color',
     'global_quality_rules',
     'final_constraints',

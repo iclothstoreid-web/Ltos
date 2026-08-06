@@ -109,23 +109,29 @@ function formatEntryContent(entry: RenderRecipeEntry): string {
 // reference/structural text (formatEntryContent), then its resolved
 // Component Rules (Component Default Knowledge + Component Delta
 // Knowledge, from Recipe Composer's componentRulesByCategory — see
-// recipeComposer/composer.ts), then — only for a reference-backed category
-// — that category's own Component Reference Delta (the geometry
-// transfer/ignore instruction, unchanged wording from
-// aiAssetComposer/registry.ts). Component Rules are joined as plain
+// recipeComposer/composer.ts). Component Rules are joined as plain
 // sentences: each entry is already a complete, self-contained instruction
 // ("Preserve the Rounded collar shape...", "Do not modify the inherited
 // Standard Collar dimensions.") — no "Preserve:"/"Avoid:" wrapper needed at
 // this level (that wrapper stays Engine-only, see buildGarmentLayoutContent/
 // buildFinalConstraintsContent below), since componentRules is one merged
 // list now, not two.
-function buildComponentStepContent(
-  entry: RenderRecipeEntry,
-  masterRecipe: MasterRenderRecipe | null,
-  referenceDelta: string | undefined
-): string {
+//
+// Final Repository Cleanup (2026-08-06) — no longer appends a "Component
+// Reference Delta" ("Transfer only: .../Do NOT copy: ...", previously
+// sourced from aiAssetComposer/registry.ts). That content is neither an
+// Engine section nor Master Data — per this sprint's own definition of what
+// the Final Prompt may be built from ("Engine + Master Data, selain itu
+// dianggap legacy"), it no longer belongs in the assembled prompt. The Hero
+// Image itself (and its binding/geometry role, stated once in Reference
+// Binding/Reference Usage Policy) is unaffected — only this extra per-
+// component caption text is removed. aiAssetComposer/registry.ts's
+// constants and componentReferenceDeltas() are untouched (still used
+// elsewhere, e.g. the DNA Debug Viewer) — only this Builder-side consumer
+// stopped reading them.
+function buildComponentStepContent(entry: RenderRecipeEntry, masterRecipe: MasterRenderRecipe | null): string {
   const componentRules = masterRecipe?.componentRulesByCategory[entry.category] ?? []
-  return [formatEntryContent(entry), componentRules.join(' '), referenceDelta ?? ''].filter(Boolean).join(' ')
+  return [formatEntryContent(entry), componentRules.join(' ')].filter(Boolean).join(' ')
 }
 
 // Section 4 — Scene Configuration (camera/lighting/composition/background/
@@ -222,12 +228,6 @@ export interface BuildPromptLayersInput {
   // Content itself (REFERENCE_USAGE_POLICY) is a fixed Engine constant, not
   // caller-supplied.
   referenceUsagePolicy: boolean
-  // Sections 9-11 (Collar/Placket/Pocket) — the geometry transfer/ignore
-  // instruction for whichever of those categories is reference-backed this
-  // render (aiAssetComposer/registry.ts's own per-category constants,
-  // unchanged wording). Absent/omitted category means DNA-only (no Hero
-  // Image active for it).
-  componentReferenceDeltas?: Partial<Record<MasterDataCategory, string>>
 }
 
 // Assembles the 13 fixed sections (plus optional Extension Components,
@@ -239,7 +239,7 @@ export interface BuildPromptLayersInput {
 // Layout/Material/Color/Global Quality Rules/Final Constraints) always
 // produce a layer, empty content if genuinely nothing to say.
 export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] {
-  const { entries, masterRecipe, identityPreservation, referenceBinding, referenceUsagePolicy, componentReferenceDeltas = {} } = input
+  const { entries, masterRecipe, identityPreservation, referenceBinding, referenceUsagePolicy } = input
 
   const byCategory = new Map<MasterDataCategory, RenderRecipeEntry>()
   entries.forEach((entry) => {
@@ -283,7 +283,7 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
     id: 'material',
     label: 'Material',
     priority: 0,
-    content: materialEntry ? buildComponentStepContent(materialEntry, masterRecipe, undefined) : '',
+    content: materialEntry ? buildComponentStepContent(materialEntry, masterRecipe) : '',
   })
 
   // 7. Color — referenceInstruction only, per the locked Master Data shape
@@ -302,7 +302,7 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
       id: `component:${id}`,
       label,
       priority: 1,
-      content: buildComponentStepContent(entry, masterRecipe, componentReferenceDeltas[category]),
+      content: buildComponentStepContent(entry, masterRecipe),
     })
   })
 
@@ -315,7 +315,7 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
       id: `component:${category}`,
       label: masterDataCategoryLabel(category),
       priority: 1,
-      content: buildComponentStepContent(entry, masterRecipe, undefined),
+      content: buildComponentStepContent(entry, masterRecipe),
     })
   })
 

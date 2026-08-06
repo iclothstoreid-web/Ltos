@@ -21,7 +21,6 @@ import {
   validateCollarReference,
   validatePlaketReference,
   validatePocketReference,
-  componentReferenceDeltas,
 } from '@/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
@@ -355,15 +354,12 @@ export async function POST(req: NextRequest) {
     placket: composedAssets.referencesByCategory.has('plaket'),
     pocket: composedAssets.referencesByCategory.has('saku'),
   })
-  const referenceDeltas = componentReferenceDeltas(composedAssets)
-
   const promptLayers = buildPromptLayers({
     entries,
     masterRecipe,
     identityPreservation: IDENTITY_PRESERVATION,
     referenceBinding: referenceBindingContent,
     referenceUsagePolicy: referenceUsagePolicyActive,
-    componentReferenceDeltas: referenceDeltas,
   })
   const layerCompression = compressPromptByLayers(promptLayers)
   const compressionIssues = includesRegressionString(layerCompression.compressed)

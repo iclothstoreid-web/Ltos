@@ -43,7 +43,7 @@ import { DEFAULT_MODEL } from '../src/lib/ai/services/image'
 import { validateComponentDna } from '../src/lib/design/promptValidation/dnaValidator'
 import { validateRenderRequest } from '../src/lib/design/promptValidation/renderValidator'
 import { getRenderRunMode, isDebugMode } from '../src/lib/design/promptValidation/debugMode'
-import { composeAiAssets, componentReferenceDeltas } from '../src/lib/design/aiAssetComposer/composer'
+import { composeAiAssets } from '../src/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '../src/lib/design/capabilityEngine/engine'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '../src/lib/design/renderEngine/baseHero'
 import { IDENTITY_PRESERVATION } from '../src/lib/design/renderEngine/identityPreservation'
@@ -278,7 +278,6 @@ async function runScenario(customer: CustomerManifestEntry, dna: DnaScenarioMani
     identityPreservation: IDENTITY_PRESERVATION,
     referenceBinding: referenceBindingContent,
     referenceUsagePolicy: referenceUsagePolicyActive,
-    componentReferenceDeltas: componentReferenceDeltas(composedAssets),
   })
   const layerCompression = compressPromptByLayers(promptLayers)
   const prompt = layerCompression.ok ? layerCompression.compressed : null
