@@ -14,28 +14,16 @@
 // as-is — structural positioning a photo can't convey, not narrative.
 //
 // Safe Migration (2026-08-07) — `lockRules`/`negativeRules` as two separate
-// concepts are being retired, but NOT destructively. A component never
-// needed two arrays distinguishing "preserve this" from "avoid this": every
-// entry in both was already a complete, self-contained instruction sentence
-// ("Preserve the Rounded collar shape...", "Do not modify the inherited
-// Standard Collar dimensions.") — the split existed only so Prompt Builder
-// could wrap each half in its own "Preserve: ..."/"Avoid: ..." label, a
-// presentation choice, not a data requirement. Replaced by ONE field,
-// `componentRules` — every constraint (positive or negative) this component
-// carries, in authored order. CRUD+reorder in the UI (RuleListEditor,
-// unchanged component, now pointed at one list instead of two).
+// concepts were retired in favor of ONE field, `componentRules` — every
+// constraint (positive or negative) this component carries, in authored
+// order. CRUD+reorder in the UI (RuleListEditor).
 //
-// `lockRules`/`negativeRules` themselves are KEPT on this type, marked
-// legacy/optional, for the transition period: every row's data migration
-// (supabase/migrations/20260827000000_add_component_rules.sql) ADDS
-// `componentRules` alongside them, never removing the old keys. Pipeline
-// code reads `componentRules` when present and falls back to
-// merge(lockRules, negativeRules) otherwise (see dnaResolver/
-// resolveComponentRules.ts) — so a row that hasn't been migrated, or a
-// stale client that still writes the old shape, never loses data. The old
-// fields are deleted only in a future Sprint Cleanup, after UAT confirms
-// `componentRules` is correct for every row (see Step 5 audit in this
-// sprint's report).
+// Sprint Cleanup (2026-08-09) — the transitional `lockRules`/`negativeRules`
+// legacy fields (and the DB data behind them) have been removed entirely;
+// `componentRules` is now the only shape, on every row (see Final Master
+// Data Cleanup sprint report). `resolveComponentRules` in
+// dnaResolver/resolveComponentRules.ts still gates reads through one
+// function for consistency, but no longer has legacy data to fall back to.
 //
 // The `needs_regeneration` member means "the Hero Image changed, go
 // re-activate it as a Reference" on the Reference-First architecture, not
@@ -76,19 +64,10 @@ export interface AiDesignDna {
   // extension (e.g. LOOK_CUTTING_FIT_COMPONENT_RULES below) or a genuine
   // per-item custom rule is the only content that belongs here.
   //
-  // Optional at the type level (not every row has been migrated yet — see
-  // Safe Migration note above); readers must go through
+  // Optional at the type level for defensive callers only — every real row
+  // has this populated (Sprint Cleanup, 2026-08-09); go through
   // dnaResolver/resolveComponentRules.ts rather than reading this key bare.
   componentRules?: string[]
-  // LEGACY — kept only for the Safe Migration transition (see header
-  // comment above). No longer shown in the Master Data Editor (RuleListEditor
-  // now points at `componentRules` only) and no longer written by this app's
-  // own save path, but still readable as a fallback source for any row whose
-  // `componentRules` hasn't been populated yet. Removed in the post-UAT
-  // Sprint Cleanup, not before.
-  lockRules?: string[]
-  /** @deprecated LEGACY — see `lockRules` above. */
-  negativeRules?: string[]
   // Optional admin-facing note (e.g. "why this Lock Rule was added," known
   // render quirks) — never serialized into the GPT payload.
   renderNotes: string | null

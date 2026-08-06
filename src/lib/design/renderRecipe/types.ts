@@ -39,16 +39,10 @@ export interface RenderRecipe {
   // `componentRules` the same way (see dnaResolver/resolver.ts). Real seed
   // content lives on AiDesignDna; defaults to empty here.
   //
-  // Optional at the type level, same reason as AiDesignDna.componentRules
-  // (aiDna/types.ts) — not every row has been migrated yet. Read only
-  // through dnaResolver/resolveComponentRules.ts.
+  // Optional at the type level for defensive callers only — every real row
+  // has this populated (Sprint Cleanup, 2026-08-09, legacy fields removed).
+  // Read only through dnaResolver/resolveComponentRules.ts.
   componentRules?: string[]
-  // LEGACY — kept only for the Safe Migration transition. See
-  // aiDna/types.ts's `lockRules` doc comment for the full rationale; same
-  // rules apply here. Removed in the post-UAT Sprint Cleanup.
-  lockRules?: string[]
-  /** @deprecated LEGACY — see `lockRules` above. */
-  negativeRules?: string[]
 }
 
 // Matches the DB column default on design_master_options.render_recipe

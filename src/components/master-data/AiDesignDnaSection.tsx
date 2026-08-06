@@ -133,12 +133,9 @@ export function AiDesignDnaSection({
       </div>
 
       <div className="mt-4">
-        {/* Safe Migration (2026-08-07) — reads through resolveComponentRules
-            so a row not yet migrated (componentRules still empty, real
-            content still in legacy lockRules/negativeRules) shows its real
-            effective rules here instead of an empty list. Editing and saving
-            always writes back to componentRules only (onComponentRulesChange),
-            which is the per-row migration path for anything edited by hand. */}
+        {/* Reads through resolveComponentRules (normalizes a missing array to
+            []) rather than `dna.componentRules` bare. Editing and saving
+            always writes back to componentRules (onComponentRulesChange). */}
         <RuleListEditor label="Component Rules" items={resolveComponentRules(dna)} onChange={onComponentRulesChange} />
       </div>
 
