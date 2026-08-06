@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AiDesignDna } from './aiDna/types'
-import { DEFAULT_AI_DESIGN_DNA, LOOK_CUTTING_FIT_COMPONENT_RULES } from './aiDna/types'
 import type { RenderRecipe } from './renderRecipe/types'
 
 // Single reusable structure for the whole Product Knowledge Base — Model
@@ -209,33 +208,18 @@ export async function createMasterDataOption(
     .limit(1)
     .maybeSingle()
 
-  // Look Cutting Fit Knowledge is layered in here, explicitly, only for
-  // 'look_cutting' — see aiDna/types.ts's LOOK_CUTTING_FIT_COMPONENT_RULES.
-  // Every other category (including model_thobe, since the Architecture
-  // Lock revision, 2026-08-04) leaves `ai_dna` unset and gets the plain DB
-  // column default — model_thobe no longer gets a Quality Foundation
-  // extension here; that content now lives in DEFAULT_GLOBAL_RENDER_POLICY
-  // (recipeComposer/types.ts), applied to every render regardless of which
-  // Model Thobe is selected. Delta Knowledge decision (2026-08-04) —
-  // DEFAULT_AI_DESIGN_DNA.componentRules is now `[]` (Identity Knowledge
-  // lives only in Recipe Composer's Engine merge, see composer.ts), so
-  // spreading it below already produces a delta-only array (just the
-  // category extension) with no logic change needed here.
-  const ai_dna: AiDesignDna | undefined =
-    params.category === 'look_cutting'
-      ? {
-          ...DEFAULT_AI_DESIGN_DNA,
-          componentRules: [...(DEFAULT_AI_DESIGN_DNA.componentRules ?? []), ...LOOK_CUTTING_FIT_COMPONENT_RULES],
-        }
-      : undefined
-
+  // Every category, including 'look_cutting' (Look Cutting Repository
+  // Refactor, 2026-08-06 — its former Fit Knowledge componentRules
+  // extension is retired, see aiDna/types.ts) and model_thobe (Architecture
+  // Lock, 2026-08-04 — Quality Foundation now lives in
+  // DEFAULT_GLOBAL_RENDER_POLICY, recipeComposer/types.ts), leaves `ai_dna`
+  // unset here and gets the plain DB column default.
   const { error } = await supabase.from('design_master_options').insert({
     category: params.category,
     name: params.name.trim(),
     metadata: params.metadata ?? {},
     price: params.price ?? 0,
     sort_order: (existing?.sort_order ?? 0) + 1,
-    ...(ai_dna ? { ai_dna } : {}),
   })
 
   if (error) throw error

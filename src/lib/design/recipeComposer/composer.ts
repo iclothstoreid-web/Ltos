@@ -183,8 +183,11 @@ function mergeRecordField(field: RecipeRecordField, sortedEntries: RenderRecipeE
 // Component category with no dedicated Prompt Builder step (Prompt
 // Architecture Realignment, 2026-08-06) — its resolved Component Rules fold
 // into `garmentLayoutRules` instead of a per-category slot in
-// `componentRulesByCategory` (see aiDna/types.ts's
-// LOOK_CUTTING_FIT_COMPONENT_RULES doc comment for why).
+// `componentRulesByCategory`. As of the Look Cutting Repository Refactor
+// (2026-08-06, see aiDna/types.ts) this category no longer carries any
+// componentRules of its own, so the fold-in is a permanent no-op — kept
+// as-is since removing it would be a Pipeline change, out of scope for a
+// Repository-only refactor.
 const NO_DEDICATED_STEP_CATEGORIES: MasterDataCategory[] = ['look_cutting']
 
 // Reads Component Recipe (RenderRecipeEntry[]) + Global Render Policy ->

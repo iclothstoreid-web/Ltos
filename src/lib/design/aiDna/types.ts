@@ -60,9 +60,12 @@ export interface AiDesignDna {
   // renderEngine/finalConstraints.ts — merged in by Recipe Composer at
   // compose time as Engine defaults, never stored here — Delta Knowledge
   // decision, 2026-08-04, unchanged by this rename). CRUD + reorder in the
-  // Master Data Editor. Empty for a component with no override; a category
-  // extension (e.g. LOOK_CUTTING_FIT_COMPONENT_RULES below) or a genuine
-  // per-item custom rule is the only content that belongs here.
+  // Master Data Editor. Empty for a component with no override; a genuine
+  // per-item custom rule is the only content that belongs here. Look
+  // Cutting Repository Refactor (2026-08-06) — Look Cutting no longer has a
+  // category extension here at all; its own garment behavior comes
+  // entirely from the Engine's Garment Layout now (see
+  // DEFAULT_AI_DESIGN_DNA below).
   //
   // Optional at the type level for defensive callers only — every real row
   // has this populated (Sprint Cleanup, 2026-08-09); go through
@@ -91,52 +94,19 @@ export interface AiDesignDna {
 // renderEngine/finalConstraints.ts. Quality-target content (what used to be
 // called "Quality Foundation" both here and in recipeComposer/types.ts) now
 // lives in renderEngine/globalQualityRules.ts — a third, distinct Engine
-// responsibility, never mixed with the other two again. Look Cutting's own
-// Fit Knowledge extension (LOOK_CUTTING_FIT_COMPONENT_RULES below) is
-// unaffected — it was always a category-specific delta on top of the Engine
-// default, not part of the Engine default itself.
-
-// Fit Knowledge — belongs ONLY to category 'look_cutting'. Look Cutting
-// controls ONLY how the garment fits and drapes on the customer's EXISTING
-// body (silhouette, ease, drape, fold, tension) — it must never influence
-// body shape or any other design component (Kerah, Manset, Plaket, Saku,
-// Material, Warna, Aksesori, Bordir, Handmade Zig-Zag). Merged in only by
-// masterData.ts's createMasterDataOption when category === 'look_cutting' —
-// never added to DEFAULT_AI_DESIGN_DNA/the DB column default, since that
-// default is category-agnostic and applies to every insert.
+// responsibility, never mixed with the other two again.
 //
-// This is the boundary shared by every Fit (Slim/Standard/Regular). The
-// amount of ease and character of drape that distinguishes one Fit from
-// another belongs in that item's own admin-authored `referenceInstruction`
-// free text, not here — see AiDesignDnaSection.tsx's Look Cutting authoring
-// caption.
-//
-// Prompt Architecture Realignment (2026-08-06) — the former
-// LOOK_CUTTING_FIT_LOCK_RULES + LOOK_CUTTING_FIT_NEGATIVE_RULES pair is one
-// array now (componentRules), same wording, same order (positive framing
-// first, then the negative mirror) — this array was never part of the
-// validated UAT prompt (Look Cutting was not selected in that render), so
-// merging its storage shape carries zero wording-preservation risk. Look
-// Cutting has no dedicated Prompt Builder step (it is a fit/silhouette
-// delta, not a discrete visual reference component like Collar/Placket/
-// Pocket/Cuff) — when selected, its componentRules are folded into the
-// Garment Layout section alongside the Engine's own GARMENT_LAYOUT_RULES.
-export const LOOK_CUTTING_FIT_COMPONENT_RULES: string[] = [
-  'Apply the selected garment fit consistently across the entire thobe.',
-  'Adjust only the garment silhouette.',
-  "Control garment ease relative to the customer's existing body.",
-  'Generate natural fabric drape.',
-  'Maintain realistic folds and fabric tension.',
-  "Preserve proportionality to the customer's existing body and pose.",
-  'Ensure smooth fit transitions across shoulders, chest, waist, sleeves, and hem.',
-  'Produce a physically plausible tailored garment.',
-  'Do not modify body shape or proportions.',
-  'Do not create unrealistic tightness or looseness.',
-  'Do not stretch or shrink the garment unnaturally.',
-  'Do not generate exaggerated folds or floating fabric.',
-  'Do not modify garment length or sleeve length.',
-  'Do not modify collar, cuffs, material, color, embroidery, placket, pockets, buttons, or any design element unrelated to garment fit.',
-]
+// Look Cutting Repository Refactor (2026-08-06) — Look Cutting's former Fit
+// Knowledge extension (was `LOOK_CUTTING_FIT_COMPONENT_RULES`, a 14-line
+// componentRules array covering ease/drape/silhouette/proportion behavior,
+// merged into every look_cutting row by masterData.ts's
+// createMasterDataOption) is retired entirely. Look Cutting no longer
+// stores any garment logic of its own — all garment behavior (ease, drape,
+// silhouette, proportion, body relation) comes exclusively from the
+// Engine's own Garment Layout (renderEngine/garmentLayout.ts) now. A Look
+// Cutting item's `ai_dna` carries only `referenceInstruction`;
+// `componentRules` and `placement` are unused for this category (data
+// migration strips existing rows' values — see this sprint's report).
 
 // Engine/Repository split (Delta Knowledge decision, 2026-08-04) — this is
 // now the DELTA-ONLY seed for a freshly created item, not a copy of the
@@ -145,11 +115,10 @@ export const LOOK_CUTTING_FIT_COMPONENT_RULES: string[] = [
 // Engine source (consumed once, at compose time, by
 // recipeComposer/composer.ts's composeRenderRecipe — see its own comment),
 // never copied into a row again. A component only ever stores what
-// genuinely differs from that Engine default (a category extension like
-// LOOK_CUTTING_FIT_COMPONENT_RULES, or a real per-item override) —
-// masterData.ts's createMasterDataOption spreads this object then layers
-// those extensions straight on top, so it now produces a delta-only array
-// with no code change of its own required there.
+// genuinely differs from that Engine default (a real per-item override) —
+// masterData.ts's createMasterDataOption spreads this object as-is now for
+// every category, including 'look_cutting' (no category extension left to
+// layer on top of it, see the Look Cutting Repository Refactor note above).
 //
 // NOT the live DB column default (that column predates componentRules/
 // referenceInstruction entirely — every insert path that matters

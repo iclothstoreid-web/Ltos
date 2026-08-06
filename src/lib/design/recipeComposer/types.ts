@@ -117,8 +117,10 @@ export interface MasterRenderRecipe {
   // `policy.garmentLayoutRules`/`policy.finalConstraintRules`, no per-item
   // contribution — see composer.ts's composeRenderRecipe. `garmentLayoutRules`
   // additionally carries Look Cutting's own resolved componentRules when
-  // Look Cutting was selected (it has no dedicated Prompt Builder step — see
-  // aiDna/types.ts's LOOK_CUTTING_FIT_COMPONENT_RULES).
+  // Look Cutting was selected (it has no dedicated Prompt Builder step) —
+  // as of the Look Cutting Repository Refactor (2026-08-06, aiDna/types.ts)
+  // that category no longer carries any componentRules, so this is a
+  // permanent no-op now.
   garmentLayoutRules: string[]
   finalConstraintRules: string[]
   // Per-category resolved Component Rules (Component Default Knowledge +
