@@ -9,5 +9,13 @@
 // and the ignore list ("Do NOT copy: ...") — those stay with each
 // component's own Component Rules (Collar/Placket/Pocket's own Prompt
 // Builder step), never hoisted here.
+//
+// Final Repository Knowledge Migration (2026-08-06) — FULL REPLACE per
+// latest Prompt UAT. NOTE (flagged in this sprint's report, not silently
+// "corrected"): sentence 3 below reads as a reversal of the prior English
+// wording's "Do not treat these reference images as the complete
+// construction" — the UAT text has no "Jangan" before "Perlakukan ...
+// sebagai konstruksi lengkap." Implemented literally as given (no wording
+// invented), since a reversal may be intentional; verify against source.
 export const REFERENCE_USAGE_POLICY =
-  "Each reference image other than the Customer Photo describes ONLY shape and geometry — the referenced component's, or for Base Hero, the garment's silhouette. Ignore any person shown in these images. The result must still follow the selected AI Design DNA. Do not treat these reference images as the complete construction — each component's own inherited Standard construction still applies."
+  'Setiap gambar referensi selain Foto Pelanggan HANYA menggambarkan bentuk dan geometri komponen yang direferensikan, atau untuk Hero Dasar, siluet pakaian. Hasilnya tetap harus mengikuti DNA Desain AI yang dipilih. Perlakukan gambar referensi ini sebagai konstruksi lengkap. Konstruksi Standar yang diwarisi dari setiap komponen tetap berlaku.'

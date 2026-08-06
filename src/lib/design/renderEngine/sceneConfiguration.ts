@@ -4,35 +4,38 @@
 // file/exports only — wording unchanged, storage-location move.
 //
 // Responsibility is strictly GLOBAL SCENE — camera/lighting/composition/
-// background/shadow/visibility — never a quality target (Global Quality
-// Rules), never a constraint (Garment Layout / Final Constraints: this layer
-// states the scene positively, it never says "do not"), never identity
-// (Identity Preservation), never material/component knowledge.
+// background/visibility — never a quality target (Global Quality Rules),
+// never a constraint (Garment Layout / Final Constraints: this layer states
+// the scene positively, it never says "do not"), never identity (Identity
+// Preservation), never material/component knowledge.
+//
+// Final Repository Knowledge Migration (2026-08-06) — FULL REPLACE per
+// latest Prompt UAT (Indonesian). `shadow` dropped: not present in the UAT
+// content, and background is now the customer's own (see
+// SCENE_CONFIGURATION_BACKGROUND below and Identity Preservation's matching
+// "tampilkan background foto customer" instruction), so a studio "natural
+// ground shadow" default no longer applies.
 export const SCENE_CONFIGURATION_CAMERA: Record<string, unknown> = {
-  view: 'Front-facing view.',
+  view: 'Tampilan depan.',
 }
 
 // Visibility — body-visibility/framing extent only (what portion of the
 // body/garment is shown, never the viewing angle — that is Camera's job
 // above).
 export const SCENE_CONFIGURATION_VISIBILITY: Record<string, unknown> = {
-  framing: 'Full body. Head-to-toe. Feet visible. No crop.',
+  framing: 'Seluruh tubuh. Dari kepala hingga kaki. Kaki terlihat. Tanpa pemotongan gambar (no crop).',
 }
 
 export const SCENE_CONFIGURATION_LIGHTING: Record<string, unknown> = {
-  setup: 'Soft studio lighting.',
+  setup: 'Pencahayaan studio lembut.',
 }
 
 export const SCENE_CONFIGURATION_COMPOSITION: Record<string, unknown> = {
-  layout: 'Centered composition.',
+  layout: 'Komposisi terpusat.',
 }
 
-// `shadow` has no dedicated field anywhere in the RenderRecipe/
-// MasterRenderRecipe/RenderInstruction type chain, and adding one would be a
-// schema change, not a content move. `background` is already a free-form
-// Record<string, unknown> Recipe Composer merges unconditionally into every
-// render, so shadow is carried as one more key on it instead.
+// `background` is a free-form Record<string, unknown> Recipe Composer
+// merges unconditionally into every render.
 export const SCENE_CONFIGURATION_BACKGROUND: Record<string, unknown> = {
-  setting: 'Clean neutral studio background.',
-  shadow: 'Natural ground shadow.',
+  setting: 'Latar belakang alami yang dibawa customer.',
 }
