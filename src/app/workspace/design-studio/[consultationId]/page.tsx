@@ -6,7 +6,7 @@ import { findOrderIdForConsultation } from '@/lib/order/lookup'
 import { fetchActiveMasterOptions, canManageMasterData } from '@/lib/design/masterData'
 import { fetchMaterialStockByName } from '@/lib/inventory/materials'
 import { fetchMaterialColorsForMaterials } from '@/lib/design/materialColors'
-import { fetchRenderFinal } from '@/lib/design/renderFinal'
+import { fetchRenderFinal, createRenderFinalSignedUrl } from '@/lib/design/renderFinal'
 
 interface Props {
   params: { consultationId: string }
@@ -86,7 +86,19 @@ export default async function DesignStudioPage({ params }: Props) {
   // Render Final Storage — loaded server-side so Preview/Download/Replace/
   // Approve persist across a page reload, not just within one client
   // session. null when this consultation has never had a render saved yet.
+  //
+  // Store Private, Access by Signed URL (Final Security Refactor,
+  // 2026-08-07) — render_finals only ever holds a Storage path now, never a
+  // fetchable URL, so the initial Preview needs its own signed URL minted
+  // right here, server-side, at page load (same staff-authenticated
+  // session this whole page already runs under). Never persisted — this is
+  // a fresh, short-TTL (1 hour) URL good for this page load only; a later
+  // Generate/Replace/Download in the client gets its own fresh one from
+  // /api/design/render-final/signed-url.
   const initialRenderFinal = await fetchRenderFinal(supabase, params.consultationId)
+  const initialPreviewUrl = initialRenderFinal
+    ? await createRenderFinalSignedUrl(supabase, initialRenderFinal.render_storage_path).catch(() => null)
+    : null
 
   return (
     <DesignStudioWorkspace
@@ -98,6 +110,7 @@ export default async function DesignStudioPage({ params }: Props) {
       canManageMasterData={canManageMasterData(profile?.role)}
       userId={user.id}
       initialRenderFinal={initialRenderFinal}
+      initialPreviewUrl={initialPreviewUrl}
     />
   )
 }

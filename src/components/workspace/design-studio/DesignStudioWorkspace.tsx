@@ -22,7 +22,7 @@ import { decodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
 import type { RenderContext } from '@/lib/customerProfile/renderContext'
 import type { RenderResult } from '@/lib/types/render'
 import { renderDesign } from '@/lib/services/renderService'
-import { saveRenderFinal, approveRenderFinal, uploadRenderFinalImage } from '@/lib/design/renderFinal'
+import { saveRenderFinal, approveRenderFinal, uploadRenderFinalFile, uploadRenderFinalFromDataUrl } from '@/lib/design/renderFinal'
 import type { RenderFinal } from '@/lib/design/renderFinal'
 
 interface MaterialStockInfo {
@@ -46,6 +46,11 @@ interface DesignStudioWorkspaceProps {
   // Render Final Storage — null when this consultation has never had a
   // render saved yet (see page.tsx's server-side fetchRenderFinal).
   initialRenderFinal: RenderFinal | null
+  // Store Private, Access by Signed URL — a fresh, short-TTL signed URL
+  // minted server-side at page load (page.tsx), or null if there's no
+  // Render Final yet / signing failed. Never persisted; see
+  // renderFinal.ts's own doc comment.
+  initialPreviewUrl: string | null
 }
 
 // For any field with no saved value yet (new consultation), default
@@ -76,6 +81,7 @@ export function DesignStudioWorkspace({
   canManageMasterData,
   userId,
   initialRenderFinal,
+  initialPreviewUrl,
 }: DesignStudioWorkspaceProps) {
   const router = useRouter()
   const supabase = createClient()
@@ -109,6 +115,13 @@ export function DesignStudioWorkspace({
   const [renderFinal, setRenderFinal] = useState<RenderFinal | null>(initialRenderFinal)
   const [renderFinalBusy, setRenderFinalBusy] = useState(false)
   const [renderFinalError, setRenderFinalError] = useState<string | null>(null)
+  // Store Private, Access by Signed URL (Final Security Refactor,
+  // 2026-08-07) — the bucket is private and render_finals only stores a
+  // Storage path, so this is the ONE piece of client state that holds an
+  // actually-displayable URL, always freshly minted (never derived from
+  // renderFinal.render_storage_path directly) and never sent anywhere for
+  // persistence.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialPreviewUrl)
 
   // Read-only decode of the profile Measurement already built — Design
   // Studio never writes to it, only reads it for the Generate Final Preview
@@ -182,6 +195,28 @@ export function DesignStudioWorkspace({
     }
   }
 
+  // Store Private, Access by Signed URL — the ONE place this component asks
+  // for a fresh signed URL (via the server-side route, never minted
+  // client-side directly). Called after every write that changes which
+  // Storage object is current (Generate, Replace) so Preview reflects the
+  // new image immediately, without waiting for a page reload.
+  async function refreshPreviewUrl(): Promise<string | null> {
+    try {
+      const res = await fetch('/api/design/render-final/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId: consultation.id }),
+      })
+      const data = await res.json()
+      const url = res.ok && data.success ? (data.signedUrl as string) : null
+      setPreviewUrl(url)
+      return url
+    } catch {
+      setPreviewUrl(null)
+      return null
+    }
+  }
+
   async function handleRenderGenerate(context: RenderContext) {
     // Render Request Lock (Sprint O, Task 1) — guards against a double
     // click even before the network round-trip: while renderResult.status
@@ -198,25 +233,38 @@ export function DesignStudioWorkspace({
     // consultation's current Render Final (always 'draft'; an Owner
     // reviews and Approves separately below). Failure here never blocks or
     // rolls back the render itself — the AI Preview above already
-    // succeeded and is shown regardless; only the persisted
+    // succeeded (renderResult.imageUrl, a data: URI, displays immediately
+    // regardless — see AIPreviewPanel) — only the persisted
     // Preview/Download/Replace/Approve record failed to save.
+    //
+    // The render API returns the finished image as a data: URI (gpt-image-1
+    // never returns a fetchable URL — see image.ts), so it has to be
+    // uploaded into the private render-finals bucket before there's
+    // anything to save a path for; this is Render Final storage's own
+    // responsibility, not a change to the AI pipeline that produced the
+    // bytes in the first place.
     if (result.status === 'success' && result.imageUrl) {
       setRenderFinalError(null)
       try {
+        const path = await uploadRenderFinalFromDataUrl(supabase, {
+          consultationId: consultation.id,
+          dataUrl: result.imageUrl,
+        })
         const saved = await saveRenderFinal(supabase, {
           consultationId: consultation.id,
           customerPhotoUrl: context.customerDigitalProfile.customerPhoto!.url,
-          renderImageUrl: result.imageUrl,
+          renderStoragePath: path,
         })
         setRenderFinal(saved)
+        await refreshPreviewUrl()
       } catch (err) {
         setRenderFinalError(err instanceof Error ? err.message : 'Gagal menyimpan Render Final.')
       }
     }
   }
 
-  // Manual Replace — uploads to the render-finals bucket (deterministic
-  // path, always overwrites) then saves the new URL as this consultation's
+  // Manual Replace — uploads to the render-finals bucket (fixed path,
+  // always overwrites) then saves the new path as this consultation's
   // Render Final, same as a fresh AI render (resets to 'draft').
   async function handleReplaceRenderFinal(file: File) {
     const customerPhotoUrl = customerDigitalProfile?.customerPhoto?.url
@@ -227,9 +275,10 @@ export function DesignStudioWorkspace({
     setRenderFinalBusy(true)
     setRenderFinalError(null)
     try {
-      const renderImageUrl = await uploadRenderFinalImage(supabase, { consultationId: consultation.id, file })
-      const saved = await saveRenderFinal(supabase, { consultationId: consultation.id, customerPhotoUrl, renderImageUrl })
+      const path = await uploadRenderFinalFile(supabase, { consultationId: consultation.id, file })
+      const saved = await saveRenderFinal(supabase, { consultationId: consultation.id, customerPhotoUrl, renderStoragePath: path })
       setRenderFinal(saved)
+      await refreshPreviewUrl()
     } catch (err) {
       setRenderFinalError(err instanceof Error ? err.message : 'Gagal mengganti Render Final.')
     } finally {
@@ -238,7 +287,8 @@ export function DesignStudioWorkspace({
   }
 
   // Owner's explicit sign-off — the only place render_status becomes
-  // 'approved'.
+  // 'approved'. Doesn't touch the image itself, so no signed URL refresh
+  // needed.
   async function handleApproveRenderFinal() {
     if (!renderFinal) return
     setRenderFinalBusy(true)
@@ -248,6 +298,38 @@ export function DesignStudioWorkspace({
       setRenderFinal({ ...renderFinal, render_status: 'approved' })
     } catch (err) {
       setRenderFinalError(err instanceof Error ? err.message : 'Gagal meng-approve Render Final.')
+    } finally {
+      setRenderFinalBusy(false)
+    }
+  }
+
+  // Download — per the brief's own workflow diagram, Download mints its
+  // OWN fresh signed URL (not necessarily the same one Preview is
+  // currently showing), fetches the bytes, and triggers a browser
+  // download. Fetch-as-blob rather than a plain <a download>: a signed
+  // Storage URL is a different origin, where the `download` attribute is
+  // not reliably honored without the right Content-Disposition header.
+  async function handleDownloadRenderFinal() {
+    setRenderFinalBusy(true)
+    setRenderFinalError(null)
+    try {
+      const res = await fetch('/api/design/render-final/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId: consultation.id }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Gagal membuat Signed URL untuk Download.')
+
+      const blob = await (await fetch(data.signedUrl)).blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = `render-final-${Date.now()}.${blob.type.split('/')[1] || 'png'}`
+      link.click()
+      URL.revokeObjectURL(objectUrl)
+    } catch (err) {
+      setRenderFinalError(err instanceof Error ? err.message : 'Gagal mengunduh Render Final.')
     } finally {
       setRenderFinalBusy(false)
     }
@@ -279,10 +361,12 @@ export function DesignStudioWorkspace({
           onGenerate={handleRenderGenerate}
           renderResult={renderResult}
           renderFinal={renderFinal}
+          previewUrl={previewUrl}
           renderFinalBusy={renderFinalBusy}
           renderFinalError={renderFinalError}
           onReplaceRenderFinal={handleReplaceRenderFinal}
           onApproveRenderFinal={handleApproveRenderFinal}
+          onDownloadRenderFinal={handleDownloadRenderFinal}
         />
         <DesignSummaryPanel specification={liveSpecification} selections={selections} />
       </main>

@@ -15,16 +15,23 @@ interface AIPreviewPanelProps {
   renderContext: RenderContext | null
   onGenerate: (context: RenderContext) => void
   renderResult: RenderResult
-  // Render Final Storage (2026-08-07) — Preview reuses `renderResult`
-  // above (already shown once a render succeeds this session) /
-  // `renderFinal.render_image_url` (persisted, survives a reload).
-  // Download/Replace/Approve act on whichever image is currently the
-  // consultation's Render Final.
+  // Render Final Storage (2026-08-07, Store Private / Access by Signed
+  // URL) — Preview prefers this session's freshly-generated image
+  // (renderResult.imageUrl, a data: URI, displays instantly with no
+  // round-trip) and falls back to `previewUrl`, a short-TTL signed URL the
+  // parent mints server-side (page load) or via the signed-url API route
+  // (after Generate/Replace) — never a URL read directly off `renderFinal`,
+  // which only ever carries a private Storage path now. Download/Replace/
+  // Approve act on whichever image is currently the consultation's Render
+  // Final; Download mints its own fresh signed URL via the parent
+  // (onDownloadRenderFinal), independent of whatever Preview is showing.
   renderFinal: RenderFinal | null
+  previewUrl: string | null
   renderFinalBusy: boolean
   renderFinalError: string | null
   onReplaceRenderFinal: (file: File) => void
   onApproveRenderFinal: () => void
+  onDownloadRenderFinal: () => void
 }
 
 // Design Studio's only remaining visual surface — deliberately inert. No
@@ -77,25 +84,26 @@ export function AIPreviewPanel({
   onGenerate,
   renderResult,
   renderFinal,
+  previewUrl,
   renderFinalBusy,
   renderFinalError,
   onReplaceRenderFinal,
   onApproveRenderFinal,
+  onDownloadRenderFinal,
 }: AIPreviewPanelProps) {
   const [validationMessages, setValidationMessages] = useState<string[]>([])
-  const [downloading, setDownloading] = useState(false)
   const replaceInputRef = useRef<HTMLInputElement>(null)
   const isLoading = renderResult.status === 'loading'
   const elapsedSeconds = useElapsedSeconds(isLoading)
   const loadingMessage = [...LOADING_STAGE_MESSAGES].reverse().find((stage) => elapsedSeconds >= stage.afterSeconds)?.text
     ?? LOADING_STAGE_MESSAGES[0].text
 
-  // Preview prefers this session's freshly-generated image; falls back to
-  // the persisted Render Final (survives a page reload, when `renderResult`
-  // has reset to 'idle') — Download/Replace/Approve always act on whichever
-  // one is currently shown.
+  // Preview prefers this session's freshly-generated image (a data: URI —
+  // displays instantly, no round-trip); falls back to `previewUrl`, the
+  // parent's freshly-minted signed URL (survives a page reload, when
+  // `renderResult` has reset to 'idle').
   const previewImageUrl =
-    renderResult.status === 'success' && renderResult.imageUrl ? renderResult.imageUrl : (renderFinal?.render_image_url ?? null)
+    renderResult.status === 'success' && renderResult.imageUrl ? renderResult.imageUrl : previewUrl
 
   function handleGenerate() {
     // Render Request Lock (Sprint O, Task 1) — the button below is already
@@ -111,27 +119,6 @@ export function AIPreviewPanel({
     }
     setValidationMessages([])
     onGenerate(buildRenderContext(customerDigitalProfile as CustomerDigitalProfile, designSpecification))
-  }
-
-  // Fetch-as-blob rather than a plain <a download> — the image lives on a
-  // different origin (Supabase Storage), where the `download` attribute is
-  // not honored by every browser without the right Content-Disposition
-  // header, which this bucket doesn't set.
-  async function handleDownload() {
-    if (!previewImageUrl) return
-    setDownloading(true)
-    try {
-      const response = await fetch(previewImageUrl)
-      const blob = await response.blob()
-      const objectUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = objectUrl
-      link.download = `render-final-${Date.now()}.${blob.type.split('/')[1] || 'png'}`
-      link.click()
-      URL.revokeObjectURL(objectUrl)
-    } finally {
-      setDownloading(false)
-    }
   }
 
   function handleReplaceClick() {
@@ -176,12 +163,12 @@ export function AIPreviewPanel({
           <div className="w-full flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
-              onClick={handleDownload}
-              disabled={downloading}
+              onClick={onDownloadRenderFinal}
+              disabled={renderFinalBusy}
               className="px-4 py-2 border-[0.5px] border-[#151c27] text-[#151c27] font-sans text-xs uppercase
                          tracking-widest hover:bg-[#151c27]/5 transition-colors disabled:opacity-40"
             >
-              {downloading ? 'Mengunduh...' : 'Download Render'}
+              {renderFinalBusy ? 'Memproses...' : 'Download Render'}
             </button>
             <button
               type="button"
