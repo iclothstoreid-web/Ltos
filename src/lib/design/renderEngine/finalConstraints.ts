@@ -12,39 +12,19 @@
 // constraint (each component's own Component Rules, at that component's own
 // Prompt Builder step).
 //
-// Final Repository Knowledge Migration (2026-08-06) — FULL REPLACE per
-// latest Prompt UAT (Indonesian). Each line of the UAT brief (including its
-// "KRITIS:"/"HINDARI:" section labels and the "JANGAN disalin:" sub-list)
-// becomes its own array item, in the exact given order — no merging,
-// reformatting, or summarizing. Serializer/compression wrap this array as
-// `Avoid: ${rules.join(', ')}.` (promptBuilder/compression.ts's
-// buildFinalConstraintsContent) — unchanged, Pipeline is locked.
+// Repository Knowledge Migration Phase 1 (2026-08-06) — VERBATIM placement
+// of the Prompt UAT block, byte-exact, replacing the prior "Final Repository
+// Knowledge Migration" pass's 27-item array (which had normalized every
+// line to end in a clean period, split on the source's own paragraph breaks,
+// and silently fixed "buat se alami" -> "sealami"). Kept as ONE array item
+// (not split per line) so promptBuilder/compression.ts's
+// `Avoid: ${rules.join(', ')}.` wrapper cannot alter the UAT's own mixed
+// comma/period punctuation (including its literal ".," sequences and the
+// space before "HINDARI :"). Two things flagged per instruction, left
+// exactly as given, not fixed: "JANGAN menambahkan detail yang tidak
+// realistis." appears twice (genuine duplicate in the source), and "buat se
+// alami mungkin seperti pakaian" (likely meant "sealami") is preserved with
+// its original spacing.
 export const FINAL_CONSTRAINTS: string[] = [
-  'KRITIS:',
-  'JANGAN membuat selain yg diminta.',
-  'Buat persis dengan tepat seperti di gambar dan perintah.',
-  'JANGAN buat komponen yang tidak dipilih.',
-  'Jangan lepaskan komponen yang dipilih.',
-  'JANGAN mengubah selain yg diperintahkan.',
-  'JANGAN disalin:',
-  '- tekstur kain',
-  '- warna kain',
-  '- latar belakang',
-  '- gaya fotografi',
-  'JANGAN menimpa tekstur dengan efek buatan.',
-  'JANGAN menambahkan kerutan, lipatan, atau distorsi.',
-  'JANGAN menambahkan detail yang tidak realistis.',
-  'JANGAN gagal menampilkan tepi secara bersamaan dengan fokus yang tajam.',
-  'JANGAN menampilkan perkiraan atau penyederhanaan.',
-  'JANGAN terlalu mencerahkan atau terlalu menggelapkan sehingga mengurangi kejelasan tepi.',
-  'HINDARI:',
-  'Garis bayangan yang kasar di dasar.',
-  'Tidak menyatu dengan badan.',
-  'Tidak ada yang mengambang.',
-  'Buat sealami mungkin seperti pakaian.',
-  'Pertahankan geometri pakaian.',
-  'Pertahankan proporsi pakaian.',
-  'Pertahankan konstruksi pakaian.',
-  'Pertahankan penempatan komponen yang dipilih.',
-  'Pertahankan detail komponen yang dipilih.',
+  'KRITIS: JANGAN membuat selain yg diminta.Buat persis dengan tepat seperti di gambar dan perintah. JANGAN buat komponen yang tidak dipilih, Jangan lepaskan komponen yang dipilih. JANGAN mengubah selain yg di perintahkan, JANGAN disalin: tekstur kain, warna kain,latar belakang, gaya fotografi. JANGAN menimpa tekstur dengan efek buatan, JANGAN menambahkan kerutan, lipatan, atau distorsi, JANGAN menambahkan detail yang tidak realistis. JANGAN gagal menampilkan tepi secara bersamaan dengan fokus yang tajam., JANGAN menampilkan perkiraan atau penyederhanaan — keseluruhan harus tepat., JANGAN terlalu mencerahkan atau terlalu menggelapkan sehingga mengurangi kejelasan tepi. JANGAN menambahkan detail yang tidak realistis. HINDARI : Garis bayangan yang kasar di dasar, tidak menyatu dengan badan, tidak ada yang mengambang, buat se alami mungkin seperti pakaian, Pertahankan geometri pakaian., Pertahankan proporsi pakaian., Pertahankan konstruksi pakaian., Pertahankan penempatan komponen yang dipilih., Pertahankan detail komponen yang dipilih.',
 ]

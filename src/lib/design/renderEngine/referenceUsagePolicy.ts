@@ -10,12 +10,12 @@
 // component's own Component Rules (Collar/Placket/Pocket's own Prompt
 // Builder step), never hoisted here.
 //
-// Final Repository Knowledge Migration (2026-08-06) — FULL REPLACE per
-// latest Prompt UAT. NOTE (flagged in this sprint's report, not silently
-// "corrected"): sentence 3 below reads as a reversal of the prior English
-// wording's "Do not treat these reference images as the complete
-// construction" — the UAT text has no "Jangan" before "Perlakukan ...
-// sebagai konstruksi lengkap." Implemented literally as given (no wording
-// invented), since a reversal may be intentional; verify against source.
+// Repository Knowledge Migration Phase 1 (2026-08-06) — VERBATIM placement
+// of the Prompt UAT block, byte-exact. This UAT text supersedes and
+// resolves the ambiguity flagged in the prior "Final Repository Knowledge
+// Migration" pass (that version's "Perlakukan gambar referensi ini sebagai
+// konstruksi lengkap" read as a reversal of "do not treat as complete
+// construction") — the current UAT text is a single, unambiguous sentence
+// with no such reversal.
 export const REFERENCE_USAGE_POLICY =
-  'Setiap gambar referensi selain Foto Pelanggan HANYA menggambarkan bentuk dan geometri komponen yang direferensikan, atau untuk Hero Dasar, siluet pakaian. Hasilnya tetap harus mengikuti DNA Desain AI yang dipilih. Perlakukan gambar referensi ini sebagai konstruksi lengkap. Konstruksi Standar yang diwarisi dari setiap komponen tetap berlaku.'
+  'Setiap gambar referensi selain Foto Pelanggan menggambarkan bentuk dan geometri yg harus di ikuti mutlak kecuali warna.'

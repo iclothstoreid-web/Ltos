@@ -16,13 +16,15 @@
 // components no longer contribute to a shared global pool at all (see
 // recipeComposer/composer.ts).
 //
-// Final Repository Knowledge Migration (2026-08-06) — FULL REPLACE per
-// latest Prompt UAT (Indonesian).
+// Repository Knowledge Migration Phase 1 (2026-08-06) — VERBATIM placement
+// of the Prompt UAT block, byte-exact. The UAT text for this section is a
+// single flowing block with its own embedded "penempatan:"/
+// "posisi_pada_pakaian:"/"hubungan_dengan_tubuh:" labels (the same
+// placement-object key names individual components' own ai_dna.placement
+// use) rather than the short bare phrases the prior "Final Repository
+// Knowledge Migration" pass stored — kept as ONE array item (not split into
+// several) so promptBuilder/compression.ts's `Preserve: ${rules.join(',
+// ')}.` wrapper cannot alter the UAT's own internal comma placement.
 export const GARMENT_LAYOUT_RULES: string[] = [
-  'Seluruh badan pakaian melingkari batang tubuh sepenuhnya.',
-  'Lengan.',
-  'Panjang badan.',
-  'Potongan slim (relaxed fit) yang mempertahankan bentuk.',
-  'Jatuhan kain (drape) alami di sekitar tubuh.',
-  'Tidak melekat ketat.',
+  'penempatan: posisi_pada_pakaian: Seluruh badan pakaian - melingkari batang tubuh sepenuhnya, lengan, dan panjang badan, hubungan_dengan_tubuh: Potongan slim (relaxed fit) yang mempertahankan bentuk, jatuhan kain (drape) alami di sekitar tubuh, tidak melekat ketat.',
 ]
