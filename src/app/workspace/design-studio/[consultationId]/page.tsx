@@ -83,6 +83,20 @@ export default async function DesignStudioPage({ params }: Props) {
     ])
   )
 
+  // Color UI (Final UI & Prompt Adjustment, 2026-08-08) — Design Studio's
+  // Warna Bahan dropdown shows each color's Supplier Color Code instead of
+  // its catalog name; display-only (see ColorSelector.tsx). The code is
+  // scoped to a (material, dna_color) PAIR — the same DNA Color can carry a
+  // different supplier code for a different Material — so this is keyed by
+  // `${material_id}:${dna_color_id}`, not by dna_color_id alone. Flattened
+  // to a plain object for the same RSC-prop-friendliness reason
+  // materialColorDnaIds already is.
+  const supplierColorCodeByMaterialAndColor = Object.fromEntries(
+    Array.from(materialColorsMap.entries()).flatMap(([materialId, colors]) =>
+      colors.map(c => [`${materialId}:${c.dna_color_id}`, c.supplier_color_code])
+    )
+  )
+
   // Render Final Storage — loaded server-side so Preview/Download/Replace/
   // Approve persist across a page reload, not just within one client
   // session. null when this consultation has never had a render saved yet.
@@ -107,6 +121,7 @@ export default async function DesignStudioPage({ params }: Props) {
       masterOptions={masterOptions}
       materialStock={materialStock}
       materialColorDnaIds={materialColorDnaIds}
+      supplierColorCodeByMaterialAndColor={supplierColorCodeByMaterialAndColor}
       canManageMasterData={canManageMasterData(profile?.role)}
       userId={user.id}
       initialRenderFinal={initialRenderFinal}

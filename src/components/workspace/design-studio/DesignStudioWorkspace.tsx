@@ -41,6 +41,10 @@ interface DesignStudioWorkspaceProps {
   // material_colors). Scopes Warna Bahan to the selected Fabric's real,
   // supplier-backed colors; see GarmentBlueprintPanel.
   materialColorDnaIds: Record<string, string[]>
+  // Color UI (2026-08-08) — Supplier Color Code per (material, dna_color)
+  // pair, keyed `${material_id}:${dna_color_id}`; display-only, passed
+  // straight through to GarmentBlueprintPanel/ColorSelector.
+  supplierColorCodeByMaterialAndColor: Record<string, string>
   canManageMasterData: boolean
   userId: string
   // Render Final Storage — null when this consultation has never had a
@@ -78,6 +82,7 @@ export function DesignStudioWorkspace({
   masterOptions,
   materialStock,
   materialColorDnaIds,
+  supplierColorCodeByMaterialAndColor,
   canManageMasterData,
   userId,
   initialRenderFinal,
@@ -348,6 +353,7 @@ export function DesignStudioWorkspace({
           masterOptions={masterOptions}
           materialStock={materialStock}
           materialColorDnaIds={materialColorDnaIds}
+          supplierColorCodeByMaterialAndColor={supplierColorCodeByMaterialAndColor}
           onChange={handleChange}
           notes={notes}
           onNotesChange={setNotes}

@@ -29,6 +29,10 @@ interface GarmentBlueprintPanelProps {
   // Architecture Lock: DNA Color Repository + Material Color Mapping —
   // material_id -> the dna_color_id[] that Material actually comes in.
   materialColorDnaIds: Record<string, string[]>
+  // Color UI (2026-08-08) — Supplier Color Code per (material, dna_color)
+  // pair, keyed `${material_id}:${dna_color_id}`. Display-only; see
+  // ColorSelector.
+  supplierColorCodeByMaterialAndColor: Record<string, string>
   onChange: (key: keyof DesignSelections, value: string) => void
   notes: string
   onNotesChange: (value: string) => void
@@ -41,6 +45,7 @@ export function GarmentBlueprintPanel({
   masterOptions,
   materialStock,
   materialColorDnaIds,
+  supplierColorCodeByMaterialAndColor,
   onChange,
   notes,
   onNotesChange,
@@ -64,6 +69,21 @@ export function GarmentBlueprintPanel({
     scopedDnaColorIds && scopedDnaColorIds.length > 0
       ? masterOptions.warna_bahan.filter(c => c.dna_color_id && scopedDnaColorIds.includes(c.dna_color_id))
       : masterOptions.warna_bahan
+
+  // Color UI (2026-08-08) — Supplier Color Code, scoped to the currently
+  // selected Fabric's material_id, keyed by option.id so ColorSelector can
+  // look a code up per card without knowing about materials at all. Falls
+  // back to the color's own catalog name inside ColorSelector when a given
+  // option has no code mapped for this Fabric yet (e.g. Material Color not
+  // configured) — this map only ever adds labels, never removes one.
+  const colorCodeByOptionId: Record<string, string> = {}
+  if (selectedFabricMaterialId) {
+    colorOptions.forEach(c => {
+      if (!c.dna_color_id) return
+      const code = supplierColorCodeByMaterialAndColor[`${selectedFabricMaterialId}:${c.dna_color_id}`]
+      if (code) colorCodeByOptionId[c.id] = code
+    })
+  }
 
   return (
     <aside className="w-full lg:w-[30%] lg:h-full border-b-[0.5px] lg:border-b-0 lg:border-r-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] flex flex-col">
@@ -107,6 +127,7 @@ export function GarmentBlueprintPanel({
           <ColorSelector
             options={colorOptions}
             selected={selections.color}
+            colorCodeByOptionId={colorCodeByOptionId}
             onSelect={v => onChange('color', v)}
             onViewSpec={setSpecOption}
           />
