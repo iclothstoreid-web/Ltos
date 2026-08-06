@@ -153,10 +153,38 @@ function buildSceneConfigurationContent(masterRecipe: MasterRenderRecipe | null)
 // has no dedicated Prompt Builder step (it is a fit delta, not a discrete
 // visual reference component), so this is the one place its content is
 // emitted.
+//
+// Builder Cleanup (2026-08-06) — Repository/Engine unchanged by this fix
+// ("Repository sudah benar," only the Builder was wrong): Look Cutting's
+// own Repository content (referenceInstruction) can now be byte-identical
+// to one of the Engine's own Garment Layout rules, and emitting both
+// produced a literal duplicate sentence in the Final Prompt. Fixed
+// generally, not as a one-off string match against today's specific
+// wording: every string value Look Cutting's own garment record
+// contributes is checked against the Engine's `rules` array — only when
+// EVERY one of them is already present there verbatim (and there's no
+// other fabricIdentity/fabricBehavior content that would be lost) is Look
+// Cutting's contribution omitted, since at that point it says nothing the
+// Engine hasn't already said. A future Look Cutting item whose
+// referenceInstruction genuinely differs from the Engine's rules is still
+// included normally — this only suppresses true, full duplication.
+function isFullyRedundantWithGarmentLayoutRules(entry: RenderRecipeEntry, rules: string[]): boolean {
+  if (rules.length === 0) return false
+  const garmentValues = Object.values(entry.recipe.garment ?? {}).filter(
+    (value): value is string => typeof value === 'string' && value.length > 0
+  )
+  if (garmentValues.length === 0) return false
+  const hasOtherContent = Boolean(formatRecord(entry.recipe.fabricIdentity) || formatRecord(entry.recipe.fabricBehavior))
+  if (hasOtherContent) return false
+  return garmentValues.every((value) => rules.includes(value))
+}
+
 function buildGarmentLayoutContent(masterRecipe: MasterRenderRecipe | null, lookCuttingEntry: RenderRecipeEntry | undefined): string {
   const parts: string[] = []
-  if (lookCuttingEntry) parts.push(formatEntryContent(lookCuttingEntry))
   const rules = (masterRecipe?.garmentLayoutRules ?? []).filter(Boolean)
+  if (lookCuttingEntry && !isFullyRedundantWithGarmentLayoutRules(lookCuttingEntry, rules)) {
+    parts.push(formatEntryContent(lookCuttingEntry))
+  }
   if (rules.length > 0) parts.push(`Preserve: ${rules.join(', ')}.`)
   return parts.filter(Boolean).join(' ')
 }
