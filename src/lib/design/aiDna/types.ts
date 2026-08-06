@@ -9,10 +9,33 @@
 // lifecycle recap), so there was no admin workflow to preserve. They are
 // replaced by ONE admin-editable `referenceInstruction` string (what the
 // old 5 fields tried to describe in prose, now one field an owner can
-// actually write/edit from the Master Data Editor) plus per-item
-// `lockRules`/`negativeRules` (CRUD+reorder in the UI) and optional
+// actually write/edit from the Master Data Editor) plus optional
 // `renderNotes` (admin-facing only, never sent to GPT). `placement` is kept
 // as-is — structural positioning a photo can't convey, not narrative.
+//
+// Safe Migration (2026-08-07) — `lockRules`/`negativeRules` as two separate
+// concepts are being retired, but NOT destructively. A component never
+// needed two arrays distinguishing "preserve this" from "avoid this": every
+// entry in both was already a complete, self-contained instruction sentence
+// ("Preserve the Rounded collar shape...", "Do not modify the inherited
+// Standard Collar dimensions.") — the split existed only so Prompt Builder
+// could wrap each half in its own "Preserve: ..."/"Avoid: ..." label, a
+// presentation choice, not a data requirement. Replaced by ONE field,
+// `componentRules` — every constraint (positive or negative) this component
+// carries, in authored order. CRUD+reorder in the UI (RuleListEditor,
+// unchanged component, now pointed at one list instead of two).
+//
+// `lockRules`/`negativeRules` themselves are KEPT on this type, marked
+// legacy/optional, for the transition period: every row's data migration
+// (supabase/migrations/20260827000000_add_component_rules.sql) ADDS
+// `componentRules` alongside them, never removing the old keys. Pipeline
+// code reads `componentRules` when present and falls back to
+// merge(lockRules, negativeRules) otherwise (see dnaResolver/
+// resolveComponentRules.ts) — so a row that hasn't been migrated, or a
+// stale client that still writes the old shape, never loses data. The old
+// fields are deleted only in a future Sprint Cleanup, after UAT confirms
+// `componentRules` is correct for every row (see Step 5 audit in this
+// sprint's report).
 //
 // The `needs_regeneration` member means "the Hero Image changed, go
 // re-activate it as a Reference" on the Reference-First architecture, not
@@ -43,16 +66,29 @@ export interface AiDesignDna {
   // Image mechanism, this is simply the full descriptive text, the role the
   // old narrative fields used to play.
   referenceInstruction: string | null
-  // Positive constraints beyond the Engine's own Global Render Policy
-  // (renderEngine/globalRenderPolicy.ts, which Recipe Composer merges in at
-  // compose time, not stored here — Delta Knowledge decision, 2026-08-04) —
-  // CRUD + reorder in the Master Data Editor. Empty for a component with no
-  // override; a category extension (e.g. LOOK_CUTTING_FIT_LOCK_RULES below)
-  // or a genuine per-item custom rule is the only content that belongs here.
-  lockRules: string[]
-  // Negative constraints beyond the Engine's own Global Render Policy —
-  // same Delta Knowledge treatment as lockRules above.
-  negativeRules: string[]
+  // Component Rules — every constraint (positive or negative) this
+  // component carries beyond the Engine's own Garment Layout / Final
+  // Constraints sections (renderEngine/garmentLayout.ts,
+  // renderEngine/finalConstraints.ts — merged in by Recipe Composer at
+  // compose time as Engine defaults, never stored here — Delta Knowledge
+  // decision, 2026-08-04, unchanged by this rename). CRUD + reorder in the
+  // Master Data Editor. Empty for a component with no override; a category
+  // extension (e.g. LOOK_CUTTING_FIT_COMPONENT_RULES below) or a genuine
+  // per-item custom rule is the only content that belongs here.
+  //
+  // Optional at the type level (not every row has been migrated yet — see
+  // Safe Migration note above); readers must go through
+  // dnaResolver/resolveComponentRules.ts rather than reading this key bare.
+  componentRules?: string[]
+  // LEGACY — kept only for the Safe Migration transition (see header
+  // comment above). No longer shown in the Master Data Editor (RuleListEditor
+  // now points at `componentRules` only) and no longer written by this app's
+  // own save path, but still readable as a fallback source for any row whose
+  // `componentRules` hasn't been populated yet. Removed in the post-UAT
+  // Sprint Cleanup, not before.
+  lockRules?: string[]
+  /** @deprecated LEGACY — see `lockRules` above. */
+  negativeRules?: string[]
   // Optional admin-facing note (e.g. "why this Lock Rule was added," known
   // render quirks) — never serialized into the GPT payload.
   renderNotes: string | null
@@ -66,20 +102,20 @@ export interface AiDesignDna {
 // (recipeComposer/types.ts) — two separate Engine-default sources, both
 // unconditionally merged into every render, with real content overlap (both
 // carried garment-geometry/structure constraints in different wording) and
-// several lines that duplicated Identity Lock's own template verbatim ("Do
-// not change customer identity/body shape/facial structure/skin tone/
-// perspective" — see promptArchitectureV2/layers.ts's LAYER1_IDENTITY_
-// TEMPLATE, which already states all of this and is not touched by this
-// refactor). Both retired from here: their real (non-duplicate) content is
-// now Global Render Policy's job, consolidated into ONE Engine source —
-// see renderEngine/globalRenderPolicy.ts. Composer.ts's merge now reads
-// only `policy.lockRules`/`policy.negativeRules`, no second source. Quality-
-// target content (what used to be called "Quality Foundation" both here and
-// in recipeComposer/types.ts) now lives in renderEngine/qualityFoundation.ts
-// — a third, distinct Engine responsibility, never mixed with the other two
-// again. Look Cutting's own Fit Knowledge extension (LOOK_CUTTING_FIT_LOCK_
-// RULES below) is unaffected — it was always a category-specific delta on
-// top of the Engine default, not part of the Engine default itself.
+// several lines that duplicated Identity Preservation's own template
+// verbatim ("Do not change customer identity/body shape/facial structure/
+// skin tone/perspective" — see renderEngine/identityPreservation.ts, which
+// already states all of this and is not touched by this refactor). Both
+// retired from here: their real (non-duplicate) content is now Garment
+// Layout / Final Constraints' job, consolidated into ONE Engine source per
+// section — see renderEngine/garmentLayout.ts and
+// renderEngine/finalConstraints.ts. Quality-target content (what used to be
+// called "Quality Foundation" both here and in recipeComposer/types.ts) now
+// lives in renderEngine/globalQualityRules.ts — a third, distinct Engine
+// responsibility, never mixed with the other two again. Look Cutting's own
+// Fit Knowledge extension (LOOK_CUTTING_FIT_COMPONENT_RULES below) is
+// unaffected — it was always a category-specific delta on top of the Engine
+// default, not part of the Engine default itself.
 
 // Fit Knowledge — belongs ONLY to category 'look_cutting'. Look Cutting
 // controls ONLY how the garment fits and drapes on the customer's EXISTING
@@ -95,7 +131,18 @@ export interface AiDesignDna {
 // another belongs in that item's own admin-authored `referenceInstruction`
 // free text, not here — see AiDesignDnaSection.tsx's Look Cutting authoring
 // caption.
-export const LOOK_CUTTING_FIT_LOCK_RULES: string[] = [
+//
+// Prompt Architecture Realignment (2026-08-06) — the former
+// LOOK_CUTTING_FIT_LOCK_RULES + LOOK_CUTTING_FIT_NEGATIVE_RULES pair is one
+// array now (componentRules), same wording, same order (positive framing
+// first, then the negative mirror) — this array was never part of the
+// validated UAT prompt (Look Cutting was not selected in that render), so
+// merging its storage shape carries zero wording-preservation risk. Look
+// Cutting has no dedicated Prompt Builder step (it is a fit/silhouette
+// delta, not a discrete visual reference component like Collar/Placket/
+// Pocket/Cuff) — when selected, its componentRules are folded into the
+// Garment Layout section alongside the Engine's own GARMENT_LAYOUT_RULES.
+export const LOOK_CUTTING_FIT_COMPONENT_RULES: string[] = [
   'Apply the selected garment fit consistently across the entire thobe.',
   'Adjust only the garment silhouette.',
   "Control garment ease relative to the customer's existing body.",
@@ -104,9 +151,6 @@ export const LOOK_CUTTING_FIT_LOCK_RULES: string[] = [
   "Preserve proportionality to the customer's existing body and pose.",
   'Ensure smooth fit transitions across shoulders, chest, waist, sleeves, and hem.',
   'Produce a physically plausible tailored garment.',
-]
-
-export const LOOK_CUTTING_FIT_NEGATIVE_RULES: string[] = [
   'Do not modify body shape or proportions.',
   'Do not create unrealistic tightness or looseness.',
   'Do not stretch or shrink the garment unnaturally.',
@@ -117,31 +161,28 @@ export const LOOK_CUTTING_FIT_NEGATIVE_RULES: string[] = [
 
 // Engine/Repository split (Delta Knowledge decision, 2026-08-04) — this is
 // now the DELTA-ONLY seed for a freshly created item, not a copy of the
-// Global Default Policy. `lockRules`/`negativeRules` start empty on
-// purpose: Global Render Policy (renderEngine/globalRenderPolicy.ts) stays
-// the single Engine source (consumed once, at compose time, by
+// Global Default Policy. `componentRules` starts empty on purpose: the
+// Engine's own Garment Layout / Final Constraints sections stay the single
+// Engine source (consumed once, at compose time, by
 // recipeComposer/composer.ts's composeRenderRecipe — see its own comment),
 // never copied into a row again. A component only ever stores what
 // genuinely differs from that Engine default (a category extension like
-// LOOK_CUTTING_FIT_LOCK_RULES, or a real per-item override) — masterData.ts's
-// createMasterDataOption spreads this object then layers those extensions
-// straight on top, so it now produces delta-only arrays with no code change
-// of its own required there.
+// LOOK_CUTTING_FIT_COMPONENT_RULES, or a real per-item override) —
+// masterData.ts's createMasterDataOption spreads this object then layers
+// those extensions straight on top, so it now produces a delta-only array
+// with no code change of its own required there.
 //
-// NOT the live DB column default (that column predates lockRules/
-// referenceInstruction entirely — `information_schema.columns` shows it
-// still building the old 5-narrative-field shape with `negativeRules: []`
-// and no `lockRules` key at all — a pre-existing staleness this task does
-// not touch, since altering the column default is a schema change and the
-// locked scope forbids that; every insert path that matters (createMasterDataOption)
-// already sends `ai_dna` or a category-specific object explicitly rather than
-// relying on that stale default).
+// NOT the live DB column default (that column predates componentRules/
+// referenceInstruction entirely — every insert path that matters
+// (createMasterDataOption) already sends `ai_dna` or a category-specific
+// object explicitly rather than relying on that stale default; a data
+// migration reshapes existing rows' stored `lockRules`/`negativeRules` into
+// `componentRules` — see supabase/migrations).
 export const DEFAULT_AI_DESIGN_DNA: AiDesignDna = {
   status: 'pending',
   version: 1,
   referenceInstruction: null,
-  lockRules: [],
-  negativeRules: [],
+  componentRules: [],
   renderNotes: null,
   placement: null,
   metadata: {

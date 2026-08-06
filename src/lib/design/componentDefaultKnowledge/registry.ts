@@ -12,7 +12,7 @@ import { EMPTY_COMPONENT_DEFAULT_KNOWLEDGE, type ComponentDefaultKnowledge } fro
 // Front Placket variant inherits (Asil/Badr/Fakhr/Sudas Plaket and any
 // future variant, e.g. Hexagon, which stores only its own delta on top of
 // this). Deliberately identity-only — no Hero Image, no referenceInstruction,
-// no lockRules, no negativeRules, per the locked brief. Every other
+// no componentRules, per the locked brief. Every other
 // category's slot stays EMPTY_COMPONENT_DEFAULT_KNOWLEDGE — no content
 // seeded ("Jangan mengisi data default apa pun" beyond what was explicitly
 // requested for this one category).

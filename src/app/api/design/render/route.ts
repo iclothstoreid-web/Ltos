@@ -18,18 +18,17 @@ import {
   validatePlaketReference,
   validatePocketReference,
   referenceBackedCategories,
+  componentReferenceDeltas,
 } from '@/lib/design/aiAssetComposer/composer'
 import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
-import { GLOBAL_REFERENCE_POLICY_GEOMETRY } from '@/lib/design/renderEngine/globalReferencePolicy'
-import { buildReferenceBindingMap } from '@/lib/design/renderEngine/referenceBindingMap'
+import { buildReferenceBinding } from '@/lib/design/renderEngine/referenceBinding'
 import { applyCollarComponentIdentity } from '@/lib/design/componentDefaultKnowledge/collar'
 import type { CollarConstructionType } from '@/lib/design/componentDefaultKnowledge/collar'
-import type { AssetInstructionLayer } from '@/lib/design/promptBuilder/compression'
-import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
+import { validateComponentDna } from '@/lib/design/promptValidation/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
 import type { UnresolvedComponent } from '@/lib/design/capabilityEngine/engine'
-import { LAYER1_IDENTITY_TEMPLATE } from '@/lib/design/promptArchitectureV2/layers'
+import { IDENTITY_PRESERVATION } from '@/lib/design/renderEngine/identityPreservation'
 import type { DnaState } from '@/lib/design/dnaState/types'
 import { hashDnaState } from '@/lib/design/dnaState/hash'
 import { detectDirtyLayers } from '@/lib/design/dirtyLayer/detect'
@@ -37,6 +36,7 @@ import { getCachedRender, setCachedRender } from '@/lib/design/renderCache/cache
 import { createRenderProfiler, formatProfileReport } from '@/lib/ai/renderProfiler/profiler'
 import { prefetchReferenceImages } from '@/lib/ai/services/image'
 import type { ProviderUsage } from '@/lib/ai/services/image'
+import { generateIdentityProtectionMask } from '@/lib/ai/services/identityMask'
 
 // Debug logging (2026-07-28) — this endpoint's real callers have been
 // reporting collar/pocket/color loss in rendered output with no visibility
@@ -139,6 +139,19 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     )
   }
+
+  // Identity Protection Mask (Render Investigation, 2026-08-06) — kicked
+  // off as early as possible (customerPhotoUrl, just validated above, is
+  // its only input), so its OpenAI vision-detection call overlaps every
+  // CPU-bound stage below instead of adding to the critical path. Awaited
+  // right before the image-generation call, alongside
+  // referenceImagesPromise. Never blocks or fails a render — a mask that
+  // can't be safely built (no clear face, unusual EXIF orientation, the
+  // detection call itself failing) resolves to null, and the render
+  // proceeds exactly as it did before this feature existed — see
+  // identityMask.ts's fail-open contract.
+  const identityMaskPromise = generateIdentityProtectionMask(customerPhotoUrl)
+  identityMaskPromise.catch(() => {})
 
   const supabase = createClient()
   const {
@@ -290,7 +303,7 @@ export async function POST(req: NextRequest) {
   // Component Default Knowledge (componentDefaultKnowledge/registry.ts's
   // `look_cutting` slot stays EMPTY, untouched by this fix). It carries only
   // Variant Delta Knowledge — silhouette/fit/ease/shaping text on ai_dna
-  // (referenceInstruction/lockRules/negativeRules) — the exact same "real
+  // (referenceInstruction/componentRules) — the exact same "real
   // content already lives on ai_dna, render_recipe/status is vestigial"
   // shape as the bahan fix above, one category over. Unlike bahan though,
   // Look Cutting's own `ai_dna.status` can ALSO be stuck at 'pending' even
@@ -584,7 +597,7 @@ export async function POST(req: NextRequest) {
       const keys = Object.keys(masterRecipe[key] ?? {})
       debugLog(`  ├─ ${key}: ${keys.length ? `{${keys.join(', ')}}` : '✗ empty'}`)
     })
-    debugLog(`  └─ negativeRules: [${masterRecipe.negativeRules.join(', ')}]`)
+    debugLog(`  └─ finalConstraintRules: [${masterRecipe.finalConstraintRules.join(', ')}]`)
   } else {
     debugLog('  ⚠️  composeRenderRecipe returned null')
   }
@@ -625,109 +638,42 @@ export async function POST(req: NextRequest) {
   debugLog(`Uncompressed prompt (${uncompressed?.length ?? 0} chars):`)
   debugLog(uncompressed)
 
-  // Sprint R-04 — AI Asset caveat instructions (SILHOUETTE-only/COLLAR_
-  // SHAPE-only/PLAKET_SHAPE-only/POCKET_SHAPE-only) built as layer
-  // candidates here, one per reference actually composed in this request,
-  // so they enter compressPromptByLayers alongside everything else instead
-  // of being concatenated onto the compressed string afterward (the old
-  // `applyAssetInstructions` call, removed below — see compression.ts's
-  // AssetInstructionLayer doc comment for why that broke the token audit).
-  // Sprint R-05 (Phase 3) — loops over REFERENCE_CATEGORY_REGISTRY instead
-  // of 4 hardcoded ternaries; `composedAssets.referencesByCategory` (Sprint
-  // R-05) is the one generic map every "is category X active" question here
-  // reads from.
-  //
-  // Reference-First Cleanup / Duplication Fix — this layer carries ONLY the
-  // registry's static caveat text. An earlier revision also appended the
-  // item's own `ai_dna.referenceInstruction` here, but that text is ALSO
-  // always present in this same category's own DNA slot / component layer
-  // below (`garment.referenceInstruction`, set unconditionally by
-  // dnaResolver/resolver.ts's buildGarmentSpec regardless of reference-
-  // backed status) — sending both meant GPT Image received the identical
-  // instruction twice for every reference-backed category. Reference
-  // Instruction now has exactly one source in finalPrompt: `garment.
-  // referenceInstruction`. This layer's content is unchanged from before
-  // that duplication was introduced.
-  const assetInstructionLayers: AssetInstructionLayer[] = REFERENCE_CATEGORY_REGISTRY.filter((def) =>
-    composedAssets.referencesByCategory.has(def.category),
-  ).map((def) => ({ id: `asset_instruction:${def.idSuffix}`, label: def.instructionLabel, content: def.instruction }))
-
-  // Reference Policy Refactor (Sprint A, 2026-08-05) — the shared framing
-  // every geometry-type AI Asset Instruction above now omits (hoisted to
-  // GLOBAL_REFERENCE_POLICY_GEOMETRY, renderEngine/globalReferencePolicy.ts)
-  // is sent here ONCE, as its own Priority 0 layer, instead of once per
-  // active geometry-type reference — no change to AI Asset Composer, no
-  // change to which/how many Hero Images are sent, only where this one
-  // shared sentence lives in the assembly. Gated the same way every
-  // asset_instruction layer already is: only when at least one geometry
-  // reference (Collar/Plaket/Pocket) is actually active this render, so a
-  // render with none of them selected pays nothing for it, same as before.
-  // Priority 0 Budget Reserve (2026-08-05) — gate widened to `||
-  // baseHeroAvailable`: this layer's content now also carries Base Hero's
-  // silhouette-only/ignore-the-person instruction (globalReferencePolicy.ts's
-  // own comment), and Base Hero is sent on every render independent of
-  // whether any Collar/Plaket/Pocket reference is active.
-  if (assetInstructionLayers.length > 0 || baseHeroAvailable) {
-    assetInstructionLayers.unshift({
-      id: 'asset_instruction:global_reference_policy_geometry',
-      label: 'Global Reference Policy (Geometry)',
-      content: GLOBAL_REFERENCE_POLICY_GEOMETRY,
-    })
-  }
-
-  // Reference Binding Architecture V2 (2026-08-05) — root cause audit found
-  // OpenAI's images.edit has no label/role/id/metadata field for an
-  // individual image (verified against the installed SDK's own
-  // ImageEditParamsBase type: `image` is a plain `Uploadable[]`), and the
-  // prompt itself never bound a specific image to its role. This layer
-  // closes that gap: built ENTIRELY from which images are actually active
-  // this render (never a static "Image 1/2/3" list — see
-  // renderEngine/referenceBindingMap.ts's own doc comment), one role
-  // sentence per image, naming only what the image represents — no Lock
-  // Rules/Negative Rules/Quality/Camera/Lighting/Material/Color, and no
-  // detailed geometry (that stays exclusively in Component Delta below,
-  // never duplicated here). Broader condition than the geometry-policy
-  // block above: Customer Photo (and often Base Hero) are active even when
-  // zero geometry-type categories are selected, so this uses its own
-  // independent gate (`buildReferenceBindingMap` returns '' when nothing
-  // qualifies) rather than reusing `assetInstructionLayers.length > 0`.
-  // Unshifting AFTER the block above places this layer in front of
-  // Global Reference Policy Geometry (which is itself in front of every
-  // Component Delta) — Identity -> Reference Binding Map -> Global
-  // Reference Policy -> Component Delta, as required.
-  const referenceBindingMapContent = buildReferenceBindingMap({
+  // Prompt Architecture Realignment (2026-08-06) — Reference Binding
+  // (Section 2) and Reference Usage Policy (Section 3) are now fixed Engine
+  // sections at fixed positions, and each geometry-type category's own
+  // Component Reference Delta (the "Transfer only: .../Do NOT copy: ..."
+  // instruction, aiAssetComposer/registry.ts) is appended to that SAME
+  // category's own step (Collar/Placket/Pocket) instead of being
+  // concatenated as standalone caveats before any component's own section.
+  // See promptBuilder/compression.ts's own header comment for the full
+  // fixed order.
+  const referenceUsagePolicyActive = composedAssets.referencesByCategory.size > 0 || baseHeroAvailable
+  const referenceBindingContent = buildReferenceBinding({
     customerPhoto: true,
     baseHero: baseHeroAvailable,
     collar: composedAssets.referencesByCategory.has('kerah'),
     placket: composedAssets.referencesByCategory.has('plaket'),
     pocket: composedAssets.referencesByCategory.has('saku'),
   })
-  if (referenceBindingMapContent) {
-    assetInstructionLayers.unshift({
-      id: 'asset_instruction:reference_binding_map',
-      label: 'Reference Binding Map',
-      content: referenceBindingMapContent,
-    })
-  }
+  const referenceDeltas = componentReferenceDeltas(composedAssets)
 
-  // Layer-Based Prompt Compression (Sprint PR-04) — replaces the old fixed
-  // Anchor/Material/Other/Negatives buckets, which truncated by raw word
-  // count with no concept of which content mattered more. Built from
-  // `entries` (per-item, pre-merge) so each layer is exactly one
-  // category's own resolved content — Material Color can never again be
-  // silently cut just because it happened to serialize after Model
-  // Thobe's now-richer content inside one shared bucket.
+  // Layer-Based Prompt Compression — assembles the 13 fixed sections (see
+  // promptBuilder/compression.ts) built from `entries` (per-item, pre-merge)
+  // so each component's own layer is exactly that category's own resolved
+  // content — no cross-category collision possible here.
   const layerCompression = profiler.mark('prompt_compression', () => {
     const promptLayers = buildPromptLayers({
       entries,
       masterRecipe,
-      identityTemplate: LAYER1_IDENTITY_TEMPLATE,
-      assetInstructions: assetInstructionLayers,
+      identityPreservation: IDENTITY_PRESERVATION,
+      referenceBinding: referenceBindingContent,
+      referenceUsagePolicy: referenceUsagePolicyActive,
+      componentReferenceDeltas: referenceDeltas,
     })
     return compressPromptByLayers(promptLayers)
   })
 
-  logStage('🔵', 'STAGE 5b: LAYER-BASED COMPRESSION (~1200 token budget)')
+  logStage('🔵', 'STAGE 5b: LAYER-BASED COMPRESSION (13-section fixed order, ~1800 token budget)')
   debugTable(layerCompression.layerReport)
 
   // Phase 4 (Sprint PR-04) — Priority 0 (Identity/Negative Rules/active AI
@@ -744,38 +690,28 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Phase 5 (Sprint PR-04, extended Sprint R-04) — final safety net before
-  // the OpenAI call. Identity/Negative Rules/Lock Rules/Quality Foundation/
-  // Global Render Recipe/Material/Material Color are always required once
-  // Capability Engine hasn't already blocked the render; Look Cutting and
-  // each AI Asset Instruction are only required when applicable to THIS
-  // request (Look Cutting is a legitimate "(None)" optional field —
-  // design-studio/types.ts's OPTIONAL_FIELDS; an Asset Instruction is only
-  // meaningful when its reference was actually composed in — see
-  // composedAssets above).
-  // Architecture Lock (2026-08-04) — 'model_thobe' removed from this list.
-  // It's excluded from `entries` entirely now (catalog-only), so it can
-  // never appear in layerReport — requiring it here would hard-fail every
-  // render.
-  // Engine Priority Refactor (2026-08-04) — 'quality_foundation'/
-  // 'global_render_recipe' added: both are now Priority 0
-  // (promptBuilder/compression.ts's buildPromptLayers) and, like Identity/
-  // Material/Material Color, always have non-empty content on every render
-  // (renderEngine/qualityFoundation.ts, renderEngine/globalRenderRecipe.ts —
-  // fixed Engine defaults, never per-item-dependent) — same explicit
-  // defense-in-depth convention already applied to the other always-present
-  // Priority 0 layers, not a new kind of check.
-  const lookCuttingSelected = entries.some((e) => e.category === 'look_cutting')
+  // Final safety net before the OpenAI call. Identity Preservation/Scene
+  // Configuration/Garment Layout/Material/Color/Global Quality Rules/Final
+  // Constraints are always required once Capability Engine hasn't already
+  // blocked the render — all 7 are fixed Engine defaults or unconditionally
+  // required Master Data (Material/Color), never per-item-optional. Look
+  // Cutting has no dedicated id anymore (folded into 'garment_layout' when
+  // selected — see compression.ts's buildGarmentLayoutContent), so it needs
+  // no separate conditional entry. Reference Binding / Reference Usage
+  // Policy are only required when applicable to THIS request (a render with
+  // no reference image active at all legitimately omits both).
+  // 'model_thobe' is excluded from this list — it's excluded from `entries`
+  // entirely (catalog-only), so it can never appear in layerReport.
   const requiredPriorityZeroIds = [
-    'identity',
-    'negative_rules',
-    'lock_rules',
-    'quality_foundation',
-    'global_render_recipe',
+    'identity_preservation',
+    'scene_configuration',
+    'garment_layout',
     'material',
-    'material_color',
-    ...(lookCuttingSelected ? ['look_cutting'] : []),
-    ...assetInstructionLayers.map((layer) => layer.id),
+    'color',
+    'global_quality_rules',
+    'final_constraints',
+    ...(referenceBindingContent ? ['reference_binding'] : []),
+    ...(referenceUsagePolicyActive ? ['reference_usage_policy'] : []),
   ]
   const priorityZeroCheck = validatePriorityZeroIntact(layerCompression.layerReport, requiredPriorityZeroIds)
   if (!priorityZeroCheck.valid) {
@@ -805,6 +741,12 @@ export async function POST(req: NextRequest) {
   // Composer/Prompt Builder/Compression above — awaited here, right before
   // they're actually needed, so generateImage() never re-downloads them.
   const referenceImageFiles = await referenceImagesPromise
+  // Identity Protection Mask — kicked off right after STAGE 1's input
+  // validation; awaited here alongside the reference images it doesn't
+  // depend on. null (no mask) is a normal, non-error outcome — see
+  // identityMask.ts.
+  const identityMaskFile = await identityMaskPromise
+  debugLog(`Identity Protection Mask: ${identityMaskFile ? '✅ applied (scoped to Customer Photo)' : '— not applied this render (see identityMask.ts fail-open conditions)'}`)
 
   // Request Counter / Controlled Retry (Sprint O, Task 2/4) — replaces the
   // bare generateImage() call. maxApplicationRetries defaults to 0 (see
@@ -814,7 +756,7 @@ export async function POST(req: NextRequest) {
   // OpenAI SDK's own default retries (now disabled, src/lib/ai/client.ts)
   // silently happening with zero record of it ever occurring.
   const { result, requestCount, retryCount, attempts, usage } = await generateImageWithControlledRetry({
-    input: { instruction, referenceImageUrls, referenceImageFiles, promptOverride: finalPrompt },
+    input: { instruction, referenceImageUrls, referenceImageFiles, promptOverride: finalPrompt, maskFile: identityMaskFile ?? undefined },
   })
 
   // Sprint O.1 (Task 1/5) — one 'openai_request' stage per real network
@@ -854,6 +796,7 @@ export async function POST(req: NextRequest) {
         plaketReference: plaketReferenceStatus,
         pocketReference: pocketReferenceStatus,
       },
+      identityProtectionMask: { applied: identityMaskFile !== null },
       // Sprint O.1 (Task 3) — `promptUncompressed`/`debug` were computed and
       // sent on every production response with zero confirmed consumers
       // (verified — see SPRINT_O1 report); the 2026-07-28 comment on

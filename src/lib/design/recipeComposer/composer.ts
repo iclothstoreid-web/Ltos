@@ -1,11 +1,11 @@
 import { resolveComponentKnowledge } from '@/lib/design/componentDefaultKnowledge/resolver'
+import type { MasterDataCategory } from '@/lib/design/masterData'
 import type { GlobalRenderPolicy, MasterRenderRecipe, RecipeSource, RenderRecipeEntry } from './types'
 
-// Recipe Composer Foundation (Sprint AI-05) — real normalize/validate/
-// merge/resolve-conflict logic, still no DNA, no Vision, no UI, no
-// Storage, no OpenAI. Prompt Builder itself must never call
-// mergeRecipe/resolveRecipeConflict/sortRecipePriority directly — this
-// module is the only place allowed to combine Recipes.
+// Recipe Composer Foundation — real normalize/validate/merge/resolve-conflict
+// logic. Prompt Builder itself must never call mergeRecordField/
+// resolveRecipeConflict/sortRecipePriority directly — this module is the
+// only place allowed to combine Recipes.
 
 export interface ComposeRenderRecipeInput {
   entries: RenderRecipeEntry[]
@@ -16,9 +16,6 @@ export interface ComposeRenderRecipeInput {
 // ones a Component Recipe can actually contribute to. `background`/
 // `quality`/`style` exist only on GlobalRenderPolicy (applied once, not
 // per-item — see composeRenderRecipe) and are deliberately excluded here.
-// `garment`/`fabricIdentity`/`stitching`/`embroidery` are Component-DNA
-// producers (Sprint AI-07) — empty until a future sprint populates them,
-// merged here with the exact same algorithm as the original 7 fields.
 export const RECIPE_RECORD_FIELDS = [
   'camera',
   'pose',
@@ -59,8 +56,7 @@ export function normalizeRenderRecipeEntries(entries: RenderRecipeEntry[]): Rend
       stitching: normalizeRecord(entry.recipe.stitching),
       embroidery: normalizeRecord(entry.recipe.embroidery),
       renderPriority: Array.isArray(entry.recipe.renderPriority) ? entry.recipe.renderPriority : [],
-      negativeRules: Array.isArray(entry.recipe.negativeRules) ? entry.recipe.negativeRules : [],
-      lockRules: Array.isArray(entry.recipe.lockRules) ? entry.recipe.lockRules : [],
+      componentRules: Array.isArray(entry.recipe.componentRules) ? entry.recipe.componentRules : [],
     },
   }))
 }
@@ -118,13 +114,14 @@ export interface RecipeConflictResolution {
 // (referenceInstruction/placement, or `color` for warna_bahan — see
 // dnaResolver/resolver.ts). Without an exception, a same-key collision on
 // `garment` would let whichever component merges with the highest priority
-// (e.g. Collar/Cuff/Pocket, since Model Thobe is always sent first at
-// priority 0) silently clobber Model Thobe's own referenceInstruction —
-// the one component that defines the garment's actual identity. Model
-// Thobe is the Anchor: on `garment` only, if Model Thobe is among the
-// candidates it always wins the collision, regardless of priority. Every
-// other field (camera, lighting, ...) keeps the original priority-wins
-// rule unchanged.
+// silently clobber another's own referenceInstruction. This diagnostic
+// merge (MasterRenderRecipe.garment) is no longer what Prompt Builder reads
+// for component content (each component's own step reads `entries`
+// directly — see promptBuilder/compression.ts), but it stays correct for
+// composeRenderRecipeTrace and any future debugging consumer. Model Thobe
+// is the Anchor: on `garment` only, if Model Thobe is among the candidates
+// it always wins the collision, regardless of priority. Every other field
+// (camera, lighting, ...) keeps the original priority-wins rule unchanged.
 export function resolveRecipeConflict(conflict: RecipeConflict): RecipeConflictResolution {
   if (conflict.candidates.length === 0) {
     return { field: conflict.field, resolvedValue: null, resolvedFrom: null }
@@ -183,33 +180,12 @@ function mergeRecordField(field: RecipeRecordField, sortedEntries: RenderRecipeE
   return merged
 }
 
-export interface MergeRecipeInput {
-  base: Partial<MasterRenderRecipe>
-  incoming: RenderRecipeEntry
-}
-
-// Standalone two-way primitive: folds one more Component Recipe's 7 shared
-// fields into an existing accumulator, last-wins per key. Kept for simple
-// pairwise use; composeRenderRecipe itself merges the *whole* sorted batch
-// via mergeRecordField above, since 3+ entries commonly contribute to one
-// field and a real RecipeConflict needs every contributor, not just the
-// two sides of one fold step.
-export function mergeRecipe(input: MergeRecipeInput): Partial<MasterRenderRecipe> {
-  const { base, incoming } = input
-  const merged: Partial<MasterRenderRecipe> = { ...base }
-
-  RECIPE_RECORD_FIELDS.forEach((field) => {
-    merged[field] = {
-      ...normalizeRecord(base[field]),
-      ...incoming.recipe[field],
-    }
-  })
-
-  merged.negativeRules = Array.from(new Set([...(base.negativeRules ?? []), ...incoming.recipe.negativeRules]))
-  merged.lockRules = Array.from(new Set([...(base.lockRules ?? []), ...incoming.recipe.lockRules]))
-
-  return merged
-}
+// Component category with no dedicated Prompt Builder step (Prompt
+// Architecture Realignment, 2026-08-06) — its resolved Component Rules fold
+// into `garmentLayoutRules` instead of a per-category slot in
+// `componentRulesByCategory` (see aiDna/types.ts's
+// LOOK_CUTTING_FIT_COMPONENT_RULES doc comment for why).
+const NO_DEDICATED_STEP_CATEGORIES: MasterDataCategory[] = ['look_cutting']
 
 // Reads Component Recipe (RenderRecipeEntry[]) + Global Render Policy ->
 // normalizes -> validates -> sorts by priority -> merges + resolves
@@ -239,62 +215,53 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     priority: entry.priority,
   }))
 
-  // Engine Default Policy (Delta Knowledge decision, 2026-08-04; Render
-  // Engine Knowledge Refactor, same day) — Identity Knowledge's rule set
-  // used to be copied into every row's own ai_dna.lockRules/negativeRules
-  // (the repository audit that motivated the Delta Knowledge decision found
-  // 94.6%/89.0% of all loaded rule text was that exact duplicate).
-  // Repository rows now store Delta Knowledge only (empty unless a
-  // component has a genuine override); `policy.lockRules`/`policy.
-  // negativeRules` (DEFAULT_GLOBAL_RENDER_POLICY, recipeComposer/types.ts)
-  // is the Engine's ONE default source — Global Render Policy
-  // (renderEngine/globalRenderPolicy.ts) is what actually populates it. A
-  // second, separate Engine-default array used to exist here too
-  // (aiDna/types.ts's DEFAULT_LOCK_RULES/DEFAULT_NEGATIVE_RULES) — retired
-  // by the Render Engine Knowledge Refactor specifically because two
-  // Engine-level sources both merging unconditionally into every render is
-  // the same "hides a duplicate the Set silently absorbs" problem the
-  // Delta Knowledge decision fixed for per-item rows; `Set` dedup below is
-  // unchanged, but now dedupes against only ONE Engine source, not two.
-  //
-  // Component Default Knowledge layer (infrastructure sprint, 2026-08-04) —
-  // one level more specific than the Engine's global policy above: a
-  // per-CATEGORY baseline (Front Placket, Collar, ...) every variant in
-  // that category inherits, with each entry's own recipe.lockRules/
-  // negativeRules as ITS Delta Knowledge on top (Front Placket -> Hexagon
-  // stores only what's specific to Hexagon). Every category's Component
-  // Default Knowledge is empty this sprint (see componentDefaultKnowledge/
-  // registry.ts) — resolveComponentKnowledge still runs per entry so the
-  // merge path is real and ready, but with an empty base it is a no-op:
-  // `entry.recipe.lockRules` passes through unchanged, same as before this
-  // layer existed.
+  // Component Default Knowledge + Component Delta Knowledge merge — one
+  // category-level baseline (Front Placket, Collar, ...), each entry's own
+  // recipe.componentRules as ITS Delta Knowledge on top. Every category's
+  // Component Default Knowledge is empty today (componentDefaultKnowledge/
+  // registry.ts) except `identity`, so in practice this passes each entry's
+  // own componentRules through unchanged — but the merge point is real and
+  // ready for whenever a category default is populated.
   const resolvedComponentKnowledge = sorted.map((entry) =>
     resolveComponentKnowledge(entry.category, {
       referenceInstruction: null,
-      lockRules: entry.recipe.lockRules,
-      negativeRules: entry.recipe.negativeRules,
+      componentRules: entry.recipe.componentRules ?? [],
       identity: {},
     })
   )
 
-  const negativeRules = Array.from(
-    new Set([...policy.negativeRules, ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.negativeRules)])
-  )
-  const lockRules = Array.from(
-    new Set([...policy.lockRules, ...resolvedComponentKnowledge.flatMap((knowledge) => knowledge.lockRules)])
-  )
+  // Prompt Architecture Realignment (2026-08-06) — componentRulesByCategory
+  // replaces the old flat, everything-unioned negativeRules/lockRules pool.
+  // Each selected component's OWN resolved Component Rules stay attributed
+  // to that component's own category, read by Prompt Builder at that
+  // component's own step (Collar/Placket/Pocket/Cuff/Material/...) — never
+  // pooled with another component's or with the Engine's own
+  // garmentLayoutRules/finalConstraintRules.
+  const componentRulesByCategory: Partial<Record<MasterDataCategory, string[]>> = {}
+  let lookCuttingComponentRules: string[] = []
+  sorted.forEach((entry, index) => {
+    const rules = resolvedComponentKnowledge[index].componentRules
+    if (rules.length === 0) return
+    if (NO_DEDICATED_STEP_CATEGORIES.includes(entry.category)) {
+      lookCuttingComponentRules = rules
+      return
+    }
+    componentRulesByCategory[entry.category] = rules
+  })
+
+  // Engine-only now — no per-item contribution (Delta Knowledge decision,
+  // 2026-08-04, unchanged in spirit by this rename). Look Cutting's own
+  // Component Rules (no dedicated step) are the one addition to
+  // garmentLayoutRules beyond the Engine default, since Garment Layout is
+  // where a fit/silhouette delta belongs when it has nowhere else to go.
+  const garmentLayoutRules = Array.from(new Set([...policy.garmentLayoutRules, ...lookCuttingComponentRules]))
+  const finalConstraintRules = [...policy.finalConstraintRules]
 
   // Component Identity Knowledge (2026-08-04) — every variant in a category
   // inherits that category's identity facts (e.g. every Front Placket
   // variant gets Length/Width/Position/Construction) without needing its own
   // copy anywhere. Namespaced under the category key so two categories can
-  // never collide on the same fact name inside the shared `garment` bag
-  // (mergeRecordField below resolves same-key collisions to ONE winning
-  // value, which would silently drop one category's identity entirely if
-  // two categories both wrote to, say, a flat `length` key — namespacing
-  // avoids that by construction). Applied after mergeRecordField, not
-  // through it, so it can never be dropped by garment's own priority/Anchor
-  // collision rule (see resolveRecipeConflict) — identity always survives.
+  // never collide on the same fact name inside the shared `garment` bag.
   const componentIdentity: Record<string, unknown> = {}
   sorted.forEach((entry, index) => {
     const identity = resolvedComponentKnowledge[index].identity
@@ -303,19 +270,14 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     }
   })
 
-  // GlobalRenderPolicy overlaps RenderRecipe on 5 fields now (camera, pose,
-  // lighting, composition, visibilityRules — extended from 3 to 5 by the
-  // Render Engine Knowledge Refactor's review revision, 2026-08-04, so
-  // Global Render Recipe's Composition/Visibility content has a field to
-  // reach: see recipeComposer/types.ts's GlobalRenderPolicy interface) —
-  // policy supplies the baseline there and any item's own Render Recipe
-  // overrides it key-by-key, since a specific Component Recipe is more
-  // authoritative than the global default. Same merge shape as camera/
-  // pose/lighting always used, nothing new invented. Focus/fabricBehavior/
-  // garment/fabricIdentity/stitching/embroidery still have no policy
-  // equivalent (not on GlobalRenderPolicy at all), so they come only from
-  // entries. Background/quality/style have no RenderRecipe equivalent, so
-  // they come only from policy.
+  // GlobalRenderPolicy overlaps RenderRecipe on 5 fields (camera, pose,
+  // lighting, composition, visibilityRules) — policy supplies the baseline
+  // there and any item's own Render Recipe overrides it key-by-key, since a
+  // specific Component Recipe is more authoritative than the global
+  // default. Focus/fabricBehavior/garment/fabricIdentity/stitching/
+  // embroidery still have no policy equivalent (not on GlobalRenderPolicy
+  // at all), so they come only from entries. Background/quality/style have
+  // no RenderRecipe equivalent, so they come only from policy.
   return {
     camera: { ...normalizeRecord(policy.camera), ...mergeRecordField('camera', sorted) },
     pose: { ...normalizeRecord(policy.pose), ...mergeRecordField('pose', sorted) },
@@ -331,22 +293,22 @@ export function composeRenderRecipe(input: ComposeRenderRecipeInput): MasterRend
     background: normalizeRecord(policy.background),
     quality: normalizeRecord(policy.quality),
     style: normalizeRecord(policy.style),
-    negativeRules,
-    lockRules,
+    garmentLayoutRules,
+    finalConstraintRules,
+    componentRulesByCategory,
     sources,
     composedAt: new Date().toISOString(),
   }
 }
 
 // ---------------------------------------------------------------------------
-// Debug/trace only (Sprint AI-R1) — everything below is purely additive and
-// never called by composeRenderRecipe or any production caller. It exists so
-// an audit tool can show, per field per key, which Master Item's value won
-// and which Master Items' values were overridden — composeRenderRecipe
-// itself deliberately never persists this (mergeRecordField's per-key
-// `resolvedFrom` is real, computed, and thrown away, by design — see
-// mergeRecordField's own doc comment above). Recomputes the same
-// normalize -> validate -> sort -> per-field merge steps as
+// Debug/trace only — everything below is purely additive and never called by
+// composeRenderRecipe or any production caller. It exists so an audit tool
+// can show, per field per key, which Master Item's value won and which
+// Master Items' values were overridden — composeRenderRecipe itself
+// deliberately never persists this (mergeRecordField's per-key
+// `resolvedFrom` is real, computed, and thrown away, by design). Recomputes
+// the same normalize -> validate -> sort -> per-field merge steps as
 // composeRenderRecipe so the trace is guaranteed to describe the exact same
 // result, not an approximation of it.
 
@@ -428,19 +390,14 @@ export function composeRenderRecipeTrace(input: ComposeRenderRecipeInput): Recip
     trace[field] = traceRecordField(field, sorted)
   })
 
-  // Component Identity Knowledge (2026-08-04) — mirrors composeRenderRecipe's
-  // own post-merge injection (see that function's own comment) so this trace
+  // Component Identity Knowledge — mirrors composeRenderRecipe's own
+  // post-merge injection (see that function's own comment) so this trace
   // stays a faithful account of the real composed output, not an
-  // approximation of it. `resolvedFrom` points at the entry whose category
-  // this identity belongs to — it is synthesized from Component Default
-  // Knowledge, not read off that entry's own recipe.garment, but attributing
-  // it to that entry is the accurate "why is this here" answer for the
-  // debug viewer.
+  // approximation of it.
   sorted.forEach((entry) => {
     const identity = resolveComponentKnowledge(entry.category, {
       referenceInstruction: null,
-      lockRules: [],
-      negativeRules: [],
+      componentRules: [],
       identity: {},
     }).identity
     if (Object.keys(identity).length > 0) {

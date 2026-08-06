@@ -61,24 +61,19 @@ interface DebugResponse {
   promptBuilder: {
     instruction: Record<string, unknown> | null
     instructionValidation: { valid: boolean; errors: string[] }
+    layers: { id: string; label: string; priority: 0 | 1 | 2; content: string }[]
+    layerReport: { id: string; label: string; priority: 0 | 1 | 2; tokens: number; included: boolean; truncated: boolean }[]
+    compressed: string
+    compressionOk: boolean
+    compressionError: string | null
+    totalTokens: number
+    issues: string[]
   }
   serializer: { uncompressed: string | null; issues: string[] }
-  compression: {
-    before: string | null
-    beforeChars: number
-    after: string
-    afterChars: number
-    totalTokens: number
-    sectionsIncluded: string[]
-    sectionsOmitted: string[]
-    estimatedTokens: Record<string, number>
-    issues: string[]
-  } | null
   finalRequest: {
     model: string
     endpoint: string
     prompt: string | null
-    promptVersionUsed: 'v1' | 'v2'
     referenceImages: string[]
     mask: string | null
     input_fidelity: string | null
@@ -128,16 +123,6 @@ interface DebugResponse {
     missingFields: string[]
     errors: string[]
   }[]
-  promptArchitectureV2: {
-    layers: { identity: string; composition: string; garmentDna: string; quality: string; negativeRules: string[] }
-    merged: string
-    compressed: string
-    totalTokens: number
-    sectionsIncluded: string[]
-    sectionsOmitted: string[]
-    promptValidator: { valid: boolean; checks: { layer: string; label: string; status: 'PASS' | 'FAIL'; reason: string }[] }
-    issues: string[]
-  }
   renderRequestValidator: {
     valid: boolean
     cancelled: boolean
@@ -146,8 +131,9 @@ interface DebugResponse {
   runMode: 'debug' | 'production'
   aiAssetComposer: {
     customerPhotoUrl: string
-    modelReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
     collarReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
+    plaketReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
+    pocketReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
     urls: string[]
     excluded: { category: string; reason: string }[]
     backgroundReferenceCount: 0
@@ -235,7 +221,6 @@ export default function RenderDebugPage() {
   const [selected, setSelected] = useState<Partial<Record<MasterDataCategory, string>>>({})
   const [dryRun, setDryRun] = useState(true)
   const [runVisionJudge, setRunVisionJudge] = useState(false)
-  const [promptVersion, setPromptVersion] = useState<'v1' | 'v2'>('v1')
   const [running, setRunning] = useState(false)
   const [runError, setRunError] = useState<string | null>(null)
   const [result, setResult] = useState<DebugResponse | null>(null)
@@ -267,7 +252,7 @@ export default function RenderDebugPage() {
       const res = await fetch('/api/design/render/debug', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerPhotoUrl, componentSelections, dryRun, runVisionJudge, promptVersion }),
+        body: JSON.stringify({ customerPhotoUrl, componentSelections, dryRun, runVisionJudge }),
       })
       const json = (await res.json()) as DebugResponse
       if (!res.ok || !json.success) {
@@ -332,17 +317,6 @@ export default function RenderDebugPage() {
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" checked={runVisionJudge} onChange={(e) => setRunVisionJudge(e.target.checked)} />
             Jalankan Vision Judge (biaya kecil, GPT-4o-mini — cek framing foto + Render Quality Judge)
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            Prompt Version dikirim ke OpenAI:
-            <select
-              value={promptVersion}
-              onChange={(e) => setPromptVersion(e.target.value as 'v1' | 'v2')}
-              className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
-            >
-              <option value="v1">V1 (legacy serializer/compression — dipakai production)</option>
-              <option value="v2">V2 (4-layer architecture — perbandingan/regresi saja)</option>
-            </select>
           </label>
           <button
             type="button"
@@ -412,8 +386,8 @@ export default function RenderDebugPage() {
                 { step: 1, label: 'DNA (raw)', content: result.rawDna.map((r) => `${r.componentType}: ${r.name ?? 'not found'}`).join(' | ') || '—' },
                 { step: 2, label: 'Resolved DNA', content: result.resolvedDna.map((r) => `${r.componentType}: ${r.ready ? 'ready' : 'NOT ready'}`).join(' | ') || '—' },
                 { step: 3, label: 'Recipe (Master Render Recipe)', content: result.recipeComposer.masterRecipe ? Object.keys(result.recipeComposer.masterRecipe).filter((k) => k !== 'sources' && k !== 'composedAt').join(', ') : '(null — compose gagal / entries kosong)' },
-                { step: 4, label: 'Serialized Prompt (uncompressed)', content: result.serializer.uncompressed ?? '(null)' },
-                { step: 5, label: 'Compressed Prompt', content: result.compression?.after ?? '(belum berjalan)' },
+                { step: 4, label: 'Serialized Prompt (uncompressed diagnostic dump)', content: result.serializer.uncompressed ?? '(null)' },
+                { step: 5, label: 'Prompt Builder — 13 fixed sections, compressed', content: result.promptBuilder.compressed || '(belum berjalan)' },
                 { step: 6, label: 'Final Prompt (dikirim ke OpenAI)', content: result.finalRequest.prompt ?? '(null)' },
                 { step: 7, label: 'GPT Revised Prompt', content: result.aiResponse.executed ? (result.aiResponse.revisedPrompt ?? '(OpenAI tidak mengembalikan revised_prompt)') : '(belum dijalankan — dry run atau belum render)' },
               ].map((item, i, arr) => (
@@ -430,66 +404,48 @@ export default function RenderDebugPage() {
             </div>
           </Section>
 
-          <Section title="Prompt Inspector V2 (Part 1+2) — Layer 1 → Layer 2 → Layer 3 → Layer 4 → Merged → Compressed → Final → GPT Revised Prompt" defaultOpen>
+          <Section title="Prompt Builder — 13 Fixed Sections (Identity Preservation → ... → Final Constraints)" defaultOpen>
             <div className="mb-2 text-xs italic text-gray-500">
-              Perbandingan saja — hanya dipakai untuk request nyata ke OpenAI jika &quot;Prompt Version&quot; = V2 di atas. Production
-              (/api/design/render/route.ts) tetap selalu memakai V1.
+              Real production assembly order — see promptBuilder/compression.ts. Ordering and truncation tier are
+              decoupled: a section&apos;s position never changes, only how much of it survives the token budget.
             </div>
-            <div className="space-y-2">
-              {[
-                { label: 'Layer 1 — Identity (template permanen)', content: result.promptArchitectureV2.layers.identity },
-                { label: 'Layer 2 — Composition (template permanen)', content: result.promptArchitectureV2.layers.composition },
-                { label: 'Layer 3 — Garment DNA (dari Recipe Composer)', content: result.promptArchitectureV2.layers.garmentDna || '(kosong)' },
-                { label: 'Layer 4 — Quality (template permanen)', content: result.promptArchitectureV2.layers.quality },
-                { label: 'Merged Prompt', content: result.promptArchitectureV2.merged },
-                { label: 'Compressed Prompt', content: result.promptArchitectureV2.compressed },
-                {
-                  label: 'Final Prompt (dikirim ke OpenAI jika Prompt Version=V2)',
-                  content: result.finalRequest.promptVersionUsed === 'v2'
-                    ? (result.finalRequest.prompt ?? '(null)')
-                    : '(tidak dipakai untuk request ini — Prompt Version aktif: v1)',
-                },
-                {
-                  label: 'GPT Revised Prompt',
-                  content: result.aiResponse.executed && result.finalRequest.promptVersionUsed === 'v2'
-                    ? (result.aiResponse.revisedPrompt ?? '(OpenAI tidak mengembalikan revised_prompt)')
-                    : '(belum dijalankan dengan V2 — dry run, cancelled, atau Prompt Version=v1)',
-                },
-              ].map((item, i, arr) => (
-                <div key={item.label}>
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
-                    <div className="text-xs font-semibold text-gray-500">{item.label}</div>
-                    <div className="mt-1 whitespace-pre-wrap break-words text-xs text-gray-800">{item.content}</div>
-                  </div>
-                  {i < arr.length - 1 && <div className="py-1 text-center text-gray-300">↓</div>}
-                </div>
-              ))}
+            <table className="mb-3 w-full text-left text-xs">
+              <thead>
+                <tr className="text-gray-500">
+                  <th className="py-1 pr-2">#</th>
+                  <th className="py-1 pr-2">Section</th>
+                  <th className="py-1 pr-2">Priority</th>
+                  <th className="py-1 pr-2">Tokens</th>
+                  <th className="py-1 pr-2">Included</th>
+                  <th className="py-1 pr-2">Truncated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.promptBuilder.layerReport.map((row, i) => (
+                  <tr key={row.id} className="border-t border-gray-100">
+                    <td className="py-1 pr-2">{i + 1}</td>
+                    <td className="py-1 pr-2">{row.label}</td>
+                    <td className="py-1 pr-2">{row.priority}</td>
+                    <td className="py-1 pr-2">{row.tokens}</td>
+                    <td className="py-1 pr-2">
+                      <StatusBadge status={row.included ? 'PASS' : 'INFO'} />
+                    </td>
+                    <td className="py-1 pr-2">{row.truncated ? '✓' : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="mb-1 text-sm font-semibold text-gray-800">
+              Compression:{' '}
+              <StatusBadge status={result.promptBuilder.compressionOk ? 'PASS' : 'FAIL'} /> — {result.promptBuilder.totalTokens} token
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              <div>Tokens (est.): {result.promptArchitectureV2.totalTokens}</div>
-              <div>Sections included: {result.promptArchitectureV2.sectionsIncluded.join(', ') || '—'}</div>
-              <div className="col-span-2 text-red-600">
-                Sections omitted: {result.promptArchitectureV2.sectionsOmitted.join(', ') || '—'}
-              </div>
-            </div>
-            {result.promptArchitectureV2.issues.length > 0 && (
-              <div className="mt-1 text-xs font-semibold text-red-600">FAIL — ditemukan: {result.promptArchitectureV2.issues.join(', ')}</div>
+            {!result.promptBuilder.compressionOk && (
+              <div className="mb-2 text-xs font-semibold text-red-600">{result.promptBuilder.compressionError}</div>
             )}
-            <div className="mt-3 mb-1 text-sm font-semibold text-gray-800">
-              Prompt Validator (Part 3):{' '}
-              <StatusBadge status={result.promptArchitectureV2.promptValidator.valid ? 'PASS' : 'FAIL'} />
-            </div>
-            <div className="space-y-1">
-              {result.promptArchitectureV2.promptValidator.checks.map((check) => (
-                <div key={check.layer} className="flex items-start gap-3 rounded-lg border border-gray-100 p-2">
-                  <StatusBadge status={check.status} />
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{check.label}</div>
-                    <div className="text-xs text-gray-500">{check.reason}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <pre className="whitespace-pre-wrap rounded-lg bg-gray-100 p-3 text-xs text-gray-800">{result.promptBuilder.compressed}</pre>
+            {result.promptBuilder.issues.length > 0 && (
+              <div className="mt-1 text-xs font-semibold text-red-600">FAIL — ditemukan: {result.promptBuilder.issues.join(', ')}</div>
+            )}
           </Section>
 
           <Section title="DNA Validator (Part 4) — per-component, deterministic">
@@ -638,48 +594,27 @@ export default function RenderDebugPage() {
             )}
           </Section>
 
-          <Section title="Section 5 — Compression (before / after)">
-            {result.compression ? (
-              <>
-                <div className="mb-2 grid grid-cols-2 gap-3 text-xs">
-                  <div>Chars before: {result.compression.beforeChars}</div>
-                  <div>Chars after: {result.compression.afterChars}</div>
-                  <div>Tokens (est.): {result.compression.totalTokens}</div>
-                  <div>Sections included: {result.compression.sectionsIncluded.join(', ') || '—'}</div>
-                  <div className="col-span-2 text-red-600">
-                    Sections omitted: {result.compression.sectionsOmitted.join(', ') || '—'}
-                  </div>
-                </div>
-                <pre className="whitespace-pre-wrap rounded-lg bg-gray-100 p-3 text-xs text-gray-800">{result.compression.after}</pre>
-                {result.compression.issues.length > 0 && (
-                  <div className="mt-1 text-xs font-semibold text-red-600">FAIL — ditemukan: {result.compression.issues.join(', ')}</div>
-                )}
-              </>
-            ) : (
-              <div className="text-xs text-gray-500">Compression belum berjalan (instruction kosong).</div>
-            )}
-          </Section>
-
           <Section title="Section 6 — Final AI Request">
             <JsonBlock value={result.finalRequest} />
           </Section>
 
-          <Section title="AI Asset Composer (renamed from Reference Composer — AI Asset Lifecycle)" defaultOpen>
+          <Section title="AI Asset Composer (AI Asset Lifecycle)" defaultOpen>
             <div className="space-y-2 text-xs">
-              <div>
-                Model Reference:{' '}
-                <StatusBadge status={result.aiAssetComposer.modelReference ? 'PASS' : 'FAIL'} />{' '}
-                {result.aiAssetComposer.modelReference
-                  ? `type=${result.aiAssetComposer.modelReference.type} role=${result.aiAssetComposer.modelReference.role} priority=${result.aiAssetComposer.modelReference.priority} item=${result.aiAssetComposer.modelReference.itemId}`
-                  : 'tidak tersedia — render tidak boleh dikirim.'}
-              </div>
-              <div>
-                Collar Reference:{' '}
-                <StatusBadge status={result.aiAssetComposer.collarReference ? 'PASS' : 'INFO'} />{' '}
-                {result.aiAssetComposer.collarReference
-                  ? `type=${result.aiAssetComposer.collarReference.type} role=${result.aiAssetComposer.collarReference.role} priority=${result.aiAssetComposer.collarReference.priority} item=${result.aiAssetComposer.collarReference.itemId}`
-                  : 'tidak tersedia — optional, render tetap berjalan menggunakan DNA.'}
-              </div>
+              {(
+                [
+                  ['Collar Reference', result.aiAssetComposer.collarReference],
+                  ['Placket Reference', result.aiAssetComposer.plaketReference],
+                  ['Pocket Reference', result.aiAssetComposer.pocketReference],
+                ] as const
+              ).map(([label, ref]) => (
+                <div key={label}>
+                  {label}:{' '}
+                  <StatusBadge status={ref ? 'PASS' : 'INFO'} />{' '}
+                  {ref
+                    ? `type=${ref.type} role=${ref.role} priority=${ref.priority} item=${ref.itemId}`
+                    : 'tidak tersedia — optional, render tetap berjalan menggunakan DNA (Component Rules).'}
+                </div>
+              ))}
               <div>
                 Excluded categories (text-only, tidak pernah jadi image reference):{' '}
                 {result.aiAssetComposer.excluded.map((e) => e.category).join(', ') || '—'}
@@ -688,18 +623,11 @@ export default function RenderDebugPage() {
                 Background reference count: {result.aiAssetComposer.backgroundReferenceCount} | Mannequin reference count:{' '}
                 {result.aiAssetComposer.mannequinReferenceCount}
               </div>
-              {result.aiAssetComposer.modelReference && (
+              {(result.aiAssetComposer.collarReference || result.aiAssetComposer.plaketReference || result.aiAssetComposer.pocketReference) && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-amber-800">
-                  SILHOUETTE-only instruction ditambahkan ke final prompt (lihat Section 6) karena Model Reference disertakan —
-                  GPT Image diinstruksikan untuk TIDAK meniru collar/cuff/pocket/placket/embroidery/button/fabric/color dari foto
-                  referensi ini.
-                </div>
-              )}
-              {result.aiAssetComposer.collarReference && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-amber-800">
-                  COLLAR_SHAPE-only instruction ditambahkan ke final prompt (lihat Section 6) karena Collar Reference disertakan —
-                  GPT Image diinstruksikan untuk hanya mengambil outline/curvature/opening/height kerah, TIDAK meniru fabric/color/
-                  stitching/lighting/background dari foto referensi ini.
+                  Component Reference Delta (geometry-only &quot;Transfer only: .../Do NOT copy: ...&quot; instruction) is appended to
+                  that same component&apos;s own Prompt Builder step for every active reference above — see the Prompt Builder
+                  section above.
                 </div>
               )}
             </div>

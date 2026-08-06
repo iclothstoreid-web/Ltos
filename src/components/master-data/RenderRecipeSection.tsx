@@ -54,8 +54,8 @@ function rowsToRecord(rows: RecordRow[]): Record<string, unknown> {
 // (recipeComposer/types.ts), applied once per render, not per item;
 // `garment`/`fabricIdentity`/`fabricBehavior`/`stitching`/`embroidery` are
 // DNA Resolver/Component-DNA producers, not admin-authored camera/lighting
-// knowledge; `negativeRules`/`lockRules` have their own RuleListEditor under
-// AI Design DNA (per-item scope decision).
+// knowledge; `componentRules` has its own RuleListEditor under AI Design DNA
+// (per-item scope decision).
 export function RenderRecipeSection({ recipe, onChange }: RenderRecipeSectionProps) {
   if (!recipe) return null
 

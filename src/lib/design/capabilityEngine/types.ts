@@ -23,8 +23,8 @@ export const CAPABILITY_STARS: Record<CapabilityMode, string> = {
 }
 
 // What the render is actually allowed to use, derived from `mode` — Prompt
-// Architecture's Identity Lock (Layer 1, promptArchitectureV2/layers.ts) is
-// a permanent template unrelated to capability grading, so it stays `true`
+// Builder's Identity Preservation section (renderEngine/identityPreservation.ts)
+// is a permanent template unrelated to capability grading, so it stays `true`
 // whenever a render is attempted at all (every mode except BLOCKED); this
 // sprint's brief never asks to weaken identity protection at lower quality
 // tiers, only to stop hard-failing on a missing reference/partial DNA.

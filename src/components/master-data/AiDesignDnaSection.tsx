@@ -2,6 +2,7 @@
 
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
 import type { MasterDataCategory } from '@/lib/design/masterData'
+import { resolveComponentRules } from '@/lib/design/dnaResolver/resolveComponentRules'
 import { RuleListEditor } from './RuleListEditor'
 
 interface AiDesignDnaSectionProps {
@@ -16,8 +17,7 @@ interface AiDesignDnaSectionProps {
   onActivateHeroImageReference: () => void
   onReferenceInstructionChange: (value: string) => void
   onRenderNotesChange: (value: string) => void
-  onLockRulesChange: (items: string[]) => void
-  onNegativeRulesChange: (items: string[]) => void
+  onComponentRulesChange: (items: string[]) => void
 }
 
 // `dna.metadata` is optionally-chained below (not a bare `dna.metadata.x`)
@@ -63,8 +63,7 @@ export function AiDesignDnaSection({
   onActivateHeroImageReference,
   onReferenceInstructionChange,
   onRenderNotesChange,
-  onLockRulesChange,
-  onNegativeRulesChange,
+  onComponentRulesChange,
 }: AiDesignDnaSectionProps) {
   const isActiveReference = dna.status === 'approved' && !!dna.metadata?.sourceImage
   // Architecture Lock (2026-08-04) — Hero Image Internal is no longer a
@@ -134,11 +133,13 @@ export function AiDesignDnaSection({
       </div>
 
       <div className="mt-4">
-        <RuleListEditor label="Lock Rules" items={dna.lockRules} onChange={onLockRulesChange} />
-      </div>
-
-      <div className="mt-4">
-        <RuleListEditor label="Negative Rules" items={dna.negativeRules} onChange={onNegativeRulesChange} />
+        {/* Safe Migration (2026-08-07) — reads through resolveComponentRules
+            so a row not yet migrated (componentRules still empty, real
+            content still in legacy lockRules/negativeRules) shows its real
+            effective rules here instead of an empty list. Editing and saving
+            always writes back to componentRules only (onComponentRulesChange),
+            which is the per-row migration path for anything edited by hand. */}
+        <RuleListEditor label="Component Rules" items={resolveComponentRules(dna)} onChange={onComponentRulesChange} />
       </div>
 
       <div className="mt-4">

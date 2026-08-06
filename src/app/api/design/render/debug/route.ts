@@ -9,33 +9,48 @@ import type { RenderRecipeEntry } from '@/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
 import { buildRenderInstruction, validateRenderInstruction } from '@/lib/design/promptBuilder/builder'
 import { serializeOpenAI } from '@/lib/design/promptBuilder/serializer'
-import { buildCompressedSections, compressPrompt } from '@/lib/design/promptBuilder/compression'
+import { buildPromptLayers, compressPromptByLayers } from '@/lib/design/promptBuilder/compression'
 import { DEFAULT_MODEL } from '@/lib/ai/services/image'
 import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '@/lib/ai/renderSession/service'
 import { classifyCustomerPhotoFraming, judgeRenderQuality } from '@/lib/design/renderQuality/qualityJudge'
-import { buildPromptLayersV2, mergePromptLayersV2, compressPromptLayersV2 } from '@/lib/design/promptArchitectureV2/layers'
-import { validatePromptLayers } from '@/lib/design/promptArchitectureV2/promptValidator'
-import { validateComponentDna } from '@/lib/design/promptArchitectureV2/dnaValidator'
-import { validateRenderRequest } from '@/lib/design/promptArchitectureV2/renderValidator'
-import { getRenderRunMode, isDebugMode } from '@/lib/design/promptArchitectureV2/debugMode'
-import { composeAiAssets, applyAssetInstructions, validateCollarReference } from '@/lib/design/aiAssetComposer/composer'
+import { validateComponentDna } from '@/lib/design/promptValidation/dnaValidator'
+import { validateRenderRequest } from '@/lib/design/promptValidation/renderValidator'
+import { getRenderRunMode, isDebugMode } from '@/lib/design/promptValidation/debugMode'
+import {
+  composeAiAssets,
+  validateCollarReference,
+  validatePlaketReference,
+  validatePocketReference,
+  componentReferenceDeltas,
+} from '@/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
+import { IDENTITY_PRESERVATION } from '@/lib/design/renderEngine/identityPreservation'
+import { buildReferenceBinding } from '@/lib/design/renderEngine/referenceBinding'
 
-// DNA Debug Viewer pipeline endpoint (Sprint AI-R1) — a read-only audit twin
-// of /api/design/render/route.ts. It runs the EXACT same library calls
-// (DNA Resolver -> Recipe Composer -> Prompt Builder -> Serializer ->
-// Compression -> Image Service), never a re-implementation, so what this
-// endpoint reports is guaranteed to match production behavior. Two
-// deliberate differences from the production route:
+// DNA Debug Viewer pipeline endpoint — a read-only audit twin of
+// /api/design/render/route.ts. It runs the EXACT same library calls (DNA
+// Resolver -> Recipe Composer -> Prompt Builder -> Compression -> Image
+// Service), never a re-implementation, so what this endpoint reports is
+// guaranteed to match production behavior. Two deliberate differences from
+// the production route:
 //   1. Never reads/writes Render Cache — an audit tool that could return a
 //      stale cached result without saying so would defeat its own purpose.
 //   2. Only calls OpenAI (spends money) when the caller explicitly passes
 //      `dryRun: false`; defaults to `dryRun: true` so simply opening the
 //      debug page and clicking through components never costs anything.
-// Every stage below is captured into the response even when an earlier
-// stage is incomplete, so a developer can see exactly where a real render
-// would stop, instead of getting an early 4xx like the production route.
+//
+// Prompt Architecture Realignment (2026-08-06) — this endpoint used to also
+// run a parallel "Prompt Architecture V2" comparison path
+// (promptArchitectureV2/layers.ts) and the pre-Sprint-PR-04 legacy
+// Anchor/Material/Other/Negatives compression buckets. Both are retired:
+// V2 never became production and this realignment IS the new locked
+// architecture; the legacy buckets were superseded in production since
+// Sprint PR-04 and this debug route had drifted out of sync with it (it
+// never built Reference Binding/Reference Usage Policy/Component Reference
+// Delta, and never passed plaket/pocket options to composeAiAssets) — this
+// rewrite closes that drift by calling the exact same real pipeline
+// functions route.ts calls, nothing reimplemented.
 
 interface ComponentSelection {
   componentType: string
@@ -46,19 +61,12 @@ interface DebugRequestBody {
   customerPhotoUrl?: string
   componentSelections?: ComponentSelection[]
   dryRun?: boolean
-  // Sprint AI-R2 — separate opt-in from `dryRun`. `dryRun` only gates the
-  // expensive gpt-image-1 generation call; this gates the (smaller, but
-  // still real-money) GPT-4o-mini vision-judge calls (photo framing check +
+  // Separate opt-in from `dryRun`. `dryRun` only gates the expensive
+  // gpt-image-1 generation call; this gates the (smaller, but still
+  // real-money) GPT-4o-mini vision-judge calls (photo framing check +
   // post-render quality judge), so a developer can dry-run the pipeline for
   // free without accidentally also paying for vision judging every click.
   runVisionJudge?: boolean
-  // Sprint AI-R2.5 — which prompt architecture actually gets sent to OpenAI
-  // when dryRun is false. Defaults to 'v1' (the existing, production-used
-  // serializer/compression path — unchanged). 'v2' sends the new 4-layer
-  // Prompt Architecture V2 (promptArchitectureV2/layers.ts) instead, purely
-  // for comparison/regression testing — the real production route
-  // (/api/design/render/route.ts) still only ever uses V1.
-  promptVersion?: 'v1' | 'v2'
 }
 
 function includesRegressionString(text: string | null | undefined): string[] {
@@ -78,7 +86,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Invalid JSON body.' }, { status: 400 })
   }
 
-  const { customerPhotoUrl, componentSelections, dryRun = true, runVisionJudge = false, promptVersion = 'v1' } = body
+  const { customerPhotoUrl, componentSelections, dryRun = true, runVisionJudge = false } = body
   const runMode = getRenderRunMode()
 
   if (!customerPhotoUrl || !Array.isArray(componentSelections) || componentSelections.length === 0) {
@@ -145,13 +153,10 @@ export async function POST(req: NextRequest) {
       return
     }
 
-    // Architecture Lock (2026-08-04) — Model Thobe is catalog-only now,
-    // excluded from DNA resolution entirely (mirrors route.ts exactly, so
-    // this audit twin stays accurate). Still reported in `resolvedDna` for
-    // visibility (so a debugging owner can see it was selected), but never
-    // reaches `resolved`/`entries` (Recipe Composer input) or
-    // `componentsMissing` (Capability Engine input) — a pending/invalid
-    // Model Thobe DNA can no longer block a render or contribute text.
+    // Model Thobe is catalog-only (Architecture Lock, 2026-08-04) — excluded
+    // from DNA resolution entirely (mirrors route.ts exactly, so this audit
+    // twin stays accurate). Still reported in `resolvedDna` for visibility,
+    // but never reaches `resolved`/`entries`.
     if (option.category === 'model_thobe') {
       resolvedDna.push({
         componentType: selection.componentType,
@@ -199,10 +204,8 @@ export async function POST(req: NextRequest) {
   }))
 
   // ---------------------------------------------------------------------
-  // SECTION 2b — DNA Validator (Sprint AI-R2.5, Part 4) — deterministic,
-  // per component, independent of whether DNA Resolver marked it "ready".
-  // Runs over every found component so an incomplete-but-technically-ready
-  // item still surfaces a FAIL here instead of silently passing through.
+  // SECTION 2b — DNA Validator — deterministic, per component, independent
+  // of whether DNA Resolver marked it "ready".
   // ---------------------------------------------------------------------
   const dnaValidator = componentSelections
     .map((selection) => rowsById.get(selection.componentId))
@@ -232,71 +235,44 @@ export async function POST(req: NextRequest) {
   }
 
   // ---------------------------------------------------------------------
-  // SECTION 4 — Prompt Builder + Serializer (uncompressed)
+  // SECTION 4 — Prompt Builder + Serializer (uncompressed diagnostic dump)
   // ---------------------------------------------------------------------
   const instruction = buildRenderInstruction(masterRecipe)
   const instructionValidation = validateRenderInstruction(instruction)
   const uncompressed = instruction ? serializeOpenAI({ instruction }) : null
   const serializerIssues = includesRegressionString(uncompressed)
 
-  // ---------------------------------------------------------------------
-  // SECTION 5 — Compression
-  // ---------------------------------------------------------------------
-  const promptCompression = instruction ? compressPrompt(buildCompressedSections(instruction)) : null
-  const compressionIssues = promptCompression ? includesRegressionString(promptCompression.compressed) : []
-
-  // ---------------------------------------------------------------------
-  // SECTION 5b — Prompt Architecture V2 (Sprint AI-R2.5, Part 1+2) —
-  // Layer 1 Identity -> Layer 2 Composition -> Layer 3 Garment DNA ->
-  // Layer 4 Quality -> merged -> compressed. Always computed (cheap, no AI)
-  // so the Prompt Inspector can show V1 and V2 side by side regardless of
-  // which one `promptVersion` selects for the actual OpenAI call below.
-  // ---------------------------------------------------------------------
-  const promptLayersV2 = buildPromptLayersV2(instruction)
-  const mergedPromptV2 = mergePromptLayersV2(promptLayersV2)
-  const compressedPromptV2 = compressPromptLayersV2(promptLayersV2)
-  const promptValidatorV2 = validatePromptLayers(promptLayersV2)
-  const v2Issues = includesRegressionString(compressedPromptV2.compressed)
-
   // Raw lookups (regardless of resolveDNA success) — shared by the AI Asset
   // Composer below AND the AI Capability Engine further down, so "not
-  // selected" vs "selected but DNA/Asset invalid" stay distinguishable in
-  // both, from a single source instead of two independently-computed
-  // near-duplicates (a redundancy this sprint's report flags and removes).
-  // Architecture Lock (2026-08-04) removed the model_thobe raw lookup that
-  // used to live here — Model Thobe no longer feeds the AI Asset Composer
-  // or Capability Engine at all, see below.
+  // selected" vs "selected but DNA/Asset invalid" stay distinguishable.
   const collarSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'kerah')
   const collarOptionRaw = collarSelection ? (rowsById.get(collarSelection.componentId) ?? null) : null
+  const plaketSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'plaket')
+  const plaketOptionRaw = plaketSelection ? (rowsById.get(plaketSelection.componentId) ?? null) : null
+  const pocketSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'saku')
+  const pocketOptionRaw = pocketSelection ? (rowsById.get(pocketSelection.componentId) ?? null) : null
 
   // ---------------------------------------------------------------------
-  // SECTION 7 — AI Asset Composer (renamed from Reference Composer this
-  // sprint — "AI Asset Lifecycle") — must be computed before Section 6/8,
-  // which both depend on it.
+  // SECTION 5 — AI Asset Composer — must be computed before Capability
+  // Engine/Prompt Builder, which both depend on it.
   // ---------------------------------------------------------------------
-  const otherSelectedCategories = componentSelections
-    .map((selection) => rowsById.get(selection.componentId)?.category)
-    .filter((category): category is MasterDataOption['category'] => !!category && category !== 'model_thobe')
-
   const composedAssets = composeAiAssets({
     customerPhotoUrl,
     collarOption: collarOptionRaw,
-    otherSelectedCategories,
+    plaketOption: plaketOptionRaw,
+    pocketOption: pocketOptionRaw,
   })
-  // Global Base Hero (Architecture Lock, 2026-08-04) — mirrors route.ts's
-  // insertion exactly, so this audit twin's reported reference image list
-  // matches what production actually sends.
   const baseHeroAvailable = GLOBAL_BASE_HERO_IMAGE_URL !== null
   const referenceImageUrls = GLOBAL_BASE_HERO_IMAGE_URL
     ? [composedAssets.urls[0], GLOBAL_BASE_HERO_IMAGE_URL, ...composedAssets.urls.slice(1)]
     : composedAssets.urls
   const collarReferenceValidation = validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
+  const plaketReferenceValidation = validatePlaketReference({ plaketOption: plaketOptionRaw, composed: composedAssets })
+  const pocketReferenceValidation = validatePocketReference({ pocketOption: pocketOptionRaw, composed: composedAssets })
 
   // ---------------------------------------------------------------------
-  // AI Capability Engine (Sprint AI-R3) — the ONE place deciding render
-  // mode/quality/strategy for this scenario. Architecture Lock (2026-08-04)
-  // removed Model Thobe from this input entirely — it can no longer block
-  // or downgrade a render.
+  // AI Capability Engine — the ONE place deciding render mode/quality/
+  // strategy for this scenario.
   // ---------------------------------------------------------------------
   const componentDnaResults = dnaValidator
     .filter((d) => d.category !== 'model_thobe')
@@ -309,10 +285,6 @@ export async function POST(req: NextRequest) {
     unresolvedComponents: componentsMissing.map((m) => ({ itemId: m.componentId, category: m.componentType, reason: m.reason })),
   })
 
-  // Part 1's "if customer photo IS full body, no crop is allowed; if it's
-  // half body, report it" — classifies the INPUT photo only, independent of
-  // whether a render actually runs. Opt-in (runVisionJudge) since it's a
-  // real, billed OpenAI call.
   const customerPhotoFraming = runVisionJudge ? await classifyCustomerPhotoFraming(customerPhotoUrl) : null
 
   const referenceImages = {
@@ -321,34 +293,15 @@ export async function POST(req: NextRequest) {
       included: referenceImageUrls.includes(customerPhotoUrl),
       framing: customerPhotoFraming,
     },
-    // Global Base Hero replaces the old per-order Model Thobe reference
-    // (Architecture Lock, 2026-08-04) — a Render Engine singleton, not tied
-    // to any MasterDataOption, so there's no itemId/name/validation here.
     baseHeroModel: {
       url: GLOBAL_BASE_HERO_IMAGE_URL,
       configured: baseHeroAvailable,
       included: baseHeroAvailable,
       note: baseHeroAvailable ? null : 'Base Hero Model belum dikonfigurasi (renderEngine/baseHero.ts).',
     },
-    // Architecture decision (aiAssetComposer/composer.ts), not a bug: every
-    // other category only ever reaches the AI provider as text (via Render
-    // Recipe -> Prompt Builder), never as an image input. Listed here so
-    // this is visible, not silently assumed.
     excludedByDesign: composedAssets.excluded.map((e) => e.category),
   }
 
-  // ---------------------------------------------------------------------
-  // AI Assets (AI Asset Library / AI Asset Lifecycle turns) — every
-  // currently-implemented AI Asset, its lifecycle metadata, and exactly
-  // what it is/isn't allowed to transfer. Debug Viewer section. `status`
-  // reflects whether the Asset is ACTIVE (composed in) or not; `aiDnaStatus`
-  // + `catalogActive` are the two independent conditions that determine it
-  // (see aiAssetComposer's `isAiAssetActive`) — surfaced separately so a
-  // FAIL is diagnosable (not approved yet? or just deactivated in catalog?).
-  // Architecture Lock (2026-08-04) removed the MODEL_THOBE/SILHOUETTE entry
-  // that used to lead this list — Base Hero Model isn't a MasterDataOption-
-  // backed AI Asset, it's reported separately via referenceImages.baseHeroModel.
-  // ---------------------------------------------------------------------
   const aiAssets = [
     {
       referenceType: 'COLLAR_REFERENCE',
@@ -363,22 +316,67 @@ export async function POST(req: NextRequest) {
       transferredGeometry: ['Outline', 'Curvature', 'Opening', 'Height', 'Proportion', 'Profile'],
       ignored: ['Color', 'Texture', 'Stitching', 'Background', 'Lighting', 'Shadows', 'Wrinkles'],
     },
+    {
+      referenceType: 'PLAKET_REFERENCE',
+      referenceRole: 'PLAKET_SHAPE',
+      name: plaketOptionRaw?.name ?? null,
+      priority: 80,
+      status: composedAssets.plaketReference ? 'ACTIVE' : 'INACTIVE',
+      aiDnaStatus: plaketOptionRaw?.ai_dna.status ?? null,
+      catalogActive: plaketOptionRaw?.is_active ?? null,
+      included: !!composedAssets.plaketReference,
+      validation: plaketReferenceValidation,
+      transferredGeometry: ['Outline', 'Opening Length', 'Width', 'Button Spacing', 'Stitch-line Geometry'],
+      ignored: ['Fabric texture', 'Fabric color', 'Stitching thread color', 'Lighting', 'Wrinkles', 'Shadows', 'Background', 'Photography style'],
+    },
+    {
+      referenceType: 'POCKET_REFERENCE',
+      referenceRole: 'POCKET_SHAPE',
+      name: pocketOptionRaw?.name ?? null,
+      priority: 70,
+      status: composedAssets.pocketReference ? 'ACTIVE' : 'INACTIVE',
+      aiDnaStatus: pocketOptionRaw?.ai_dna.status ?? null,
+      catalogActive: pocketOptionRaw?.is_active ?? null,
+      included: !!composedAssets.pocketReference,
+      validation: pocketReferenceValidation,
+      transferredGeometry: ['Outline', 'Placement', 'Proportion', 'Flap/Opening Geometry'],
+      ignored: ['Fabric texture', 'Fabric color', 'Stitching thread color', 'Lighting', 'Wrinkles', 'Shadows', 'Background', 'Photography style'],
+    },
   ]
 
   // ---------------------------------------------------------------------
-  // SECTION 6 — Final AI Request (payload that WOULD be / IS sent)
+  // SECTION 6 — Prompt Builder (13 fixed sections, real production path)
+  // ---------------------------------------------------------------------
+  const referenceUsagePolicyActive = composedAssets.referencesByCategory.size > 0 || baseHeroAvailable
+  const referenceBindingContent = buildReferenceBinding({
+    customerPhoto: true,
+    baseHero: baseHeroAvailable,
+    collar: composedAssets.referencesByCategory.has('kerah'),
+    placket: composedAssets.referencesByCategory.has('plaket'),
+    pocket: composedAssets.referencesByCategory.has('saku'),
+  })
+  const referenceDeltas = componentReferenceDeltas(composedAssets)
+
+  const promptLayers = buildPromptLayers({
+    entries,
+    masterRecipe,
+    identityPreservation: IDENTITY_PRESERVATION,
+    referenceBinding: referenceBindingContent,
+    referenceUsagePolicy: referenceUsagePolicyActive,
+    componentReferenceDeltas: referenceDeltas,
+  })
+  const layerCompression = compressPromptByLayers(promptLayers)
+  const compressionIssues = includesRegressionString(layerCompression.compressed)
+
+  // ---------------------------------------------------------------------
+  // SECTION 7 — Final AI Request (payload that WOULD be / IS sent)
   // ---------------------------------------------------------------------
   const usesEdit = referenceImageUrls.length > 0
-  const basePrompt = promptVersion === 'v2' ? compressedPromptV2.compressed : (promptCompression?.compressed ?? null)
-  // Reference DNA Architecture V1 + AI Asset Library — SILHOUETTE-only
-  // and/or COLLAR_SHAPE-only caveats, appended only for whichever reference
-  // images are actually included.
-  const activePrompt = basePrompt ? applyAssetInstructions(basePrompt, composedAssets) : basePrompt
+  const activePrompt = layerCompression.ok ? layerCompression.compressed : null
   const finalRequest = {
     model: 'gpt-image-1',
     endpoint: usesEdit ? 'images.edit' : 'images.generate',
     prompt: activePrompt,
-    promptVersionUsed: promptVersion,
     referenceImages: referenceImageUrls,
     mask: null as string | null,
     input_fidelity: usesEdit ? 'high' : null,
@@ -387,14 +385,6 @@ export async function POST(req: NextRequest) {
     size: null as string | null,
   }
 
-  // ---------------------------------------------------------------------
-  // Render Validator (Sprint AI-R2.5 Part 5) — deterministic, no AI, checks
-  // request-SHAPE correctness only (non-empty prompt, no serialization
-  // bugs, correct model/endpoint/fidelity/count). Render QUALITY grading
-  // (including Model Reference availability) is the AI Capability Engine's
-  // job now (Sprint AI-R3) — a missing Model Reference no longer appears
-  // here at all, see renderValidator.ts's own note.
-  // ---------------------------------------------------------------------
   const renderRequestValidator = validateRenderRequest({
     customerPhotoUrl,
     referenceImageUrls,
@@ -404,12 +394,7 @@ export async function POST(req: NextRequest) {
     model: finalRequest.model,
     imageCount: finalRequest.imageCount,
   })
-  // The ONLY 3 conditions allowed to block a render (Sprint AI-R3 Phase 4)
-  // live in capability.mode === 'BLOCKED'; renderRequestValidator still
-  // gates on pure request-shape bugs (e.g. a broken prompt), which stay
-  // fatal regardless of capability grade.
-  const canSendRequest =
-    capability.mode !== 'BLOCKED' && renderRequestValidator.valid && (promptVersion !== 'v2' || promptValidatorV2.valid)
+  const canSendRequest = capability.mode !== 'BLOCKED' && layerCompression.ok && renderRequestValidator.valid
 
   // ---------------------------------------------------------------------
   // SECTION 8 — AI Response (only when dryRun === false AND validators PASS)
@@ -425,10 +410,6 @@ export async function POST(req: NextRequest) {
     latencyMs?: number
     responseSizeBytes?: number
     error?: string
-    // Sprint O — Debug Viewer renders now flow through the same Render
-    // Session (Lock/History/Request Counter) as production, tagged
-    // source: 'debug_viewer' so this spend is always filterable apart from
-    // real Design Studio usage in Render History.
     renderId?: string
   } = { executed: false }
 
@@ -438,8 +419,8 @@ export async function POST(req: NextRequest) {
       cancelled: true,
       cancelReason: [
         ...(capability.mode === 'BLOCKED' ? [`[Capability] ${capability.blockedReason}`] : []),
+        ...(!layerCompression.ok ? [`[Compression] ${layerCompression.error}`] : []),
         ...renderRequestValidator.checks.filter((c) => c.status === 'FAIL').map((c) => c.label),
-        ...(promptVersion === 'v2' ? promptValidatorV2.checks.filter((c) => c.status === 'FAIL').map((c) => c.label) : []),
       ].join('; ') || 'Validator gagal.',
     }
   } else if (!dryRun && instruction && activePrompt) {
@@ -453,10 +434,6 @@ export async function POST(req: NextRequest) {
       userId: debugUser?.id ?? null,
       model: DEFAULT_MODEL,
     })
-    // consultationId is always null here, so the Render Request Lock's
-    // unique index (scoped to consultation_id IS NOT NULL) never applies —
-    // `session.locked` is structurally impossible for this route, but the
-    // type is still a union, so this satisfies it rather than asserting.
     const renderId = session.locked ? 'RND-DEBUG-LOCKED' : session.renderId
     const startedAt = session.locked ? new Date().toISOString() : session.startedAt
     const historyRowId = session.locked ? null : session.historyRowId
@@ -495,13 +472,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // ---------------------------------------------------------------------
-  // Render Validator (Part 6) — only meaningful once a real render exists
-  // (needs the actual output image), and only run when the developer
-  // opted into vision-judge spend. Compares the ORIGINAL customer photo
-  // against the RENDERED image; see qualityJudge.ts for why this is a
-  // heuristic AI opinion, not a certified biometric similarity score.
-  // ---------------------------------------------------------------------
   const expectedGarmentNote = resolved.map(({ option }) => `${option.category}: ${option.name}`).join('; ')
   const renderValidator =
     runVisionJudge && aiResponse.ok && aiResponse.renderedImageUrl
@@ -523,11 +493,11 @@ export async function POST(req: NextRequest) {
       reason: capability.mode === 'BLOCKED' ? (capability.blockedReason ?? '') : capability.warnings.join(' | ') || 'Tidak ada warning.',
     },
     {
-      id: 'anchor_not_overridden',
+      id: 'model_thobe_catalog_only',
       label: 'Model Thobe — Prompt Assembly participation',
       status: 'INFO' as const,
       reason:
-        'Model Thobe adalah catalog-only sejak Architecture Lock (2026-08-04) — tidak lagi menyumbang Hero Image, Reference Instruction, Lock Rules, atau Negative Rules ke Prompt Assembly, jadi tidak lagi bisa "menang" atau "kalah" collision di Recipe Composer.',
+        'Model Thobe adalah catalog-only sejak Architecture Lock (2026-08-04) — tidak lagi menyumbang Hero Image, Reference Instruction, atau Component Rules ke Prompt Assembly.',
     },
     {
       id: 'render_recipe_ready',
@@ -551,34 +521,24 @@ export async function POST(req: NextRequest) {
     },
     {
       id: 'collar_reference_available',
-      label: 'AI Asset — Collar Reference (COLLAR_REFERENCE, optional — never blocks render)',
+      label: 'AI Asset — Collar Reference (optional — never blocks render)',
       status: collarReferenceValidation.valid ? 'PASS' : 'INFO',
       reason: collarReferenceValidation.reason,
     },
     {
       id: 'no_object_object',
-      label: 'Prompt bukan [object Object] / undefined / null literal (V1 serializer+compression)',
+      label: 'Prompt bukan [object Object] / undefined / null literal',
       status: serializerIssues.length === 0 && compressionIssues.length === 0 ? 'PASS' : 'FAIL',
       reason: [...serializerIssues, ...compressionIssues].length === 0
         ? 'Tidak ditemukan literal [object Object]/undefined/null di prompt.'
         : `Ditemukan: ${Array.from(new Set([...serializerIssues, ...compressionIssues])).join(', ')}`,
     },
     {
-      id: 'compression_within_budget',
-      label: 'Compression OK (≤270 token budget)',
-      status: promptCompression && promptCompression.totalTokens <= 270 ? 'PASS' : 'FAIL',
-      reason: promptCompression ? `${promptCompression.totalTokens} token terpakai.` : 'Compression belum berjalan.',
+      id: 'compression_ok',
+      label: 'Prompt Builder Compression OK (Priority 0 muat dalam budget)',
+      status: layerCompression.ok ? 'PASS' : 'FAIL',
+      reason: layerCompression.ok ? `${layerCompression.totalTokens} token terpakai.` : (layerCompression.error ?? ''),
     },
-    {
-      id: 'v2_no_regression_strings',
-      label: 'Prompt V2 bukan [object Object] / undefined / null literal',
-      status: v2Issues.length === 0 ? 'PASS' : 'FAIL',
-      reason: v2Issues.length === 0 ? 'Tidak ditemukan.' : `Ditemukan: ${v2Issues.join(', ')}`,
-    },
-    // Render Validator (Part 5, deterministic, no AI) — evaluated against
-    // whichever prompt version (`promptVersion`) was actually selected for
-    // sending; this is the SAME check object that gated the generateImage
-    // call above (renderRequestValidator), not a recomputation.
     ...renderRequestValidator.checks.map((check) => ({ id: `render_validator_${check.id}`, label: `[Render Validator] ${check.label}`, status: check.status, reason: check.reason })),
     ...(renderValidator
       ? renderValidator.ok
@@ -606,40 +566,24 @@ export async function POST(req: NextRequest) {
     promptBuilder: {
       instruction,
       instructionValidation,
+      layers: promptLayers,
+      layerReport: layerCompression.layerReport,
+      compressed: layerCompression.compressed,
+      compressionOk: layerCompression.ok,
+      compressionError: layerCompression.error,
+      totalTokens: layerCompression.totalTokens,
+      issues: compressionIssues,
     },
     serializer: {
       uncompressed,
       issues: serializerIssues,
     },
-    compression: promptCompression
-      ? {
-          before: uncompressed,
-          beforeChars: uncompressed?.length ?? 0,
-          after: promptCompression.compressed,
-          afterChars: promptCompression.compressed.length,
-          totalTokens: promptCompression.totalTokens,
-          sectionsIncluded: promptCompression.metadata.sectionsIncluded,
-          sectionsOmitted: promptCompression.metadata.sectionsOmitted,
-          estimatedTokens: promptCompression.metadata.estimatedTokens,
-          issues: compressionIssues,
-        }
-      : null,
     finalRequest,
     referenceImages,
     aiResponse,
     renderValidator,
     validation,
     dnaValidator,
-    promptArchitectureV2: {
-      layers: promptLayersV2,
-      merged: mergedPromptV2,
-      compressed: compressedPromptV2.compressed,
-      totalTokens: compressedPromptV2.totalTokens,
-      sectionsIncluded: compressedPromptV2.metadata.sectionsIncluded,
-      sectionsOmitted: compressedPromptV2.metadata.sectionsOmitted,
-      promptValidator: promptValidatorV2,
-      issues: v2Issues,
-    },
     renderRequestValidator,
     runMode,
     aiAssetComposer: composedAssets,

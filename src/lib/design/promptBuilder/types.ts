@@ -36,8 +36,11 @@ export interface RenderInstruction {
   stitching: Record<string, unknown>
   embroidery: Record<string, unknown>
   quality: Record<string, unknown>
-  negativeRules: string[]
-  lockRules: string[]
+  // Prompt Architecture Realignment (2026-08-06) — was `negativeRules` +
+  // `lockRules`, mirroring MasterRenderRecipe's own rename (see
+  // recipeComposer/types.ts).
+  garmentLayoutRules: string[]
+  finalConstraintRules: string[]
 }
 
 export interface RenderInstructionValidation {

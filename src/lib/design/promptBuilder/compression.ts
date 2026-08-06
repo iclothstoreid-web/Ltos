@@ -1,34 +1,34 @@
-import type { RenderInstruction } from './types'
 import { formatRecord } from './serializer'
 import type { RenderRecipeEntry, MasterRenderRecipe } from '@/lib/design/recipeComposer/types'
 import { masterDataCategoryLabel, type MasterDataCategory } from '@/lib/design/masterData'
+import { REFERENCE_USAGE_POLICY as REFERENCE_USAGE_POLICY_CONTENT } from '@/lib/design/renderEngine/referenceUsagePolicy'
 
-// Prompt Compression — an ADDITIVE layer next to the existing Prompt
-// Serializer (serializer.ts), not a replacement for it. serializeOpenAI()
-// stays the full, uncompressed provider prompt; this module produces a
-// second, token-budgeted string for callers that need to stay inside a hard
-// total budget (Image Service does not consume this yet — see
-// resolveDNA/route.ts's own notes on why).
+// Prompt Builder — Layer-Based Compression (Prompt Architecture Realignment,
+// 2026-08-06). This module IS the Prompt Builder: it assembles the 13 fixed
+// sections the locked architecture requires, in a fixed order that never
+// changes, then fits that assembly into a token budget without ever
+// reordering it.
+//
+// The 13 sections, in the order they are always emitted:
+//   1. Identity Preservation   7. Color
+//   2. Reference Binding       8. Global Quality Rules
+//   3. Reference Usage Policy  9. Collar
+//   4. Scene Configuration    10. Placket
+//   5. Garment Layout         11. Pocket
+//   6. Material               12. Cuff
+//                             13. Final Constraints
+//
+// Ordering and truncation are DECOUPLED on purpose: `priority` (0/1/2)
+// governs how aggressively a layer may be truncated under budget pressure,
+// never where it appears in the final string. compressPromptByLayers below
+// assembles the final string by walking the layers in their ORIGINAL push
+// order (see the `layers` array itself), using whatever content each layer
+// ended up with (full or truncated) — never regrouped by priority tier, so
+// "Jangan mengubah urutan" holds even when the budget is tight.
 //
 // Word/token conversion is a rough approximation only (no real tokenizer
 // dependency here): 1 word ~= 1.3 tokens.
 const WORDS_PER_TOKEN = 1 / 1.3
-
-export interface PromptSection {
-  label: string
-  content: string
-  maxTokens: number
-}
-
-export interface CompressionResult {
-  compressed: string
-  totalTokens: number
-  metadata: {
-    sectionsIncluded: string[]
-    sectionsOmitted: string[]
-    estimatedTokens: Record<string, number>
-  }
-}
 
 function estimateTokens(text: string): number {
   const words = text.trim().split(/\s+/).filter(Boolean)
@@ -44,166 +44,8 @@ function truncateToTokenBudget(content: string, maxTokens: number): string {
   return `${words.slice(0, maxWords).join(' ')}...`
 }
 
-// Fits `sections` into `totalBudget` tokens (~270 per the locked Prompt
-// Compression Strategy), in order: each section is truncated to its own
-// `maxTokens` first, then only added if it still fits inside what's left of
-// the total budget — a section that would blow the remaining budget is
-// omitted entirely rather than partially included, so `compressed` never
-// exceeds `totalBudget`.
-export function compressPrompt(sections: PromptSection[], totalBudget = 270): CompressionResult {
-  const parts: string[] = []
-  const metadata = {
-    sectionsIncluded: [] as string[],
-    sectionsOmitted: [] as string[],
-    estimatedTokens: {} as Record<string, number>,
-  }
-  let totalTokens = 0
-
-  for (const section of sections) {
-    if (!section.content.trim()) {
-      metadata.sectionsOmitted.push(section.label)
-      continue
-    }
-
-    const truncated = truncateToTokenBudget(section.content, section.maxTokens)
-    const tokens = estimateTokens(truncated)
-
-    if (totalTokens + tokens > totalBudget) {
-      metadata.sectionsOmitted.push(section.label)
-      continue
-    }
-
-    parts.push(`${section.label}: ${truncated}`)
-    totalTokens += tokens
-    metadata.sectionsIncluded.push(section.label)
-    metadata.estimatedTokens[section.label] = tokens
-  }
-
-  return { compressed: parts.join('. '), totalTokens, metadata }
-}
-
-// Recursive — a nested object value (e.g. an AI Design DNA field authored as
-// a structured object rather than a string) must flatten through
-// stringifyRecord again, not fall through to String(value), which is what
-// used to produce literal "[object Object]" in the compressed prompt sent to
-// OpenAI. Mirrors formatValue/formatRecord's recursion in serializer.ts, kept
-// in this file's own "key value" (no colon) formatting style.
-function stringifyValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return ''
-  if (Array.isArray(value)) return value.map(stringifyValue).filter(Boolean).join('/')
-  if (typeof value === 'object') return stringifyRecord(value as Record<string, unknown>)
-  return String(value)
-}
-
-function stringifyRecord(record: Record<string, unknown>): string {
-  return Object.entries(record)
-    .map(([key, value]) => {
-      const formatted = stringifyValue(value)
-      return formatted ? `${key} ${formatted}` : ''
-    })
-    .filter(Boolean)
-    .join(', ')
-}
-
-// Maps a compiled RenderInstruction onto the 4 buckets of the Prompt
-// Compression Strategy (Anchor/Material/Other/Negatives, ~270 tokens total).
-//
-// Known gap: RenderInstruction has no dedicated Color field — nothing
-// between AI Design DNA and Prompt Builder carries a "color" concept of its
-// own (warna_bahan content ends up wherever that item's own Render Recipe
-// happened to put it). The strategy's 10-token Color budget is folded into
-// Other rather than inventing a Color source that doesn't exist.
-export function buildCompressedSections(instruction: RenderInstruction): PromptSection[] {
-  return [
-    {
-      label: 'Anchor',
-      content: [instruction.garment, instruction.subject, instruction.body].map(stringifyRecord).filter(Boolean).join('; '),
-      maxTokens: 150,
-    },
-    {
-      label: 'Material',
-      content: stringifyRecord(instruction.fabric),
-      maxTokens: 15,
-    },
-    {
-      label: 'Other',
-      content: [
-        instruction.camera,
-        instruction.lighting,
-        instruction.composition,
-        instruction.background,
-        instruction.quality,
-        instruction.stitching,
-        instruction.embroidery,
-      ]
-        .map(stringifyRecord)
-        .filter(Boolean)
-        .join('; '),
-      maxTokens: 55,
-    },
-    {
-      label: 'Negatives',
-      content: instruction.negativeRules.join(', '),
-      maxTokens: 50,
-    },
-  ]
-}
-
-// ===========================================================================
-// Layer-Based Compression (Sprint PR-04) — replaces the fixed Anchor/Material/
-// Other/Negatives buckets above for the production call site. The old scheme
-// truncated each bucket to its OWN word count, then dropped the whole bucket
-// if it still didn't fit the remaining total budget — but a bucket's
-// CONTENTS were never priority-ordered internally. Once Model Thobe's own
-// AI Design DNA became rich (Sprint after PR-03), its content alone filled
-// the ~150-token "Anchor" bucket, and Material Color's `garment.color` key
-// (added last during Recipe Composer's merge — see recipeComposer/
-// composer.ts's mergeRecordField) fell after the truncation cutoff and was
-// silently dropped. Not a DNA bug, not a Resolver bug, not a Recipe Composer
-// bug (none of those are touched here) — a Prompt Compression bug: it never
-// knew "Model Thobe" and "Material Color" were different, differently-
-// critical things sharing one bucket.
-//
-// Built from `entries: RenderRecipeEntry[]` (DNA Resolver's per-item output,
-// BEFORE Recipe Composer merges everything into one flat MasterRenderRecipe)
-// specifically so each Layer's content comes from exactly one category's own
-// resolved data — no cross-item collision is possible here even though
-// Recipe Composer's own Anchor-collision rule (unchanged, still used for
-// buildRenderInstruction/serializeOpenAI's uncompressed output and
-// validateRenderInstruction) still applies to MasterRenderRecipe itself.
-
 export type PromptLayerPriority = 0 | 1 | 2
 
-// Priority 0 — Identity Lock; Global Render Policy (Negative Rules/Lock
-// Rules); active AI Asset Instructions; Quality Foundation; Global Render
-// Recipe (Camera/Lighting/Composition/Background+Shadow/Visibility); Look
-// Cutting/Material/Material Color. Never truncated, never dropped by
-// compressPromptByLayers; if they cannot all fit, the whole render is
-// refused (see compressPromptByLayers).
-//
-// Engine Priority Refactor (2026-08-04) — Quality Foundation and Global
-// Render Recipe were Priority 2 (folded into Visual Description) until this
-// revision. Both are 2 of the 4 locked Render Engine pillars (Base Hero
-// Model/Quality Foundation/Global Render Policy/Global Render Recipe) —
-// Foundation content the Architecture Lock requires to always reach GPT
-// Image, not mood/framing that is acceptable to lose under budget pressure.
-// Promoted to Priority 0, positioned immediately after Global Render Policy
-// (negative_rules/lock_rules) and before every Component Knowledge layer
-// (asset instructions, Look Cutting/Material/Material Color, Priority 1
-// selected components) — see buildPromptLayers' push order. Base Hero Model
-// itself has no text layer here at all (route.ts inserts it directly into
-// `referenceImageUrls`, outside the text-priority system entirely) — it was
-// never subject to Prompt Compression in the first place.
-//
-// Priority 1 — Selected Components (Collar/Cuff/Pocket/Placket/Embroidery/
-// Accessory) that the customer actually picked (skipped automatically for
-// "(None)" — that component simply never produces a layer, see
-// buildPromptLayers). Compressed/dropped only after Priority 2 is exhausted.
-// Priority 2 — Visual Description: only `pose` remains here post-refactor
-// (camera/lighting/composition/background/visibilityRules/quality all moved
-// to Priority 0 above) — narrative/mood only, not a locked Engine pillar,
-// not a component identity. Compressed first; currently always empty in
-// practice since no Engine or per-item source populates `pose` yet.
 export interface PromptLayer {
   id: string
   label: string
@@ -223,102 +65,73 @@ export interface LayerTokenReport {
 export interface LayeredCompressionResult {
   ok: boolean
   compressed: string
-  // Non-null only when ok === false — Phase 4: "STOP. JANGAN menghapus
-  // Priority 0. Laporkan error." This is the one situation where
+  // Non-null only when ok === false — Priority 0 could not fit even with
+  // Priority 1/2 fully removed. This is the one situation where
   // compressPromptByLayers refuses to produce a prompt at all, rather than
-  // silently deleting Identity/Model Thobe/Look Cutting/Material/Material
-  // Color content to make room.
+  // silently deleting required content to make room.
   error: string | null
   totalTokens: number
   layerReport: LayerTokenReport[]
 }
 
-const SELECTED_COMPONENT_CATEGORIES: MasterDataCategory[] = [
-  'kerah',
-  'manset',
-  'plaket',
-  'saku',
-  'bordir',
-  'handmade_zigzag',
-  'aksesori',
+// Named component steps 9-12 — fixed order, per the locked architecture.
+// Priority 1: compressible/skippable under budget pressure (the customer
+// may not have selected one), never Priority 0.
+const NAMED_COMPONENT_STEPS: { id: string; label: string; category: MasterDataCategory }[] = [
+  { id: 'collar', label: 'Collar', category: 'kerah' },
+  { id: 'placket', label: 'Placket', category: 'plaket' },
+  { id: 'pocket', label: 'Pocket', category: 'saku' },
+  { id: 'cuff', label: 'Cuff', category: 'manset' },
 ]
 
-// Sprint R-05 (Phase 1/3) — the Priority 0 DNA-only slots (Anchor/Look
-// Cutting/Material/Material Color), DRYed from 4 near-identical
-// `layers.push(...)` calls into one small table + loop. Unlike
-// SELECTED_COMPONENT_CATEGORIES above, these can't just read
-// masterDataCategoryLabel(category) generically — `warna_bahan`'s generic
-// label is "Warna Material" (see masterData.ts), not the "Material Color"
-// this layer has always been called — so each slot's id/label is declared
-// explicitly here instead. These 4 are structurally different from
-// SELECTED_COMPONENT_CATEGORIES (Anchor/required-if-selected/material
-// slots, not repeatable "did the customer pick one" components), which is
-// why they stay their own table rather than merging into one.
-const P0_DNA_SLOTS: { id: string; label: string; category: MasterDataCategory }[] = [
-  { id: 'model_thobe', label: 'Model Thobe', category: 'model_thobe' },
-  { id: 'look_cutting', label: 'Look Cutting', category: 'look_cutting' },
-  { id: 'material', label: 'Material', category: 'bahan' },
-  { id: 'material_color', label: 'Material Color', category: 'warna_bahan' },
-]
+// Extension components — categories with no named slot in the locked
+// 13-step architecture (Embroidery/Handmade Zig-Zag/Accessory), but with
+// real, currently-in-use business value (real catalog categories, real
+// customer selections) that the brief does not ask to remove. Kept as
+// additive, optional, skip-if-not-selected steps immediately after Cuff and
+// before Final Constraints — the same position they held (as the tail of
+// SELECTED_COMPONENT_CATEGORIES) before this realignment, so nothing about
+// their own behavior changes, only their neighbors' names/positions.
+const EXTENSION_COMPONENT_CATEGORIES: MasterDataCategory[] = ['bordir', 'handmade_zigzag', 'aksesori']
 
 // One entry's own resolved content only — garment (DNA Resolver's per-item
-// output) plus its own fabricIdentity/fabricBehavior (per-item sensory
-// fields Recipe Composer would otherwise merge across items). Never reads
-// another entry's data, so two entries in the same category collision the
-// old Anchor-rule solves for MasterRenderRecipe never arises here at all.
-//
-// Reference-First Cleanup — `entry.recipe.garment` no longer carries
-// prunable narrative text (see dnaResolver/resolver.ts: it only ever holds
-// `referenceInstruction`/`placement`/`color` now, already right-sized for
-// its purpose whether or not a Hero Image photo is also being sent for this
-// category), so there is nothing left to conditionally prune here.
+// output, containing `referenceInstruction`/`placement`/`color`) plus its
+// own fabricIdentity/fabricBehavior (per-item sensory fields Recipe
+// Composer would otherwise merge across items). Never reads another
+// entry's data, so no cross-item collision is possible here.
 function formatEntryContent(entry: RenderRecipeEntry): string {
   return [formatRecord(entry.recipe.garment), formatRecord(entry.recipe.fabricIdentity), formatRecord(entry.recipe.fabricBehavior)]
     .filter(Boolean)
     .join(', ')
 }
 
-// Visual Description (Priority 2) — mood/framing only. `negativeRules` used
-// to be folded into this layer's own text (see git history), which meant
-// Identity/Garment Lock reinforcement ("thobe replaced by shirt", "face/
-// age/body shape changed" — recipeComposer/types.ts's DEFAULT_GLOBAL_
-// RENDER_POLICY) shared P2's fate: first in line for compression, and per
-// Sprint R-03's audit (PLAN_SPRINT_R03), proven to hit ZERO tokens under
-// every realistic budget once a render has more than a couple of Priority 1
-// components. A negative constraint isn't mood — losing it under budget
-// pressure is a correctness bug (GPT Image free to swap the whole garment),
-// not a quality tradeoff. Sprint R-04 moves it to its own layer (see
-// buildNegativeRulesContent / the 'negative_rules' layer below).
-//
-// Engine Priority Refactor (2026-08-04) — visibilityRules/camera/lighting/
-// composition/background/quality all moved OUT of this function to
-// buildGlobalRenderRecipeContent/buildQualityFoundationContent below (both
-// now Priority 0). `pose` is the only field left here: it is not one of the
-// 4 locked Render Engine pillars (Base Hero Model/Quality Foundation/Global
-// Render Policy/Global Render Recipe), so it stays P2 — acceptable to
-// compress/drop under budget pressure, unlike the content that moved out.
-function buildVisualDescriptionContent(masterRecipe: MasterRenderRecipe | null): string {
-  if (!masterRecipe) return ''
-  return formatRecord(masterRecipe.pose)
+// A component's full Prompt Builder step content: its own resolved
+// reference/structural text (formatEntryContent), then its resolved
+// Component Rules (Component Default Knowledge + Component Delta
+// Knowledge, from Recipe Composer's componentRulesByCategory — see
+// recipeComposer/composer.ts), then — only for a reference-backed category
+// — that category's own Component Reference Delta (the geometry
+// transfer/ignore instruction, unchanged wording from
+// aiAssetComposer/registry.ts). Component Rules are joined as plain
+// sentences: each entry is already a complete, self-contained instruction
+// ("Preserve the Rounded collar shape...", "Do not modify the inherited
+// Standard Collar dimensions.") — no "Preserve:"/"Avoid:" wrapper needed at
+// this level (that wrapper stays Engine-only, see buildGarmentLayoutContent/
+// buildFinalConstraintsContent below), since componentRules is one merged
+// list now, not two.
+function buildComponentStepContent(
+  entry: RenderRecipeEntry,
+  masterRecipe: MasterRenderRecipe | null,
+  referenceDelta: string | undefined
+): string {
+  const componentRules = masterRecipe?.componentRulesByCategory[entry.category] ?? []
+  return [formatEntryContent(entry), componentRules.join(' '), referenceDelta ?? ''].filter(Boolean).join(' ')
 }
 
-// Quality Foundation (Priority 0, Engine Priority Refactor 2026-08-04) — one
-// of the 4 locked Render Engine pillars (renderEngine/qualityFoundation.ts).
-// Sourced from `masterRecipe.quality` — policy-only field, no per-item
-// override exists for it (see recipeComposer/composer.ts's composeRenderRecipe:
-// `quality: normalizeRecord(policy.quality)`).
-function buildQualityFoundationContent(masterRecipe: MasterRenderRecipe | null): string {
-  if (!masterRecipe) return ''
-  return formatRecord(masterRecipe.quality)
-}
-
-// Global Render Recipe (Priority 0, Engine Priority Refactor 2026-08-04) —
-// one of the 4 locked Render Engine pillars (renderEngine/
-// globalRenderRecipe.ts): Camera + Lighting + Composition + Background
-// (Shadow lives inside it, same field — see globalRenderRecipe.ts's own
-// comment) + Visibility. Each field is "policy baseline, item overrides"
-// (composer.ts), same merge shape camera/pose/lighting always used.
-function buildGlobalRenderRecipeContent(masterRecipe: MasterRenderRecipe | null): string {
+// Section 4 — Scene Configuration (camera/lighting/composition/background/
+// visibility). Each field is "policy baseline, item overrides" (Recipe
+// Composer), never a per-component concern.
+function buildSceneConfigurationContent(masterRecipe: MasterRenderRecipe | null): string {
   if (!masterRecipe) return ''
   const parts = [
     formatRecord(masterRecipe.camera),
@@ -331,78 +144,74 @@ function buildGlobalRenderRecipeContent(masterRecipe: MasterRenderRecipe | null)
   return parts.join(', ')
 }
 
-// Sprint R-04 — negativeRules promoted out of Visual Description into its
-// own Priority 0 layer. Same "Avoid: ..." phrasing GPT Image needs (no
-// dedicated negative-prompt parameter — see serializer.ts's own rationale),
-// just no longer sharing P2's compression fate. Empty when nothing has
-// contributed a negative rule yet (Global Render Policy, renderEngine/
-// globalRenderPolicy.ts, always has at least a few by default, so in
-// practice this is non-empty on every real render — see route.ts's
-// requiredPriorityZeroIds, which only requires this layer when masterRecipe
-// actually produced at least one).
-function buildNegativeRulesContent(masterRecipe: MasterRenderRecipe | null): string {
-  const negatives = (masterRecipe?.negativeRules ?? []).filter(Boolean)
-  return negatives.length > 0 ? `Avoid: ${negatives.join(', ')}.` : ''
+// Section 5 — Garment Layout. Engine's own positive garment framing
+// (masterRecipe.garmentLayoutRules — GARMENT_LAYOUT_RULES plus Look
+// Cutting's own resolved Component Rules when selected, see
+// recipeComposer/composer.ts) wrapped the same "Preserve: ..." way the
+// prior lockRules layer always was, preceded by Look Cutting's own
+// referenceInstruction (fit/ease/drape prose) when selected — Look Cutting
+// has no dedicated Prompt Builder step (it is a fit delta, not a discrete
+// visual reference component), so this is the one place its content is
+// emitted.
+function buildGarmentLayoutContent(masterRecipe: MasterRenderRecipe | null, lookCuttingEntry: RenderRecipeEntry | undefined): string {
+  const parts: string[] = []
+  if (lookCuttingEntry) parts.push(formatEntryContent(lookCuttingEntry))
+  const rules = (masterRecipe?.garmentLayoutRules ?? []).filter(Boolean)
+  if (rules.length > 0) parts.push(`Preserve: ${rules.join(', ')}.`)
+  return parts.filter(Boolean).join(' ')
 }
 
-// Reference-First Cleanup — Lock Rules is the positive-constraint mirror of
-// Negative Rules above: per-item admin-authored text ("Preserve garment
-// silhouette exactly.") unioned across every selected item plus the Global
-// Render Policy floor (see recipeComposer/composer.ts's composeRenderRecipe).
-// Same Priority 0 treatment as Negative Rules — a positive identity/garment
-// constraint is no less important than a negative one, so it gets the same
-// "included in full or the render refuses" guarantee, never P2 mood-tier
-// compression.
-function buildLockRulesContent(masterRecipe: MasterRenderRecipe | null): string {
-  const locks = (masterRecipe?.lockRules ?? []).filter(Boolean)
-  return locks.length > 0 ? `Preserve: ${locks.join(', ')}.` : ''
+// Section 8 — Global Quality Rules. Policy-only field, no per-item override
+// exists for it.
+function buildGlobalQualityRulesContent(masterRecipe: MasterRenderRecipe | null): string {
+  if (!masterRecipe) return ''
+  return formatRecord(masterRecipe.quality)
 }
 
-// Sprint R-04 — an AI Asset caveat instruction (SILHOUETTE-only, COLLAR_
-// SHAPE-only, etc. — aiAssetComposer/composer.ts's MODEL_REFERENCE_
-// SILHOUETTE_INSTRUCTION and siblings) as a layer candidate. These used to
-// be string-concatenated onto `finalPrompt` AFTER compressPromptByLayers
-// had already finished (`applyAssetInstructions`, called post-compression
-// in route.ts) — meaning the token budget audited by Sprint R-03 never
-// actually matched what reached OpenAI. Folding them in as Priority 0
-// layers makes `layerReport`/`totalTokens` the real, complete accounting:
-// what's reported is what's sent, nothing appended afterward.
-export interface AssetInstructionLayer {
-  id: string
-  label: string
-  content: string
+// Section 13 — Final Constraints. Engine-only negative safety net
+// (masterRecipe.finalConstraintRules — FINAL_CONSTRAINTS, no per-component
+// contribution), wrapped the same "Avoid: ..." way the prior negativeRules
+// layer always was. Positioned last by push order (see buildPromptLayers),
+// not merely "Priority 0" — see this file's own header comment on why
+// ordering and truncation tier are decoupled.
+function buildFinalConstraintsContent(masterRecipe: MasterRenderRecipe | null): string {
+  const rules = (masterRecipe?.finalConstraintRules ?? []).filter(Boolean)
+  return rules.length > 0 ? `Avoid: ${rules.join(', ')}.` : ''
 }
 
 export interface BuildPromptLayersInput {
   entries: RenderRecipeEntry[]
-  // Read for: Priority 0 Negative Rules/Lock Rules (negativeRules/
-  // lockRules), Priority 0 Quality Foundation (quality), Priority 0 Global
-  // Render Recipe (camera/lighting/composition/background/visibilityRules),
-  // and Priority 2 Visual Description (pose only, post Engine Priority
-  // Refactor). Recipe Composer's own merge is unchanged and still the
-  // source for those fields; Priority 0/1 DNA layers below (P0_DNA_SLOTS,
-  // SELECTED_COMPONENT_CATEGORIES) never read from it, only from `entries`.
   masterRecipe: MasterRenderRecipe | null
-  identityTemplate: string
-  // Sprint R-04 — caller-supplied (route.ts already knows which AI Assets
-  // composeAiAssets() actually activated for this request; this module
-  // never re-derives that). Optional and defaults to none, so an existing
-  // caller that doesn't pass it (Render Test Framework, any future ad-hoc
-  // script) behaves exactly as before: no caveat layers, nothing appended
-  // anywhere else either (callers that still concatenate them externally,
-  // e.g. the DNA Debug Viewer's legacy V1 display, are unaffected).
-  assetInstructions?: AssetInstructionLayer[]
+  // Section 1 — static Engine template (renderEngine/identityPreservation.ts).
+  identityPreservation: string
+  // Section 2 — built by the caller (route.ts already knows which images are
+  // actually active this render — see renderEngine/referenceBinding.ts).
+  // Empty string when no reference image qualifies (customer photo alone
+  // never triggers this — see buildReferenceBinding's own gate).
+  referenceBinding: string
+  // Section 3 — whether Reference Usage Policy applies to this render at
+  // all (true whenever Base Hero or any geometry-type reference is active).
+  // Content itself (REFERENCE_USAGE_POLICY) is a fixed Engine constant, not
+  // caller-supplied.
+  referenceUsagePolicy: boolean
+  // Sections 9-11 (Collar/Placket/Pocket) — the geometry transfer/ignore
+  // instruction for whichever of those categories is reference-backed this
+  // render (aiAssetComposer/registry.ts's own per-category constants,
+  // unchanged wording). Absent/omitted category means DNA-only (no Hero
+  // Image active for it).
+  componentReferenceDeltas?: Partial<Record<MasterDataCategory, string>>
 }
 
-// Phase 1 (Sprint PR-04) — splits the render into the 7 layers the brief
-// specifies. A category with no resolved entry (never selected, or
-// selected as the design-level "(None)" sentinel — which never reaches
-// `entries` at all, see design-studio/types.ts's OPTIONAL_FIELDS) simply
-// produces an empty-content layer for Priority 0 slots (Look Cutting) or is
-// skipped entirely for Priority 1 slots (Selected Components) — "Skip
-// otomatis jika NONE" per the brief.
+// Assembles the 13 fixed sections (plus optional Extension Components,
+// additive, never reordering the 13) into PromptLayer candidates, in the
+// exact order the locked architecture specifies. A category with no
+// resolved entry (never selected, or selected as the design-level "(None)"
+// sentinel) simply produces no layer for that step (Collar/Placket/Pocket/
+// Cuff/extensions) — required steps (Identity/Scene Configuration/Garment
+// Layout/Material/Color/Global Quality Rules/Final Constraints) always
+// produce a layer, empty content if genuinely nothing to say.
 export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] {
-  const { entries, masterRecipe, identityTemplate, assetInstructions = [] } = input
+  const { entries, masterRecipe, identityPreservation, referenceBinding, referenceUsagePolicy, componentReferenceDeltas = {} } = input
 
   const byCategory = new Map<MasterDataCategory, RenderRecipeEntry>()
   entries.forEach((entry) => {
@@ -411,55 +220,79 @@ export function buildPromptLayers(input: BuildPromptLayersInput): PromptLayer[] 
 
   const layers: PromptLayer[] = []
 
-  layers.push({ id: 'identity', label: 'Identity Lock', priority: 0, content: identityTemplate })
+  // 1. Identity Preservation
+  layers.push({ id: 'identity_preservation', label: 'Identity Preservation', priority: 0, content: identityPreservation })
 
-  // Sprint R-04 — Negative Rules is a hard constraint (Identity/Garment Lock
-  // reinforcement), not P2 mood text; see buildNegativeRulesContent's doc
-  // comment. Pushed here, alongside Identity Lock, so it always competes for
-  // budget as Priority 0 — included in full or the render refuses, exactly
-  // like Model Thobe/Material/Material Color (compressPromptByLayers'
-  // Phase 4 gate), never silently compressed away.
-  layers.push({ id: 'negative_rules', label: 'Negative Rules (Constraint)', priority: 0, content: buildNegativeRulesContent(masterRecipe) })
+  // 2. Reference Binding
+  if (referenceBinding) {
+    layers.push({ id: 'reference_binding', label: 'Reference Binding', priority: 0, content: referenceBinding })
+  }
 
-  // Reference-First Cleanup — Lock Rules (positive constraint) gets the
-  // same Priority 0 treatment as Negative Rules; see buildLockRulesContent's
-  // doc comment.
-  layers.push({ id: 'lock_rules', label: 'Lock Rules (Constraint)', priority: 0, content: buildLockRulesContent(masterRecipe) })
+  // 3. Reference Usage Policy
+  if (referenceUsagePolicy) {
+    layers.push({
+      id: 'reference_usage_policy',
+      label: 'Reference Usage Policy',
+      priority: 0,
+      content: REFERENCE_USAGE_POLICY_CONTENT,
+    })
+  }
 
-  // Engine Priority Refactor (2026-08-04) — Quality Foundation and Global
-  // Render Recipe, the remaining 2 of the 4 locked Render Engine pillars
-  // (Global Render Policy is negative_rules/lock_rules above; Base Hero
-  // Model has no text layer at all, see PromptLayerPriority's doc comment).
-  // Pushed here, immediately after Global Render Policy and before every
-  // Component Knowledge layer below (asset instructions, Look Cutting/
-  // Material/Material Color, Priority 1 selected components) — matches the
-  // locked ordering: Global Render Policy highest, then the rest of Engine
-  // Knowledge, then Component Knowledge, never the reverse. Content only
-  // (isi knowledge) is unchanged from the prior revision — only the
-  // priority tier and position moved.
-  layers.push({ id: 'quality_foundation', label: 'Quality Foundation', priority: 0, content: buildQualityFoundationContent(masterRecipe) })
-  layers.push({ id: 'global_render_recipe', label: 'Global Render Recipe', priority: 0, content: buildGlobalRenderRecipeContent(masterRecipe) })
+  // 4. Scene Configuration
+  layers.push({ id: 'scene_configuration', label: 'Scene Configuration', priority: 0, content: buildSceneConfigurationContent(masterRecipe) })
 
-  // Sprint R-04 — AI Asset caveat instructions, now real Priority 0 layers
-  // instead of text appended after compression finished (see
-  // AssetInstructionLayer's doc comment above). Only ever non-empty when
-  // route.ts actually composed a reference for this category this request.
-  assetInstructions.forEach((instruction) => {
-    layers.push({ id: instruction.id, label: instruction.label, priority: 0, content: instruction.content })
+  // 5. Garment Layout
+  layers.push({
+    id: 'garment_layout',
+    label: 'Garment Layout',
+    priority: 0,
+    content: buildGarmentLayoutContent(masterRecipe, byCategory.get('look_cutting')),
   })
 
-  P0_DNA_SLOTS.forEach(({ id, label, category }) => {
-    const entry = byCategory.get(category)
-    layers.push({ id, label, priority: 0, content: entry ? formatEntryContent(entry) : '' })
+  // 6. Material
+  const materialEntry = byCategory.get('bahan')
+  layers.push({
+    id: 'material',
+    label: 'Material',
+    priority: 0,
+    content: materialEntry ? buildComponentStepContent(materialEntry, masterRecipe, undefined) : '',
   })
 
-  SELECTED_COMPONENT_CATEGORIES.forEach((category) => {
+  // 7. Color — referenceInstruction only, per the locked Master Data shape
+  // (Color carries no componentRules and has no Hero Image mechanism).
+  const colorEntry = byCategory.get('warna_bahan')
+  layers.push({ id: 'color', label: 'Color', priority: 0, content: colorEntry ? formatEntryContent(colorEntry) : '' })
+
+  // 8. Global Quality Rules
+  layers.push({ id: 'global_quality_rules', label: 'Global Quality Rules', priority: 0, content: buildGlobalQualityRulesContent(masterRecipe) })
+
+  // 9-12. Collar, Placket, Pocket, Cuff — fixed order, skip if not selected.
+  NAMED_COMPONENT_STEPS.forEach(({ id, label, category }) => {
     const entry = byCategory.get(category)
     if (!entry) return
-    layers.push({ id: `component:${category}`, label: masterDataCategoryLabel(category), priority: 1, content: formatEntryContent(entry) })
+    layers.push({
+      id: `component:${id}`,
+      label,
+      priority: 1,
+      content: buildComponentStepContent(entry, masterRecipe, componentReferenceDeltas[category]),
+    })
   })
 
-  layers.push({ id: 'visual_description', label: 'Visual Description', priority: 2, content: buildVisualDescriptionContent(masterRecipe) })
+  // Extension Components — additive, not part of the fixed 13, positioned
+  // after Cuff and before Final Constraints (see this file's own comment).
+  EXTENSION_COMPONENT_CATEGORIES.forEach((category) => {
+    const entry = byCategory.get(category)
+    if (!entry) return
+    layers.push({
+      id: `component:${category}`,
+      label: masterDataCategoryLabel(category),
+      priority: 1,
+      content: buildComponentStepContent(entry, masterRecipe, undefined),
+    })
+  })
+
+  // 13. Final Constraints
+  layers.push({ id: 'final_constraints', label: 'Final Constraints', priority: 0, content: buildFinalConstraintsContent(masterRecipe) })
 
   return layers
 }
@@ -468,75 +301,26 @@ function layerTokens(layer: PromptLayer): number {
   return estimateTokens(layer.content)
 }
 
-// Default budget (Sprint PR-04) — raised from the old fixed 270 tokens.
-// That number predates Model Thobe ever having a complete AI Design DNA;
-// measured against Saudi Modern's now fully-authored DNA (regression test,
-// Phase 6), Priority 0 alone (Identity + Model Thobe + Look Cutting +
-// Material + Material Color) already needs ~620-660 tokens — meaning the
-// old budget could no longer fit Priority 0 alone, let alone any Priority
-// 1/2 content, and Phase 4 would refuse every real render. 1200 leaves
-// realistic headroom above that measured P0 floor for at least one
-// Priority 1 Selected Component plus some Priority 2 Visual Description,
-// while still being a real, finite ceiling — a render selecting many
-// components (Collar+Cuff+Pocket+Placket+Embroidery+Accessory) can still
-// exceed it, at which point Priority 2 then Priority 1 compress as
-// designed. GPT Image (gpt-image-1) has no prompt-length constraint anywhere
-// near this range; this budget exists for the pipeline's own token-cost
-// tracking, not an OpenAI limit.
-const DEFAULT_LAYER_TOTAL_BUDGET = 1200
+// Default budget — re-measured against real data across several sprints
+// (270 -> 1200 -> 1800). Unchanged by this realignment; still the pipeline's
+// own token-cost tracking, not an OpenAI limit (gpt-image-1 has no
+// prompt-length constraint anywhere near this range).
+const DEFAULT_LAYER_TOTAL_BUDGET = 1800
 
 interface PackResult {
-  contents: string[]
+  included: Map<string, string>
   usedTokens: number
 }
 
-// Importance-Ordered packing (Sprint PR-06, re-ordered Sprint R-04) —
-// replaces the old single-pass greedy scan that BROKE the instant one
-// candidate didn't fit whole, silently discarding every candidate still
-// left in the queue no matter how small. That's what let Plaket Hexagonal's
-// 697-token DNA zero out the budget via Manset's truncation and take Saku's
-// 52-token pocket layer down with it, even though 52 tokens of room
-// genuinely existed — confirmed in production PAT-01/02 (2026-07-31):
-// `component:plaket` and `component:saku` both came back `included: false`,
-// and the render showed no hexagon and no pocket at all.
-//
-// Sprint PR-06's fix kept BOTH problems' fix AND a new one: it sorted
-// candidates smallest-token-first for the "does it fit whole" scan, which
-// means SIZE — not priority, not which component the customer actually
-// selected first, not how visually central it is — decided who gets a
-// whole slot. Sprint R-03's audit (PLAN_SPRINT_R03) measured the result:
-// Plaket (697 tokens, the single largest Priority 1 layer, and often the
-// most visually dominant selected component) was *structurally* always
-// last in line, penalized purely for verbosity, and left with whatever
-// leftover fair-share crumbs remained — regardless of how important the
-// motif it describes actually is.
-//
-// Sprint R-04 fixes the ordering itself: Pass 1 now scans candidates in
-// their ORIGINAL order (priority tier already separated the caller's own
-// candidates array into P0/P1/P2 batches; within a batch, `candidates`
-// arrives in `SELECTED_COMPONENT_CATEGORIES`' fixed anatomical order —
-// Kerah > Manset > Plaket > Saku > Bordir > Handmade Zig-Zag > Aksesori —
-// the only existing, stable importance signal in this codebase; inventing
-// a new per-item importance score is explicitly out of scope this sprint).
-// Size no longer decides WHICH candidate gets a whole slot; it only decides
-// HOW MUCH of the truncated remainder each deferred candidate is fairly
-// entitled to in Pass 2 — a purely arithmetic role, not a selection one.
-//
-// Two passes, no break:
-//   Pass 1 (importance order, not size order) — each candidate that fits
-//   whole in what's left is taken whole, in the caller's own order. A
-//   candidate that doesn't fit is deferred, not fatal — the scan keeps
-//   going, so a later, smaller candidate still gets its shot at whatever
-//   budget remains (unchanged from PR-06: still no early break).
-//   Pass 2 (fair-share truncation) — whatever budget Pass 1 left over is
-//   split evenly across every deferred candidate, remainder going to the
-//   FIRST deferred one (the most important, per Pass 1's own order) rather
-//   than the last, so being big no longer means being least-prioritized
-//   twice over. Every deferred component still ends up with SOME
-//   representation rather than a lucky few getting everything.
-// Output order follows the original `candidates` order — sorting never
-// happens at all now; the caller's own order drives both the fit decision
-// and the output.
+// Importance-Ordered packing — each candidate that fits whole in what's left
+// is taken whole, in the caller's own order; a candidate that doesn't fit is
+// deferred, not fatal, so a later, smaller candidate still gets its shot at
+// remaining budget. Whatever budget is left over after Pass 1 is split
+// evenly across every deferred candidate in Pass 2 (fair-share truncation),
+// remainder going to the FIRST deferred one. Returns a Map so the caller can
+// re-walk the ORIGINAL layer order when assembling the final string — this
+// function itself never decides final output order, only which layers make
+// it in and how much of each survives.
 function packLayers(candidates: PromptLayer[], budget: number, markIncluded: (id: string, truncated?: boolean) => void): PackResult {
   let remaining = budget
   const included = new Map<string, string>()
@@ -568,21 +352,18 @@ function packLayers(candidates: PromptLayer[], budget: number, markIncluded: (id
     })
   }
 
-  const contents = candidates.filter((l) => included.has(l.id)).map((l) => included.get(l.id) as string)
-  return { contents, usedTokens: budget - remaining }
+  return { included, usedTokens: budget - remaining }
 }
 
-// Phase 2/3/4 (Sprint PR-04, packing rewritten Sprint PR-06) — computes a
-// per-layer token report (Phase 2), then fits layers into `totalBudget`
-// strictly in priority order: Priority 0 is always included in full;
-// Priority 1 gets whatever budget remains after Priority 0, best-fit packed
-// (see packLayers above) only if it doesn't all fit whole; Priority 2 gets
-// only what's left after that, so it is the first and most aggressively
-// compressed tier — matching the brief's "Compression hanya boleh dimulai
-// dari Priority 2. Jika masih melebihi budget, baru Priority 1." Priority 0
-// is NEVER truncated or dropped: if it alone exceeds `totalBudget` even with
-// Priority 1/2 fully removed, this returns `ok: false` with a clear reason
-// instead (Phase 4).
+// Fits `layers` into `totalBudget` strictly by priority tier (Priority 0 is
+// always included in full; Priority 1 gets whatever budget remains after
+// Priority 0, best-fit packed, only if it doesn't all fit whole; Priority 2
+// gets only what's left after that) — but the FINAL assembled string always
+// walks `layers` in its original push order (the fixed 13-step order,
+// see buildPromptLayers), never grouped by tier. Priority governs how much
+// of a layer survives; it never decides where that layer appears. Priority
+// 0 is NEVER truncated or dropped: if it alone exceeds `totalBudget` even
+// with Priority 1/2 fully removed, this returns `ok: false` instead.
 export function compressPromptByLayers(layers: PromptLayer[], totalBudget = DEFAULT_LAYER_TOTAL_BUDGET): LayeredCompressionResult {
   const report: LayerTokenReport[] = layers.map((layer) => ({
     id: layer.id,
@@ -613,23 +394,35 @@ export function compressPromptByLayers(layers: PromptLayer[], totalBudget = DEFA
     return {
       ok: false,
       compressed: '',
-      error: `Priority 0 (Identity Lock/Global Render Policy/AI Asset Instructions aktif/Quality Foundation/Global Render Recipe/Look Cutting/Material/Material Color) membutuhkan ${p0Tokens} token, melebihi budget ${totalBudget} token. Render dibatalkan — Prompt Compression tidak diizinkan menghapus konten Priority 0 untuk memuatnya.`,
+      error: `Priority 0 (Identity Preservation/Reference Binding/Reference Usage Policy/Scene Configuration/Garment Layout/Material/Color/Global Quality Rules/Final Constraints) membutuhkan ${p0Tokens} token, melebihi budget ${totalBudget} token. Render dibatalkan — Prompt Compression tidak diizinkan menghapus konten Priority 0 untuk memuatnya.`,
       totalTokens: p0Tokens,
       layerReport: report,
     }
   }
 
-  p0.forEach((l) => markIncluded(l.id))
+  const includedContent = new Map<string, string>()
+  p0.forEach((l) => {
+    includedContent.set(l.id, l.content)
+    markIncluded(l.id)
+  })
   let remaining = totalBudget - p0Tokens
 
   // Priority 1 served first (from what's left after Priority 0) so it
   // survives longer than Priority 2 under a tight budget.
   const p1Result = packLayers(p1, remaining, markIncluded)
+  p1Result.included.forEach((content, id) => includedContent.set(id, content))
   remaining -= p1Result.usedTokens
   const p2Result = packLayers(p2, remaining, markIncluded)
+  p2Result.included.forEach((content, id) => includedContent.set(id, content))
   remaining -= p2Result.usedTokens
 
-  const compressed = [...p0.map((l) => l.content), ...p1Result.contents, ...p2Result.contents].filter(Boolean).join('. ')
+  // Final assembly walks the ORIGINAL fixed order (`layers`), not grouped
+  // by priority tier — this is what makes "Jangan mengubah urutan" hold
+  // even when Priority 1 components got truncated or dropped.
+  const compressed = layers
+    .filter((l) => includedContent.has(l.id))
+    .map((l) => includedContent.get(l.id) as string)
+    .join('. ')
   const totalTokens = totalBudget - remaining
 
   return { ok: true, compressed, error: null, totalTokens, layerReport: report }
@@ -640,19 +433,12 @@ export interface PriorityZeroValidation {
   missing: string[]
 }
 
-// Phase 5 (Sprint PR-04) — final safety net immediately before the OpenAI
-// call. `requiredIds` is supplied by the caller, not re-derived here: only
-// the caller (route.ts) knows which Priority 0 layers were actually
-// applicable to THIS request (Identity/Negative Rules/Lock Rules/Quality
-// Foundation/Global Render Recipe/Material/Material Color are always
-// required once Capability Engine hasn't already blocked the render — the
-// last 2 by Engine Priority Refactor, 2026-08-04, same "always non-empty,
-// always Priority 0" guarantee identity/material already had; Look Cutting
-// is required only when the customer selected a real one — it is a
-// legitimate "(None)" optional field, so its absence on its own is not an
-// error). A layer missing here means it had empty content or (in principle)
-// failed to survive compression — either way, the request must be
-// cancelled rather than sent to OpenAI without it.
+// Final safety net immediately before the OpenAI call. `requiredIds` is
+// supplied by the caller, not re-derived here: only the caller (route.ts)
+// knows which Priority 0 layers were actually applicable to THIS request. A
+// layer missing here means it had empty content or (in principle) failed to
+// survive compression — either way, the request must be cancelled rather
+// than sent to OpenAI without it.
 export function validatePriorityZeroIntact(report: LayerTokenReport[], requiredIds: string[]): PriorityZeroValidation {
   const missing = requiredIds.filter((id) => {
     const entry = report.find((r) => r.id === id)

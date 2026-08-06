@@ -2,6 +2,7 @@ import type { AiDesignDna } from '@/lib/design/aiDna/types'
 import type { RenderRecipeEntry } from '@/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
 import type { DNAResolverInput, DNAResolverOutput } from './types'
+import { resolveComponentRules } from './resolveComponentRules'
 
 // Only a non-`pending`/non-`empty` item has anything real to resolve — a
 // still-`pending` AI Design DNA or still-`empty` Render Recipe means nothing
@@ -27,8 +28,8 @@ function validate(input: DNAResolverInput): string[] {
 // as-is — structural positioning a photo can't convey). Any key the item's
 // own Render Recipe.garment already carries wins over the DNA-derived
 // value — same "more specific source wins" precedent as
-// recipeComposer/composer.ts's mergeRecipe, here applied to two sources on
-// the same item rather than two different items.
+// recipeComposer/composer.ts's mergeRecordField, here applied to two
+// sources on the same item rather than across items.
 // Color DNA fallback (Sprint PR-01, P4, still relevant post-cleanup) — a
 // `warna_bahan` item's real color description may still be authored
 // directly into the jsonb `ai_dna` column under legacy ad-hoc keys
@@ -87,7 +88,7 @@ function buildGarmentSpec(
 // unchanged — this module never invents render-instruction content, it only
 // (a) gates on both sources actually having something to resolve, (b) maps
 // AI Design DNA's garment-identity fields into RenderRecipe.garment, and
-// (c) unions negativeRules from both sources. It never merges across items
+// (c) unions componentRules from both sources. It never merges across items
 // and never resolves a conflict between items — that stays Recipe
 // Composer's job.
 export function resolveDNA(input: DNAResolverInput): DNAResolverOutput {
@@ -97,20 +98,18 @@ export function resolveDNA(input: DNAResolverInput): DNAResolverOutput {
   }
 
   const garment = buildGarmentSpec(input.aiDna, input.renderRecipe.garment, input.category)
-  // Defensive: some Repository rows (e.g. warna_bahan, saku) were authored
-  // with a non-conforming ai_dna/render_recipe shape that omits negativeRules
-  // entirely — spreading `undefined` into an array literal throws, unlike the
-  // object spread in buildGarmentSpec above. `?? []` only guards against that
-  // missing-key case; it changes nothing for any row that already has the
-  // array (every currently-passing kerah/manset/plaket/bahan row).
-  const negativeRules = Array.from(
-    new Set([...(input.renderRecipe.negativeRules ?? []), ...(input.aiDna.negativeRules ?? [])])
-  )
-  const lockRules = Array.from(
-    new Set([...(input.renderRecipe.lockRules ?? []), ...(input.aiDna.lockRules ?? [])])
+  // Safe Migration (2026-08-07) — each source (Render Recipe, AI Design DNA)
+  // independently prefers its own `componentRules` when present, falling
+  // back to merge(lockRules, negativeRules) otherwise (resolveComponentRules,
+  // see that module's own doc comment) — a row that has been migrated on one
+  // side but not the other (e.g. ai_dna migrated, render_recipe not yet)
+  // still resolves correctly, since each side's fallback is independent.
+  // `Set` dedup afterwards is unchanged from before this migration.
+  const componentRules = Array.from(
+    new Set([...resolveComponentRules(input.renderRecipe), ...resolveComponentRules(input.aiDna)])
   )
 
-  const recipe: RenderRecipe = { ...input.renderRecipe, garment, negativeRules, lockRules }
+  const recipe: RenderRecipe = { ...input.renderRecipe, garment, componentRules }
 
   return { recipe, ready: true, errors: [] }
 }

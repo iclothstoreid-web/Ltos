@@ -22,6 +22,8 @@ import { decodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
 import type { RenderContext } from '@/lib/customerProfile/renderContext'
 import type { RenderResult } from '@/lib/types/render'
 import { renderDesign } from '@/lib/services/renderService'
+import { saveRenderFinal, approveRenderFinal, uploadRenderFinalImage } from '@/lib/design/renderFinal'
+import type { RenderFinal } from '@/lib/design/renderFinal'
 
 interface MaterialStockInfo {
   available_stock: number
@@ -41,6 +43,9 @@ interface DesignStudioWorkspaceProps {
   materialColorDnaIds: Record<string, string[]>
   canManageMasterData: boolean
   userId: string
+  // Render Final Storage — null when this consultation has never had a
+  // render saved yet (see page.tsx's server-side fetchRenderFinal).
+  initialRenderFinal: RenderFinal | null
 }
 
 // For any field with no saved value yet (new consultation), default
@@ -70,6 +75,7 @@ export function DesignStudioWorkspace({
   materialColorDnaIds,
   canManageMasterData,
   userId,
+  initialRenderFinal,
 }: DesignStudioWorkspaceProps) {
   const router = useRouter()
   const supabase = createClient()
@@ -95,6 +101,14 @@ export function DesignStudioWorkspace({
   // Render result from AI Render Engine — holds image URL, tokens, error state
   // Updated by handleRenderGenerate; passed to AIPreviewPanel for display
   const [renderResult, setRenderResult] = useState<RenderResult>({ status: 'idle' })
+
+  // Render Final Storage — the persisted Preview/Download/Replace/Approve
+  // record for this consultation (render_finals table). Starts from the
+  // server-fetched row (or null); updated locally after every successful
+  // save so the UI never needs a round-trip refetch to reflect its own write.
+  const [renderFinal, setRenderFinal] = useState<RenderFinal | null>(initialRenderFinal)
+  const [renderFinalBusy, setRenderFinalBusy] = useState(false)
+  const [renderFinalError, setRenderFinalError] = useState<string | null>(null)
 
   // Read-only decode of the profile Measurement already built — Design
   // Studio never writes to it, only reads it for the Generate Final Preview
@@ -179,6 +193,64 @@ export function DesignStudioWorkspace({
     setRenderResult({ status: 'loading' })
     const result = await renderDesign(context, { consultationId: consultation.id })
     setRenderResult(result)
+
+    // Render Final Storage — a successful AI render is auto-saved as the
+    // consultation's current Render Final (always 'draft'; an Owner
+    // reviews and Approves separately below). Failure here never blocks or
+    // rolls back the render itself — the AI Preview above already
+    // succeeded and is shown regardless; only the persisted
+    // Preview/Download/Replace/Approve record failed to save.
+    if (result.status === 'success' && result.imageUrl) {
+      setRenderFinalError(null)
+      try {
+        const saved = await saveRenderFinal(supabase, {
+          consultationId: consultation.id,
+          customerPhotoUrl: context.customerDigitalProfile.customerPhoto!.url,
+          renderImageUrl: result.imageUrl,
+        })
+        setRenderFinal(saved)
+      } catch (err) {
+        setRenderFinalError(err instanceof Error ? err.message : 'Gagal menyimpan Render Final.')
+      }
+    }
+  }
+
+  // Manual Replace — uploads to the render-finals bucket (deterministic
+  // path, always overwrites) then saves the new URL as this consultation's
+  // Render Final, same as a fresh AI render (resets to 'draft').
+  async function handleReplaceRenderFinal(file: File) {
+    const customerPhotoUrl = customerDigitalProfile?.customerPhoto?.url
+    if (!customerPhotoUrl) {
+      setRenderFinalError('Foto pelanggan belum tersedia — tidak dapat menyimpan Render Final.')
+      return
+    }
+    setRenderFinalBusy(true)
+    setRenderFinalError(null)
+    try {
+      const renderImageUrl = await uploadRenderFinalImage(supabase, { consultationId: consultation.id, file })
+      const saved = await saveRenderFinal(supabase, { consultationId: consultation.id, customerPhotoUrl, renderImageUrl })
+      setRenderFinal(saved)
+    } catch (err) {
+      setRenderFinalError(err instanceof Error ? err.message : 'Gagal mengganti Render Final.')
+    } finally {
+      setRenderFinalBusy(false)
+    }
+  }
+
+  // Owner's explicit sign-off — the only place render_status becomes
+  // 'approved'.
+  async function handleApproveRenderFinal() {
+    if (!renderFinal) return
+    setRenderFinalBusy(true)
+    setRenderFinalError(null)
+    try {
+      await approveRenderFinal(supabase, consultation.id)
+      setRenderFinal({ ...renderFinal, render_status: 'approved' })
+    } catch (err) {
+      setRenderFinalError(err instanceof Error ? err.message : 'Gagal meng-approve Render Final.')
+    } finally {
+      setRenderFinalBusy(false)
+    }
   }
 
   return (
@@ -206,6 +278,11 @@ export function DesignStudioWorkspace({
           renderContext={renderContext}
           onGenerate={handleRenderGenerate}
           renderResult={renderResult}
+          renderFinal={renderFinal}
+          renderFinalBusy={renderFinalBusy}
+          renderFinalError={renderFinalError}
+          onReplaceRenderFinal={handleReplaceRenderFinal}
+          onApproveRenderFinal={handleApproveRenderFinal}
         />
         <DesignSummaryPanel specification={liveSpecification} selections={selections} />
       </main>

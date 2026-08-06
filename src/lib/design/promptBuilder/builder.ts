@@ -60,8 +60,8 @@ export function buildRenderInstruction(recipe: MasterRenderRecipe | null): Rende
     stitching: { ...recipe.stitching },
     embroidery: { ...recipe.embroidery },
     quality: { ...recipe.quality, style: recipe.style },
-    negativeRules: [...recipe.negativeRules],
-    lockRules: [...recipe.lockRules],
+    garmentLayoutRules: [...recipe.garmentLayoutRules],
+    finalConstraintRules: [...recipe.finalConstraintRules],
   }
 }
 

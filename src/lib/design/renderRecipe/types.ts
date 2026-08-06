@@ -34,12 +34,21 @@ export interface RenderRecipe {
   stitching: Record<string, unknown>
   embroidery: Record<string, unknown>
   renderPriority: string[]
-  negativeRules: string[]
-  // Reference-First Cleanup — per-item Lock Rules, unioned from AI Design
-  // DNA's own `lockRules` the same way `negativeRules` already is (see
-  // dnaResolver/resolver.ts). Real seed content lives on AiDesignDna;
-  // defaults to empty here.
-  lockRules: string[]
+  // Safe Migration (2026-08-07) — was `negativeRules` + `lockRules` as two
+  // separate arrays; now one, unioned with AI Design DNA's own
+  // `componentRules` the same way (see dnaResolver/resolver.ts). Real seed
+  // content lives on AiDesignDna; defaults to empty here.
+  //
+  // Optional at the type level, same reason as AiDesignDna.componentRules
+  // (aiDna/types.ts) — not every row has been migrated yet. Read only
+  // through dnaResolver/resolveComponentRules.ts.
+  componentRules?: string[]
+  // LEGACY — kept only for the Safe Migration transition. See
+  // aiDna/types.ts's `lockRules` doc comment for the full rationale; same
+  // rules apply here. Removed in the post-UAT Sprint Cleanup.
+  lockRules?: string[]
+  /** @deprecated LEGACY — see `lockRules` above. */
+  negativeRules?: string[]
 }
 
 // Matches the DB column default on design_master_options.render_recipe
@@ -61,8 +70,7 @@ export const DEFAULT_RENDER_RECIPE: RenderRecipe = {
   stitching: {},
   embroidery: {},
   renderPriority: [],
-  negativeRules: [],
-  lockRules: [],
+  componentRules: [],
 }
 
 export const RENDER_RECIPE_STATUS_LABELS: Record<RenderRecipeStatus, string> = {

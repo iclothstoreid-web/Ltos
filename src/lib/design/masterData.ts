@@ -1,10 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AiDesignDna } from './aiDna/types'
-import {
-  DEFAULT_AI_DESIGN_DNA,
-  LOOK_CUTTING_FIT_LOCK_RULES,
-  LOOK_CUTTING_FIT_NEGATIVE_RULES,
-} from './aiDna/types'
+import { DEFAULT_AI_DESIGN_DNA, LOOK_CUTTING_FIT_COMPONENT_RULES } from './aiDna/types'
 import type { RenderRecipe } from './renderRecipe/types'
 
 // Single reusable structure for the whole Product Knowledge Base — Model
@@ -214,24 +210,22 @@ export async function createMasterDataOption(
     .maybeSingle()
 
   // Look Cutting Fit Knowledge is layered in here, explicitly, only for
-  // 'look_cutting' — see aiDna/types.ts's LOOK_CUTTING_FIT_LOCK_RULES/
-  // _NEGATIVE_RULES. Every other category (including model_thobe, since the
-  // Architecture Lock revision, 2026-08-04) leaves `ai_dna` unset and gets
-  // the plain DB column default — model_thobe no longer gets a Quality
-  // Foundation extension here; that content now lives in
-  // DEFAULT_GLOBAL_RENDER_POLICY (recipeComposer/types.ts), applied to every
-  // render regardless of which Model Thobe is selected. Delta Knowledge
-  // decision (2026-08-04) — DEFAULT_AI_DESIGN_DNA.lockRules/negativeRules
-  // are now `[]` (Identity Knowledge lives only in Recipe Composer's Engine
-  // merge, see composer.ts), so spreading it below already produces a
-  // delta-only array (just the category extension) with no logic change
-  // needed here.
+  // 'look_cutting' — see aiDna/types.ts's LOOK_CUTTING_FIT_COMPONENT_RULES.
+  // Every other category (including model_thobe, since the Architecture
+  // Lock revision, 2026-08-04) leaves `ai_dna` unset and gets the plain DB
+  // column default — model_thobe no longer gets a Quality Foundation
+  // extension here; that content now lives in DEFAULT_GLOBAL_RENDER_POLICY
+  // (recipeComposer/types.ts), applied to every render regardless of which
+  // Model Thobe is selected. Delta Knowledge decision (2026-08-04) —
+  // DEFAULT_AI_DESIGN_DNA.componentRules is now `[]` (Identity Knowledge
+  // lives only in Recipe Composer's Engine merge, see composer.ts), so
+  // spreading it below already produces a delta-only array (just the
+  // category extension) with no logic change needed here.
   const ai_dna: AiDesignDna | undefined =
     params.category === 'look_cutting'
       ? {
           ...DEFAULT_AI_DESIGN_DNA,
-          lockRules: [...DEFAULT_AI_DESIGN_DNA.lockRules, ...LOOK_CUTTING_FIT_LOCK_RULES],
-          negativeRules: [...DEFAULT_AI_DESIGN_DNA.negativeRules, ...LOOK_CUTTING_FIT_NEGATIVE_RULES],
+          componentRules: [...(DEFAULT_AI_DESIGN_DNA.componentRules ?? []), ...LOOK_CUTTING_FIT_COMPONENT_RULES],
         }
       : undefined
 

@@ -2,30 +2,29 @@
 
 interface RuleListEditorProps {
   label: string
-  // Nullable/undefined on purpose — a row's ai_dna.lockRules/negativeRules
-  // predating Sprint R-06 simply doesn't have this key yet (the data-cleanup
-  // migration that would backfill it has not been applied), and the editor
-  // must still open. Never assume the DB guarantees this shape at the UI
-  // boundary; see the defensive normalize below.
+  // Nullable/undefined on purpose — a row's ai_dna.componentRules predating
+  // the field's introduction simply doesn't have this key yet (a data
+  // migration backfills existing rows, but the editor must still open even
+  // if a row somehow slips through). Never assume the DB guarantees this
+  // shape at the UI boundary; see the defensive normalize below.
   items: string[] | null | undefined
   onChange: (items: string[]) => void
 }
 
-// Generic Add/Edit/Delete/Reorder editor over a string[] — used for both
-// AiDesignDna.lockRules and AiDesignDna.negativeRules (Reference-First
-// Cleanup). Reorder mirrors MasterDataManager.tsx's existing up/down
-// neighbor-swap pattern (handleMove) rather than inventing drag-and-drop;
-// Add/Delete mirror the existing Selling Point row editor in the same file.
+// Generic Add/Edit/Delete/Reorder editor over a string[] — used for
+// AiDesignDna.componentRules (Prompt Architecture Realignment, 2026-08-06:
+// was two separate lists, lockRules/negativeRules, each with its own copy
+// of this same editor; now one list, one editor instance per item).
+// Reorder mirrors MasterDataManager.tsx's existing up/down neighbor-swap
+// pattern (handleMove) rather than inventing drag-and-drop; Add/Delete
+// mirror the existing Selling Point row editor in the same file.
 //
-// Hotfix R-06.2 — Defensive UI Guard. `items` is normalized to `[]` right
-// here, at the component's own boundary, the same `Array.isArray(x) ? x :
-// []` idiom recipeComposer/composer.ts's normalizeRenderRecipeEntries
-// already uses for these exact two fields — so every internal reference
-// (render, add/edit/delete/reorder) is guaranteed a real array and legacy
-// Master Data rows without lockRules/negativeRules yet no longer crash the
-// editor. Business logic, AI pipeline, Prompt Builder, and Render Engine
-// are untouched — this fixes only how the UI reads a possibly-missing
-// field, not what the field means or how it flows downstream.
+// Defensive UI Guard — `items` is normalized to `[]` right here, at the
+// component's own boundary, the same `Array.isArray(x) ? x : []` idiom
+// recipeComposer/composer.ts's normalizeRenderRecipeEntries already uses
+// for this exact field — so every internal reference (render, add/edit/
+// delete/reorder) is guaranteed a real array and a legacy Master Data row
+// without componentRules yet no longer crashes the editor.
 export function RuleListEditor({ label, items, onChange }: RuleListEditorProps) {
   const safeItems = Array.isArray(items) ? items : []
 

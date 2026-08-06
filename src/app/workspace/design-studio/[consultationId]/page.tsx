@@ -6,6 +6,7 @@ import { findOrderIdForConsultation } from '@/lib/order/lookup'
 import { fetchActiveMasterOptions, canManageMasterData } from '@/lib/design/masterData'
 import { fetchMaterialStockByName } from '@/lib/inventory/materials'
 import { fetchMaterialColorsForMaterials } from '@/lib/design/materialColors'
+import { fetchRenderFinal } from '@/lib/design/renderFinal'
 
 interface Props {
   params: { consultationId: string }
@@ -82,6 +83,11 @@ export default async function DesignStudioPage({ params }: Props) {
     ])
   )
 
+  // Render Final Storage — loaded server-side so Preview/Download/Replace/
+  // Approve persist across a page reload, not just within one client
+  // session. null when this consultation has never had a render saved yet.
+  const initialRenderFinal = await fetchRenderFinal(supabase, params.consultationId)
+
   return (
     <DesignStudioWorkspace
       consultation={consultation}
@@ -91,6 +97,7 @@ export default async function DesignStudioPage({ params }: Props) {
       materialColorDnaIds={materialColorDnaIds}
       canManageMasterData={canManageMasterData(profile?.role)}
       userId={user.id}
+      initialRenderFinal={initialRenderFinal}
     />
   )
 }

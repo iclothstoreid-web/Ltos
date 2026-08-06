@@ -16,7 +16,7 @@ export interface PromptSerializerInput {
   instruction: RenderInstruction
 }
 
-type RenderInstructionSectionKey = Exclude<keyof RenderInstruction, 'negativeRules' | 'lockRules'>
+type RenderInstructionSectionKey = Exclude<keyof RenderInstruction, 'garmentLayoutRules' | 'finalConstraintRules'>
 
 interface PromptSection {
   key: RenderInstructionSectionKey
@@ -58,10 +58,9 @@ function formatValue(value: unknown): string {
 
 // Keys are sorted so the same RenderInstruction content always serializes to
 // the same string, regardless of the order its fields were assigned in.
-// Exported (Sprint AI-R2.5) so Prompt Architecture V2 (promptArchitectureV2/
-// layers.ts) can format its Layer 3 (Garment DNA) using the exact same
-// deterministic key-sorted formatting as this file's own SECTION_ORDER
-// output, instead of re-implementing it a second time.
+// Exported so every other formatter in this pipeline (Prompt Builder's own
+// per-component step content, promptBuilder/compression.ts) uses this exact
+// same deterministic key-sorted formatting instead of re-implementing it.
 export function formatRecord(record: Record<string, unknown> | null | undefined): string {
   return Object.keys(record ?? {})
     .sort()
@@ -102,14 +101,14 @@ export function serializeOpenAI(input: PromptSerializerInput): string | null {
 
   let prompt = `${sections.join('. ')}.`
 
-  const lockRules = (instruction.lockRules ?? []).filter(Boolean)
-  if (lockRules.length > 0) {
-    prompt += ` Preserve: ${lockRules.join(', ')}.`
+  const garmentLayoutRules = (instruction.garmentLayoutRules ?? []).filter(Boolean)
+  if (garmentLayoutRules.length > 0) {
+    prompt += ` Preserve: ${garmentLayoutRules.join(', ')}.`
   }
 
-  const negativeRules = (instruction.negativeRules ?? []).filter(Boolean)
-  if (negativeRules.length > 0) {
-    prompt += ` Avoid: ${negativeRules.join(', ')}.`
+  const finalConstraintRules = (instruction.finalConstraintRules ?? []).filter(Boolean)
+  if (finalConstraintRules.length > 0) {
+    prompt += ` Avoid: ${finalConstraintRules.join(', ')}.`
   }
 
   return prompt

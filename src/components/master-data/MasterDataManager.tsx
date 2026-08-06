@@ -283,12 +283,8 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
     setEditingAiDna(prev => (prev ? { ...prev, renderNotes: value } : prev))
   }
 
-  function handleLockRulesChange(items: string[]) {
-    setEditingAiDna(prev => (prev ? { ...prev, lockRules: items } : prev))
-  }
-
-  function handleNegativeRulesChange(items: string[]) {
-    setEditingAiDna(prev => (prev ? { ...prev, negativeRules: items } : prev))
+  function handleComponentRulesChange(items: string[]) {
+    setEditingAiDna(prev => (prev ? { ...prev, componentRules: items } : prev))
   }
 
   function handleRenderRecipeChange(recipe: RenderRecipe) {
@@ -748,8 +744,7 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                     onActivateHeroImageReference={handleActivateHeroImageReference}
                     onReferenceInstructionChange={handleReferenceInstructionChange}
                     onRenderNotesChange={handleRenderNotesChange}
-                    onLockRulesChange={handleLockRulesChange}
-                    onNegativeRulesChange={handleNegativeRulesChange}
+                    onComponentRulesChange={handleComponentRulesChange}
                   />
                 )}
 

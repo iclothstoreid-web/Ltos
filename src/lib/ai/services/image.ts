@@ -116,6 +116,15 @@ export interface GenerateImageInput {
   // serializeOpenAI. Optional and additive: every existing caller keeps
   // getting the full uncompressed serialization exactly as before.
   promptOverride?: string;
+  // Identity Protection Mask (Render Investigation, 2026-08-06) — see
+  // ai/services/identityMask.ts. Optional and additive: omitted (the
+  // default) sends the request exactly as before this feature existed.
+  // Per OpenAI's own images.edit contract, a mask applies to the FIRST
+  // entry in `image` — this pipeline's `referenceImageUrls`/
+  // `referenceImageFiles` always place the Customer Photo first
+  // (aiAssetComposer/composer.ts), so this mask is always scoped to the
+  // customer's own photo, never a Hero Image.
+  maskFile?: File;
 }
 
 export interface GeneratedImage {
@@ -212,6 +221,11 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
               // valid on images.edit (no such param exists on
               // images.generate, the no-reference-image branch below).
               input_fidelity: "high",
+              // Identity Protection Mask — omitted entirely (not `mask:
+              // undefined`) when the caller didn't supply one, so a request
+              // with no mask is byte-identical to what this endpoint sent
+              // before this feature existed.
+              ...(input.maskFile ? { mask: input.maskFile } : {}),
             },
             { timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS },
           )

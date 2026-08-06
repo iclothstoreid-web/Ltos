@@ -35,8 +35,7 @@ export function resolveComponentKnowledge(
   const base = getComponentDefaultKnowledge(category)
   return {
     referenceInstruction: delta.referenceInstruction ?? base.referenceInstruction,
-    lockRules: Array.from(new Set([...base.lockRules, ...delta.lockRules])),
-    negativeRules: Array.from(new Set([...base.negativeRules, ...delta.negativeRules])),
+    componentRules: Array.from(new Set([...base.componentRules, ...delta.componentRules])),
     identity: { ...base.identity, ...delta.identity },
   }
 }

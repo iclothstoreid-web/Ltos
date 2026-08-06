@@ -1,14 +1,10 @@
 import { MASTER_DATA_CATEGORIES, type MasterDataCategory, type MasterDataOption } from '@/lib/design/masterData'
 import type { ReferenceImageDescriptor } from './types'
 import { REFERENCE_CATEGORY_REGISTRY } from './registry'
-// Re-exported for backward compatibility — every existing caller (route.ts,
-// the DNA Debug Viewer) imports these instruction constants from this
-// module. Sprint R-05 moved their canonical definition into registry.ts
-// (the Category Registry, Phase 3) so they live alongside the rest of each
-// category's metadata (type/role/priority) instead of only here; nothing
-// about their content or callers changed. MODEL_REFERENCE_SILHOUETTE_
-// INSTRUCTION removed from this list (Architecture Lock, 2026-08-04) along
-// with the model_thobe registry entry — see registry.ts's header comment.
+// Re-exported so callers (route.ts, the DNA Debug Viewer) can import these
+// instruction constants from this module — canonical definition lives in
+// registry.ts (the Category Registry) alongside the rest of each category's
+// metadata (type/role/priority).
 export {
   COLLAR_REFERENCE_SHAPE_INSTRUCTION,
   PLAKET_REFERENCE_SHAPE_INSTRUCTION,
@@ -227,19 +223,23 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
   }
 }
 
-// Appends every applicable AI Asset instruction to a base prompt —
-// COLLAR_SHAPE-only caveat when a Collar AI Asset is included, PLAKET_SHAPE-
-// only / POCKET_SHAPE-only caveats likewise. Any combination, or none, may
-// apply; a render with no AI Asset at all gets no caveat, since there is
-// nothing to caveat. Sprint R-05 — loops over the registry (declared
-// Collar > Plaket > Pocket, the same order this always appended in) instead
-// of hardcoded `if` statements.
-export function applyAssetInstructions(basePrompt: string, composed: ComposedAiAssets): string {
-  let prompt = basePrompt
+// Component Reference Delta map — the geometry transfer/ignore instruction
+// for whichever categories are reference-backed this render, keyed by
+// category so Prompt Builder can append each one to that SAME category's
+// own step (Collar/Placket/Pocket — see promptBuilder/compression.ts's
+// `componentReferenceDeltas` input) instead of concatenating them onto the
+// prompt as standalone post-hoc caveats (the prior `applyAssetInstructions`
+// behavior, retired by the Prompt Architecture Realignment — it ran AFTER
+// compression finished, outside the audited token budget, a real
+// accounting gap Sprint R-03 flagged and Sprint R-04 already fixed by
+// folding these in as their own layers; this goes one step further and
+// folds them into the OWNING component's layer instead of a separate one).
+export function componentReferenceDeltas(composed: ComposedAiAssets): Partial<Record<MasterDataCategory, string>> {
+  const deltas: Partial<Record<MasterDataCategory, string>> = {}
   REFERENCE_CATEGORY_REGISTRY.forEach((def) => {
-    if (composed.referencesByCategory.has(def.category)) prompt = `${prompt} ${def.instruction}`
+    if (composed.referencesByCategory.has(def.category)) deltas[def.category] = def.instruction
   })
-  return prompt
+  return deltas
 }
 
 // Reference-First — the set of categories for which a real Hero Image was

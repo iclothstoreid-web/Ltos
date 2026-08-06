@@ -1,12 +1,18 @@
-// Render Test Runner (Sprint AI-R2.5, Part 7) — `npm run render:test`.
+// Render Test Runner — `npm run render:test`.
 //
 // Loads the Golden Dataset (render-testing/customers + render-testing/dna),
-// runs every customer × DNA-scenario combination through the REAL pipeline
-// (DNA Resolver -> DNA Validator -> Recipe Composer -> Prompt Builder ->
-// Serializer/Compression [V1] and Prompt Architecture V2 -> Render
-// Validator), and writes a timestamped result + regression report. Never
-// overwrites a previous run — every invocation gets its own timestamp
-// folder/file.
+// runs every customer x DNA-scenario combination through the REAL pipeline
+// (DNA Resolver -> DNA Validator -> Recipe Composer -> Prompt Builder
+// [13 fixed sections] -> Render Validator), and writes a timestamped result
+// + regression report. Never overwrites a previous run — every invocation
+// gets its own timestamp folder/file.
+//
+// Prompt Architecture Realignment (2026-08-06) — this runner used to
+// compare two parallel prompt architectures (V1 production vs. V2, an
+// experiment that never shipped). V2 and the pre-Sprint-PR-04 legacy
+// compression buckets are both retired; this realignment IS the one locked
+// architecture now, so there is nothing left to compare against — this
+// runner exercises that one real path.
 //
 // Standalone Node script, NOT a Next.js request handler — it builds its own
 // Supabase client from env vars (@/lib/supabase/server's createClient()
@@ -15,11 +21,9 @@
 // real API routes use — this script never re-implements pipeline logic.
 //
 // Usage:
-//   npm run render:test                      # dry run, V1, all scenarios
-//   npm run render:test -- --live             # actually calls OpenAI (spends money) for scenarios that pass validation
-//   npm run render:test -- --promptVersion=v2 # use Prompt Architecture V2 instead of V1
-//   npm run render:test -- --promptVersion=both
-//   npm run render:test -- --runVisionJudge   # also run the AI quality judge on --live results (spends more money)
+//   npm run render:test                    # dry run, all scenarios
+//   npm run render:test -- --live          # actually calls OpenAI (spends money) for scenarios that pass validation
+//   npm run render:test -- --runVisionJudge # also run the AI quality judge on --live results (spends more money)
 
 import 'dotenv/config'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -33,20 +37,17 @@ import { composeRenderRecipe } from '../src/lib/design/recipeComposer/composer'
 import { DEFAULT_GLOBAL_RENDER_POLICY } from '../src/lib/design/recipeComposer/types'
 import type { RenderRecipeEntry } from '../src/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '../src/lib/design/renderRecipe/types'
-import { buildRenderInstruction } from '../src/lib/design/promptBuilder/builder'
-import { buildCompressedSections, compressPrompt } from '../src/lib/design/promptBuilder/compression'
+import { buildPromptLayers, compressPromptByLayers } from '../src/lib/design/promptBuilder/compression'
 import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '../src/lib/ai/renderSession/service'
 import { DEFAULT_MODEL } from '../src/lib/ai/services/image'
-import { buildPromptLayersV2, compressPromptLayersV2 } from '../src/lib/design/promptArchitectureV2/layers'
-import { validatePromptLayers } from '../src/lib/design/promptArchitectureV2/promptValidator'
-import { validateComponentDna } from '../src/lib/design/promptArchitectureV2/dnaValidator'
-import { validateRenderRequest } from '../src/lib/design/promptArchitectureV2/renderValidator'
-import { getRenderRunMode, isDebugMode } from '../src/lib/design/promptArchitectureV2/debugMode'
-import { generateRegressionReportMarkdown, type ScenarioRunResult } from '../src/lib/design/promptArchitectureV2/regressionReport'
-import type { PromptVersion } from '../src/lib/design/promptArchitectureV2/versions'
-import { composeAiAssets, applyAssetInstructions } from '../src/lib/design/aiAssetComposer/composer'
+import { validateComponentDna } from '../src/lib/design/promptValidation/dnaValidator'
+import { validateRenderRequest } from '../src/lib/design/promptValidation/renderValidator'
+import { getRenderRunMode, isDebugMode } from '../src/lib/design/promptValidation/debugMode'
+import { composeAiAssets, componentReferenceDeltas } from '../src/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '../src/lib/design/capabilityEngine/engine'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '../src/lib/design/renderEngine/baseHero'
+import { IDENTITY_PRESERVATION } from '../src/lib/design/renderEngine/identityPreservation'
+import { buildReferenceBinding } from '../src/lib/design/renderEngine/referenceBinding'
 
 const ROOT = path.resolve(__dirname, '..')
 const RENDER_TESTING_DIR = path.join(ROOT, 'render-testing')
@@ -57,10 +58,6 @@ const RENDER_TESTING_DIR = path.join(ROOT, 'render-testing')
 const args = process.argv.slice(2)
 const isLive = args.includes('--live')
 const runVisionJudge = args.includes('--runVisionJudge')
-const promptVersionArg = (args.find((a) => a.startsWith('--promptVersion='))?.split('=')[1] ?? 'v1') as
-  | PromptVersion
-  | 'both'
-const promptVersionsToRun: PromptVersion[] = promptVersionArg === 'both' ? ['v1', 'v2'] : [promptVersionArg]
 
 const runMode = getRenderRunMode()
 
@@ -78,6 +75,26 @@ interface DnaScenarioManifestEntry {
   label: string
   componentSelections: { componentType: string; componentId: string | null }[]
   note: string
+}
+
+interface ScenarioRunResult {
+  customerId: string
+  customerLabel: string
+  dnaId: string
+  dnaLabel: string
+  timestamp: string
+  model: string
+  inputFidelity: string | null
+  referenceImages: string[]
+  prompt: string | null
+  revisedPrompt: string | null
+  validation: {
+    dnaValidator: { itemId: string; valid: boolean; errors: string[] }[]
+    renderRequestValidator: { valid: boolean; checks: { label: string; status: 'PASS' | 'FAIL' }[] }
+  }
+  capability?: { mode: string; capabilityScore: number; qualityLevel: number; warnings: string[] }
+  output: { ok: boolean; cancelled: boolean; cancelReason?: string; renderedImageUrl: string | null; error?: string }
+  skippedReason?: string
 }
 
 function loadJson<T>(relativePath: string): T {
@@ -113,31 +130,25 @@ function saveScenarioResult(filename: string, payload: unknown) {
   writeFileSync(path.join(resultsDir, filename), JSON.stringify(body, null, 2), 'utf-8')
 }
 
-// Production mode (Part 9) — terse persisted summary only, no raw
-// payload/prompt/revised-prompt text.
+// Production mode — terse persisted summary only, no raw payload/prompt/
+// revised-prompt text.
 function summarizeForProduction(payload: unknown): Record<string, unknown> {
   const p = payload as Partial<ScenarioRunResult> & Record<string, unknown>
   return {
     customerId: p.customerId,
     dnaId: p.dnaId,
-    promptVersion: p.promptVersion,
     ok: (p.output as { ok?: boolean } | undefined)?.ok ?? false,
     cancelled: (p.output as { cancelled?: boolean } | undefined)?.cancelled ?? false,
     skippedReason: p.skippedReason ?? null,
   }
 }
 
-async function runScenario(
-  customer: CustomerManifestEntry,
-  dna: DnaScenarioManifestEntry,
-  promptVersion: PromptVersion,
-): Promise<ScenarioRunResult> {
+async function runScenario(customer: CustomerManifestEntry, dna: DnaScenarioManifestEntry): Promise<ScenarioRunResult> {
   const baseFields = {
     customerId: customer.id,
     customerLabel: customer.label,
     dnaId: dna.id,
     dnaLabel: dna.label,
-    promptVersion,
     timestamp: runTimestamp,
     model: 'gpt-image-1',
   }
@@ -153,11 +164,7 @@ async function runScenario(
       referenceImages: [],
       prompt: null,
       revisedPrompt: null,
-      validation: {
-        dnaValidator: [],
-        promptValidator: null,
-        renderRequestValidator: { valid: false, checks: [] },
-      },
+      validation: { dnaValidator: [], renderRequestValidator: { valid: false, checks: [] } },
       output: { ok: false, cancelled: false, renderedImageUrl: null },
       skippedReason: !customer.photoUrl
         ? `Customer "${customer.id}" belum punya photoUrl.`
@@ -172,7 +179,7 @@ async function runScenario(
       referenceImages: [],
       prompt: null,
       revisedPrompt: null,
-      validation: { dnaValidator: [], promptValidator: null, renderRequestValidator: { valid: false, checks: [] } },
+      validation: { dnaValidator: [], renderRequestValidator: { valid: false, checks: [] } },
       output: { ok: false, cancelled: false, renderedImageUrl: null },
       skippedReason: 'NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY tidak diset (lihat .env.local).',
     }
@@ -187,7 +194,7 @@ async function runScenario(
       referenceImages: [],
       prompt: null,
       revisedPrompt: null,
-      validation: { dnaValidator: [], promptValidator: null, renderRequestValidator: { valid: false, checks: [] } },
+      validation: { dnaValidator: [], renderRequestValidator: { valid: false, checks: [] } },
       output: { ok: false, cancelled: false, renderedImageUrl: null },
       skippedReason: `Supabase query gagal: ${error.message}`,
     }
@@ -208,8 +215,8 @@ async function runScenario(
       unresolvedComponents.push({ itemId: selection.componentId as string, category: selection.componentType as string, reason: 'not_found' })
       return
     }
-    // Architecture Lock (2026-08-04) — Model Thobe is catalog-only now,
-    // excluded from DNA resolution entirely (mirrors route.ts exactly).
+    // Model Thobe is catalog-only (Architecture Lock, 2026-08-04) — excluded
+    // from DNA resolution entirely (mirrors route.ts exactly).
     if (option.category === 'model_thobe') return
     const input: DNAResolverInput = { itemId: option.id, category: option.category, aiDna: option.ai_dna, renderRecipe: option.render_recipe }
     const { recipe, ready, errors } = resolveDNA(input)
@@ -222,13 +229,19 @@ async function runScenario(
 
   const entries: RenderRecipeEntry[] = resolved.map(({ option, recipe }, index) => ({ itemId: option.id, category: option.category, recipe, priority: index }))
   const masterRecipe = entries.length > 0 ? composeRenderRecipe({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY }) : null
-  const instruction = buildRenderInstruction(masterRecipe)
 
   const collarSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'kerah')
   const collarOptionRaw = collarSelection ? (rowsById.get(collarSelection.componentId as string) ?? null) : null
+  const plaketSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'plaket')
+  const plaketOptionRaw = plaketSelection ? (rowsById.get(plaketSelection.componentId as string) ?? null) : null
+  const pocketSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'saku')
+  const pocketOptionRaw = pocketSelection ? (rowsById.get(pocketSelection.componentId as string) ?? null) : null
+
   const composedAssets = composeAiAssets({
     customerPhotoUrl: customer.photoUrl,
     collarOption: collarOptionRaw,
+    plaketOption: plaketOptionRaw,
+    pocketOption: pocketOptionRaw,
   })
   // Global Base Hero (Architecture Lock, 2026-08-04) — mirrors route.ts's
   // insertion exactly.
@@ -237,8 +250,8 @@ async function runScenario(
     ? [composedAssets.urls[0], GLOBAL_BASE_HERO_IMAGE_URL, ...composedAssets.urls.slice(1)]
     : composedAssets.urls
 
-  // AI Capability Engine (Sprint AI-R3) — same gate as route.ts/debug route.
-  // Architecture Lock (2026-08-04) removed Model Thobe from this input.
+  // AI Capability Engine — same gate as route.ts/debug route. Architecture
+  // Lock (2026-08-04) removed Model Thobe from this input.
   const componentDnaResults = dnaValidatorResults
     .filter((d) => d.category !== 'model_thobe')
     .map((d) => ({ itemId: d.itemId, category: d.category, valid: d.valid }))
@@ -249,22 +262,26 @@ async function runScenario(
     unresolvedComponents,
   })
 
-  let prompt: string | null = null
-  let promptValidatorResult: { valid: boolean; checks: { label: string; status: 'PASS' | 'FAIL' }[] } | null = null
-
-  if (promptVersion === 'v1') {
-    const compression = instruction ? compressPrompt(buildCompressedSections(instruction)) : null
-    prompt = compression?.compressed ?? null
-  } else {
-    const layers = buildPromptLayersV2(instruction)
-    const compressed = compressPromptLayersV2(layers)
-    prompt = compressed.compressed
-    promptValidatorResult = validatePromptLayers(layers)
-  }
-
-  // AI Asset Lifecycle — SILHOUETTE-only and/or COLLAR_SHAPE-only caveats,
-  // appended only for whichever AI Assets are actually included.
-  if (prompt) prompt = applyAssetInstructions(prompt, composedAssets)
+  // Prompt Builder — the 13 fixed sections, real production path (see
+  // promptBuilder/compression.ts).
+  const referenceUsagePolicyActive = composedAssets.referencesByCategory.size > 0 || baseHeroAvailable
+  const referenceBindingContent = buildReferenceBinding({
+    customerPhoto: true,
+    baseHero: baseHeroAvailable,
+    collar: composedAssets.referencesByCategory.has('kerah'),
+    placket: composedAssets.referencesByCategory.has('plaket'),
+    pocket: composedAssets.referencesByCategory.has('saku'),
+  })
+  const promptLayers = buildPromptLayers({
+    entries,
+    masterRecipe,
+    identityPreservation: IDENTITY_PRESERVATION,
+    referenceBinding: referenceBindingContent,
+    referenceUsagePolicy: referenceUsagePolicyActive,
+    componentReferenceDeltas: componentReferenceDeltas(composedAssets),
+  })
+  const layerCompression = compressPromptByLayers(promptLayers)
+  const prompt = layerCompression.ok ? layerCompression.compressed : null
 
   const usesEdit = referenceImageUrls.length > 0
   const renderRequestValidator = validateRenderRequest({
@@ -277,8 +294,7 @@ async function runScenario(
     imageCount: 1,
   })
 
-  const canSend =
-    capability.mode !== 'BLOCKED' && renderRequestValidator.valid && (promptVersion !== 'v2' || (promptValidatorResult?.valid ?? false))
+  const canSend = capability.mode !== 'BLOCKED' && layerCompression.ok && renderRequestValidator.valid
 
   let output: ScenarioRunResult['output'] = { ok: false, cancelled: false, renderedImageUrl: null }
   let revisedPrompt: string | null = null
@@ -291,25 +307,25 @@ async function runScenario(
       cancelled: true,
       cancelReason: [
         ...(capability.mode === 'BLOCKED' ? [`[Capability] ${capability.blockedReason}`] : []),
+        ...(!layerCompression.ok ? [`[Compression] ${layerCompression.error}`] : []),
         ...renderRequestValidator.checks.filter((c) => c.status === 'FAIL').map((c) => c.label),
       ].join('; ') || 'Validator gagal.',
       renderedImageUrl: null,
     }
-  } else if (instruction && prompt) {
+  } else if (masterRecipe && prompt) {
     // Sprint O (Task 5, Trigger Source) — tagged 'test_script' so this
     // golden-dataset spend is always filterable apart from real Design
-    // Studio usage in Render History. `supabase` is this script's own
-    // module-level client (may be null if env vars are missing, or may
-    // fail RLS since this script has no login session — either way,
-    // startRenderSession() degrades to a local, non-persisted Render ID
-    // rather than ever blocking the actual render).
+    // Studio usage in Render History.
     const session = await startRenderSession({ supabase, source: 'test_script', model: DEFAULT_MODEL })
     const renderId = session.locked ? 'RND-TEST-LOCKED' : session.renderId
     const startedAtIso = session.locked ? new Date().toISOString() : session.startedAt
     const historyRowId = session.locked ? null : session.historyRowId
 
+    const { buildRenderInstruction } = await import('../src/lib/design/promptBuilder/builder')
+    const instruction = buildRenderInstruction(masterRecipe)
+
     const { result, requestCount, retryCount } = await generateImageWithControlledRetry({
-      input: { instruction, referenceImageUrls, promptOverride: prompt },
+      input: { instruction: instruction!, referenceImageUrls, promptOverride: prompt },
     })
     if (result.ok) {
       output = { ok: true, cancelled: false, renderedImageUrl: result.images[0]?.url ?? null }
@@ -346,7 +362,6 @@ async function runScenario(
     revisedPrompt,
     validation: {
       dnaValidator: dnaValidatorResults.map((d) => ({ itemId: d.itemId, valid: d.valid, errors: d.errors })),
-      promptValidator: promptValidatorResult,
       renderRequestValidator,
     },
     capability: { mode: capability.mode, capabilityScore: capability.capabilityScore, qualityLevel: capability.qualityLevel, warnings: capability.warnings },
@@ -354,37 +369,101 @@ async function runScenario(
   }
 }
 
+function statusIcon(pass: boolean): string {
+  return pass ? '✅ PASS' : '❌ FAIL'
+}
+
+function formatScenarioMarkdown(result: ScenarioRunResult): string {
+  if (result.skippedReason) {
+    return [`### ${result.customerLabel} x ${result.dnaLabel}`, '', `**SKIPPED** — ${result.skippedReason}`, ''].join('\n')
+  }
+
+  return [
+    `### ${result.customerLabel} x ${result.dnaLabel}`,
+    '',
+    `| Field | Value |`,
+    `| --- | --- |`,
+    `| Tanggal | ${result.timestamp} |`,
+    `| Model AI | ${result.model} |`,
+    `| Input Fidelity | ${result.inputFidelity ?? '(tidak berlaku)'} |`,
+    `| Capability | ${result.capability ? `${result.capability.mode} — ${result.capability.capabilityScore}% (quality ${result.capability.qualityLevel}/5)${result.capability.warnings.length ? ` — ${result.capability.warnings.join('; ')}` : ''}` : '(tidak dihitung)'} |`,
+    `| Reference Images | ${result.referenceImages.length} — ${result.referenceImages.join(', ') || '—'} |`,
+    `| Output | ${result.output.cancelled ? `CANCELLED (${result.output.cancelReason ?? '—'})` : result.output.ok ? `OK — ${result.output.renderedImageUrl ?? '(no url)'}` : `ERROR — ${result.output.error ?? '—'}`} |`,
+    '',
+    '**Prompt (13 fixed sections, compressed)**',
+    '```',
+    result.prompt ?? '(null)',
+    '```',
+    '',
+    '**Revised Prompt (GPT)**',
+    '```',
+    result.revisedPrompt ?? '(tidak ada — dry run/cancelled/OpenAI tidak mengembalikan revised_prompt)',
+    '```',
+    '',
+    '**Validation**',
+    `- DNA Validator: ${statusIcon(result.validation.dnaValidator.every((d) => d.valid))}`,
+    ...result.validation.dnaValidator.filter((d) => !d.valid).map((d) => `  - ${d.itemId}: ${d.errors.join(' | ')}`),
+    `- Render Validator (deterministic): ${statusIcon(result.validation.renderRequestValidator.valid)}`,
+    ...result.validation.renderRequestValidator.checks.filter((c) => c.status === 'FAIL').map((c) => `  - ${c.label}: FAIL`),
+    '',
+  ].join('\n')
+}
+
+function generateRegressionReportMarkdown(results: ScenarioRunResult[]): string {
+  const total = results.length
+  const skipped = results.filter((r) => r.skippedReason).length
+  const cancelled = results.filter((r) => r.output?.cancelled).length
+  const passed = results.filter((r) => !r.skippedReason && !r.output.cancelled && r.output.ok).length
+  const failed = total - skipped - cancelled - passed
+
+  return [
+    '# AI Render — Regression Report',
+    '',
+    `Generated: ${runTimestamp}`,
+    '',
+    '## Summary',
+    '',
+    `- Total scenarios: ${total}`,
+    `- Passed: ${passed}`,
+    `- Failed: ${failed}`,
+    `- Cancelled by Render Validator: ${cancelled}`,
+    `- Skipped (incomplete golden dataset entry): ${skipped}`,
+    '',
+    '## Scenarios',
+    '',
+    ...results.map(formatScenarioMarkdown),
+  ].join('\n')
+}
+
 async function main() {
   log(`Render Test Runner — run ${runTimestamp}`)
-  log(`Mode: ${runMode} | Live: ${isLive} | Prompt version(s): ${promptVersionsToRun.join(', ')} | Vision judge: ${runVisionJudge}`)
-  log(`Customers: ${customers.length} | DNA scenarios: ${dnaScenarios.length} | Combinations: ${customers.length * dnaScenarios.length * promptVersionsToRun.length}`)
+  log(`Mode: ${runMode} | Live: ${isLive} | Vision judge: ${runVisionJudge}`)
+  log(`Customers: ${customers.length} | DNA scenarios: ${dnaScenarios.length} | Combinations: ${customers.length * dnaScenarios.length}`)
 
   const allResults: ScenarioRunResult[] = []
 
   for (const customer of customers) {
     for (const dna of dnaScenarios) {
-      for (const promptVersion of promptVersionsToRun) {
-        const result = await runScenario(customer, dna, promptVersion)
-        allResults.push(result)
+      const result = await runScenario(customer, dna)
+      allResults.push(result)
 
-        const capabilityTag = result.capability ? ` [${result.capability.mode} ${result.capability.capabilityScore}%]` : ''
-        const status = result.skippedReason
-          ? `SKIPPED — ${result.skippedReason}`
-          : result.output.cancelled
-            ? `CANCELLED — ${result.output.cancelReason}`
-            : result.output.ok
-              ? 'OK'
-              : isLive
-                ? `ERROR — ${result.output.error ?? 'unknown'}`
-                : 'DRY RUN'
-        log(`[${promptVersion}] ${customer.label} × ${dna.label}:${capabilityTag} ${status}`)
+      const capabilityTag = result.capability ? ` [${result.capability.mode} ${result.capability.capabilityScore}%]` : ''
+      const status = result.skippedReason
+        ? `SKIPPED — ${result.skippedReason}`
+        : result.output.cancelled
+          ? `CANCELLED — ${result.output.cancelReason}`
+          : result.output.ok
+            ? 'OK'
+            : isLive
+              ? `ERROR — ${result.output.error ?? 'unknown'}`
+              : 'DRY RUN'
+      log(`${customer.label} x ${dna.label}:${capabilityTag} ${status}`)
 
-        saveScenarioResult(`${customer.id}__${dna.id}__${promptVersion}.json`, result)
-      }
+      saveScenarioResult(`${customer.id}__${dna.id}.json`, result)
     }
   }
 
-  const reportMarkdown = generateRegressionReportMarkdown(allResults, runTimestamp)
+  const reportMarkdown = generateRegressionReportMarkdown(allResults)
   const reportsDir = path.join(RENDER_TESTING_DIR, 'reports')
   if (!existsSync(reportsDir)) mkdirSync(reportsDir, { recursive: true })
   const reportPath = path.join(reportsDir, `${runTimestampSafe}.md`)
