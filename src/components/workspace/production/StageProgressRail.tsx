@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { ProductionStage, StageRecord } from '@/lib/production/types'
 import { STAGE_LABELS, STAGE_ORDER } from '@/lib/production/stageConfig'
 
@@ -15,7 +16,10 @@ function latestStatusFor(stageRecords: StageRecord[], stage: ProductionStage) {
   return records.sort((a, b) => b.attempt - a.attempt)[0].status
 }
 
-export function StageProgressRail({
+// PR-03 (Rendering Performance) — memoized: props are stable references
+// derived from `packet` in the parent, so this now skips re-render on
+// unrelated keystrokes (notes/courier/etc). Same API, same behavior.
+function StageProgressRailComponent({
   stageRecords,
   currentStage,
   variant = 'horizontal',
@@ -102,3 +106,5 @@ export function StageProgressRail({
     </div>
   )
 }
+
+export const StageProgressRail = memo(StageProgressRailComponent)

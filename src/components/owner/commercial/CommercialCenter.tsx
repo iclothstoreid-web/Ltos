@@ -1,11 +1,18 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { ArrowUpRight, Search } from 'lucide-react'
 import { LeftSidebar } from '@/components/command-center/OwnerCommandCenter/LeftSidebar'
-import { OrderDetailModal } from '@/components/command-center/OwnerCommandCenter/OrderDetailModal'
 import { OwnerTopBar } from '@/components/command-center/OwnerCommandCenter/OwnerTopBar'
 import { KpiCard } from '@/components/command-center/OwnerCommandCenter/cards/KpiCard'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — only opened via local
+// state (selectedOrderId), not part of first paint. Same component, same
+// props; just excluded from the initial JS bundle until actually rendered.
+const OrderDetailModal = dynamic(() =>
+  import('@/components/command-center/OwnerCommandCenter/OrderDetailModal').then(mod => mod.OrderDetailModal)
+)
 import { formatRupiah } from '@/lib/format/money'
 import { PAYMENT_STATUS_LABELS } from '@/lib/commercial/types'
 import type { PaymentStatus } from '@/lib/commercial/types'

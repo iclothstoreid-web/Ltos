@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 
 interface ReferenceModelCardProps {
@@ -10,7 +11,9 @@ interface ReferenceModelCardProps {
 // reference-model photo capture exists anywhere in the app (same gap as the
 // Hero Card's customer photo, confirmed with the user), so this shows the
 // real design selections as text instead of fabricated images.
-export function ReferenceModelCard({ design }: ReferenceModelCardProps) {
+//
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function ReferenceModelCardComponent({ design }: ReferenceModelCardProps) {
   if (!design) return null
 
   const chips = [design.model, design.collar, design.cuff, design.button].filter(Boolean)
@@ -34,3 +37,5 @@ export function ReferenceModelCard({ design }: ReferenceModelCardProps) {
     </div>
   )
 }
+
+export const ReferenceModelCard = memo(ReferenceModelCardComponent)

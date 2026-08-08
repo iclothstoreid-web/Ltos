@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import type { Material, MaterialCategory } from '@/lib/inventory/types'
 
 interface CatalogSidebarProps {
@@ -16,7 +16,11 @@ interface CatalogSidebarProps {
 // "Tambah Katalog" now lives in MaterialHeader — `adding` is controlled by
 // the parent workspace so the header button and this inline form share one
 // source of truth instead of the sidebar owning its own trigger.
-export function CatalogSidebar({ categories, materials, activeCategoryId, adding, onCancelAdd, onSelectCategory, onCreateCategory }: CatalogSidebarProps) {
+//
+// PR-03 (Rendering Performance) — memoized. Effective once the caller
+// stabilizes onCancelAdd/onCreateCategory via useCallback (see
+// MaterialWorkspace.tsx). Same API, same behavior.
+function CatalogSidebarComponent({ categories, materials, activeCategoryId, adding, onCancelAdd, onSelectCategory, onCreateCategory }: CatalogSidebarProps) {
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -91,3 +95,5 @@ export function CatalogSidebar({ categories, materials, activeCategoryId, adding
     </div>
   )
 }
+
+export const CatalogSidebar = memo(CatalogSidebarComponent)

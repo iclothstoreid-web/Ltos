@@ -1,9 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { ConsultationDocument } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
-import { FullscreenMediaModal } from './FullscreenMediaModal'
 import { CustomerReferenceCard } from './CustomerReferenceCard'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — only opened via local
+// state (showPhoto/showVideo), not part of first paint. Same component,
+// same props; just excluded from the initial JS bundle until actually
+// rendered.
+const FullscreenMediaModal = dynamic(() => import('./FullscreenMediaModal').then(mod => mod.FullscreenMediaModal))
 
 interface MediaProduksiCardProps {
   customerPhotoUrl: string | null

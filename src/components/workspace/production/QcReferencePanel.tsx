@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { PatternFormulation, StageRecord } from '@/lib/production/types'
 import { PatternReferenceCard } from './PatternReferenceCard'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
@@ -13,7 +14,8 @@ interface QcReferencePanelProps {
 // reference Pemotongan Kain and Penjahitan use, plus Penjahitan's own
 // completed record (Ringkasan, Evidence, Catatan) via `DigitalHandoverCard`,
 // reused rather than building a second read-only summary of the same shape.
-export function QcReferencePanel({ patternFormulation, stageRecords }: QcReferencePanelProps) {
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function QcReferencePanelComponent({ patternFormulation, stageRecords }: QcReferencePanelProps) {
   const sewingRecord = [...stageRecords]
     .filter(r => r.stage === 'sewing' && r.status === 'completed')
     .sort((a, b) => b.attempt - a.attempt)[0]
@@ -40,3 +42,5 @@ export function QcReferencePanel({ patternFormulation, stageRecords }: QcReferen
     </div>
   )
 }
+
+export const QcReferencePanel = memo(QcReferencePanelComponent)

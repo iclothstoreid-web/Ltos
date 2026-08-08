@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { StageRecord } from '@/lib/production/types'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
 
@@ -12,7 +13,8 @@ interface FinishingReferencePanelProps {
 // renders exactly that shape (checklist, evidence photo, notes) for any
 // completed stage record, so it's reused here against the latest completed
 // QC record instead of building a second read-only summary of the same data.
-export function FinishingReferencePanel({ stageRecords }: FinishingReferencePanelProps) {
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function FinishingReferencePanelComponent({ stageRecords }: FinishingReferencePanelProps) {
   const qcRecord = [...stageRecords]
     .filter(r => r.stage === 'qc' && r.status === 'completed')
     .sort((a, b) => b.attempt - a.attempt)[0]
@@ -35,3 +37,5 @@ export function FinishingReferencePanel({ stageRecords }: FinishingReferencePane
     </div>
   )
 }
+
+export const FinishingReferencePanel = memo(FinishingReferencePanelComponent)

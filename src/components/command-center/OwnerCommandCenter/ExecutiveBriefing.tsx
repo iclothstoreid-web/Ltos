@@ -1,10 +1,14 @@
+import { memo } from 'react'
 import Link from 'next/link'
 
 // Sprint D.1 Phase 5 — the Decision surface (Design Language Volumes 02, 06 SS10,
 // spec SSSS7-8). hasRecommendation distinguishes the populated state from the
 // Empty State; both are fully composed at equal visual weight, never a
 // grayed-out variant of one another.
-export function ExecutiveBriefing({
+//
+// PR-01 (Rendering Performance) — memoized: receives stable primitive props
+// from OwnerCommandCenter and doesn't need to re-render on unrelated state.
+function ExecutiveBriefingComponent({
   title,
   body,
   hasRecommendation,
@@ -46,3 +50,5 @@ export function ExecutiveBriefing({
     </div>
   )
 }
+
+export const ExecutiveBriefing = memo(ExecutiveBriefingComponent)

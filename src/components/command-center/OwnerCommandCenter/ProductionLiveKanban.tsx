@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 // Sprint N.1 (Owner Intelligence, item 1) — optional so every existing
 // caller/column keeps working unchanged when it's absent.
 type KanbanItem = { id: string; order: string; customer: string; estimatedCompletion?: string | null }
@@ -15,7 +17,8 @@ const STAGES = [
   { key: 'ready', label: 'Siap Kirim' },
 ] as const
 
-export function ProductionLiveKanban({
+// PR-01 (Rendering Performance) — memoized. Same API, same behavior.
+function ProductionLiveKanbanComponent({
   columns,
 }: {
   columns: {
@@ -44,3 +47,5 @@ export function ProductionLiveKanban({
     </div>
   )
 }
+
+export const ProductionLiveKanban = memo(ProductionLiveKanbanComponent)

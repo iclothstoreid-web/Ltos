@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { getRecentConsultations } from '../actions'
+import { useState } from 'react'
 import type { RecentConsultation } from '../types'
 
 // The Stitch reference shows four static demo metrics (today's customers,
@@ -11,23 +10,23 @@ import type { RecentConsultation } from '../types'
 // getRecentConsultations() action (unmodified, just a larger limit) and
 // derives only what's honestly computable from that data — no invented
 // numbers.
-export function ConsultationInsights() {
-  const [consultations, setConsultations] = useState<RecentConsultation[]>([])
-  const [loading, setLoading] = useState(true)
+//
+// Fetch Strategy (STEP 5.1) — this data is read-only at initial load and
+// doesn't depend on anything client-side, so it's now fetched server-side
+// (check-in/page.tsx) and passed in here instead of this component fetching
+// it itself on mount (which showed "—" placeholders until that round trip
+// resolved).
+interface ConsultationInsightsProps {
+  initialConsultations: RecentConsultation[]
+}
+
+export function ConsultationInsights({ initialConsultations }: ConsultationInsightsProps) {
+  const [consultations] = useState<RecentConsultation[]>(initialConsultations)
   // Collapsed by default below `lg` only — the 4 stat cards make this
   // section tall on mobile/tablet, so it opens on demand there (Task 8).
   // `lg:flex` below always forces it visible on desktop regardless of this
   // state, so desktop behavior/appearance is unchanged.
   const [expanded, setExpanded] = useState(false)
-
-  useEffect(() => {
-    const run = async () => {
-      const { consultations } = await getRecentConsultations(50)
-      setConsultations(consultations)
-      setLoading(false)
-    }
-    run()
-  }, [])
 
   const todayStr = new Date().toDateString()
   const today = consultations.filter(c => new Date(c.created_at).toDateString() === todayStr)
@@ -35,10 +34,10 @@ export function ConsultationInsights() {
   const completed = consultations.filter(c => c.status === 'order_created')
 
   const cards = [
-    { icon: 'group', label: "Konsultasi Hari Ini", value: loading ? '—' : String(today.length) },
-    { icon: 'edit_note', label: 'Menunggu Diproses', value: loading ? '—' : String(waiting.length) },
-    { icon: 'task_alt', label: 'Order Selesai', value: loading ? '—' : String(completed.length) },
-    { icon: 'history', label: `Total Sesi (${consultations.length >= 50 ? '50+' : consultations.length})`, value: loading ? '—' : String(consultations.length) },
+    { icon: 'group', label: "Konsultasi Hari Ini", value: String(today.length) },
+    { icon: 'edit_note', label: 'Menunggu Diproses', value: String(waiting.length) },
+    { icon: 'task_alt', label: 'Order Selesai', value: String(completed.length) },
+    { icon: 'history', label: `Total Sesi (${consultations.length >= 50 ? '50+' : consultations.length})`, value: String(consultations.length) },
   ]
 
   return (

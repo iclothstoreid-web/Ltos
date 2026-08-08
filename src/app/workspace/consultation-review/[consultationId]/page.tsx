@@ -15,19 +15,23 @@ export default async function ConsultationReviewPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/fitter/login')
 
-  // Same profiles lookup pattern already used in Measurement/Design Studio
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name')
-    .eq('id', user.id)
-    .single()
-
-  // Same query pattern already used by Measurement/Design Studio's page.tsx
-  const { data: consultation } = await supabase
-    .from('consultations')
-    .select(`*, customers(*)`)
-    .eq('id', params.consultationId)
-    .single()
+  // Request Flow Optimization (STEP 3) — profile (needs only user.id) and
+  // consultation (needs only the route param) don't depend on each other's
+  // results, so they're fetched together instead of one after another.
+  // Same profiles lookup / consultation pattern already used in
+  // Measurement/Design Studio's page.tsx.
+  const [{ data: profile }, { data: consultation }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('consultations')
+      .select(`*, customers(*)`)
+      .eq('id', params.consultationId)
+      .single(),
+  ])
 
   if (!consultation) redirect('/workspace/check-in')
 
@@ -42,18 +46,22 @@ export default async function ConsultationReviewPage({ params }: Props) {
     )
   }
 
-  const { data: latestMeasurement } = await supabase
-    .from('measurements')
-    .select('*')
-    .eq('consultation_id', params.consultationId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
-
-  // Same catalog Design Studio reads from — needed here to resolve the
-  // Design Specification's price/ID snapshot when Estimasi Pengerjaan
-  // updates (see ConsultationReviewWorkspace's persistEnhancements).
-  const masterOptions = await fetchActiveMasterOptions(supabase)
+  // latestMeasurement (needs only the route param) and masterOptions (a flat
+  // catalog read, needs nothing computed here) don't depend on each other —
+  // fetched together instead of sequentially.
+  const [{ data: latestMeasurement }, masterOptions] = await Promise.all([
+    supabase
+      .from('measurements')
+      .select('*')
+      .eq('consultation_id', params.consultationId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+    // Same catalog Design Studio reads from — needed here to resolve the
+    // Design Specification's price/ID snapshot when Estimasi Pengerjaan
+    // updates (see ConsultationReviewWorkspace's persistEnhancements).
+    fetchActiveMasterOptions(supabase),
+  ])
 
   return (
     <ConsultationReviewWorkspace

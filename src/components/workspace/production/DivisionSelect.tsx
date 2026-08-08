@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { DIVISION_OPTIONS } from '@/lib/production/stageConfig'
 
 interface DivisionSelectProps {
@@ -7,7 +8,8 @@ interface DivisionSelectProps {
   onChange: (division: string) => void
 }
 
-export function DivisionSelect({ value, onChange }: DivisionSelectProps) {
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function DivisionSelectComponent({ value, onChange }: DivisionSelectProps) {
   return (
     <div>
       <label className="font-hanken text-[10px] uppercase tracking-widest text-secondary block mb-1">
@@ -28,3 +30,5 @@ export function DivisionSelect({ value, onChange }: DivisionSelectProps) {
     </div>
   )
 }
+
+export const DivisionSelect = memo(DivisionSelectComponent)

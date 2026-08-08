@@ -1,5 +1,7 @@
 'use client'
 
+import { memo } from 'react'
+
 interface QcDecisionPanelProps {
   // Kategori Temuan options — Return Rules (Business Rules), fetched once
   // server-side via get_return_rules() and passed down through
@@ -16,7 +18,10 @@ interface QcDecisionPanelProps {
 // on the stage shell. The Setujui/Kembalikan decision itself is made via the
 // two AKHIR buttons (ApproveReturnPanel), so this panel only needs to
 // capture the finding category ahead of "Kembalikan ke Penjahitan".
-export function QcDecisionPanel({
+// PR-03 (Rendering Performance) — memoized. Effective once the caller
+// stabilizes `uncheckedItems` via useMemo (see ProductionPacketWorkspace.tsx).
+// Same API, same behavior.
+function QcDecisionPanelComponent({
   returnReasons,
   uncheckedItems,
   alterCategory,
@@ -47,3 +52,5 @@ export function QcDecisionPanel({
     </div>
   )
 }
+
+export const QcDecisionPanel = memo(QcDecisionPanelComponent)

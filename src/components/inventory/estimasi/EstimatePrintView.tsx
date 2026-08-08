@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 // Shared by both "Print" (window.print(), via the #material-estimate-print-area
 // isolation rule in globals.css) and "Create PDF" (html2canvas captures this
 // same off-screen node) — the brief requires the two to be pixel-identical,
@@ -36,7 +38,11 @@ interface EstimatePrintViewProps {
 
 const rupiah = (value: number) => `Rp ${value.toLocaleString('id-ID')}`
 
-export function EstimatePrintView({
+// PR-03 (Rendering Performance) — memoized: this view is always mounted
+// off-screen (see className below) for print/PDF capture, so without this
+// it re-rendered on every keystroke in the editor, including fields it
+// doesn't display. Same API, same behavior.
+function EstimatePrintViewComponent({
   nomorEstimasi,
   estimateName,
   produk,
@@ -173,3 +179,5 @@ export function EstimatePrintView({
     </div>
   )
 }
+
+export const EstimatePrintView = memo(EstimatePrintViewComponent)

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import Link from 'next/link'
 import { formatRupiah } from '@/lib/format/money'
 import { STAGE_LABELS } from '@/lib/production/stageConfig'
@@ -15,7 +16,8 @@ type Signal = {
 // already computed server-side in src/app/command-center/page.tsx (no new
 // query). "lihat ->" routes to each signal's own dedicated, already-existing
 // page rather than opening anything new here.
-export function QuietLedger({
+// PR-01 (Rendering Performance) — memoized. Same API, same behavior.
+function QuietLedgerComponent({
   commercial,
   bottleneck,
   inventory,
@@ -96,3 +98,5 @@ export function QuietLedger({
     </div>
   )
 }
+
+export const QuietLedger = memo(QuietLedgerComponent)

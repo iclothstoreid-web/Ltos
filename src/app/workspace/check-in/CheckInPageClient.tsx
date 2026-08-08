@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CustomerSearch } from './components/CustomerSearch'
@@ -28,11 +28,21 @@ interface CheckInPageClientProps {
   // client-side — only the fetch timing moved.
   initialFitterOrders: FitterOrder[]
   initialRecentConsultations: RecentConsultation[]
+  // Fetch Strategy (STEP 5.1) — same shape as initialRecentConsultations
+  // above, fetched server-side with limit 50 for ConsultationInsights' stat
+  // cards instead of it fetching client-side on mount.
+  initialInsightsConsultations: RecentConsultation[]
+  // Query Optimization (STEP 2, P1) — computed server-side in page.tsx via
+  // getCurrentRole(), passed through to CheckInSidebar instead of it
+  // querying role itself.
+  showMasterData: boolean
 }
 
 export default function CheckInPageClient({
   initialFitterOrders,
   initialRecentConsultations,
+  initialInsightsConsultations,
+  showMasterData,
 }: CheckInPageClientProps) {
   const router = useRouter()
   const [supabase] = useState(() => createClient())
@@ -120,6 +130,18 @@ export default function CheckInPageClient({
     setCreating(false)
   }
 
+  // Fetch Strategy (STEP 5.3, prefetch) — the Measurement route is already
+  // known as soon as the session is created, but the user still reads the
+  // success screen before tapping "Lanjutkan ke Pengukuran". Prefetching as
+  // soon as that route is known (instead of waiting for the click) uses
+  // that reading time to warm the RSC payload.
+  useEffect(() => {
+    if (successData) {
+      router.prefetch(`/workspace/measurement/${successData.consultationId}`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [successData])
+
   const handleBackToSearch = () => {
     setView('search')
     setSelectedCustomer(null)
@@ -141,7 +163,7 @@ export default function CheckInPageClient({
           "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l5 15 15 5-15 5-5 15-5-15-15-5 15-5z' fill='%23775a19' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E\")",
       }}
     >
-      <CheckInSidebar />
+      <CheckInSidebar showMasterData={showMasterData} />
 
       <main
         className={`flex-1 flex flex-col lg:overflow-hidden relative ${
@@ -199,7 +221,7 @@ export default function CheckInPageClient({
             </section>
           )}
 
-          <ConsultationInsights />
+          <ConsultationInsights initialConsultations={initialInsightsConsultations} />
         </div>
 
         {view === 'profile' && selectedCustomer && (

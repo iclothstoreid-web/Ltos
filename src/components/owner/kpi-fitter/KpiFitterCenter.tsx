@@ -1,13 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { LeftSidebar } from '@/components/command-center/OwnerCommandCenter/LeftSidebar'
 import { OwnerTopBar } from '@/components/command-center/OwnerCommandCenter/OwnerTopBar'
 import type { FitterKpiRow } from '@/lib/fitter/types'
 import { formatRupiah } from '@/lib/format/money'
 import { FitterStatCard } from './FitterStatCard'
 import { FitterKpiTable } from '../kpi-operator/FitterKpiTable'
-import { FitterDetailModal } from '../kpi-operator/FitterDetailModal'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — only opened via local
+// state (selectedFitterId), not part of first paint. Same component, same
+// props; just excluded from the initial JS bundle until actually rendered.
+const FitterDetailModal = dynamic(() => import('../kpi-operator/FitterDetailModal').then(mod => mod.FitterDetailModal))
 
 export type KpiFitterCenterProps = {
   profileName: string

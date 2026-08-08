@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Camera, Download, Upload } from 'lucide-react'
 import type { Material } from '@/lib/inventory/types'
 import { MaterialCard } from './MaterialCard'
@@ -8,7 +9,9 @@ interface MaterialGridProps {
   onSelectMaterial: (id: string) => void
 }
 
-export function MaterialGrid({ materials, usedInFitterIds, onSelectMaterial }: MaterialGridProps) {
+// PR-03 (Rendering Performance) — memoized. `onSelectMaterial` is already a
+// stable setState reference at the call site. Same API, same behavior.
+function MaterialGridComponent({ materials, usedInFitterIds, onSelectMaterial }: MaterialGridProps) {
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between gap-4 mb-6">
@@ -59,3 +62,5 @@ export function MaterialGrid({ materials, usedInFitterIds, onSelectMaterial }: M
     </div>
   )
 }
+
+export const MaterialGrid = memo(MaterialGridComponent)

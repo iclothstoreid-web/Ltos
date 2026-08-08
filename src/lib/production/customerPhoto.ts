@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
+import { fetchCustomerNotesForOrder } from './customerNotes'
 
 // Measurement is the single source of truth for the customer photo (folded
 // into the Customer Digital Profile, marker-encoded in consultations.notes —
@@ -13,10 +14,7 @@ export async function getCustomerPhotoForOrder(
   supabase: SupabaseClient,
   orderId: string
 ): Promise<string | null> {
-  const { data: notes } = await supabase.rpc('get_production_customer_notes', {
-    p_order_id: orderId,
-  })
-
-  const profile = decodeCustomerDigitalProfile(notes ?? null)
+  const notes = await fetchCustomerNotesForOrder(supabase, orderId)
+  const profile = decodeCustomerDigitalProfile(notes)
   return profile?.customerPhoto?.url ?? null
 }

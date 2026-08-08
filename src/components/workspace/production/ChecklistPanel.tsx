@@ -1,5 +1,7 @@
 'use client'
 
+import { memo } from 'react'
+
 interface ChecklistPanelProps {
   items: string[]
   checked: Record<string, boolean>
@@ -8,7 +10,11 @@ interface ChecklistPanelProps {
 
 // Reused for QC's 10-item checklist and every other stage's single
 // confirmation item.
-export function ChecklistPanel({ items, checked, onToggle }: ChecklistPanelProps) {
+//
+// PR-03 (Rendering Performance) — memoized. Effective once the caller
+// stabilizes `onToggle` via useCallback (see ProductionPacketWorkspace.tsx).
+// Same API, same behavior.
+function ChecklistPanelComponent({ items, checked, onToggle }: ChecklistPanelProps) {
   return (
     <div>
       <p className="font-hanken text-[10px] uppercase tracking-widest text-secondary mb-2">
@@ -51,3 +57,5 @@ export function ChecklistPanel({ items, checked, onToggle }: ChecklistPanelProps
     </div>
   )
 }
+
+export const ChecklistPanel = memo(ChecklistPanelComponent)

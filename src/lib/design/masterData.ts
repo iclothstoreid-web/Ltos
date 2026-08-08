@@ -165,12 +165,25 @@ function groupByCategory(rows: MasterDataOption[]): MasterOptionsByCategory {
 }
 
 // Design Studio only ever offers active options to pick from.
+//
+// Query Optimization (STEP 2, P1) — explicit column list instead of
+// SELECT *. Deliberately excludes `ai_dna`, `render_recipe` (large JSON,
+// engine-only — only ever read server-side by the render API routes, which
+// do their own separate by-id fetch) and `construction_type` (engine-only
+// per its own doc comment on MasterDataOption, "never used for Design
+// Studio selection"). Verified neither Design Studio nor Consultation
+// Review — the only two callers of this function — read those 3 fields
+// anywhere in their component trees; both admin-side consumers
+// (MasterDataManager, AI Design DNA / Render Recipe editors) go through
+// fetchAllMasterOptions below instead, which is unchanged.
 export async function fetchActiveMasterOptions(
   supabase: SupabaseClient
 ): Promise<MasterOptionsByCategory> {
   const { data, error } = await supabase
     .from('design_master_options')
-    .select('*')
+    .select(
+      'id, category, name, metadata, sort_order, is_active, photo_url, selling_points, internal_notes, price, material_id, dna_color_id, updated_at'
+    )
     .eq('is_active', true)
     .order('category', { ascending: true })
     .order('sort_order', { ascending: true })

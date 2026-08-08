@@ -38,44 +38,43 @@ export default async function DesignStudioPage({ params }: Props) {
     )
   }
 
-  const { data: latestMeasurement } = await supabase
-    .from('measurements')
-    .select('*')
-    .eq('consultation_id', params.consultationId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+  // Request Flow Optimization (STEP 3) — profile (needs only user.id),
+  // masterOptions (flat catalog read, no inputs), and initialRenderFinal
+  // (needs only params.consultationId) don't depend on each other's
+  // results, so they're fetched together instead of one after another.
+  const [{ data: profile }, masterOptions, initialRenderFinal] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single(),
+    fetchActiveMasterOptions(supabase),
+    fetchRenderFinal(supabase, params.consultationId),
+  ])
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  const masterOptions = await fetchActiveMasterOptions(supabase)
-
-  // Fitter's read-only live-stock view (Inventory -> Fitter App, READ only)
-  // — matched by name against the 'bahan' catalog. A Map isn't RSC-prop
-  // friendly the way this codebase's plain-object props are, so it's
-  // flattened here before crossing the server/client boundary.
-  const materialStockMap = await fetchMaterialStockByName(
-    supabase,
-    masterOptions.bahan.map(o => o.name)
-  )
-  const materialStock = Object.fromEntries(materialStockMap)
-
-  // Architecture Lock: DNA Color Repository + Material Color Mapping —
-  // per-Material scoped Warna choices (a Fabric's real, supplier-backed
-  // colors) instead of the flat DNA Color list. Flattened to
-  // material_id -> dna_color_id[] before crossing the server/client
-  // boundary, same reasoning as materialStock's Map->object flattening
-  // above. Only 'bahan' items that are actually linked to a real Inventory
-  // material contribute anything here — a not-yet-linked item's fabric
-  // simply falls back to the full DNA Color list in GarmentBlueprintPanel.
   const bahanMaterialIds = masterOptions.bahan
     .map(o => o.material_id)
     .filter((id): id is string => !!id)
-  const materialColorsMap = await fetchMaterialColorsForMaterials(supabase, bahanMaterialIds)
+
+  // materialStock and materialColorsMap both only need masterOptions.bahan
+  // (fetched above), not each other — run in parallel instead of sequentially.
+  const [materialStockMap, materialColorsMap] = await Promise.all([
+    // Fitter's read-only live-stock view (Inventory -> Fitter App, READ only)
+    // — matched by name against the 'bahan' catalog. A Map isn't RSC-prop
+    // friendly the way this codebase's plain-object props are, so it's
+    // flattened here before crossing the server/client boundary.
+    fetchMaterialStockByName(supabase, masterOptions.bahan.map(o => o.name)),
+    // Architecture Lock: DNA Color Repository + Material Color Mapping —
+    // per-Material scoped Warna choices (a Fabric's real, supplier-backed
+    // colors) instead of the flat DNA Color list. Flattened to
+    // material_id -> dna_color_id[] before crossing the server/client
+    // boundary, same reasoning as materialStock's Map->object flattening
+    // above. Only 'bahan' items that are actually linked to a real Inventory
+    // material contribute anything here — a not-yet-linked item's fabric
+    // simply falls back to the full DNA Color list in GarmentBlueprintPanel.
+    fetchMaterialColorsForMaterials(supabase, bahanMaterialIds),
+  ])
+  const materialStock = Object.fromEntries(materialStockMap)
   const materialColorDnaIds = Object.fromEntries(
     Array.from(materialColorsMap.entries()).map(([materialId, colors]) => [
       materialId,
@@ -97,9 +96,10 @@ export default async function DesignStudioPage({ params }: Props) {
     )
   )
 
-  // Render Final Storage — loaded server-side so Preview/Download/Replace/
-  // Approve persist across a page reload, not just within one client
-  // session. null when this consultation has never had a render saved yet.
+  // Render Final Storage — loaded server-side (in the Promise.all above) so
+  // Preview/Download/Replace/Approve persist across a page reload, not just
+  // within one client session. null when this consultation has never had a
+  // render saved yet.
   //
   // Store Private, Access by Signed URL (Final Security Refactor,
   // 2026-08-07) — render_finals only ever holds a Storage path now, never a
@@ -108,8 +108,8 @@ export default async function DesignStudioPage({ params }: Props) {
   // session this whole page already runs under). Never persisted — this is
   // a fresh, short-TTL (1 hour) URL good for this page load only; a later
   // Generate/Replace/Download in the client gets its own fresh one from
-  // /api/design/render-final/signed-url.
-  const initialRenderFinal = await fetchRenderFinal(supabase, params.consultationId)
+  // /api/design/render-final/signed-url. True dependency on
+  // initialRenderFinal, so this stays a separate await.
   const initialPreviewUrl = initialRenderFinal
     ? await createRenderFinalSignedUrl(supabase, initialRenderFinal.render_storage_path).catch(() => null)
     : null
@@ -117,7 +117,6 @@ export default async function DesignStudioPage({ params }: Props) {
   return (
     <DesignStudioWorkspace
       consultation={consultation}
-      latestMeasurement={latestMeasurement}
       masterOptions={masterOptions}
       materialStock={materialStock}
       materialColorDnaIds={materialColorDnaIds}

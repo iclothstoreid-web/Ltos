@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 export type AgendaItem = {
   id: string
   type: 'Janji Temu' | 'Konsultasi' | 'Fitting' | 'Review Produksi' | 'Pengiriman'
@@ -5,7 +7,8 @@ export type AgendaItem = {
   label: string
 }
 
-export function AgendaPanel({ items }: { items: AgendaItem[] }) {
+// PR-01 (Rendering Performance) — memoized. Same API, same behavior.
+function AgendaPanelComponent({ items }: { items: AgendaItem[] }) {
   return (
     <div className="rounded-xl border border-outline-variant bg-surface/40 p-5">
       <h2 className="text-label text-secondary uppercase tracking-widest">Agenda Hari Ini</h2>
@@ -32,3 +35,5 @@ export function AgendaPanel({ items }: { items: AgendaItem[] }) {
     </div>
   )
 }
+
+export const AgendaPanel = memo(AgendaPanelComponent)

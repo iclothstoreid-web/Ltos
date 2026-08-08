@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { formatRupiah } from '@/lib/format/money'
 import { COMMERCIAL_TYPE_LABELS } from '@/lib/commercial/commercialType'
 import type { CommercialType } from '@/lib/commercial/commercialType'
@@ -20,7 +21,8 @@ interface TransactionKPISectionProps {
   onSelectTransaction?: (transactionId: string) => void
 }
 
-export function TransactionKPISection({ data, onSelectTransaction }: TransactionKPISectionProps) {
+// PR-01 (Rendering Performance) — memoized. Same API, same behavior.
+function TransactionKPISectionComponent({ data, onSelectTransaction }: TransactionKPISectionProps) {
   const commercialTypeLabels: Record<string, string> = {
     normal: 'Normal',
     dp: 'DP',
@@ -118,3 +120,5 @@ export function TransactionKPISection({ data, onSelectTransaction }: Transaction
     </section>
   )
 }
+
+export const TransactionKPISection = memo(TransactionKPISectionComponent)

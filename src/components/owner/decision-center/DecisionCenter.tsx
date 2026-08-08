@@ -1,12 +1,22 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { LeftSidebar } from '@/components/command-center/OwnerCommandCenter/LeftSidebar'
 import { OwnerTopBar } from '@/components/command-center/OwnerCommandCenter/OwnerTopBar'
-import { OrderDetailModal } from '@/components/command-center/OwnerCommandCenter/OrderDetailModal'
 import { KpiCard } from '@/components/command-center/OwnerCommandCenter/cards/KpiCard'
-import { OperatorDetailModal } from '@/components/owner/kpi-operator/OperatorDetailModal'
 import { BottleneckSummary } from '@/components/owner/kpi-operator/BottleneckSummary'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — both only opened via
+// local state (selectedOrderId/selectedOperatorId), not part of first
+// paint. Same components, same props; just excluded from the initial JS
+// bundle until actually rendered.
+const OrderDetailModal = dynamic(() =>
+  import('@/components/command-center/OwnerCommandCenter/OrderDetailModal').then(mod => mod.OrderDetailModal)
+)
+const OperatorDetailModal = dynamic(() =>
+  import('@/components/owner/kpi-operator/OperatorDetailModal').then(mod => mod.OperatorDetailModal)
+)
 import type { OwnerSummary, SlaRiskOrder } from '@/lib/decision/types'
 import type { OperatorKpiRow } from '@/lib/kpi/types'
 import { computeTodaysActions } from '@/lib/decision/actions'

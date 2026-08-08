@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { KpiCard } from './cards/KpiCard'
@@ -54,7 +54,8 @@ function PillarHeader({ title, href, linkLabel }: { title: string; href: string;
 // Bottleneck boards, Operator/Divisi tables, Capacity Calendar) still lives
 // only on its own dedicated page; this section links into them rather than
 // re-rendering them here.
-export function EngineOverviewSection({
+// PR-01 (Rendering Performance) — memoized. Same API, same behavior.
+function EngineOverviewSectionComponent({
   commercial,
   ownerSummary,
   slaRiskOrders,
@@ -68,25 +69,33 @@ export function EngineOverviewSection({
 
   const todaysActions = computeTodaysActions(ownerSummary, { dpOutstandingCount: commercial.dpOutstandingCount })
 
-  const priorityCounts = Object.fromEntries(
-    PRIORITY_ORDER.map(level => [level, slaRiskOrders.filter(o => o.business_priority === level).length])
-  ) as Record<(typeof PRIORITY_ORDER)[number], number>
+  // PR-01 (Rendering Performance) — memoized: these 5 derived values were
+  // each recomputed via .filter/.sort on every render (including renders
+  // triggered by unrelated state elsewhere in the tree). Same output,
+  // same structure -- only wrapped in useMemo keyed on slaRiskOrders.
+  const { priorityCounts, bottleneckCounts, topBottleneck, activeQueueCount, urgentOrders } = useMemo(() => {
+    const priorityCounts = Object.fromEntries(
+      PRIORITY_ORDER.map(level => [level, slaRiskOrders.filter(o => o.business_priority === level).length])
+    ) as Record<(typeof PRIORITY_ORDER)[number], number>
 
-  const bottleneckCounts = Object.fromEntries(
-    CATEGORY_ORDER.map(category => [category, slaRiskOrders.filter(o => o.bottleneck_category === category).length])
-  ) as Record<(typeof CATEGORY_ORDER)[number], number>
-  const topBottleneck = CATEGORY_ORDER.filter(category => bottleneckCounts[category] > 0).sort(
-    (a, b) => bottleneckCounts[b] - bottleneckCounts[a]
-  )[0]
+    const bottleneckCounts = Object.fromEntries(
+      CATEGORY_ORDER.map(category => [category, slaRiskOrders.filter(o => o.bottleneck_category === category).length])
+    ) as Record<(typeof CATEGORY_ORDER)[number], number>
+    const topBottleneck = CATEGORY_ORDER.filter(category => bottleneckCounts[category] > 0).sort(
+      (a, b) => bottleneckCounts[b] - bottleneckCounts[a]
+    )[0]
 
-  const activeQueueCount = slaRiskOrders.filter(o => o.queue_position != null).length
+    const activeQueueCount = slaRiskOrders.filter(o => o.queue_position != null).length
 
-  // "Perlu Perhatian Segera" -- the Priority -> Order -> Detail drill-down,
-  // right on the Dashboard, without duplicating the full boards.
-  const urgentOrders = slaRiskOrders
-    .filter(o => o.business_priority === 'critical' || o.risk_level === 'over_sla')
-    .sort((a, b) => a.hours_remaining - b.hours_remaining)
-    .slice(0, 3)
+    // "Perlu Perhatian Segera" -- the Priority -> Order -> Detail drill-down,
+    // right on the Dashboard, without duplicating the full boards.
+    const urgentOrders = slaRiskOrders
+      .filter(o => o.business_priority === 'critical' || o.risk_level === 'over_sla')
+      .sort((a, b) => a.hours_remaining - b.hours_remaining)
+      .slice(0, 3)
+
+    return { priorityCounts, bottleneckCounts, topBottleneck, activeQueueCount, urgentOrders }
+  }, [slaRiskOrders])
 
   const rankedOperators = [...operators].sort((a, b) => (b.efficiency_pct ?? -1) - (a.efficiency_pct ?? -1))
   const topOperator = rankedOperators[0]
@@ -230,3 +239,5 @@ export function EngineOverviewSection({
     </section>
   )
 }
+
+export const EngineOverviewSection = memo(EngineOverviewSectionComponent)

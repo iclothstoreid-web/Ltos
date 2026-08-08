@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import type { Operator, ProductionPacket, ProductionRules } from '@/lib/production/types'
 import {
@@ -16,7 +17,6 @@ import type { CommunicationMessage } from '@/lib/communication/types'
 import type { ConsultationDocument } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
 import { HeroCard } from './HeroCard'
 import { ProductionCommunicationPanel } from './ProductionCommunicationPanel'
-import { QrScanModal } from './QrScanModal'
 import { StageProgressRail } from './StageProgressRail'
 import { OperatorAutocomplete } from './OperatorAutocomplete'
 import { DivisionSelect } from './DivisionSelect'
@@ -40,6 +40,12 @@ import { MediaProduksiCard } from './MediaProduksiCard'
 import { PackingVideoUploader } from './PackingVideoUploader'
 import { useProductionBackGuard } from './useProductionBackGuard'
 import { ExitConfirmModal } from './ExitConfirmModal'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — this instance is only
+// opened via local state (showCompletionScan) for the completion re-scan
+// step, not part of first paint. Same component, same props; just excluded
+// from the initial JS bundle until actually rendered.
+const QrScanModal = dynamic(() => import('./QrScanModal').then(mod => mod.QrScanModal))
 
 interface ProductionPacketWorkspaceProps {
   initialPacket: ProductionPacket
@@ -229,6 +235,18 @@ export function ProductionPacketWorkspace({
   const completedRecords = [...packet.stage_records]
     .filter(r => r.status === 'completed')
     .sort((a, b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime())
+
+  // PR-03 (Rendering Performance) — stabilized so ChecklistPanel/
+  // QcDecisionPanel (now React.memo'd) actually skip re-render on unrelated
+  // keystrokes (notes/courier/etc). Same logic, same output.
+  const handleToggleChecklistItem = useCallback(
+    (item: string) => setChecklist(prev => ({ ...prev, [item]: !prev[item] })),
+    []
+  )
+  const uncheckedChecklistItems = useMemo(
+    () => Object.entries(checklist).filter(([, done]) => !done).map(([item]) => item),
+    [checklist]
+  )
 
   const requiresEvidence = currentRecord ? STAGES_WITH_EVIDENCE.includes(currentRecord.stage) : false
   // QC Wajib (Production Rules): when off, QC's own checklist no longer
@@ -556,9 +574,7 @@ export function ProductionPacketWorkspace({
                     <ChecklistPanel
                       items={checklistItemsForStage(currentRecord.stage)}
                       checked={checklist}
-                      onToggle={item =>
-                        setChecklist(prev => ({ ...prev, [item]: !prev[item] }))
-                      }
+                      onToggle={handleToggleChecklistItem}
                     />
 
                     {!usesCustomPanelShell && (
@@ -585,9 +601,7 @@ export function ProductionPacketWorkspace({
                     {isQc && (
                       <QcDecisionPanel
                         returnReasons={returnReasons}
-                        uncheckedItems={Object.entries(checklist)
-                          .filter(([, done]) => !done)
-                          .map(([item]) => item)}
+                        uncheckedItems={uncheckedChecklistItems}
                         alterCategory={alterCategory}
                         onAlterCategoryChange={setAlterCategory}
                       />

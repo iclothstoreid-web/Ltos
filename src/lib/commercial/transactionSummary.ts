@@ -57,7 +57,16 @@ function asArray<T>(value: T | T[] | null): T[] {
 // RPC: transactions/orders/quotations are already readable by any staff
 // profile (see RLS policies in the transactions migration), same
 // inline-Server-Component-query pattern getCommercialSummary() already uses.
-export async function getCommercialTypeSummary(supabase: SupabaseClient): Promise<CommercialTypeSummaryRow[]> {
+export async function getCommercialTypeSummary(
+  supabase: SupabaseClient,
+  // Query Optimization (STEP 2, P1) — the Owner Dashboard (this function's
+  // only caller) already fetches every production_stage_records row for its
+  // own bottleneck panels. When it passes that result's shipping/completed
+  // order-id set here, this function reuses it instead of re-querying the
+  // same table. Falls back to its own scoped query when called without it,
+  // so this function still works standalone.
+  completedShippingOrderIds?: Set<string>
+): Promise<CommercialTypeSummaryRow[]> {
   const { data, error } = await supabase
     .from('transactions')
     .select(
@@ -77,16 +86,21 @@ export async function getCommercialTypeSummary(supabase: SupabaseClient): Promis
   // shippingReadyRecords/production columns already read from
   // production_stage_records, not a new concept.
   const allOrderIds = rows.flatMap(r => asArray(r.orders).map(o => o.id))
-  const completedOrderIds = new Set<string>()
-  if (allOrderIds.length > 0) {
-    const { data: shippingRecords, error: shippingError } = await supabase
-      .from('production_stage_records')
-      .select('order_id')
-      .eq('stage', 'shipping')
-      .eq('status', 'completed')
-      .in('order_id', allOrderIds)
-    if (shippingError) throw shippingError
-    for (const record of shippingRecords || []) completedOrderIds.add(record.order_id)
+  let completedOrderIds: Set<string>
+  if (completedShippingOrderIds) {
+    completedOrderIds = completedShippingOrderIds
+  } else {
+    completedOrderIds = new Set<string>()
+    if (allOrderIds.length > 0) {
+      const { data: shippingRecords, error: shippingError } = await supabase
+        .from('production_stage_records')
+        .select('order_id')
+        .eq('stage', 'shipping')
+        .eq('status', 'completed')
+        .in('order_id', allOrderIds)
+      if (shippingError) throw shippingError
+      for (const record of shippingRecords || []) completedOrderIds.add(record.order_id)
+    }
   }
 
   const byType = new Map<CommercialType, CommercialTypeSummaryRow>()

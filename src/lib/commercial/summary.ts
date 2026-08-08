@@ -36,13 +36,22 @@ export interface CommercialSummary {
   outstandingRows: OutstandingPaymentRow[]
   highDiscountRows: AbnormalCommercialRow[]
   highOverrideRows: AbnormalCommercialRow[]
+  // Query Optimization (STEP 2, P1) — this loop already scans every
+  // non-'not_billable' quotation; exposing the approved ones (with the two
+  // extra columns below) lets the Owner Dashboard derive its "revenue this
+  // month/today" numbers from this same fetch instead of running its own
+  // separate quotations query for the same table.
+  approvedQuotationRows: Array<{ amount: number; approvedAt: string }>
 }
 
 type QuotationRow = {
   id: string
   order_id: string
   created_at: string
+  status: string
   total: number | null
+  amount: number | null
+  approved_at: string | null
   subtotal: number | null
   discount_amount: number | null
   override_amount: number | null
@@ -82,7 +91,7 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
       supabase
         .from('quotations')
         .select(
-          'id, order_id, created_at, total, subtotal, discount_amount, override_amount, override_reason, orders!inner(order_number, customers(name))'
+          'id, order_id, created_at, status, total, amount, approved_at, subtotal, discount_amount, override_amount, override_reason, orders!inner(order_number, customers(name))'
         )
         // Milestone A (Commercial Type Engine): 'not_billable' quotations
         // (KOL/Sponsor/Warranty/Internal Sample — see
@@ -115,6 +124,7 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
   const outstandingRows: OutstandingPaymentRow[] = []
   const highDiscountRows: AbnormalCommercialRow[] = []
   const highOverrideRows: AbnormalCommercialRow[] = []
+  const approvedQuotationRows: Array<{ amount: number; approvedAt: string }> = []
   const maxDiscountPercent = Number(rules.max_discount_percent)
 
   for (const quotation of (quotations || []) as QuotationRow[]) {
@@ -132,6 +142,16 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
     cashCollected += paid
     outstandingPayment += outstanding
     if (requiredPayment > 0 && paid < requiredPayment) dpOutstandingCount += 1
+
+    // Same 'approved' rows the Owner Dashboard's monthStart/todayStart
+    // revenue buckets used to fetch separately — see approvedQuotationRows
+    // doc comment above.
+    if (quotation.status === 'approved' && quotation.approved_at) {
+      approvedQuotationRows.push({
+        amount: Number(quotation.amount || 0),
+        approvedAt: quotation.approved_at,
+      })
+    }
 
     if (outstanding > 0) {
       outstandingRows.push({
@@ -186,5 +206,6 @@ export async function getCommercialSummary(supabase: SupabaseClient): Promise<Co
     outstandingRows,
     highDiscountRows,
     highOverrideRows,
+    approvedQuotationRows,
   }
 }

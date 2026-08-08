@@ -3,6 +3,7 @@ import {
   decodeFitterEnhancements,
   type ConsultationDocument,
 } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
+import { fetchCustomerNotesForOrder } from './customerNotes'
 
 // Referensi Customer files are uploaded in Consultation Review
 // (DocumentUploader) and persisted for real in Supabase Storage, but the
@@ -16,9 +17,6 @@ export async function getCustomerReferencesForOrder(
   supabase: SupabaseClient,
   orderId: string
 ): Promise<ConsultationDocument[]> {
-  const { data: notes } = await supabase.rpc('get_production_customer_notes', {
-    p_order_id: orderId,
-  })
-
-  return decodeFitterEnhancements(notes ?? null).documents
+  const notes = await fetchCustomerNotesForOrder(supabase, orderId)
+  return decodeFitterEnhancements(notes).documents
 }

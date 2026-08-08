@@ -1,9 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { canManageMasterData } from '@/lib/design/masterData'
 
 // Studio/Persediaan/Order/Analitik are visual-only placeholders (no real
 // pages behind them yet) — kept in this array so each can be flipped back
@@ -27,29 +24,19 @@ const BANTUAN_HAS_FUNCTION = false
 // building them is explicitly out of scope), matching the Stitch reference's
 // own `href="#"` placeholders. "Master Data" is the one exception: it's a
 // real, always-existing route (/owner/master-data, same page/component
-// Owner OS uses), shown only for accounts allowed to manage it — fetched
-// client-side here so this sidebar stays self-contained and check-in's
-// page.tsx (locked Fitter workflow) doesn't need to change.
-export function CheckInSidebar() {
-  const router = useRouter()
-  const [showMasterData, setShowMasterData] = useState(false)
+// Owner OS uses), shown only for accounts allowed to manage it.
+//
+// Query Optimization (STEP 2, P1) — role now comes in as a prop, computed
+// server-side (check-in/page.tsx via getCurrentRole(), the same
+// middleware-forwarded x-user-role header every other workspace page
+// already reuses) instead of this component re-running its own
+// auth.getUser() + profiles.role query on every mount.
+interface CheckInSidebarProps {
+  showMasterData: boolean
+}
 
-  useEffect(() => {
-    let cancelled = false
-    async function loadRole() {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (!cancelled) setShowMasterData(canManageMasterData(profile?.role))
-    }
-    loadRole()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+export function CheckInSidebar({ showMasterData }: CheckInSidebarProps) {
+  const router = useRouter()
 
   return (
     <aside className="hidden lg:flex flex-col h-full py-8 bg-[#f9f9ff] border-r-[0.5px] border-[#c4c7c7] w-64 shrink-0">

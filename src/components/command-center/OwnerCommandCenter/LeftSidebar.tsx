@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import {
   Boxes,
@@ -65,7 +66,10 @@ interface LeftSidebarProps {
   onMobileClose?: () => void
 }
 
-export function LeftSidebar({ mobileOpen = false, onMobileClose }: LeftSidebarProps) {
+// PR-01 (Rendering Performance) — memoized so this shared chrome (also used
+// by Commercial/Decision/KPI Operator/KPI Fitter/Communications Center) does
+// not re-render on unrelated parent state changes. Same API, same behavior.
+function LeftSidebarComponent({ mobileOpen = false, onMobileClose }: LeftSidebarProps) {
   return (
     <>
       <nav className="hidden lg:flex lg:flex-col w-[280px] shrink-0 border-r border-outline-variant/80 bg-surface/75 backdrop-blur-sm relative overflow-hidden">
@@ -113,4 +117,4 @@ export function LeftSidebar({ mobileOpen = false, onMobileClose }: LeftSidebarPr
   )
 }
 
-
+export const LeftSidebar = memo(LeftSidebarComponent)

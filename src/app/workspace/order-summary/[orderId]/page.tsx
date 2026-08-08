@@ -3,8 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/rbac/session'
 import type { OrderSnapshot } from '@/lib/order/types'
 import { getProductionPacket } from '@/lib/production/client'
-import { getCustomerPhotoForOrder } from '@/lib/production/customerPhoto'
-import { getCustomerReferencesForOrder } from '@/lib/production/customerReferences'
+import { getCustomerPhotoAndReferencesForOrder } from '@/lib/production/customerNotes'
 import { OrderSummaryWorkspace } from '@/components/workspace/order-summary/OrderSummaryWorkspace'
 
 interface Props {
@@ -49,10 +48,11 @@ export default async function OrderSummaryPage({ params }: Props) {
 
   const snapshot = createdEvent.event_data as unknown as OrderSnapshot
 
-  const [packet, customerPhotoUrl, customerReferences] = await Promise.all([
+  // Query Optimization (STEP 2, P1) — photo and references now come from one
+  // get_production_customer_notes call instead of two.
+  const [packet, { customerPhotoUrl, customerReferences }] = await Promise.all([
     getProductionPacket(supabase, order.id),
-    getCustomerPhotoForOrder(supabase, order.id),
-    getCustomerReferencesForOrder(supabase, order.id),
+    getCustomerPhotoAndReferencesForOrder(supabase, order.id),
   ])
 
   return (

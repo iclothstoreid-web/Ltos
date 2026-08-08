@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { LeftSidebar } from './LeftSidebar'
 import { OwnerTopBar } from './OwnerTopBar'
 import { ExecutiveBriefing } from './ExecutiveBriefing'
 import { QuietLedger } from './QuietLedger'
 import { ProductionLiveKanban } from './ProductionLiveKanban'
+import { ClockLabel } from './ClockLabel'
 import { AgendaPanel, AgendaItem } from './AgendaPanel'
+import { TransactionKPISection } from './TransactionKPISection'
 import type { EngineOverviewSectionProps } from './EngineOverviewSection'
 import type { BottleneckItem } from './BottleneckPanel'
 import type {
@@ -78,15 +80,20 @@ export type OwnerCommandCenterProps = {
 // (Procession + Agenda) -> Close. Every number rendered below still comes
 // from the same props CommandCenterPage (src/app/command-center/page.tsx)
 // already computed — no new query, RPC, or business rule was added; only
-// composition, density, and styling changed. Sections that no longer appear
-// in this composition (Engine Overview, Summary Cards, CRM Snapshot,
-// Decision Cards, Commercial Type Summary, Transaction KPI, the old boxed
-// Bottleneck Panel, Artisan Grid, Clock/Calendar widget) are unchanged files
-// elsewhere in this directory; simply no longer rendered on this one screen,
-// per the approved Atmosphere DNA ("no dashboard grid of equal-weight
-// widgets"). LeftSidebar/OwnerTopBar are shared chrome across six other
-// Owner OS pages (Commercial/Decision/KPI Operator/KPI Fitter/Communications
-// Center) and are out of this sprint's scope; left unchanged.
+// composition, density, and styling changed. Sections that still don't
+// appear in this composition (Engine Overview, Summary Cards, CRM Snapshot,
+// Decision Cards, Commercial Type Summary, the old boxed Bottleneck Panel,
+// Artisan Grid, Clock/Calendar widget) are unchanged files elsewhere in this
+// directory; simply not rendered on this one screen, per the approved
+// Atmosphere DNA ("no dashboard grid of equal-weight widgets").
+// LeftSidebar/OwnerTopBar are shared chrome across six other Owner OS pages
+// (Commercial/Decision/KPI Operator/KPI Fitter/Communications Center) and
+// are out of this sprint's scope; left unchanged.
+//
+// Sprint C.01 (Feature Recovery) — Transaction KPI (Multi-Garment Overview)
+// re-added below. getMultiGarmentKPIs() was never removed from
+// page.tsx/this component's own props; only its render call was dropped
+// when this file's body was rebuilt above. No data/query/RPC change.
 export function OwnerCommandCenter({
   profileName,
   todayLabel,
@@ -95,31 +102,50 @@ export function OwnerCommandCenter({
   productionColumns,
   agendaItems,
   decisionCards,
+  multiGarmentKpis,
 }: OwnerCommandCenterProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-
-  // Close signature clock — mirrors ClockCalendar's hydration-safe pattern
-  // (starts null, fills in on mount) so server-rendered markup never shows a
-  // timestamp that would mismatch the client's first render. Minute-only,
-  // not per-second, per Behavior DNA Tempo ("never perform busyness").
-  const [now, setNow] = useState<Date | null>(null)
-  useEffect(() => {
-    setNow(new Date())
-    const timer = setInterval(() => setNow(new Date()), 60_000)
-    return () => clearInterval(timer)
-  }, [])
-  const timeLabel = now ? now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '--:--'
 
   const focusLine = executiveBrief.hasRecommendation
     ? `Fokus utama hari ini: ${executiveBrief.recommendationTitle}.`
     : 'Tidak ada yang memerlukan keputusan Anda hari ini.'
 
+  // PR-03 (Rendering Performance) — stabilized so LeftSidebar/OwnerTopBar
+  // (React.memo'd since PR-01) actually skip re-render on unrelated state.
+  // Same logic, same behavior.
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), [])
+  const openMobileNav = useCallback(() => setMobileNavOpen(true), [])
+
+  // PR-03 (Rendering Performance) — memoized: these were inline object
+  // literals recreated every render, defeating QuietLedger's React.memo
+  // (added in PR-01). Same values, same structure.
+  const { quietLedgerCommercial, quietLedgerBottleneck, quietLedgerInventory } = useMemo(
+    () => ({
+      quietLedgerCommercial: {
+        outstandingPayment: engineOverview.commercial.outstandingPayment,
+        dpOutstandingCount: engineOverview.commercial.dpOutstandingCount,
+        overdueCount: decisionCards.commercialAlert.overdueCount,
+      },
+      quietLedgerBottleneck: {
+        stage: engineOverview.ownerSummary.bottleneck.most_backlogged_stage,
+        count: engineOverview.ownerSummary.bottleneck.most_backlogged_stage_count,
+        overSlaCount: engineOverview.ownerSummary.sla_risk.total_over_sla,
+      },
+      quietLedgerInventory: {
+        lowStockCount: decisionCards.inventoryAlert.lowStockCount,
+        outOfStockCount: decisionCards.inventoryAlert.outOfStockCount,
+        mostCriticalItem: decisionCards.inventoryAlert.mostCriticalItem,
+      },
+    }),
+    [engineOverview, decisionCards]
+  )
+
   return (
     <div className="min-h-screen bg-surface-01 text-text-primary flex atelier-bg">
-      <LeftSidebar mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
+      <LeftSidebar mobileOpen={mobileNavOpen} onMobileClose={closeMobileNav} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <OwnerTopBar profileName={profileName} onMenuClick={() => setMobileNavOpen(true)} />
+        <OwnerTopBar profileName={profileName} onMenuClick={openMobileNav} />
 
         <main className="flex-1 px-4 sm:px-6 md:px-10 py-6 sm:py-10 max-w-[1200px] w-full mx-auto">
           {/* Threshold */}
@@ -144,21 +170,9 @@ export function OwnerCommandCenter({
           {/* Periphery — Quiet Ledger */}
           <section className="mb-14 sm:mb-16">
             <QuietLedger
-              commercial={{
-                outstandingPayment: engineOverview.commercial.outstandingPayment,
-                dpOutstandingCount: engineOverview.commercial.dpOutstandingCount,
-                overdueCount: decisionCards.commercialAlert.overdueCount,
-              }}
-              bottleneck={{
-                stage: engineOverview.ownerSummary.bottleneck.most_backlogged_stage,
-                count: engineOverview.ownerSummary.bottleneck.most_backlogged_stage_count,
-                overSlaCount: engineOverview.ownerSummary.sla_risk.total_over_sla,
-              }}
-              inventory={{
-                lowStockCount: decisionCards.inventoryAlert.lowStockCount,
-                outOfStockCount: decisionCards.inventoryAlert.outOfStockCount,
-                mostCriticalItem: decisionCards.inventoryAlert.mostCriticalItem,
-              }}
+              commercial={quietLedgerCommercial}
+              bottleneck={quietLedgerBottleneck}
+              inventory={quietLedgerInventory}
             />
           </section>
 
@@ -171,10 +185,19 @@ export function OwnerCommandCenter({
             <AgendaPanel items={agendaItems} />
           </section>
 
+          {/* Record — Multi-Garment Overview (Milestone B / Sprint C.01 recovery:
+              getMultiGarmentKPIs() has been computed and passed down every
+              page load since Milestone B shipped -- this render call is the
+              only piece that was lost when Sprint D.1 Phase 5 rebuilt this
+              page's body around QuietLedger. No new data, query, or RPC. */}
+          <section className="mb-16 sm:mb-20">
+            <TransactionKPISection data={multiGarmentKpis} />
+          </section>
+
           {/* Close */}
           <footer className="border-t border-warm-gold/40 pt-6 flex items-center justify-between gap-4">
             <p className="text-label text-secondary/80 uppercase tracking-widest">LTOS — Owner OS</p>
-            <p className="text-label text-secondary/80 tabular-nums">{timeLabel}</p>
+            <ClockLabel />
           </footer>
         </main>
       </div>

@@ -1,10 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { PatternFormulation, StageRecord } from '@/lib/production/types'
 import { PATTERN_TEMPLATE_LABELS } from '@/lib/production/stageConfig'
 import { FIELD_LABELS } from './PatternFormulationPanel'
-import { FullscreenMediaModal } from './FullscreenMediaModal'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — only opened via local
+// state (expanded), not part of first paint. Same component, same props
+// (including children); just excluded from the initial JS bundle until
+// actually rendered.
+const FullscreenMediaModal = dynamic(() => import('./FullscreenMediaModal').then(mod => mod.FullscreenMediaModal))
 
 interface PatternReferenceCardProps {
   patternFormulation: PatternFormulation | null

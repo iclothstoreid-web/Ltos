@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -17,11 +18,17 @@ import { materialStockStatus } from '@/lib/inventory/types'
 import type { Material, MaterialCategory } from '@/lib/inventory/types'
 import { CatalogSidebar } from './CatalogSidebar'
 import { MaterialGrid } from './MaterialGrid'
-import { MaterialDetailDrawer } from './MaterialDetailDrawer'
-import { StockMovementModal } from './StockMovementModal'
-import { MaterialFormModal } from './MaterialFormModal'
 import { MaterialHeader, type MaterialFilter } from './MaterialHeader'
 import { MaterialSummaryStrip } from './MaterialSummaryStrip'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — all three only opened via
+// local state (selectedMaterialId/stockModalMode/formMaterial), not part of
+// first paint. Same components, same props; just excluded from the initial
+// JS bundle until actually rendered. SSR stays enabled (default) so the
+// ?material=/?action=add-material deep-link cases still render correctly.
+const MaterialDetailDrawer = dynamic(() => import('./MaterialDetailDrawer').then(mod => mod.MaterialDetailDrawer))
+const StockMovementModal = dynamic(() => import('./StockMovementModal').then(mod => mod.StockMovementModal))
+const MaterialFormModal = dynamic(() => import('./MaterialFormModal').then(mod => mod.MaterialFormModal))
 
 interface MaterialWorkspaceProps {
   initialCategories: MaterialCategory[]
@@ -108,10 +115,20 @@ export function MaterialWorkspace({ initialCategories, initialMaterials }: Mater
     router.replace('/inventory/material')
   }
 
-  async function handleCreateCategory(name: string) {
-    await createCategory(supabase, name)
-    setCategories(await fetchCategories(supabase))
-  }
+  const handleCreateCategory = useCallback(
+    async (name: string) => {
+      await createCategory(supabase, name)
+      setCategories(await fetchCategories(supabase))
+    },
+    [supabase]
+  )
+
+  // PR-03 (Rendering Performance) — stabilized so MaterialHeader/
+  // CatalogSidebar (now React.memo'd) actually skip re-render on unrelated
+  // state changes (e.g. search keystrokes). Same logic, same output.
+  const handleAddCategory = useCallback(() => setAddingCategory(true), [])
+  const handleAddItem = useCallback(() => setFormMaterial('new'), [])
+  const handleCancelAddCategory = useCallback(() => setAddingCategory(false), [])
 
   async function handleCreateMaterial(params: Parameters<typeof createMaterial>[1]) {
     await createMaterial(supabase, params)
@@ -149,8 +166,8 @@ export function MaterialWorkspace({ initialCategories, initialMaterials }: Mater
         onSearchChange={setSearch}
         filter={filter}
         onFilterChange={setFilter}
-        onAddCategory={() => setAddingCategory(true)}
-        onAddItem={() => setFormMaterial('new')}
+        onAddCategory={handleAddCategory}
+        onAddItem={handleAddItem}
       />
 
       <MaterialSummaryStrip
@@ -166,7 +183,7 @@ export function MaterialWorkspace({ initialCategories, initialMaterials }: Mater
           materials={materials}
           activeCategoryId={activeCategoryId}
           adding={addingCategory}
-          onCancelAdd={() => setAddingCategory(false)}
+          onCancelAdd={handleCancelAddCategory}
           onSelectCategory={setActiveCategoryId}
           onCreateCategory={handleCreateCategory}
         />

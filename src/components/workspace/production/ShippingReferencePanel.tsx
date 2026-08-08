@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { StageRecord } from '@/lib/production/types'
 import { COURIERS } from '@/lib/shipping/couriers'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
@@ -23,7 +24,8 @@ interface ShippingReferencePanelProps {
 // Pengiriman capture (Ekspedisi + Nomor Resi) here, since this is already
 // the shipping-specific custom panel — captured before the completion scan,
 // alongside Catatan Pengiriman, so operators fill it once before scanning.
-export function ShippingReferencePanel({
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function ShippingReferencePanelComponent({
   stageRecords,
   courier,
   trackingNumber,
@@ -93,3 +95,5 @@ export function ShippingReferencePanel({
     </div>
   )
 }
+
+export const ShippingReferencePanel = memo(ShippingReferencePanelComponent)

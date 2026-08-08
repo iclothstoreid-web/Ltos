@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { StageRecord } from '@/lib/production/types'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
 
@@ -13,7 +14,8 @@ interface PackingReferencePanelProps {
 // any completed stage record, so it's reused here against the latest
 // completed Finishing record instead of building a second read-only summary
 // of the same data.
-export function PackingReferencePanel({ stageRecords }: PackingReferencePanelProps) {
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function PackingReferencePanelComponent({ stageRecords }: PackingReferencePanelProps) {
   const finishingRecord = [...stageRecords]
     .filter(r => r.stage === 'finishing' && r.status === 'completed')
     .sort((a, b) => b.attempt - a.attempt)[0]
@@ -36,3 +38,5 @@ export function PackingReferencePanel({ stageRecords }: PackingReferencePanelPro
     </div>
   )
 }
+
+export const PackingReferencePanel = memo(PackingReferencePanelComponent)

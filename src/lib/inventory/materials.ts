@@ -158,12 +158,19 @@ export async function uploadMaterialPhoto(
   return data.publicUrl
 }
 
+// Fetch Strategy (STEP 5.4, pagination) — "Riwayat Stok" in MaterialDetailDrawer
+// is a fixed-size drawer panel, not an infinite-scroll view; a hot material's
+// full lifetime ledger has no bound otherwise. Capped to the 200 most recent
+// movements (already newest-first). fetchMaterialOrderHistory below is a
+// separate, unlimited query — it nets reserved/released totals per order and
+// needs the complete ledger to stay correct, so it's untouched.
 export async function fetchMaterialMovements(supabase: SupabaseClient, materialId: string): Promise<StockMovement[]> {
   const { data, error } = await supabase
     .from('material_stock_movements')
     .select('*, profiles(name)')
     .eq('material_id', materialId)
     .order('created_at', { ascending: false })
+    .limit(200)
 
   if (error) throw error
   return (data ?? []) as StockMovement[]

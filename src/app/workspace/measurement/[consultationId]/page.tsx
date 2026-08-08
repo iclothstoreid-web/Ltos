@@ -21,19 +21,22 @@ export default async function MeasurementPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/fitter/login')
 
-  // Same profiles lookup pattern already used in command-center/page.tsx
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name')
-    .eq('id', user.id)
-    .single()
-
-  // Get consultation with customer
-  const { data: consultation } = await supabase
-    .from('consultations')
-    .select(`*, customers(*)`)
-    .eq('id', params.consultationId)
-    .single()
+  // Request Flow Optimization (STEP 3) — profile (needs only user.id) and
+  // consultation (needs only the route param) don't depend on each other's
+  // results, so they're fetched together instead of one after another.
+  // Same profiles lookup pattern already used in command-center/page.tsx.
+  const [{ data: profile }, { data: consultation }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('consultations')
+      .select(`*, customers(*)`)
+      .eq('id', params.consultationId)
+      .single(),
+  ])
 
   if (!consultation) redirect('/workspace/check-in')
 
@@ -48,21 +51,22 @@ export default async function MeasurementPage({ params }: Props) {
     )
   }
 
-  // Get existing measurements if any
-  const { data: measurement } = await supabase
-    .from('measurements')
-    .select('*')
-    .eq('consultation_id', params.consultationId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
-
-  // Get event history
-  const { data: events } = await supabase
-    .from('business_events')
-    .select(`*, profiles(name)`)
-    .eq('consultation_id', params.consultationId)
-    .order('created_at', { ascending: false })
+  // Existing measurement and event history both only need the route param,
+  // not each other's results — fetched together instead of sequentially.
+  const [{ data: measurement }, { data: events }] = await Promise.all([
+    supabase
+      .from('measurements')
+      .select('*')
+      .eq('consultation_id', params.consultationId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+    supabase
+      .from('business_events')
+      .select(`*, profiles(name)`)
+      .eq('consultation_id', params.consultationId)
+      .order('created_at', { ascending: false }),
+  ])
 
   return (
     <MeasurementWorkspace

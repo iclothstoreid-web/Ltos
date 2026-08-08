@@ -1,4 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createAnonClient } from '@supabase/supabase-js'
+import { unstable_cache } from 'next/cache'
 import type {
   MaterialCatalogEntry,
   MaterialPreparationItem,
@@ -161,6 +163,30 @@ export async function getProductionRules(supabase: SupabaseClient): Promise<Prod
   return data as ProductionRules
 }
 
+// Cache Strategy (STEP 5.2) — get_production_rules() has RLS `using (true)`
+// (no role gate, see above), so unlike every other function in this file it
+// deliberately does NOT take the caller's `supabase` client: unstable_cache
+// persists its result across requests/users, and a per-request client built
+// on next/headers' cookies() can't safely be reused there. Read-only
+// consumers on the hot path (e.g. the Production kiosk packet page, opened
+// on every scan) should call this instead of getProductionRules() directly.
+// Admin screens that write these rules (owner/business-rules/production,
+// ProductionRulesManager) keep calling getProductionRules() unchanged so an
+// admin's own edit is reflected immediately, not after the cache window.
+export const getCachedProductionRules = unstable_cache(
+  async (): Promise<ProductionRules> => {
+    const supabase = createAnonClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data, error } = await supabase.rpc('get_production_rules')
+    if (error) throw error
+    return data as ProductionRules
+  },
+  ['production-rules'],
+  { revalidate: 60 }
+)
+
 export async function setProductionRules(
   supabase: SupabaseClient,
   rules: Pick<
@@ -194,6 +220,25 @@ export async function getReturnRules(supabase: SupabaseClient): Promise<ReturnRu
   if (error) throw error
   return data as ReturnRules
 }
+
+// Cache Strategy (STEP 5.2) — same reasoning as getCachedProductionRules
+// above: get_return_rules() is anon-callable with RLS `using (true)`, so a
+// cookie-independent client is safe to cache across requests. Admin screens
+// (owner/business-rules/return, ReturnRulesManager) keep calling
+// getReturnRules() unchanged.
+export const getCachedReturnRules = unstable_cache(
+  async (): Promise<ReturnRules> => {
+    const supabase = createAnonClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data, error } = await supabase.rpc('get_return_rules')
+    if (error) throw error
+    return data as ReturnRules
+  },
+  ['return-rules'],
+  { revalidate: 60 }
+)
 
 export async function setReturnRules(
   supabase: SupabaseClient,

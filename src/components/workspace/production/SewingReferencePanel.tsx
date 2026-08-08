@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { PatternFormulation, StageRecord } from '@/lib/production/types'
 import { PatternReferenceCard } from './PatternReferenceCard'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
@@ -15,7 +16,8 @@ interface SewingReferencePanelProps {
 // mulai/selesai/durasi/checklist/evidence/notes summary of any completed
 // stage record) against the latest completed cutting record instead of
 // building a second display for the same shape of data.
-export function SewingReferencePanel({ patternFormulation, stageRecords }: SewingReferencePanelProps) {
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function SewingReferencePanelComponent({ patternFormulation, stageRecords }: SewingReferencePanelProps) {
   const cuttingRecord = [...stageRecords]
     .filter(r => r.stage === 'cutting' && r.status === 'completed')
     .sort((a, b) => b.attempt - a.attempt)[0]
@@ -42,3 +44,5 @@ export function SewingReferencePanel({ patternFormulation, stageRecords }: Sewin
     </div>
   )
 }
+
+export const SewingReferencePanel = memo(SewingReferencePanelComponent)

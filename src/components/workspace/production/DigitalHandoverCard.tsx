@@ -1,9 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { StageRecord } from '@/lib/production/types'
 import { STAGE_LABELS } from '@/lib/production/stageConfig'
-import { FullscreenMediaModal } from './FullscreenMediaModal'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — only opened via local
+// state (showEvidence), not part of first paint. Same component, same
+// props; just excluded from the initial JS bundle until actually rendered.
+const FullscreenMediaModal = dynamic(() => import('./FullscreenMediaModal').then(mod => mod.FullscreenMediaModal))
 
 interface DigitalHandoverCardProps {
   record: StageRecord

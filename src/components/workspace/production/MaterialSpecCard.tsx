@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 
 interface MaterialSpecCardProps {
@@ -14,7 +15,9 @@ interface MaterialSpecCardProps {
 // selection exists anywhere in the app yet (same honesty rule already used
 // by Design Studio's Production Metrics card and Order Created's System
 // Logistics card).
-export function MaterialSpecCard({ design, consultationNotes }: MaterialSpecCardProps) {
+//
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function MaterialSpecCardComponent({ design, consultationNotes }: MaterialSpecCardProps) {
   return (
     <div className="bg-surface rounded-2xl p-6 shadow-sm border border-outline-variant/30 space-y-6">
       <h3 className="font-caslon text-xl text-on-surface">Spesifikasi Material</h3>
@@ -58,3 +61,5 @@ export function MaterialSpecCard({ design, consultationNotes }: MaterialSpecCard
     </div>
   )
 }
+
+export const MaterialSpecCard = memo(MaterialSpecCardComponent)

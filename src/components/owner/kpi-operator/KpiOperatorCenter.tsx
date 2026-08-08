@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { LeftSidebar } from '@/components/command-center/OwnerCommandCenter/LeftSidebar'
@@ -16,10 +17,15 @@ import type {
 import { OperatorStatCard } from './OperatorStatCard'
 import { BottleneckSummary } from './BottleneckSummary'
 import { DivisiKpiGrid } from './DivisiKpiGrid'
-import { DivisiMembersModal } from './DivisiMembersModal'
 import { OperatorKpiTable } from './OperatorKpiTable'
-import { OperatorDetailModal } from './OperatorDetailModal'
 import { ReworkRateOverview } from './ReworkRateOverview'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — both only opened via
+// local state (selectedDivision/selectedOperatorId), not part of first
+// paint. Same components, same props; just excluded from the initial JS
+// bundle until actually rendered.
+const DivisiMembersModal = dynamic(() => import('./DivisiMembersModal').then(mod => mod.DivisiMembersModal))
+const OperatorDetailModal = dynamic(() => import('./OperatorDetailModal').then(mod => mod.OperatorDetailModal))
 
 export type KpiOperatorCenterProps = {
   profileName: string

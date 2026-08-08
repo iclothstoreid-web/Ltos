@@ -1,14 +1,19 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 import type { PatternFormulation, StageRecord } from '@/lib/production/types'
 import type { SpecSheetPaperSize } from '@/lib/production/specSheetPaper'
 import { triggerSpecSheetPrint, generateSpecSheetPdfBlob, downloadPdfBlob } from '@/lib/production/specSheetPdf'
 import { PatternReferenceCard } from './PatternReferenceCard'
 import { ProductionSpecificationSheet } from './ProductionSpecificationSheet'
-import { PrintDialog } from './PrintDialog'
 import { WhatsAppShareButton } from './WhatsAppShareButton'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — only opened via local
+// state (dialogOpen), not part of first paint. Same component, same props;
+// just excluded from the initial JS bundle until actually rendered.
+const PrintDialog = dynamic(() => import('./PrintDialog').then(mod => mod.PrintDialog))
 
 interface PatternFormulationCardProps {
   patternFormulation: PatternFormulation | null

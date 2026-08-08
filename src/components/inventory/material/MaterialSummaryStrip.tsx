@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 // Small ambient summary for the Material Workspace — deliberately much
 // smaller than dashboard/SummaryCards.tsx's KPI tiles, since this page is
 // meant to feel like a workspace to act in, not a dashboard to read.
@@ -13,7 +15,8 @@ function StripStat({ label, value, unit, tone }: { label: string; value: number;
   )
 }
 
-export function MaterialSummaryStrip({
+// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
+function MaterialSummaryStripComponent({
   totalMaterial,
   totalItem,
   lowStock,
@@ -36,3 +39,5 @@ export function MaterialSummaryStrip({
     </div>
   )
 }
+
+export const MaterialSummaryStrip = memo(MaterialSummaryStripComponent)

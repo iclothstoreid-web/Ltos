@@ -1,10 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Bell, Menu, Search, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { searchOrdersGlobal, type OrderSearchResult } from '@/lib/order/lookup'
-import { OrderDetailModal } from './OrderDetailModal'
+
+// PR-02 (Rendering Performance, Lazy Hydration) — only opened via local
+// state (selectedOrderId), not part of first paint. Same component, same
+// props; just excluded from the initial JS bundle until actually rendered.
+const OrderDetailModal = dynamic(() => import('./OrderDetailModal').then(mod => mod.OrderDetailModal))
 
 interface OwnerTopBarProps {
   profileName: string
@@ -17,7 +22,10 @@ interface OwnerTopBarProps {
 // self-contained (own OrderDetailModal instance) instead of threading a
 // shared "selected order" callback through every page that renders this
 // bar, which would have meant touching each page's own local state.
-export function OwnerTopBar({ profileName, onMenuClick }: OwnerTopBarProps) {
+// PR-01 (Rendering Performance) — memoized so this shared chrome (also used
+// by Commercial/Decision/KPI Operator/KPI Fitter/Communications Center) does
+// not re-render on unrelated parent state changes. Same API, same behavior.
+function OwnerTopBarComponent({ profileName, onMenuClick }: OwnerTopBarProps) {
   const [supabase] = useState(() => createClient())
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<OrderSearchResult[]>([])
@@ -127,4 +135,6 @@ export function OwnerTopBar({ profileName, onMenuClick }: OwnerTopBarProps) {
     </header>
   )
 }
+
+export const OwnerTopBar = memo(OwnerTopBarComponent)
 

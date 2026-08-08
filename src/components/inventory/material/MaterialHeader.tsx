@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { FolderPlus, Plus, Search, SlidersHorizontal } from 'lucide-react'
 
 export type MaterialFilter = 'menipis' | 'reserved' | null
@@ -23,7 +23,11 @@ interface MaterialHeaderProps {
 // Panel-agnostic top bar for the Material Workspace — owns title, search,
 // filter, and the two primary creation actions per the brief's HEADER
 // section. Category/item panels below just render what this state selects.
-export function MaterialHeader({ search, onSearchChange, filter, onFilterChange, onAddCategory, onAddItem }: MaterialHeaderProps) {
+//
+// PR-03 (Rendering Performance) — memoized. Effective once the caller
+// stabilizes onAddCategory/onAddItem via useCallback (see
+// MaterialWorkspace.tsx). Same API, same behavior.
+function MaterialHeaderComponent({ search, onSearchChange, filter, onFilterChange, onAddCategory, onAddItem }: MaterialHeaderProps) {
   const [filterOpen, setFilterOpen] = useState(false)
   const activeFilterLabel = FILTER_OPTIONS.find(o => o.value === filter)?.label ?? 'Semua Status'
 
@@ -101,3 +105,5 @@ export function MaterialHeader({ search, onSearchChange, filter, onFilterChange,
     </div>
   )
 }
+
+export const MaterialHeader = memo(MaterialHeaderComponent)

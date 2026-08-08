@@ -1,10 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Consultation } from '@/app/workspace/check-in/types'
-import type { Measurement } from '@/types'
 import { DesignStudioTopBar } from './DesignStudioTopBar'
 import { GarmentBlueprintPanel } from './GarmentBlueprintPanel'
 import { AIPreviewPanel } from './AIPreviewPanel'
@@ -33,7 +32,6 @@ interface MaterialStockInfo {
 
 interface DesignStudioWorkspaceProps {
   consultation: Consultation & { customers: { name: string; phone: string | null } }
-  latestMeasurement: Measurement | null
   masterOptions: MasterOptionsByCategory
   materialStock: Record<string, MaterialStockInfo>
   // Architecture Lock: DNA Color Repository + Material Color Mapping —
@@ -94,6 +92,14 @@ export function DesignStudioWorkspace({
   const [selections, setSelections] = useState<DesignSelections>(() =>
     buildInitialSelections(consultation.notes, masterOptions)
   )
+
+  // Fetch Strategy (STEP 5.3, prefetch) — same reasoning as
+  // MeasurementWorkspace: consultation.id is known from page load, well
+  // before the fitter finishes the design and moves to Consultation Review.
+  useEffect(() => {
+    router.prefetch(`/workspace/consultation-review/${consultation.id}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultation.id])
   const [notes, setNotes] = useState<string>(() => decodeDesignSpecification(consultation.notes)?.notes ?? '')
   // Sprint V1.2.1 (Fabric Quantity Input) — the Fitter's manual meter
   // estimate. Spec-only: Fitter no longer reserves/deducts stock (see

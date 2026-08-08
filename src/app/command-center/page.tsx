@@ -47,73 +47,108 @@ export default async function CommandCenterPage() {
   todayStart.setHours(0, 0, 0, 0)
   const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1)
 
+  // Query Optimization (STEP 2, P1) — `orders` and `consultations` were
+  // previously 6 and 2 separate round trips respectively, split only by
+  // which current_state/status the UI bucket needed. Same rows, same
+  // columns as before (plus current_state/customer_id on orders, needed to
+  // do the split client-side instead of in SQL) — fetched once each and
+  // partitioned below. Revenue-this-month no longer needs its own
+  // quotations query either: getCommercialSummary() already scans every
+  // non-'not_billable' quotation and now also returns the approved ones
+  // (see summary.ts's approvedQuotationRows) for this page to bucket by
+  // month/day below, exactly as the removed query did.
+  // Request Flow Optimization (STEP 3) — every query below reads only from
+  // `supabase`/`todayStart`/`monthStart` (computed above), none of them
+  // depend on each other's results, so they're one Promise.all instead of
+  // the previous 4-query batch -> separate allStageRecords await -> 8-query
+  // batch -> separate materials await -> separate fittingsToday await
+  // waterfall (5 sequential round trips -> 1). commercialTypeSummary is the
+  // one genuine dependency (needs completedShippingOrderIds, derived from
+  // allStageRecords) and stays a separate await right after.
   const [
-    { data: ordersAwaiting },
-    { data: ordersInQuotation },
-    { data: ordersInAppointment },
-    { data: consultationsInReview },
+    { data: ordersAll },
+    { data: consultationsCombined },
     { data: artisans },
-    { count: activeOrdersCount },
-    { count: followUpTodayCount },
     { data: vipCustomers },
-    { data: quotationsApprovedThisMonth },
+    { data: allStageRecords },
+    { data: materials },
+    { count: fittingsToday },
+    commercialSummary,
+    ownerSummary,
+    slaRiskOrders,
+    capacityDashboard,
+    kpiDashboard,
+    operators,
+    divisiRows,
+    multiGarmentKpis,
   ] = await Promise.all([
     supabase
       .from('orders')
-      .select('id, order_number, created_at, customers(name)')
-      .eq('current_state', 'order')
+      .select('id, order_number, created_at, current_state, customer_id, customers(name)')
       .order('created_at', { ascending: true }),
-    supabase
-      .from('orders')
-      .select('id, order_number, created_at, customers(name)')
-      .eq('current_state', 'quotation')
-      .order('created_at', { ascending: true }),
-    supabase
-      .from('orders')
-      .select('id, order_number, created_at, customers(name)')
-      .eq('current_state', 'appointment'),
     supabase
       .from('consultations')
-      .select('id, consultation_number, created_at, customers(name)')
-      .eq('status', 'review')
+      .select('id, consultation_number, status, created_at, customers(name)')
+      .or(`status.eq.review,created_at.gte.${todayStart.toISOString()}`)
       .order('created_at', { ascending: true }),
     supabase.from('profiles').select('id, name, role').eq('role', 'artisan'),
-    supabase
-      .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .neq('current_state', 'follow_up'),
-    supabase
-      .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('current_state', 'follow_up'),
     supabase.from('customers').select('id, name').eq('is_preferred_client', true),
-    // Revenue source — quotations.status flips to 'approved' the first time
-    // record_order_payment() is called (Sprint K Commercial Engine), and
-    // .amount tracks the same post-discount/override total as .total (kept
-    // in sync by recompute_quotation_total()). Sums are honestly 0 for any
-    // month with no recorded payments yet, not a query bug.
     supabase
-      .from('quotations')
-      .select('amount, approved_at')
-      .eq('status', 'approved')
-      .gte('approved_at', monthStart.toISOString()),
+      .from('production_stage_records')
+      .select('order_id, stage, status, started_at, created_at, orders(order_number, customers(name))'),
+    supabase
+      .from('materials')
+      .select('id, name, sku, unit, available_stock, min_stock, material_categories(name)'),
+    supabase
+      .from('business_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_type', 'measurement.completed')
+      .gte('created_at', todayStart.toISOString()),
+    getCommercialSummary(supabase),
+    getOwnerSummary(supabase),
+    getSlaRiskOrders(supabase),
+    getCapacityDashboard(supabase),
+    getKpiDashboard(supabase),
+    getOperatorKpiList(supabase),
+    getDivisiKpiList(supabase),
+    getMultiGarmentKPIs(supabase),
   ])
 
-  // Sprint K Dashboard Integration: every number the Engine Overview section
-  // needs, reusing the exact RPCs/queries Decision Center, KPI Operator, and
-  // Commercial Center already fetch server-side — no new RPC.
-  const [commercialSummary, ownerSummary, slaRiskOrders, capacityDashboard, kpiDashboard, operators, divisiRows, commercialTypeSummary, multiGarmentKpis] =
-    await Promise.all([
-      getCommercialSummary(supabase),
-      getOwnerSummary(supabase),
-      getSlaRiskOrders(supabase),
-      getCapacityDashboard(supabase),
-      getKpiDashboard(supabase),
-      getOperatorKpiList(supabase),
-      getDivisiKpiList(supabase),
-      getCommercialTypeSummary(supabase),
-      getMultiGarmentKPIs(supabase),
-    ])
+  // Null-safe to match Postgres neq/not-in semantics exactly (a null
+  // current_state would never satisfy those filters either) — same
+  // partitioning the removed .eq/.neq/.count queries used to do in SQL.
+  const isKnownState = (s: string | null) => s != null
+  const ordersAwaiting = (ordersAll || []).filter(o => o.current_state === 'order')
+  const ordersInQuotation = (ordersAll || []).filter(o => o.current_state === 'quotation')
+  const ordersInAppointment = (ordersAll || []).filter(o => o.current_state === 'appointment')
+  const activeOrdersCount = (ordersAll || []).filter(
+    o => isKnownState(o.current_state) && o.current_state !== 'follow_up'
+  ).length
+  const followUpTodayCount = (ordersAll || []).filter(o => o.current_state === 'follow_up').length
+
+  const consultationsInReview = (consultationsCombined || []).filter(c => c.status === 'review')
+
+  // Internal 8-stage production workflow now populates production_stage_records
+  // — this is the real runtime source of truth for where an order currently
+  // sits (orders.current_state only ever reaches 'order'/'follow_up', see
+  // the file header note above; Sprint M.2 moved the Production/QC/Ready
+  // buckets below off the dead current_state values they used to read).
+  // allStageRecords (fetched in the Promise.all above) feeds cutting/sewing
+  // (narrowed to in_progress below, unchanged from before), QC, the
+  // shipping-ready bucket, the productionToday count, AND the
+  // shipping/completed order-id set getCommercialTypeSummary() needs below.
+  const activeStageRecords = (allStageRecords || []).filter(r => r.status !== 'completed')
+  const completedShippingOrderIds = new Set(
+    (allStageRecords || [])
+      .filter(r => r.stage === 'shipping' && r.status === 'completed')
+      .map(r => r.order_id)
+  )
+
+  // Request Flow Optimization (STEP 3): commercialTypeSummary is the one
+  // genuine dependency in this page — it needs completedShippingOrderIds,
+  // which can only be derived after allStageRecords resolves — so it stays
+  // a separate await instead of joining the Promise.all above.
+  const commercialTypeSummary = await getCommercialTypeSummary(supabase, completedShippingOrderIds)
 
   // Sprint N.1 (Owner Intelligence, item 1 — Estimated Completion Date on
   // Dashboard): get_sla_risk_orders already computes estimated_completion
@@ -124,50 +159,33 @@ export default async function CommandCenterPage() {
     slaRiskOrders.map(o => [o.order_id, o.estimated_completion])
   )
 
-  // Internal 8-stage production workflow now populates production_stage_records
-  // — this is the real runtime source of truth for where an order currently
-  // sits (orders.current_state only ever reaches 'order'/'follow_up', see
-  // the file header note above; Sprint M.2 moved the Production/QC/Ready
-  // buckets below off the dead current_state values they used to read).
-  // One broad fetch (every stage, anything not yet completed) feeds
-  // cutting/sewing (narrowed to in_progress below, unchanged from before),
-  // QC, and the shipping-ready bucket, plus the productionToday count.
-  const { data: activeStageRecords } = await supabase
-    .from('production_stage_records')
-    .select('order_id, stage, status, started_at, created_at, orders(order_number, customers(name))')
-    .neq('status', 'completed')
-
   // Low Stock notice (Cross Application Integration, LOCKED): Inventory is
   // now real (see src/lib/inventory) — materials at/under their Minimum
   // Stock feed the same Bottleneck Panel every other urgent item does,
   // always 'kritis' since a stock-out blocks production outright.
-  const { data: materials } = await supabase
-    .from('materials')
-    .select('id, name, sku, unit, available_stock, min_stock, material_categories(name)')
-
+  // (materials fetched in the Promise.all above.)
   const lowStockMaterials = (materials || []).filter(m => m.available_stock <= m.min_stock)
 
-  const [{ data: consultationsToday }, { count: fittingsToday }] = await Promise.all([
-    supabase
-      .from('consultations')
-      .select('id, consultation_number, status, created_at, customers(name)')
-      .gte('created_at', todayStart.toISOString()),
-    supabase
-      .from('business_events')
-      .select('id', { count: 'exact', head: true })
-      .eq('event_type', 'measurement.completed')
-      .gte('created_at', todayStart.toISOString()),
-  ])
+  // consultationsToday now comes from the merged consultations fetch above
+  // (see isKnownState/ordersAwaiting block) instead of a second query here.
+  // fittingsToday also fetched in the Promise.all above.
+  const consultationsToday = (consultationsCombined || []).filter(
+    c => new Date(c.created_at) >= todayStart
+  )
 
-  const vipCustomerIds = (vipCustomers || []).map(c => c.id)
+  // vipOrdersWaiting now derives from the already-fetched ordersAll instead
+  // of a second `orders` query — same customer_id/current_state filters as
+  // before, applied in-memory.
+  const vipCustomerIds = new Set((vipCustomers || []).map(c => c.id))
   const vipCustomerNameById = new Map((vipCustomers || []).map(c => [c.id, c.name]))
-  const { data: vipOrdersWaiting } = vipCustomerIds.length
-    ? await supabase
-        .from('orders')
-        .select('id, order_number, created_at, current_state, customer_id')
-        .in('customer_id', vipCustomerIds)
-        .not('current_state', 'in', '(delivery,follow_up)')
-    : { data: [] as Array<{ id: string; order_number: string; created_at: string; current_state: string; customer_id: string }> }
+  const vipOrdersWaiting = (ordersAll || []).filter(
+    o =>
+      o.customer_id != null &&
+      vipCustomerIds.has(o.customer_id) &&
+      isKnownState(o.current_state) &&
+      o.current_state !== 'delivery' &&
+      o.current_state !== 'follow_up'
+  )
 
   // Without a generated Database type, the untyped client infers embedded
   // to-one relations as an array here even though PostgREST returns a
@@ -303,13 +321,21 @@ export default async function CommandCenterPage() {
   const ordersWaitingCount = ordersAwaiting?.length || 0
   const qcTodayCount = qcRecords.length
 
-  const revenueThisMonth = (quotationsApprovedThisMonth || []).reduce(
-    (sum, q) => sum + (q.amount || 0),
-    0
+  // Revenue source — quotations.status flips to 'approved' the first time
+  // record_order_payment() is called (Sprint K Commercial Engine), and
+  // .amount tracks the same post-discount/override total as .total (kept
+  // in sync by recompute_quotation_total()). Sums are honestly 0 for any
+  // month with no recorded payments yet, not a query bug. Query
+  // Optimization (STEP 2, P1): sourced from getCommercialSummary()'s
+  // approvedQuotationRows (same underlying scan) instead of a dedicated
+  // quotations query.
+  const revenueApprovedThisMonth = commercialSummary.approvedQuotationRows.filter(
+    q => q.approvedAt >= monthStart.toISOString()
   )
-  const revenueToday = (quotationsApprovedThisMonth || [])
-    .filter(q => q.approved_at && new Date(q.approved_at) >= todayStart)
-    .reduce((sum, q) => sum + (q.amount || 0), 0)
+  const revenueThisMonth = revenueApprovedThisMonth.reduce((sum, q) => sum + q.amount, 0)
+  const revenueToday = revenueApprovedThisMonth
+    .filter(q => new Date(q.approvedAt) >= todayStart)
+    .reduce((sum, q) => sum + q.amount, 0)
 
   const newLeadsCount = (consultationsToday || []).filter(c => c.status === 'check_in').length
 

@@ -11,8 +11,10 @@ interface Props {
 // (QCWorkspace.tsx) called emit_event()/create_queue_task(), which were
 // revoked in 20260721000100_revoke_legacy_queue_rpcs.sql because their only
 // caller was this route — the calls failed silently (no {error} check) and
-// nothing was ever actually recorded. QCWorkspace.tsx is left in place,
-// unimported, per Sprint M.1 scope (no dead-code cleanup).
+// nothing was ever actually recorded. QCWorkspace.tsx (and its sole
+// dependency WorkspaceHeader.tsx) removed PR-04 (Rendering Performance,
+// Dead Render Path Cleanup) — confirmed zero importers, non-functional
+// against the revoked RPCs above.
 //
 // Redirect rather than 404 for any bookmarked/shared /workspace/qc/[orderId]
 // link (same convention as LegacyProductionPacketRedirect) — the correct

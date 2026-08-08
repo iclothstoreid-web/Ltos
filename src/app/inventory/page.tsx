@@ -26,7 +26,17 @@ export default async function InventoryDashboardPage() {
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
 
-  const [{ data: categories }, { data: materials }, { data: todayMovements }, mostUsedMaterials] = await Promise.all([
+  // Request Flow Optimization (STEP 3) — reservationMovements queries the
+  // same table with different filters and doesn't depend on any of the
+  // other results here, so it joins this Promise.all instead of running as
+  // a separate await afterward.
+  const [
+    { data: categories },
+    { data: materials },
+    { data: todayMovements },
+    mostUsedMaterials,
+    { data: reservationMovements },
+  ] = await Promise.all([
     supabase.from('material_categories').select('id'),
     supabase.from('materials').select('id, name, unit, reserved_stock, available_stock, min_stock, is_active'),
     supabase
@@ -35,18 +45,17 @@ export default async function InventoryDashboardPage() {
       .gte('created_at', todayStart.toISOString())
       .order('created_at', { ascending: false }),
     fetchMostUsedMaterials(supabase, 5),
+    supabase
+      .from('material_stock_movements')
+      .select('order_id, movement_type, quantity')
+      .not('order_id', 'is', null)
+      .in('movement_type', ['reservation', 'release']),
   ])
 
   const materialRows = materials ?? []
   const stokMenipisCount = materialRows.filter(m => m.available_stock <= m.min_stock).length
   const reservedTotal = materialRows.reduce((sum, m) => sum + (m.reserved_stock || 0), 0)
   const attentionList = getMaterialAttentionList(materialRows).slice(0, 5)
-
-  const { data: reservationMovements } = await supabase
-    .from('material_stock_movements')
-    .select('order_id, movement_type, quantity')
-    .not('order_id', 'is', null)
-    .in('movement_type', ['reservation', 'release'])
 
   const netByOrder = new Map<string, number>()
   for (const m of reservationMovements ?? []) {

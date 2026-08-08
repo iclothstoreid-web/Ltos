@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, FileDown, Plus, Printer, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { saveCostTemplate } from '@/lib/inventory/materialCalculator'
@@ -118,7 +118,14 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingTemplate?.nonce])
 
-  const resolvedMaterialRows: ResolvedEstimateMaterialRow[] = materialRows
+  // PR-01 (Rendering Performance) — memoized: this used to re-run its
+  // map/filter (with a nested categories.find per row) on every render,
+  // including every keystroke in an unrelated controlled input. Same
+  // output, same logic -- only wrapped in useMemo. allMaterials/categories
+  // are static per editor session (passed once from EstimasiWorkspace,
+  // never reassigned), so they're intentionally left out of the dependency
+  // array per the locked PR-01 spec.
+  const resolvedMaterialRows: ResolvedEstimateMaterialRow[] = useMemo(() => materialRows
     .map(row => {
       const resolved = resolveMaterial(row.materialId)
       if (!resolved) return null
@@ -133,14 +140,25 @@ export function EstimasiEditor({ categories, allMaterials, templates, pendingTem
         subtotal: quantity * resolved.price,
       }
     })
-    .filter((row): row is ResolvedEstimateMaterialRow => row !== null)
+    .filter((row): row is ResolvedEstimateMaterialRow => row !== null),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [materialRows, categories])
 
-  const resolvedCostRows: ResolvedEstimateCostRow[] = additionalCosts.map(c => ({
-    id: c.id,
-    name: c.name,
-    nominal: Number(c.nominal) || 0,
-    notes: c.notes,
-  }))
+  // PR-03 (Rendering Performance) — memoized: EstimatePrintView (always
+  // mounted off-screen for print/PDF) receives this array; without
+  // memoization it got a new reference on every render, including on state
+  // unrelated to costs (templatesOpen/saving/exporting/error), forcing the
+  // invisible print view to re-render for no visible reason. Same output.
+  const resolvedCostRows: ResolvedEstimateCostRow[] = useMemo(
+    () =>
+      additionalCosts.map(c => ({
+        id: c.id,
+        name: c.name,
+        nominal: Number(c.nominal) || 0,
+        notes: c.notes,
+      })),
+    [additionalCosts]
+  )
 
   const totalMaterial = resolvedMaterialRows.reduce((sum, r) => sum + r.subtotal, 0)
   const hppMaterial = totalMaterial

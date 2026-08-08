@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Measurement, BusinessEvent } from '@/types'
@@ -86,6 +86,16 @@ export function MeasurementWorkspace({
     fields.cuttingModel && fields.wristFinishing &&
     hasCommittedCustomerPhoto && !photoUploading
   )
+
+  // Fetch Strategy (STEP 5.3, prefetch) — consultation.id (the next route's
+  // only parameter) is known from the moment this page loads, well before
+  // the fitter finishes filling the form and taps "Lanjut ke Design Studio".
+  // Prefetching here warms that navigation during the form-filling time
+  // instead of at click time.
+  useEffect(() => {
+    router.prefetch(`/workspace/design-studio/${consultation.id}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultation.id])
 
   // Body Map is the source of truth for which part(s) glow — see
   // src/lib/measurement/bodyMap.ts
