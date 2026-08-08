@@ -1,10 +1,16 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { getProductionPacket, getCachedProductionRules, getCachedReturnRules } from '@/lib/production/client'
 import { getCurrentStageRecord } from '@/lib/production/stageConfig'
 import { getCustomerPhotoAndReferencesForOrder } from '@/lib/production/customerNotes'
-import { getOrderCommunications } from '@/lib/communication/kiosk'
+import { timedQuery } from '@/lib/production/perfInstrumentation'
 import { ProductionPacketWorkspace } from '@/components/workspace/production/ProductionPacketWorkspace'
 import { ProductionAccessGate } from '@/components/workspace/production/ProductionAccessGate'
+import { ProductionCommunicationBoundary } from '@/components/workspace/production/ProductionCommunicationBoundary'
+import { CustomerReferenceBoundary } from '@/components/workspace/production/CustomerReferenceBoundary'
+import { CommunicationPanelSkeleton, MediaProduksiCardSkeleton } from '@/components/workspace/production/DeferredPanelSkeletons'
+import { ReferenceModelCard } from '@/components/workspace/production/ReferenceModelCard'
+import { MaterialSpecCard } from '@/components/workspace/production/MaterialSpecCard'
 
 interface Props {
   params: { orderId: string }
@@ -25,31 +31,57 @@ interface Props {
 export default async function ProductionPacketPage({ params }: Props) {
   const supabase = createClient()
 
+  // Query Consolidation (Sprint N5) — started immediately, in parallel with
+  // packet/rules below, instead of being gated behind `packet` resolving
+  // first (that gate turned this into a waterfall: Promise.all(packet,
+  // rules) THEN a separate awaited customer-notes call). Not knowing yet
+  // whether `packet` exists is fine here — the one call this triggers on the
+  // rare "order not found" path is a negligible cost against removing a real
+  // sequential wait on the common path. Its Promise is also handed to
+  // CustomerReferenceBoundary below (see that file's doc comment) instead of
+  // that boundary firing a second get_production_customer_notes call — one
+  // RPC call now serves both HeroCard's customerPhotoUrl (critical) and
+  // Media Produksi's customerReferences (deferred).
+  const customerNotesPromise = timedQuery('customerNotes (critical, shared)', () =>
+    getCustomerPhotoAndReferencesForOrder(supabase, params.orderId)
+  )
+  // Nothing below ever awaits this promise on the "order not found" path
+  // (see the `packet ?` gate a few lines down) — attach a silent handler so
+  // a network-level failure there can't surface as an unhandled rejection.
+  customerNotesPromise.catch(() => {})
+
   // Request Flow Optimization (STEP 3) — productionRules/returnRules don't
   // depend on the packet, so they're fetched alongside it instead of after.
-  // Cache Strategy (STEP 5.2) — both are relatively static, admin-configured
-  // rules (RLS `using (true)`, no per-user variation), cached 60s instead of
-  // hitting Postgres on every single kiosk scan.
+  // Cache Strategy (STEP 5.2, confirmed still correct in Sprint N5's audit)
+  // — both are relatively static, admin-configured rules (RLS `using
+  // (true)`, no per-user variation), cached 60s via unstable_cache instead
+  // of hitting Postgres on every single kiosk scan. Never a candidate for
+  // this page's own caching change since it was already done.
   const [packet, productionRules, returnRules] = await Promise.all([
-    getProductionPacket(supabase, params.orderId),
-    getCachedProductionRules(),
-    getCachedReturnRules(),
+    timedQuery('packet (critical)', () => getProductionPacket(supabase, params.orderId)),
+    timedQuery('productionRules (critical, cached 60s)', () => getCachedProductionRules()),
+    timedQuery('returnRules (critical, cached 60s)', () => getCachedReturnRules()),
   ])
   const isInProgress = packet
     ? getCurrentStageRecord(packet.stage_records)?.status === 'in_progress'
     : false
 
-  // communications and customer notes/references both only need packet to
-  // exist (not any of its fields) and don't depend on each other — fetched
-  // together instead of sequentially. Query Optimization (STEP 2, P1) —
-  // photo and references still come from one get_production_customer_notes
-  // call instead of two.
-  const [initialMessages, { customerPhotoUrl, customerReferences }] = packet
-    ? await Promise.all([
-        getOrderCommunications(supabase, params.orderId),
-        getCustomerPhotoAndReferencesForOrder(supabase, params.orderId),
-      ])
-    : [[], { customerPhotoUrl: null, customerReferences: [] }]
+  // HeroCard needs a customer photo on first paint, so this one field stays
+  // on the critical path — same as Sprint N4, just parallel now instead of
+  // sequential (see customerNotesPromise above).
+  const { customerPhotoUrl } = packet
+    ? await customerNotesPromise
+    : { customerPhotoUrl: null }
+
+  // Same derivation ProductionPacketWorkspace always used (largest Packing
+  // attempt's video_url off stage_records) — re-read here, not a new query,
+  // so CustomerReferenceBoundary can render Media Produksi without waiting
+  // on ProductionPacketWorkspace's client-side render first.
+  const packingVideoUrl = packet
+    ? [...packet.stage_records]
+        .filter(r => r.stage === 'packing')
+        .sort((a, b) => b.attempt - a.attempt)[0]?.video_url ?? null
+    : null
 
   return (
     <ProductionAccessGate orderId={params.orderId} isInProgress={isInProgress}>
@@ -63,11 +95,26 @@ export default async function ProductionPacketPage({ params }: Props) {
         <ProductionPacketWorkspace
           initialPacket={packet}
           orderId={params.orderId}
-          initialMessages={initialMessages}
           customerPhotoUrl={customerPhotoUrl}
-          customerReferences={customerReferences}
           productionRules={productionRules}
           returnReasons={returnRules.reasons}
+          referenceModelSlot={<ReferenceModelCard design={packet.design} />}
+          materialSpecSlot={
+            <MaterialSpecCard design={packet.design} consultationNotes={packet.consultation_notes} />
+          }
+          communicationSlot={
+            <Suspense fallback={<CommunicationPanelSkeleton />}>
+              <ProductionCommunicationBoundary orderId={params.orderId} />
+            </Suspense>
+          }
+          referenceSlot={
+            <Suspense fallback={<MediaProduksiCardSkeleton />}>
+              <CustomerReferenceBoundary
+                customerNotesPromise={customerNotesPromise}
+                packingVideoUrl={packingVideoUrl}
+              />
+            </Suspense>
+          }
         />
       )}
     </ProductionAccessGate>

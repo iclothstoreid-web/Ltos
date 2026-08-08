@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 interface OrderCreatedLockNoticeProps {
   consultationNumber: string
   orderId: string | null
@@ -24,13 +26,13 @@ export function OrderCreatedLockNotice({ consultationNumber, orderId, stageLabel
           revisi Order, bukan dari workspace Fitter.
         </p>
         {orderId && (
-          <a
+          <Link
             href={`/workspace/order-created/${orderId}`}
             className="inline-block px-6 py-3 bg-[#151c27] text-white text-sm uppercase tracking-widest
                        hover:bg-[#775a19] transition-colors"
           >
             Lihat Pesanan
-          </a>
+          </Link>
         )}
       </div>
     </div>

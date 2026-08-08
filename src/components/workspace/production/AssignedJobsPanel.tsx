@@ -32,12 +32,14 @@ export function AssignedJobsPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleOpenJob(job: PendingAssignment) {
-    try {
-      await markNotificationRead(supabase, job.notification_id)
-    } catch (err) {
+  function handleOpenJob(job: PendingAssignment) {
+    // Fire-and-forget — mark-as-read is a bookkeeping side effect, not a
+    // gate for entry (ProductionAccessGate grants access via the
+    // sessionStorage token below, not via notification read state), so it
+    // must never delay or block the navigation it's attached to.
+    markNotificationRead(supabase, job.notification_id).catch(err => {
       console.error('[production] mark notification read failed', err)
-    }
+    })
     sessionStorage.setItem(scanTokenKey(job.order_id), '1')
     router.push(`/production/${job.order_id}`)
   }

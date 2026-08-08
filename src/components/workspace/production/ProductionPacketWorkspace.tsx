@@ -13,10 +13,7 @@ import {
 } from '@/lib/production/stageConfig'
 import { completeStage, getProductionPacket, setShippingInfo, startStage } from '@/lib/production/client'
 import { buildProductionQrPayload } from '@/lib/order/qr'
-import type { CommunicationMessage } from '@/lib/communication/types'
-import type { ConsultationDocument } from '@/components/workspace/consultation-review/fitterEnhancementsCodec'
 import { HeroCard } from './HeroCard'
-import { ProductionCommunicationPanel } from './ProductionCommunicationPanel'
 import { StageProgressRail } from './StageProgressRail'
 import { OperatorAutocomplete } from './OperatorAutocomplete'
 import { DivisionSelect } from './DivisionSelect'
@@ -33,10 +30,7 @@ import { FinishingReferencePanel } from './FinishingReferencePanel'
 import { PackingReferencePanel } from './PackingReferencePanel'
 import { ShippingReferencePanel } from './ShippingReferencePanel'
 import { DigitalHandoverCard } from './DigitalHandoverCard'
-import { ReferenceModelCard } from './ReferenceModelCard'
-import { MaterialSpecCard } from './MaterialSpecCard'
 import { MaterialPreparationCard } from './MaterialPreparationCard'
-import { MediaProduksiCard } from './MediaProduksiCard'
 import { PackingVideoUploader } from './PackingVideoUploader'
 import { useProductionBackGuard } from './useProductionBackGuard'
 import { ExitConfirmModal } from './ExitConfirmModal'
@@ -50,9 +44,27 @@ const QrScanModal = dynamic(() => import('./QrScanModal').then(mod => mod.QrScan
 interface ProductionPacketWorkspaceProps {
   initialPacket: ProductionPacket
   orderId: string
-  initialMessages: CommunicationMessage[]
+  // HeroCard/PatternFormulationCard both read this directly, so it stays a
+  // resolved value fetched on the critical path (page.tsx) — deferring it
+  // too would delay the one card this sprint's brief calls out as most
+  // critical. See CustomerReferenceBoundary's doc comment for why Media
+  // Produksi reads customer notes a second time instead of sharing this.
   customerPhotoUrl: string | null
-  customerReferences: ConsultationDocument[]
+  // Streaming boundaries (Sprint N4) — both pre-rendered server-side
+  // (page.tsx) behind their own <Suspense>, passed down as already-resolved
+  // React trees instead of raw data. Rendered at the exact same position the
+  // inline <ProductionCommunicationPanel>/<MediaProduksiCard> calls used to
+  // occupy; nothing about placement or conditional visibility changed.
+  communicationSlot: React.ReactNode
+  referenceSlot: React.ReactNode
+  // Server Component slots (Sprint N6) — ReferenceModelCard/MaterialSpecCard
+  // read only `design`/`consultationNotes`, which never change after this
+  // page loads (see ReferenceModelCard's doc comment), so page.tsx renders
+  // them once server-side instead of this Client Component importing them.
+  // Visibility is still decided here (same `isMaterialPrep || ...` gate as
+  // before) — only the two components' own hydration cost moved out.
+  referenceModelSlot: React.ReactNode
+  materialSpecSlot: React.ReactNode
   // Production Rules (Runtime Configuration) — see
   // supabase/migrations/20260811000000_add_business_rules_runtime_config.sql.
   // Fetched once server-side (page.tsx); this kiosk workspace has no login
@@ -66,9 +78,11 @@ interface ProductionPacketWorkspaceProps {
 export function ProductionPacketWorkspace({
   initialPacket,
   orderId,
-  initialMessages,
   customerPhotoUrl,
-  customerReferences,
+  communicationSlot,
+  referenceSlot,
+  referenceModelSlot,
+  materialSpecSlot,
   productionRules,
   returnReasons,
 }: ProductionPacketWorkspaceProps) {
@@ -78,13 +92,6 @@ export function ProductionPacketWorkspace({
   const { showExitConfirm, dismiss: dismissExitConfirm } = useProductionBackGuard()
 
   const currentRecord = getCurrentStageRecord(packet.stage_records)
-  // video_url rides on get_production_packet's stage_records payload
-  // (row_to_json), so this is just a derived read — no separate fetch/state.
-  // Largest Packing attempt, same rule Customer Journey's RPC applies.
-  const packingVideoUrl =
-    [...packet.stage_records]
-      .filter(r => r.stage === 'packing')
-      .sort((a, b) => b.attempt - a.attempt)[0]?.video_url ?? null
   const isMaterialPrep = currentRecord?.stage === 'material_prep'
   const isPatternFormulation = currentRecord?.stage === 'pattern_formulation'
   const isCutting = currentRecord?.stage === 'cutting'
@@ -666,7 +673,7 @@ export function ProductionPacketWorkspace({
           isQc ||
           isFinishing ||
           isPacking ||
-          isShipping) && <ReferenceModelCard design={packet.design} />}
+          isShipping) && referenceModelSlot}
         {(isMaterialPrep ||
           isPatternFormulation ||
           isCutting ||
@@ -674,9 +681,7 @@ export function ProductionPacketWorkspace({
           isQc ||
           isFinishing ||
           isPacking ||
-          isShipping) && (
-          <MaterialSpecCard design={packet.design} consultationNotes={packet.consultation_notes} />
-        )}
+          isShipping) && materialSpecSlot}
         {(isMaterialPrep ||
           isPatternFormulation ||
           isCutting ||
@@ -684,13 +689,7 @@ export function ProductionPacketWorkspace({
           isQc ||
           isFinishing ||
           isPacking ||
-          isShipping) && (
-          <MediaProduksiCard
-            customerPhotoUrl={customerPhotoUrl}
-            customerReferences={customerReferences}
-            packingVideoUrl={packingVideoUrl}
-          />
-        )}
+          isShipping) && referenceSlot}
 
         {/* Cutting/Sewing/QC already surface Formulasi Pola inline in their
             own custom panel above, right where those operators are working —
@@ -706,7 +705,7 @@ export function ProductionPacketWorkspace({
           />
         )}
 
-        <ProductionCommunicationPanel supabase={supabase} orderId={orderId} initialMessages={initialMessages} />
+        {communicationSlot}
 
         {completedRecords.length > 0 && (
           <div>

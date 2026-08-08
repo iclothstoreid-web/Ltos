@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { scanTokenKey } from '@/lib/production/accessToken'
+import { ProductionPacketSkeleton } from './ProductionPacketSkeleton'
 
 interface ProductionAccessGateProps {
   orderId: string
@@ -60,6 +61,12 @@ export function ProductionAccessGate({ orderId, isInProgress, children }: Produc
     setAllowed(true)
   }, [orderId, isInProgress, router])
 
-  if (!allowed) return null
+  // Sprint N3 (blank-flash fix) — while the scan-token check above is
+  // pending (or, for the "bounce back to /production" branch, right up
+  // until that redirect actually unmounts this tree), show the same shell
+  // the real packet renders into instead of nothing. `children` (the actual
+  // Production Packet) still never mounts until `allowed` is true — this is
+  // a visual-only change, the access check itself is untouched.
+  if (!allowed) return <ProductionPacketSkeleton />
   return <>{children}</>
 }

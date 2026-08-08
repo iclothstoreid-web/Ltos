@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { BOTTLENECK_SEVERITY_LABEL, BottleneckSeverity } from '@/lib/ltos'
 import { OrderDetailModal } from './OrderDetailModal'
@@ -121,14 +122,14 @@ export function BottleneckPanel({ items }: { items: BottleneckItem[] }) {
                           <ChevronRight size={16} className="text-secondary transition-transform duration-200 group-hover:translate-x-[1px]" />
                         </button>
                       ) : (
-                        <a
+                        <Link
                           href={it.workspaceUrl}
                           onClick={e => e.stopPropagation()}
                           className="inline-flex items-center justify-between gap-2 w-full px-3 py-2 rounded-lg border border-outline-variant/90 bg-surface/10 text-body text-on-surface transition-all duration-200 hover:bg-on-surface/5 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:outline-none"
                         >
                           <span className="truncate">{it.suggestedAction}</span>
                           <ChevronRight size={16} className="text-secondary transition-transform duration-200 group-hover:translate-x-[1px]" />
-                        </a>
+                        </Link>
                       )}
                     </div>
                   </div>

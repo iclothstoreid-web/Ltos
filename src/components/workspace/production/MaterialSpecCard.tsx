@@ -1,6 +1,3 @@
-'use client'
-
-import { memo } from 'react'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 
 interface MaterialSpecCardProps {
@@ -16,8 +13,11 @@ interface MaterialSpecCardProps {
 // by Design Studio's Production Metrics card and Order Created's System
 // Logistics card).
 //
-// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
-function MaterialSpecCardComponent({ design, consultationNotes }: MaterialSpecCardProps) {
+// Server Component (Sprint N6) — same reasoning as ReferenceModelCard:
+// `design`/`consultationNotes` are frozen well before Production, never
+// mutated by anything on this page, so this renders server-side as a slot
+// from page.tsx. `memo` dropped — meaningless for a Server Component.
+export function MaterialSpecCard({ design, consultationNotes }: MaterialSpecCardProps) {
   return (
     <div className="bg-surface rounded-2xl p-6 shadow-sm border border-outline-variant/30 space-y-6">
       <h3 className="font-caslon text-xl text-on-surface">Spesifikasi Material</h3>
@@ -61,5 +61,3 @@ function MaterialSpecCardComponent({ design, consultationNotes }: MaterialSpecCa
     </div>
   )
 }
-
-export const MaterialSpecCard = memo(MaterialSpecCardComponent)

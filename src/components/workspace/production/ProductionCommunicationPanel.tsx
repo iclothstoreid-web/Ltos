@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import type { Operator } from '@/lib/production/types'
 import { sendOrderCommunication } from '@/lib/communication/kiosk'
 import { SENDER_ROLE_LABELS } from '@/lib/communication/types'
@@ -9,7 +9,6 @@ import type { CommunicationMessage } from '@/lib/communication/types'
 import { OperatorAutocomplete } from './OperatorAutocomplete'
 
 interface ProductionCommunicationPanelProps {
-  supabase: SupabaseClient
   orderId: string
   initialMessages: CommunicationMessage[]
 }
@@ -31,7 +30,8 @@ function formatTime(iso: string) {
 // operator is mid-stage below — any operator on the floor can open this and
 // check/send messages regardless of who's actively working the current
 // stage.
-export function ProductionCommunicationPanel({ supabase, orderId, initialMessages }: ProductionCommunicationPanelProps) {
+export function ProductionCommunicationPanel({ orderId, initialMessages }: ProductionCommunicationPanelProps) {
+  const [supabase] = useState(() => createClient())
   const [messages, setMessages] = useState(initialMessages)
   const [composerOperator, setComposerOperator] = useState<Operator | null>(null)
   const [body, setBody] = useState('')

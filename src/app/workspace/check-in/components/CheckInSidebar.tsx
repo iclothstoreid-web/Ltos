@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 // Studio/Persediaan/Order/Analitik are visual-only placeholders (no real
 // pages behind them yet) — kept in this array so each can be flipped back
@@ -36,8 +36,6 @@ interface CheckInSidebarProps {
 }
 
 export function CheckInSidebar({ showMasterData }: CheckInSidebarProps) {
-  const router = useRouter()
-
   return (
     <aside className="hidden lg:flex flex-col h-full py-8 bg-[#f9f9ff] border-r-[0.5px] border-[#c4c7c7] w-64 shrink-0">
       <div className="px-6 mb-10">
@@ -69,17 +67,13 @@ export function CheckInSidebar({ showMasterData }: CheckInSidebarProps) {
           </a>
         ))}
         {showMasterData && (
-          <a
+          <Link
             href="/owner/master-data-center"
-            onClick={e => {
-              e.preventDefault()
-              router.push('/owner/master-data-center')
-            }}
             className="flex items-center px-6 py-4 text-[#444748] hover:text-[#151c27] hover:bg-[#e2e8f8]/60 transition-all duration-200"
           >
             <span className="material-symbols-outlined mr-4">style</span>
             <span className="font-sans text-sm">Master Data</span>
-          </a>
+          </Link>
         )}
       </nav>
       {BANTUAN_HAS_FUNCTION && (

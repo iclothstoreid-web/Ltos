@@ -1,6 +1,3 @@
-'use client'
-
-import { memo } from 'react'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 
 interface ReferenceModelCardProps {
@@ -12,8 +9,14 @@ interface ReferenceModelCardProps {
 // Hero Card's customer photo, confirmed with the user), so this shows the
 // real design selections as text instead of fabricated images.
 //
-// PR-03 (Rendering Performance) — memoized. Same API, same behavior.
-function ReferenceModelCardComponent({ design }: ReferenceModelCardProps) {
+// Server Component (Sprint N6) — `design` is set once in Design Studio and
+// never mutated by anything reachable from the Production Packet (refetch()
+// replaces the whole `packet` object, but this field's value never changes
+// across that), so it's safe to render server-side as a slot from page.tsx
+// instead of a client component re-reading it from live packet state on
+// every render. `memo` dropped — meaningless for a Server Component, which
+// never re-renders on the client at all.
+export function ReferenceModelCard({ design }: ReferenceModelCardProps) {
   if (!design) return null
 
   const chips = [design.model, design.collar, design.cuff, design.button].filter(Boolean)
@@ -37,5 +40,3 @@ function ReferenceModelCardComponent({ design }: ReferenceModelCardProps) {
     </div>
   )
 }
-
-export const ReferenceModelCard = memo(ReferenceModelCardComponent)
