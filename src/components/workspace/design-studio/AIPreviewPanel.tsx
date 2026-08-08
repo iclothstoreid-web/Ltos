@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import Image from 'next/image'
 import type { CustomerDigitalProfile } from '@/lib/customerProfile/types'
 import type { DesignSpecification } from '@/lib/designSpecification/types'
 import { buildRenderContext, validateRenderContextReadiness } from '@/lib/customerProfile/renderContext'
@@ -8,6 +9,7 @@ import type { RenderContext } from '@/lib/customerProfile/renderContext'
 import type { RenderResult } from '@/lib/types/render'
 import type { RenderFinal } from '@/lib/design/renderFinal'
 import { RENDER_FINAL_STATUS_LABELS } from '@/lib/design/renderFinal'
+import { supabaseImageLoader } from '@/lib/supabase/imageLoader'
 
 interface AIPreviewPanelProps {
   customerDigitalProfile: CustomerDigitalProfile | null
@@ -92,6 +94,10 @@ export function AIPreviewPanel({
   onDownloadRenderFinal,
 }: AIPreviewPanelProps) {
   const [validationMessages, setValidationMessages] = useState<string[]>([])
+  // Mirrors CatalogCard/SpecDetailModal's fallback: a handful of legacy
+  // Storage objects exceed the Image Transformation add-on's resolution
+  // limit (400 InvalidRequest) and must fall back to the untransformed URL.
+  const [transformFailed, setTransformFailed] = useState(false)
   const replaceInputRef = useRef<HTMLInputElement>(null)
   const isLoading = renderResult.status === 'loading'
   const elapsedSeconds = useElapsedSeconds(isLoading)
@@ -104,6 +110,10 @@ export function AIPreviewPanel({
   // `renderResult` has reset to 'idle').
   const previewImageUrl =
     renderResult.status === 'success' && renderResult.imageUrl ? renderResult.imageUrl : previewUrl
+
+  useEffect(() => {
+    setTransformFailed(false)
+  }, [previewImageUrl])
 
   function handleGenerate() {
     // Render Request Lock (Sprint O, Task 1) — the button below is already
@@ -135,11 +145,17 @@ export function AIPreviewPanel({
     <section className="w-full lg:w-[45%] lg:h-full bg-[#f9f9ff] relative flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 lg:overflow-hidden gap-6">
       {previewImageUrl ? (
         <div className="w-full max-w-lg flex flex-col items-center justify-center gap-3">
-          <div className="relative w-full">
-            <img
-              src={previewImageUrl}
+          <div className="relative w-full aspect-[3/4] border border-[#c4c7c7]">
+            <Image
+              key={transformFailed ? 'raw' : 'transformed'}
+              src={previewImageUrl as string}
               alt="Rendered thobe"
-              className="w-full aspect-[3/4] object-cover border border-[#c4c7c7]"
+              loader={transformFailed ? undefined : supabaseImageLoader}
+              unoptimized={transformFailed}
+              fill
+              sizes="(min-width: 1024px) 512px, 100vw"
+              className="object-cover"
+              onError={() => setTransformFailed(true)}
             />
             {renderFinal && (
               <span
