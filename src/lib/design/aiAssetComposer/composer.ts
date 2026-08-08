@@ -9,6 +9,7 @@ export {
   COLLAR_REFERENCE_SHAPE_INSTRUCTION,
   PLAKET_REFERENCE_SHAPE_INSTRUCTION,
   POCKET_REFERENCE_SHAPE_INSTRUCTION,
+  CUFF_REFERENCE_SHAPE_INSTRUCTION,
 } from './registry'
 
 // AI Asset Composer (renamed from Reference Composer this sprint — "AI
@@ -81,7 +82,11 @@ export interface ComposedAiAssets {
   /** POCKET_SHAPE — same 4-condition gate as collarReference (Sprint AI
    *  Stability Phase 2). */
   pocketReference: ReferenceImageDescriptor | null
-  /** Sprint R-05 (Phase 2/3) — the same 3 descriptors above, keyed by
+  /** CUFF_SHAPE — same 4-condition gate as collarReference. Added this
+   *  sprint ("Hero Image Manset" revision) — see registry.ts's header
+   *  comment. */
+  cuffReference: ReferenceImageDescriptor | null
+  /** Sprint R-05 (Phase 2/3) — the same descriptors above, keyed by
    *  category instead of by name. This is the ONE generic place every other
    *  "which categories have an active Hero Image right now" question gets
    *  answered from (referenceBackedCategories, applyAssetInstructions,
@@ -124,6 +129,12 @@ export interface ComposeAiAssetsInput {
   /** The resolved Pocket (saku) MasterDataOption for this render, or null.
    *  Same 4-condition gate as `collarOption` (Sprint AI Stability Phase 2). */
   pocketOption?: MasterDataOption | null
+  /** The resolved Cuff (manset) MasterDataOption for this render, or null.
+   *  Same 4-condition gate as `collarOption`. Added this sprint ("Hero
+   *  Image Manset" revision) — Manset's Prompt text stays one shared
+   *  template across every item; only its Hero Image now joins the other
+   *  AI Assets sent to GPT Image. */
+  mansetOption?: MasterDataOption | null
   /** Every OTHER category present in this render's selection, purely so
    *  `excluded` can report exactly which ones were deliberately skipped
    *  for this request, not the full static category list. */
@@ -171,12 +182,13 @@ function isAiAssetActive(option: MasterDataOption | null): boolean {
 // a 5th reference-eligible category no longer means adding a 5th copy of
 // this block — see registry.ts's header comment.
 export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
-  const { customerPhotoUrl, collarOption = null, plaketOption = null, pocketOption = null, otherSelectedCategories } = input
+  const { customerPhotoUrl, collarOption = null, plaketOption = null, pocketOption = null, mansetOption = null, otherSelectedCategories } = input
 
   const optionByCategory: Partial<Record<MasterDataCategory, MasterDataOption | null>> = {
     kerah: collarOption,
     plaket: plaketOption,
     saku: pocketOption,
+    manset: mansetOption,
   }
 
   const referencesByCategory = new Map<MasterDataCategory, ReferenceImageDescriptor>()
@@ -195,10 +207,10 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
   const collarReference = referencesByCategory.get('kerah') ?? null
   const plaketReference = referencesByCategory.get('plaket') ?? null
   const pocketReference = referencesByCategory.get('saku') ?? null
+  const cuffReference = referencesByCategory.get('manset') ?? null
 
-  // kerah/plaket/saku stay in `excluded` (still text-only, per Recipe
-  // Composer) unless their real reference was actually composed in for
-  // THIS render.
+  // kerah/plaket/saku/manset stay in `excluded` (still text-only) unless
+  // their real reference was actually composed in for THIS render.
   const excludedCategorySet = new Set(otherSelectedCategories ?? NON_REFERENCE_CATEGORIES)
   referencesByCategory.forEach((_descriptor, category) => excludedCategorySet.delete(category))
   const excluded: ExcludedReferenceCategory[] = Array.from(excludedCategorySet).map((category) => ({
@@ -215,6 +227,7 @@ export function composeAiAssets(input: ComposeAiAssetsInput): ComposedAiAssets {
     collarReference,
     plaketReference,
     pocketReference,
+    cuffReference,
     referencesByCategory,
     urls,
     excluded,
@@ -318,4 +331,12 @@ export function validatePlaketReference(params: { plaketOption: MasterDataOption
 
 export function validatePocketReference(params: { pocketOption: MasterDataOption | null; composed: ComposedAiAssets }): AiAssetValidation {
   return validateAiAssetAvailable({ option: params.pocketOption, asset: params.composed.pocketReference, label: 'Pocket Reference' })
+}
+
+// Same non-blocking semantics as validateCollarReference — added this
+// sprint ("Hero Image Manset" revision). A FAIL here just means
+// cuffReference stays null and the render proceeds on DNA (text) alone,
+// same as every other AI Asset.
+export function validateMansetReference(params: { mansetOption: MasterDataOption | null; composed: ComposedAiAssets }): AiAssetValidation {
+  return validateAiAssetAvailable({ option: params.mansetOption, asset: params.composed.cuffReference, label: 'Cuff Reference' })
 }

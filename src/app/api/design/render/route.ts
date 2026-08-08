@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import type { MasterDataOption } from '@/lib/design/masterData'
+import type { MasterDataCategory, MasterDataOption } from '@/lib/design/masterData'
 import { resolveDNA } from '@/lib/design/dnaResolver/resolver'
 import type { DNAResolverInput } from '@/lib/design/dnaResolver/types'
-import { composeRenderRecipe } from '@/lib/design/recipeComposer/composer'
-import { DEFAULT_GLOBAL_RENDER_POLICY } from '@/lib/design/recipeComposer/types'
-import type { RenderRecipeEntry } from '@/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
-import { buildRenderInstruction, validateRenderInstruction } from '@/lib/design/promptBuilder/builder'
-import { serializeOpenAI } from '@/lib/design/promptBuilder/serializer'
-import { buildPromptLayers, compressPromptByLayers, validatePriorityZeroIntact } from '@/lib/design/promptBuilder/compression'
+import { buildFinalPrompt } from '@/lib/design/promptBuilder/finalPrompt'
 import { DEFAULT_MODEL } from '@/lib/ai/services/image'
 import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '@/lib/ai/renderSession/service'
 import {
@@ -17,17 +12,14 @@ import {
   validateCollarReference,
   validatePlaketReference,
   validatePocketReference,
+  validateMansetReference,
   referenceBackedCategories,
 } from '@/lib/design/aiAssetComposer/composer'
 import { REFERENCE_CATEGORY_REGISTRY } from '@/lib/design/aiAssetComposer/registry'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
-import { buildReferenceBinding } from '@/lib/design/renderEngine/referenceBinding'
-import { applyCollarComponentIdentity } from '@/lib/design/componentDefaultKnowledge/collar'
-import type { CollarConstructionType } from '@/lib/design/componentDefaultKnowledge/collar'
 import { validateComponentDna } from '@/lib/design/promptValidation/dnaValidator'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
 import type { UnresolvedComponent } from '@/lib/design/capabilityEngine/engine'
-import { IDENTITY_PRESERVATION } from '@/lib/design/renderEngine/identityPreservation'
 import type { DnaState } from '@/lib/design/dnaState/types'
 import { hashDnaState } from '@/lib/design/dnaState/hash'
 import { detectDirtyLayers } from '@/lib/design/dirtyLayer/detect'
@@ -45,17 +37,10 @@ import { generateIdentityProtectionMask } from '@/lib/ai/services/identityMask'
 // behavior. Remove once the loss is root-caused.
 //
 // Sprint O.1 (Task 3/6, Audit Duplicate Work) — a real profiling probe this
-// sprint (see SPRINT_O1 report) measured this whole diagnostic block
-// (JSON.stringify of the full instruction/masterRecipe + the uncompressed
-// prompt dump below) at well under 1ms of CPU per request — not the
-// latency bottleneck (OpenAI's own generation time is ~99%+ of total). It's
-// still real, unconditional work done on every production render for a
-// payload (`promptUncompressed`, `debug`) that has zero confirmed
-// consumers (verified: no client code reads `data.debug` or
-// `data.promptUncompressed` — see report). Gating it behind
-// RENDER_DEBUG_LOG removes that always-on cost/response-payload growth
-// without losing the ability to turn it back on for a specific
-// investigation (env var, no redeploy needed).
+// sprint (see SPRINT_O1 report) measured this whole diagnostic block at
+// well under 1ms of CPU per request — not the latency bottleneck (OpenAI's
+// own generation time is ~99%+ of total). Gated behind RENDER_DEBUG_LOG so
+// it costs nothing on a production render by default.
 const RENDER_DEBUG_LOG = process.env.RENDER_DEBUG_LOG === 'true' || process.env.NODE_ENV !== 'production'
 const SEP = '='.repeat(80)
 function logStage(emoji: string, title: string) {
@@ -66,10 +51,6 @@ function debugLog(...args: unknown[]) {
   if (!RENDER_DEBUG_LOG) return
   console.log(...args)
 }
-function debugTable(data: unknown) {
-  if (!RENDER_DEBUG_LOG) return
-  console.table(data)
-}
 
 // Incremental Render Engine V1 (Task 3/6/7) — remembers only the most
 // recently *processed* DNA State for this server process, purely so Dirty
@@ -79,8 +60,22 @@ function debugTable(data: unknown) {
 // observation only, same convention as the STAGE 1-6 debug logging.
 let lastDnaState: DnaState | null = null
 
-// Design Render orchestration endpoint — DNA Resolver -> Recipe Composer ->
-// Prompt Builder -> Image Service, gated by the AI Capability Engine.
+// Design Render orchestration endpoint — DNA Resolver -> Prompt Builder ->
+// Image Service, gated by the AI Capability Engine.
+//
+// Prompt UAT Source of Truth realignment (this sprint) — Recipe Composer,
+// Component Default Knowledge, and the old 13-fixed-section/token-budget
+// Prompt Builder (promptBuilder/compression.ts) are retired. The Prompt
+// Final is now a fixed 10-block concatenation (Identity Lock/Reference
+// Binding/Garment/Material/Color/Kerah/Plaket/Saku/Manset/Output, see
+// promptBuilder/finalPrompt.ts) with zero wrappers/labels — Material/Color/
+// Kerah/Plaket/Saku/Manset each contribute exactly their own selected
+// item's ai_dna.referenceInstruction (Color: its `color` field, per DNA
+// Resolver's own carve-out), read directly off `resolved` below. DNA
+// Resolver itself, the AI Capability Engine, and AI Asset Composer (which
+// Hero Images actually attach as images) are all unchanged — this
+// realignment only changes what TEXT becomes the final prompt string, never
+// which components block a render or which images are sent.
 //
 // Sprint PR-01 (Production Recovery) — this endpoint previously tolerated a
 // selected component silently failing to resolve (dropped into
@@ -159,9 +154,9 @@ export async function POST(req: NextRequest) {
 
   // Render Request Lock (Sprint O, Task 1) — acquired BEFORE any pipeline
   // work starts, so a rejected (locked) request never pays for the DNA
-  // Resolver/Recipe Composer/Compression work either, not just the OpenAI
-  // call. See src/lib/ai/renderSession/service.ts for the DB-constraint-
-  // backed (not check-then-act) locking mechanism.
+  // Resolver work either, not just the OpenAI call. See
+  // src/lib/ai/renderSession/service.ts for the DB-constraint-backed (not
+  // check-then-act) locking mechanism.
   const session = await profiler.markAsync('session_start', () =>
     startRenderSession({
       supabase,
@@ -238,8 +233,8 @@ export async function POST(req: NextRequest) {
   // mark it ready IN-MEMORY ONLY (never persisted) so DNA Resolver's existing
   // pending/empty gate doesn't block it — dna_colors.prompt is the ONLY
   // color content that ever reaches OpenAI this way; material_colors'
-  // supplier_color_code is never read here. Does not touch DNA Resolver,
-  // Recipe Composer, or Compression at all.
+  // supplier_color_code is never read here. Does not touch DNA Resolver at
+  // all.
   const warnaBahanRows = Array.from(rowsById.values()).filter(
     (row) => row.category === 'warna_bahan' && row.dna_color_id
   )
@@ -272,9 +267,7 @@ export async function POST(req: NextRequest) {
 
   // Material Resolver audit (2026-08-05) — same false-blocker pattern as
   // warna_bahan above, one category over. 'bahan' (Material) rows source
-  // their real content from ai_dna (Hero Image/Reference Instruction/Lock
-  // Rules/Negative Rules) and Component Default Knowledge (Engine,
-  // componentDefaultKnowledge/registry.ts's `bahan` slot), never
+  // their real content from ai_dna.referenceInstruction, never
   // render_recipe — but render_recipe.status still sits at the DB default
   // ('empty') forever for these rows since nothing in this app's UI ever
   // writes it to 'configured' (RenderRecipeSection.tsx only displays status,
@@ -285,10 +278,6 @@ export async function POST(req: NextRequest) {
   // already has real authored content (status !== 'pending', the exact same
   // condition DNA Resolver's own aiDna check one field over already
   // requires), so a genuinely-empty Material row is still correctly blocked.
-  // No extra Supabase fetch needed (unlike warna_bahan's dna_colors join) —
-  // Material's real content already lives on this same row's ai_dna. Does
-  // not touch DNA Resolver, Recipe Composer, Compression, or Component
-  // Default Knowledge at all.
   rowsById.forEach((row) => {
     if (row.category !== 'bahan' || row.ai_dna.status === 'pending') return
     row.render_recipe = {
@@ -299,28 +288,9 @@ export async function POST(req: NextRequest) {
 
   // Collar (Kerah) false-blocker fix (Final Pipeline Validation, 2026-08-06)
   // — the exact same pattern as the bahan fix immediately above, one
-  // category over. 'kerah' (Collar) rows source their real content from
-  // ai_dna (Hero Image/Reference Instruction/Component Rules), never
-  // render_recipe — but render_recipe.status still sits at the DB default
-  // ('empty') forever for rows nothing in this app's UI ever writes it to
-  // 'configured' for. This was a REAL, live blocker (audited finding,
-  // "Zirve Collar" — approved ai_dna with a real Hero Image, but empty
-  // render_recipe): DNA Resolver's `validate()` rejected the item outright
-  // (render blocked entirely, not just missing a reference image), AND —
-  // worse — aiAssetComposer/composer.ts's `isAiAssetActive()` reads this
-  // SAME `render_recipe.status !== 'empty'` condition as one of its own 4
-  // gates, so even a fully-approved Collar with a real uploaded Hero Image
-  // was silently excluded from the images actually sent to GPT Image. Mark
-  // it ready IN-MEMORY ONLY (never persisted) — only when ai_dna itself
-  // already has real authored content (status !== 'pending', the exact
-  // same condition the bahan fix above already requires), so a
-  // genuinely-empty Collar row is still correctly blocked, and
-  // isAiAssetActive's own separate `ai_dna.status === 'approved'`
-  // requirement still gates whether the Hero Image actually binds — this
-  // only removes the false blocker, it does not loosen approval. Does not
-  // touch DNA Resolver, Recipe Composer, Compression, Component Default
-  // Knowledge, or aiAssetComposer's own gate logic at all — only the
-  // render_recipe.status value both of those already read.
+  // category over. Mark it ready IN-MEMORY ONLY (never persisted) — only
+  // when ai_dna itself already has real authored content (status !==
+  // 'pending'), so a genuinely-empty Collar row is still correctly blocked.
   rowsById.forEach((row) => {
     if (row.category !== 'kerah' || row.ai_dna.status === 'pending') return
     row.render_recipe = {
@@ -330,25 +300,18 @@ export async function POST(req: NextRequest) {
   })
 
   // Look Cutting Architecture Lock (2026-08-05) — Look Cutting is NOT a
-  // Visual Component: no Hero Image, no AI Asset, no Reference Image, no
-  // Component Default Knowledge (componentDefaultKnowledge/registry.ts's
-  // `look_cutting` slot stays EMPTY, untouched by this fix). It carries only
-  // Variant Delta Knowledge — silhouette/fit/ease/shaping text on ai_dna
-  // (referenceInstruction/componentRules) — the exact same "real
-  // content already lives on ai_dna, render_recipe/status is vestigial"
-  // shape as the bahan fix above, one category over. Unlike bahan though,
-  // Look Cutting's own `ai_dna.status` can ALSO be stuck at 'pending' even
-  // with real referenceInstruction text already authored (audited finding,
-  // "Slim Fit" — see RND-20260805-000007): the only UI path that ever
-  // advances ai_dna.status (AiDesignDnaSection's Activate button) is gated
-  // on a catalog photo Look Cutting was never meant to need, so status
-  // alone is not a trustworthy readiness signal here. Gate on the presence
-  // of real Variant Delta Knowledge instead (referenceInstruction — the
-  // same "don't bypass a genuinely-empty item" guard as warnaBahanRows' own
-  // `if (!colorText) return` above), then mark BOTH ai_dna.status and
-  // render_recipe.status ready IN-MEMORY ONLY, never persisted. Does not
-  // touch DNA Resolver, Recipe Composer, Compression, or Component Default
-  // Knowledge at all.
+  // Visual Component: no Hero Image, no AI Asset, no Reference Image. It
+  // carries only Variant Delta Knowledge (referenceInstruction text) — the
+  // same "real content already lives on ai_dna, render_recipe/status is
+  // vestigial" shape as the bahan fix above. Its own `ai_dna.status` can ALSO
+  // be stuck at 'pending' even with real referenceInstruction text already
+  // authored (the only UI path that ever advances ai_dna.status is gated on
+  // a catalog photo Look Cutting was never meant to need), so status alone
+  // is not a trustworthy readiness signal here. Gate on the presence of real
+  // referenceInstruction text instead, then mark BOTH ai_dna.status and
+  // render_recipe.status ready IN-MEMORY ONLY, never persisted. Restored
+  // this sprint — Look Cutting's Builder slot is a real, permanent feature,
+  // not something the Prompt UAT realignment retires.
   rowsById.forEach((row) => {
     if (row.category !== 'look_cutting' || !row.ai_dna.referenceInstruction) return
     row.ai_dna = {
@@ -418,13 +381,8 @@ export async function POST(req: NextRequest) {
 
       // Architecture Lock (2026-08-04) — Model Thobe is catalog-only now
       // (thumbnail/name/description/selling point). It never contributes
-      // Hero Image, Reference Instruction, Lock Rules, or Negative Rules to
-      // Prompt Assembly, so it's excluded from DNA resolution entirely here
-      // — never resolved, never pushed to `resolved` (so it never reaches
-      // Recipe Composer's `entries`), and never a possible
-      // `componentsMissing`/`unresolvedComponents` entry (so a pending/
-      // invalid Model Thobe DNA can no longer block a render either — see
-      // capabilityEngine/engine.ts).
+      // anything to Prompt Assembly, so it's excluded from DNA resolution
+      // entirely here.
       if (option.category === 'model_thobe') {
         debugLog(`  ├─ ${selection.componentType} → "${option.name}" [category=model_thobe] — catalog-only, excluded from Prompt Assembly`)
         return
@@ -473,13 +431,7 @@ export async function POST(req: NextRequest) {
   // AI Asset Library — kerah (Collar), plaket (Placket), and saku (Pocket)
   // each reuse the same "found regardless of resolve success" raw lookup
   // (validateCollarReference/validatePlaketReference/validatePocketReference
-  // never block a render — Sprint AI Stability Phase 2 extended Plaket/
-  // Pocket onto the exact mechanism Collar already used).
-  //
-  // Sprint R-05 (Phase 3) — loops over REFERENCE_CATEGORY_REGISTRY instead
-  // of one hardcoded `find()` block per category. Model Thobe no longer has
-  // an entry in that registry (Architecture Lock, 2026-08-04), so this loop
-  // no longer needs a model_thobe special case at all.
+  // never block a render).
   const referenceOptionByCategory = new Map<string, MasterDataOption | null>()
   REFERENCE_CATEGORY_REGISTRY.forEach((def) => {
     const selection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === def.category)
@@ -488,6 +440,7 @@ export async function POST(req: NextRequest) {
   const collarOptionRaw = referenceOptionByCategory.get('kerah') ?? null
   const plaketOptionRaw = referenceOptionByCategory.get('plaket') ?? null
   const pocketOptionRaw = referenceOptionByCategory.get('saku') ?? null
+  const mansetOptionRaw = referenceOptionByCategory.get('manset') ?? null
 
   const composedAssets = profiler.mark('asset_composer', () =>
     composeAiAssets({
@@ -495,46 +448,30 @@ export async function POST(req: NextRequest) {
       collarOption: collarOptionRaw,
       plaketOption: plaketOptionRaw,
       pocketOption: pocketOptionRaw,
+      mansetOption: mansetOptionRaw,
     }),
   )
 
   // Global Base Hero (Architecture Lock, 2026-08-04) — the sole Global
   // Canvas owned by the Render Engine, always included when configured,
-  // independent of which components were selected. composeAiAssets itself
-  // is untouched; this augments its output only, inserted right after the
-  // customer photo and before every AI-Asset-Composer-produced reference,
-  // per the locked pipeline order (Customer Photo + Base Hero Model +
-  // Component Identity Knowledge + Component Variant Knowledge + Material +
-  // Color). No-op while renderEngine/baseHero.ts's constant is null (no
-  // image has been uploaded yet).
+  // independent of which components were selected.
   const baseHeroAvailable = GLOBAL_BASE_HERO_IMAGE_URL !== null
   const referenceImageUrls = GLOBAL_BASE_HERO_IMAGE_URL
     ? [composedAssets.urls[0], GLOBAL_BASE_HERO_IMAGE_URL, ...composedAssets.urls.slice(1)]
     : composedAssets.urls
 
   // Reference Image diagnostics (Sprint PR-01, P6; extended Sprint AI
-  // Stability Phase 2) — validateCollarReference/validatePlaketReference/
-  // validatePocketReference already existed (or now mirror what already
-  // existed) but were never called anywhere in production; wiring them in
-  // is what turns "reference image silently omitted" into a reported
-  // reason. Model Reference's equivalent diagnostic is gone along with the
-  // concept itself — Base Hero availability is just `baseHeroAvailable`
-  // above, a plain boolean, since it isn't tied to any MasterDataOption.
+  // Stability Phase 2).
   const collarReferenceStatus = validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
   const plaketReferenceStatus = validatePlaketReference({ plaketOption: plaketOptionRaw, composed: composedAssets })
   const pocketReferenceStatus = validatePocketReference({ pocketOption: pocketOptionRaw, composed: composedAssets })
+  const mansetReferenceStatus = validateMansetReference({ mansetOption: mansetOptionRaw, composed: composedAssets })
   debugLog(`Base Hero Model: ${baseHeroAvailable ? '✅ configured' : '— not configured (renderEngine/baseHero.ts)'}`)
   debugLog(`Collar Reference: ${collarReferenceStatus.valid ? '✅' : '—'} ${collarReferenceStatus.reason}`)
   debugLog(`Plaket Reference: ${plaketReferenceStatus.valid ? '✅' : '—'} ${plaketReferenceStatus.reason}`)
   debugLog(`Pocket Reference: ${pocketReferenceStatus.valid ? '✅' : '—'} ${pocketReferenceStatus.reason}`)
+  debugLog(`Cuff Reference: ${mansetReferenceStatus.valid ? '✅' : '—'} ${mansetReferenceStatus.reason}`)
 
-  // Reference-First — categories whose Hero Image is actually being sent
-  // this render (derived from composedAssets above, the same
-  // isAiAssetActive gate that decided the image itself). Still used below
-  // to decide which AI Asset caveat instruction layers apply and for debug
-  // logging; no longer used to prune garment text (Reference-First Cleanup
-  // removed the narrative fields that pruning used to target — every
-  // category's `garment.referenceInstruction` is already right-sized).
   const referenceBacked = referenceBackedCategories(composedAssets)
   debugLog(`Reference-backed categories (photo sent): [${Array.from(referenceBacked).join(', ') || 'none'}]`)
 
@@ -558,10 +495,8 @@ export async function POST(req: NextRequest) {
   debugLog(`Warnings: [${capability.warnings.join(' | ') || 'none'}]`)
 
   // Fail Fast (P3/P8): a selected component that never resolved, or a
-  // missing Customer Photo, are now the ONLY conditions allowed to stop a
-  // render before OpenAI (Architecture Lock, 2026-08-04, removed the old
-  // Model-Thobe-Anchor conditions — see capabilityEngine/engine.ts). No
-  // more rendering ahead with a silently-dropped component.
+  // missing Customer Photo, are the ONLY conditions allowed to stop a
+  // render before OpenAI.
   if (capability.mode === 'BLOCKED') {
     debugLog(`  ❌ BLOCKED — ${capability.blockedReason}`)
     outcome = {
@@ -577,211 +512,66 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Reference Image Prefetch (Sprint O.1, Task 4/6) — `composedAssets.urls`
-  // is already fully known at this point (composeAiAssets ran above); the
-  // download from Supabase Storage doesn't need anything Recipe
-  // Composer/Prompt Builder/Compression produce, so it's kicked off here
-  // and only awaited right before the OpenAI call, overlapping the
-  // download with those CPU-bound stages instead of paying for both in
-  // sequence (previously: image.ts only started this fetch AFTER prompt
-  // compression fully finished).
-  const referenceImagesPromise = profiler.markAsync('reference_image_fetch', () => prefetchReferenceImages(referenceImageUrls))
-  // Suppress Node's "unhandled promise rejection" warning for the case where
-  // an earlier stage below returns/throws before this is ever awaited (e.g.
-  // Prompt Compression rejects the render) — the real rejection is still
-  // delivered normally to whichever `await referenceImagesPromise` actually
-  // runs further down; this extra handler only exists to not crash/warn on
-  // the ones that don't.
-  referenceImagesPromise.catch(() => {})
-
-  // Priority mirrors the caller's own selection order (model_thobe first,
-  // per RenderRecipeEntry's own "Model before Collar before Pocket"
-  // convention) — there is no other ordering signal available per request.
-  const rawEntries: RenderRecipeEntry[] = resolved.map(({ option, recipe }, index) => ({
-    itemId: option.id,
-    category: option.category,
-    recipe,
-    priority: index,
-  }))
-
-  // Component Default Knowledge — Collar (locked brief, 2026-08-05). Recipe
-  // Composer below is unmodified and only ever resolves Component Default
-  // Knowledge by category (empty for 'kerah', see componentDefaultKnowledge/
-  // registry.ts); this injects the item's own construction_type-selected
-  // default (COLLAR_DEFAULT_1/COLLAR_DEFAULT_2) directly into its entry
-  // before Composer runs — see componentDefaultKnowledge/collar.ts's own
-  // comment for why this is safe to do without touching Composer itself.
-  const collarConstructionTypeByItemId = new Map<string, CollarConstructionType | null>(
-    resolved
-      .filter(({ option }) => option.category === 'kerah')
-      .map(({ option }) => [option.id, (option.construction_type as CollarConstructionType | null) ?? null])
-  )
-  const entries: RenderRecipeEntry[] = applyCollarComponentIdentity(rawEntries, collarConstructionTypeByItemId)
-
-  logStage('🟣', 'STAGE 3: RECIPE COMPOSER — merging component recipes')
-  debugLog(`Entries (priority order): ${entries.map((e) => `${e.category}#${e.priority}`).join(', ')}`)
-  const masterRecipe = profiler.mark('recipe_composer', () => composeRenderRecipe({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY }))
-  if (masterRecipe) {
-    ;(
-      ['camera', 'pose', 'lighting', 'composition', 'focus', 'fabricBehavior', 'visibilityRules', 'garment', 'fabricIdentity', 'stitching', 'embroidery', 'background', 'quality', 'style'] as const
-    ).forEach((key) => {
-      const keys = Object.keys(masterRecipe[key] ?? {})
-      debugLog(`  ├─ ${key}: ${keys.length ? `{${keys.join(', ')}}` : '✗ empty'}`)
-    })
-    debugLog(`  └─ finalConstraintRules: [${masterRecipe.finalConstraintRules.join(', ')}]`)
-  } else {
-    debugLog('  ⚠️  composeRenderRecipe returned null')
-  }
-
-  logStage('🟢', 'STAGE 4: PROMPT BUILDER — RenderInstruction')
-  const instruction = profiler.mark('prompt_builder', () => buildRenderInstruction(masterRecipe))
-  const instructionValidation = validateRenderInstruction(instruction)
-  debugLog(JSON.stringify(instruction, null, 2))
-  debugLog(`Validation: ${instructionValidation.valid ? '✅ valid' : `⚠️  ${instructionValidation.errors.join(' | ')}`}`)
-  if (!instruction) {
+  // Nothing resolved at all (e.g. every selection was model_thobe, which is
+  // catalog-only and never reaches `resolved`) — there is no Prompt Final
+  // to assemble beyond the fixed Engine blocks. Mirrors the old
+  // "RenderInstruction could not be compiled" gate this replaces.
+  if (resolved.length === 0) {
     outcome = {
       status: 'failed',
       requestCount: 0,
       retryCount: 0,
       model: null,
-      errorMessage: 'Render Instruction could not be compiled.',
+      errorMessage: 'Tidak ada komponen yang berhasil diresolusi untuk Prompt Final.',
     }
-    return NextResponse.json({ success: false, error: 'Render Instruction could not be compiled.', renderId }, { status: 422 })
+    return NextResponse.json({ success: false, error: 'Tidak ada komponen yang berhasil diresolusi.', renderId }, { status: 422 })
   }
 
-  // AI Asset Composer already ran (STAGE 2.5, alongside the Capability
-  // Engine) — reused here, not recomputed. `referenceImageUrls` (computed
-  // above, right after composedAssets) naturally reflects
-  // capability.strategy.includeBaseHero: the Global Base Hero slot is
-  // included whenever GLOBAL_BASE_HERO_IMAGE_URL is configured, independent
-  // of Collar/Plaket/Pocket AI Asset availability, which composeAiAssets
-  // still gates per-item exactly as before.
+  // Reference Image Prefetch (Sprint O.1, Task 4/6) — `composedAssets.urls`
+  // is already fully known at this point; the download from Supabase
+  // Storage is kicked off here and only awaited right before the OpenAI
+  // call, overlapping the download with the CPU-bound stages below.
+  const referenceImagesPromise = profiler.markAsync('reference_image_fetch', () => prefetchReferenceImages(referenceImageUrls))
+  // Suppress Node's "unhandled promise rejection" warning for the case where
+  // an earlier stage below returns/throws before this is ever awaited.
+  referenceImagesPromise.catch(() => {})
 
-  logStage('🔵', 'STAGE 5: PROMPT SERIALIZER (uncompressed, diagnostic only)')
-  // Sprint O.1 (Task 3, Audit Duplicate Work) — this uncompressed
-  // serialization exists purely for diagnostics (its own comment says so);
-  // it's never sent to OpenAI (`finalPrompt` below, from the COMPRESSED
-  // layers, is) and no client reads `promptUncompressed` from the response
-  // (verified — see SPRINT_O1 report). Only computed when a debug build/env
-  // actually wants it, instead of unconditionally on every production
-  // render.
-  const uncompressed = profiler.mark('prompt_serialize_uncompressed', () => (RENDER_DEBUG_LOG ? serializeOpenAI({ instruction }) : null))
-  debugLog(`Uncompressed prompt (${uncompressed?.length ?? 0} chars):`)
-  debugLog(uncompressed)
-
-  // Prompt Architecture Realignment (2026-08-06) — Reference Binding
-  // (Section 2) and Reference Usage Policy (Section 3) are now fixed Engine
-  // sections at fixed positions. Final Repository Cleanup (2026-08-06) —
-  // each geometry-type category's own Component Reference Delta (the
-  // "Transfer only: .../Do NOT copy: ..." instruction, aiAssetComposer/
-  // registry.ts) is no longer appended to that category's own step —
-  // neither an Engine section nor Master Data, so it no longer belongs in
-  // the assembled prompt (see promptBuilder/compression.ts's
-  // buildComponentStepContent for the full rationale). Hero Image binding
-  // itself (Reference Binding/Reference Usage Policy) is unaffected.
-  // See promptBuilder/compression.ts's own header comment for the full
-  // fixed order.
-  const referenceUsagePolicyActive = composedAssets.referencesByCategory.size > 0 || baseHeroAvailable
-  const referenceBindingContent = buildReferenceBinding({
-    customerPhoto: true,
-    baseHero: baseHeroAvailable,
-    collar: composedAssets.referencesByCategory.has('kerah'),
-    placket: composedAssets.referencesByCategory.has('plaket'),
-    pocket: composedAssets.referencesByCategory.has('saku'),
-  })
-
-  // Layer-Based Prompt Compression — assembles the 13 fixed sections (see
-  // promptBuilder/compression.ts) built from `entries` (per-item, pre-merge)
-  // so each component's own layer is exactly that category's own resolved
-  // content — no cross-category collision possible here.
-  const layerCompression = profiler.mark('prompt_compression', () => {
-    const promptLayers = buildPromptLayers({
-      entries,
-      masterRecipe,
-      identityPreservation: IDENTITY_PRESERVATION,
-      referenceBinding: referenceBindingContent,
-      referenceUsagePolicy: referenceUsagePolicyActive,
-    })
-    return compressPromptByLayers(promptLayers)
-  })
-
-  logStage('🔵', 'STAGE 5b: LAYER-BASED COMPRESSION (13-section fixed order, ~1800 token budget)')
-  debugTable(layerCompression.layerReport)
-
-  // Phase 4 (Sprint PR-04) — Priority 0 (Identity/Negative Rules/active AI
-  // Asset Instructions/Model Thobe/Look Cutting/Material/Material Color) is
-  // NEVER truncated or dropped to make room. If it alone exceeds the token
-  // budget, the render is refused outright rather than silently deleting
-  // one of those layers.
-  if (!layerCompression.ok) {
-    debugLog(`  ❌ ${layerCompression.error}`)
-    outcome = { status: 'failed', requestCount: 0, retryCount: 0, model: null, errorMessage: layerCompression.error ?? 'Compression failed.' }
-    return NextResponse.json(
-      { success: false, error: layerCompression.error, componentsMissing, layerReport: layerCompression.layerReport, renderId },
-      { status: 422 },
-    )
+  // Prompt Builder — Prompt Final (10 fixed blocks, Prompt UAT Source of
+  // Truth realignment, this sprint). Material/Color/Kerah/Plaket/Saku/Manset
+  // each read straight off `resolved`'s own DNA-Resolver output — no Recipe
+  // Composer merge, no Component Rules, no wrapper text. A category not
+  // present in `resolved` (not selected, or resolved as empty) simply
+  // contributes no block.
+  const extractReferenceText = (category: MasterDataCategory): string | null => {
+    const entry = resolved.find(({ option }) => option.category === category)
+    if (!entry) return null
+    const garment = entry.recipe.garment as Record<string, unknown>
+    const raw = category === 'warna_bahan' ? garment.color : garment.referenceInstruction
+    return typeof raw === 'string' && raw.trim().length > 0 ? raw : null
   }
 
-  // Final safety net before the OpenAI call. Identity Preservation/Scene
-  // Configuration/Garment Layout/Color/Global Quality Rules/Final
-  // Constraints are always required once Capability Engine hasn't already
-  // blocked the render — all fixed Engine defaults or unconditionally
-  // required Master Data (Color, which always has real content via the
-  // dna_colors merge). Look Cutting has no dedicated id anymore (folded
-  // into 'garment_layout' when selected — see compression.ts's
-  // buildGarmentLayoutContent), so it needs no separate conditional entry.
-  // Reference Binding / Reference Usage Policy are only required when
-  // applicable to THIS request (a render with no reference image active at
-  // all legitimately omits both).
-  //
-  // Final Repository Cleanup (2026-08-06) — 'material' removed from this
-  // unconditional list. Material's referenceInstruction/componentRules were
-  // cleared (no Material Prompt UAT exists yet — "lebih baik kosong
-  // daripada memakai prompt legacy"), so its layer is now legitimately
-  // empty for every row until real Prompt UAT is authored for it. Treating
-  // it as unconditionally required would reject every render with a 422
-  // starting now; instead it behaves like Collar/Placket/Pocket/Cuff —
-  // included when it has real content, silently omitted when it doesn't,
-  // never a hard blocker on its own.
-  // 'model_thobe' is excluded from this list — it's excluded from `entries`
-  // entirely (catalog-only), so it can never appear in layerReport.
-  const requiredPriorityZeroIds = [
-    'identity_preservation',
-    'scene_configuration',
-    'garment_layout',
-    'color',
-    'global_quality_rules',
-    'final_constraints',
-    ...(referenceBindingContent ? ['reference_binding'] : []),
-    ...(referenceUsagePolicyActive ? ['reference_usage_policy'] : []),
-  ]
-  const priorityZeroCheck = validatePriorityZeroIntact(layerCompression.layerReport, requiredPriorityZeroIds)
-  if (!priorityZeroCheck.valid) {
-    const message = `Prompt akhir kehilangan layer wajib sebelum dikirim ke OpenAI: ${priorityZeroCheck.missing.join(', ')}.`
-    debugLog(`  ❌ ${message}`)
-    outcome = { status: 'failed', requestCount: 0, retryCount: 0, model: null, errorMessage: message }
-    return NextResponse.json(
-      { success: false, error: message, componentsMissing, layerReport: layerCompression.layerReport, renderId },
-      { status: 422 },
-    )
-  }
-
-  debugLog(`\nCompressed prompt (~${layerCompression.totalTokens} tokens):`)
-  debugLog(layerCompression.compressed)
-
+  logStage('🟢', 'STAGE 3: PROMPT BUILDER — Prompt Final')
+  const finalPrompt = profiler.mark('prompt_builder', () =>
+    buildFinalPrompt({
+      material: extractReferenceText('bahan'),
+      color: extractReferenceText('warna_bahan'),
+      lookCutting: extractReferenceText('look_cutting'),
+      kerah: extractReferenceText('kerah'),
+      plaket: extractReferenceText('plaket'),
+      saku: extractReferenceText('saku'),
+      manset: extractReferenceText('manset'),
+      aksesori: extractReferenceText('aksesori'),
+      bordir: extractReferenceText('bordir'),
+      handmadeZigzag: extractReferenceText('handmade_zigzag'),
+    }),
+  )
+  debugLog(`\nPrompt Final (${finalPrompt.length} chars):`)
+  debugLog(finalPrompt)
   debugLog(`\nReference images sent to OpenAI: ${referenceImageUrls.length ? referenceImageUrls.join(', ') : 'none'}`)
 
-  // Sprint R-04 — `layerCompression.compressed` IS the final prompt now;
-  // AI Asset Instructions already went through compressPromptByLayers as
-  // Priority 0 layers above, so there is nothing left to concatenate here.
-  // This is what makes the audited `layerReport`/`totalTokens` (Sprint
-  // R-03's whole complaint) match what actually reaches OpenAI, byte for
-  // byte — no post-compression step can silently grow the prompt again.
-  const finalPrompt = layerCompression.compressed
-
-  // Reference images were kicked off (STAGE 2.5) concurrently with Recipe
-  // Composer/Prompt Builder/Compression above — awaited here, right before
-  // they're actually needed, so generateImage() never re-downloads them.
+  // Reference images were kicked off (STAGE 2.5) concurrently with Prompt
+  // Builder above — awaited here, right before they're actually needed, so
+  // generateImage() never re-downloads them.
   const referenceImageFiles = await referenceImagesPromise
   // Identity Protection Mask — kicked off right after STAGE 1's input
   // validation; awaited here alongside the reference images it doesn't
@@ -794,11 +584,9 @@ export async function POST(req: NextRequest) {
   // bare generateImage() call. maxApplicationRetries defaults to 0 (see
   // renderSession/service.ts), so this is currently identical in behavior
   // to a single generateImage() call — the difference is that every
-  // attempt is now counted and the count is persisted, instead of the
-  // OpenAI SDK's own default retries (now disabled, src/lib/ai/client.ts)
-  // silently happening with zero record of it ever occurring.
+  // attempt is now counted and the count is persisted.
   const { result, requestCount, retryCount, attempts, usage } = await generateImageWithControlledRetry({
-    input: { instruction, referenceImageUrls, referenceImageFiles, promptOverride: finalPrompt, maskFile: identityMaskFile ?? undefined },
+    input: { referenceImageUrls, referenceImageFiles, promptOverride: finalPrompt, maskFile: identityMaskFile ?? undefined },
   })
 
   // Sprint O.1 (Task 1/5) — one 'openai_request' stage per real network
@@ -809,7 +597,7 @@ export async function POST(req: NextRequest) {
     profiler.record(`openai_request_attempt_${index + 1}`, attempt.requestSentAt, attempt.responseReceivedAt)
   })
 
-  logStage('✅', 'STAGE 6: IMAGE SERVICE RESULT')
+  logStage('✅', 'STAGE 4: IMAGE SERVICE RESULT')
   debugLog(
     result.ok
       ? `success — ${result.images.length} image(s) returned (requests: ${requestCount}, retries: ${retryCount})`
@@ -827,8 +615,6 @@ export async function POST(req: NextRequest) {
       renderId,
       renderedImageUrl: result.images[0]?.url ?? null,
       promptUsed: finalPrompt,
-      promptLayerReport: layerCompression.layerReport,
-      promptTotalTokens: layerCompression.totalTokens,
       componentsUsed: resolved.map(({ option }) => ({ id: option.id, name: option.name, category: option.category })),
       componentsMissing,
       capability,
@@ -837,22 +623,15 @@ export async function POST(req: NextRequest) {
         collarReference: collarReferenceStatus,
         plaketReference: plaketReferenceStatus,
         pocketReference: pocketReferenceStatus,
+        mansetReference: mansetReferenceStatus,
       },
       identityProtectionMask: { applied: identityMaskFile !== null },
-      // Sprint O.1 (Task 3) — `promptUncompressed`/`debug` were computed and
-      // sent on every production response with zero confirmed consumers
-      // (verified — see SPRINT_O1 report); the 2026-07-28 comment on
-      // `debug`'s original addition already called it temporary ("Remove
-      // once the loss is root-caused"). Kept available on demand
-      // (RENDER_DEBUG_LOG) for exactly the investigation it was built for,
-      // instead of shipping on every render regardless of need.
+      // Sprint O.1 (Task 3) — kept available on demand (RENDER_DEBUG_LOG)
+      // for investigation, instead of shipping on every render regardless
+      // of need.
       ...(RENDER_DEBUG_LOG
         ? {
-            promptUncompressed: uncompressed,
             debug: {
-              masterRecipe,
-              instruction,
-              instructionValidation,
               referenceImageUrls,
               aiAssetComposer: composedAssets,
               referenceBackedCategories: Array.from(referenceBacked),

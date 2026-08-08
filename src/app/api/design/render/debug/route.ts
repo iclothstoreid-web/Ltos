@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import type { MasterDataOption } from '@/lib/design/masterData'
+import type { MasterDataCategory, MasterDataOption } from '@/lib/design/masterData'
 import { resolveDNA } from '@/lib/design/dnaResolver/resolver'
 import type { DNAResolverInput } from '@/lib/design/dnaResolver/types'
-import { composeRenderRecipe, composeRenderRecipeTrace, RECIPE_RECORD_FIELDS } from '@/lib/design/recipeComposer/composer'
-import { DEFAULT_GLOBAL_RENDER_POLICY } from '@/lib/design/recipeComposer/types'
-import type { RenderRecipeEntry } from '@/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
-import { buildRenderInstruction, validateRenderInstruction } from '@/lib/design/promptBuilder/builder'
-import { serializeOpenAI } from '@/lib/design/promptBuilder/serializer'
-import { buildPromptLayers, compressPromptByLayers } from '@/lib/design/promptBuilder/compression'
+import { buildFinalPrompt } from '@/lib/design/promptBuilder/finalPrompt'
 import { DEFAULT_MODEL } from '@/lib/ai/services/image'
 import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '@/lib/ai/renderSession/service'
 import { classifyCustomerPhotoFraming, judgeRenderQuality } from '@/lib/design/renderQuality/qualityJudge'
@@ -21,35 +16,27 @@ import {
   validateCollarReference,
   validatePlaketReference,
   validatePocketReference,
+  validateMansetReference,
 } from '@/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '@/lib/design/capabilityEngine/engine'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '@/lib/design/renderEngine/baseHero'
-import { IDENTITY_PRESERVATION } from '@/lib/design/renderEngine/identityPreservation'
-import { buildReferenceBinding } from '@/lib/design/renderEngine/referenceBinding'
 
 // DNA Debug Viewer pipeline endpoint — a read-only audit twin of
 // /api/design/render/route.ts. It runs the EXACT same library calls (DNA
-// Resolver -> Recipe Composer -> Prompt Builder -> Compression -> Image
-// Service), never a re-implementation, so what this endpoint reports is
-// guaranteed to match production behavior. Two deliberate differences from
-// the production route:
+// Resolver -> Prompt Builder -> Image Service), never a re-implementation,
+// so what this endpoint reports is guaranteed to match production behavior.
+// Two deliberate differences from the production route:
 //   1. Never reads/writes Render Cache — an audit tool that could return a
 //      stale cached result without saying so would defeat its own purpose.
 //   2. Only calls OpenAI (spends money) when the caller explicitly passes
 //      `dryRun: false`; defaults to `dryRun: true` so simply opening the
 //      debug page and clicking through components never costs anything.
 //
-// Prompt Architecture Realignment (2026-08-06) — this endpoint used to also
-// run a parallel "Prompt Architecture V2" comparison path
-// (promptArchitectureV2/layers.ts) and the pre-Sprint-PR-04 legacy
-// Anchor/Material/Other/Negatives compression buckets. Both are retired:
-// V2 never became production and this realignment IS the new locked
-// architecture; the legacy buckets were superseded in production since
-// Sprint PR-04 and this debug route had drifted out of sync with it (it
-// never built Reference Binding/Reference Usage Policy/Component Reference
-// Delta, and never passed plaket/pocket options to composeAiAssets) — this
-// rewrite closes that drift by calling the exact same real pipeline
-// functions route.ts calls, nothing reimplemented.
+// Prompt UAT Source of Truth realignment (this sprint) — Recipe Composer's
+// merge/provenance trace and the old Serializer/13-fixed-section Compression
+// report are retired along with the production pipeline they audited (see
+// route.ts's own header comment) — this endpoint now reports the new
+// Prompt Final's 10 fixed blocks directly instead.
 
 interface ComponentSelection {
   componentType: string
@@ -155,7 +142,7 @@ export async function POST(req: NextRequest) {
     // Model Thobe is catalog-only (Architecture Lock, 2026-08-04) — excluded
     // from DNA resolution entirely (mirrors route.ts exactly, so this audit
     // twin stays accurate). Still reported in `resolvedDna` for visibility,
-    // but never reaches `resolved`/`entries`.
+    // but never reaches `resolved`.
     if (option.category === 'model_thobe') {
       resolvedDna.push({
         componentType: selection.componentType,
@@ -195,13 +182,6 @@ export async function POST(req: NextRequest) {
     resolved.push({ option, recipe })
   })
 
-  const entries: RenderRecipeEntry[] = resolved.map(({ option, recipe }, index) => ({
-    itemId: option.id,
-    category: option.category,
-    recipe,
-    priority: index,
-  }))
-
   // ---------------------------------------------------------------------
   // SECTION 2b — DNA Validator — deterministic, per component, independent
   // of whether DNA Resolver marked it "ready".
@@ -210,36 +190,6 @@ export async function POST(req: NextRequest) {
     .map((selection) => rowsById.get(selection.componentId))
     .filter((option): option is MasterDataOption => !!option)
     .map((option) => validateComponentDna({ itemId: option.id, category: option.category, aiDna: option.ai_dna }))
-
-  // ---------------------------------------------------------------------
-  // SECTION 3 — Recipe Composer (merge + field-level provenance trace)
-  // ---------------------------------------------------------------------
-  const masterRecipe = entries.length > 0 ? composeRenderRecipe({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY }) : null
-  const trace = entries.length > 0 ? composeRenderRecipeTrace({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY }) : null
-
-  const overrides: { field: string; key: string; winner: { itemId: string; category: string } | null; losers: { itemId: string; category: string }[] }[] = []
-  if (trace) {
-    RECIPE_RECORD_FIELDS.forEach((field) => {
-      trace[field].forEach((entry) => {
-        if (entry.overriddenSources.length > 0) {
-          overrides.push({
-            field,
-            key: entry.key,
-            winner: entry.resolvedFrom ? { itemId: entry.resolvedFrom.itemId, category: entry.resolvedFrom.category } : null,
-            losers: entry.overriddenSources.map((source) => ({ itemId: source.itemId, category: source.category })),
-          })
-        }
-      })
-    })
-  }
-
-  // ---------------------------------------------------------------------
-  // SECTION 4 — Prompt Builder + Serializer (uncompressed diagnostic dump)
-  // ---------------------------------------------------------------------
-  const instruction = buildRenderInstruction(masterRecipe)
-  const instructionValidation = validateRenderInstruction(instruction)
-  const uncompressed = instruction ? serializeOpenAI({ instruction }) : null
-  const serializerIssues = includesRegressionString(uncompressed)
 
   // Raw lookups (regardless of resolveDNA success) — shared by the AI Asset
   // Composer below AND the AI Capability Engine further down, so "not
@@ -250,9 +200,11 @@ export async function POST(req: NextRequest) {
   const plaketOptionRaw = plaketSelection ? (rowsById.get(plaketSelection.componentId) ?? null) : null
   const pocketSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'saku')
   const pocketOptionRaw = pocketSelection ? (rowsById.get(pocketSelection.componentId) ?? null) : null
+  const mansetSelection = componentSelections.find((s) => rowsById.get(s.componentId)?.category === 'manset')
+  const mansetOptionRaw = mansetSelection ? (rowsById.get(mansetSelection.componentId) ?? null) : null
 
   // ---------------------------------------------------------------------
-  // SECTION 5 — AI Asset Composer — must be computed before Capability
+  // SECTION 3 — AI Asset Composer — must be computed before Capability
   // Engine/Prompt Builder, which both depend on it.
   // ---------------------------------------------------------------------
   const composedAssets = composeAiAssets({
@@ -260,6 +212,7 @@ export async function POST(req: NextRequest) {
     collarOption: collarOptionRaw,
     plaketOption: plaketOptionRaw,
     pocketOption: pocketOptionRaw,
+    mansetOption: mansetOptionRaw,
   })
   const baseHeroAvailable = GLOBAL_BASE_HERO_IMAGE_URL !== null
   const referenceImageUrls = GLOBAL_BASE_HERO_IMAGE_URL
@@ -268,6 +221,7 @@ export async function POST(req: NextRequest) {
   const collarReferenceValidation = validateCollarReference({ collarOption: collarOptionRaw, composed: composedAssets })
   const plaketReferenceValidation = validatePlaketReference({ plaketOption: plaketOptionRaw, composed: composedAssets })
   const pocketReferenceValidation = validatePocketReference({ pocketOption: pocketOptionRaw, composed: composedAssets })
+  const mansetReferenceValidation = validateMansetReference({ mansetOption: mansetOptionRaw, composed: composedAssets })
 
   // ---------------------------------------------------------------------
   // AI Capability Engine — the ONE place deciding render mode/quality/
@@ -312,8 +266,6 @@ export async function POST(req: NextRequest) {
       catalogActive: collarOptionRaw?.is_active ?? null,
       included: !!composedAssets.collarReference,
       validation: collarReferenceValidation,
-      transferredGeometry: ['Outline', 'Curvature', 'Opening', 'Height', 'Proportion', 'Profile'],
-      ignored: ['Color', 'Texture', 'Stitching', 'Background', 'Lighting', 'Shadows', 'Wrinkles'],
     },
     {
       referenceType: 'PLAKET_REFERENCE',
@@ -325,8 +277,6 @@ export async function POST(req: NextRequest) {
       catalogActive: plaketOptionRaw?.is_active ?? null,
       included: !!composedAssets.plaketReference,
       validation: plaketReferenceValidation,
-      transferredGeometry: ['Outline', 'Opening Length', 'Width', 'Button Spacing', 'Stitch-line Geometry'],
-      ignored: ['Fabric texture', 'Fabric color', 'Stitching thread color', 'Lighting', 'Wrinkles', 'Shadows', 'Background', 'Photography style'],
     },
     {
       referenceType: 'POCKET_REFERENCE',
@@ -338,41 +288,54 @@ export async function POST(req: NextRequest) {
       catalogActive: pocketOptionRaw?.is_active ?? null,
       included: !!composedAssets.pocketReference,
       validation: pocketReferenceValidation,
-      transferredGeometry: ['Outline', 'Placement', 'Proportion', 'Flap/Opening Geometry'],
-      ignored: ['Fabric texture', 'Fabric color', 'Stitching thread color', 'Lighting', 'Wrinkles', 'Shadows', 'Background', 'Photography style'],
+    },
+    {
+      referenceType: 'CUFF_REFERENCE',
+      referenceRole: 'CUFF_SHAPE',
+      name: mansetOptionRaw?.name ?? null,
+      priority: 60,
+      status: composedAssets.cuffReference ? 'ACTIVE' : 'INACTIVE',
+      aiDnaStatus: mansetOptionRaw?.ai_dna.status ?? null,
+      catalogActive: mansetOptionRaw?.is_active ?? null,
+      included: !!composedAssets.cuffReference,
+      validation: mansetReferenceValidation,
     },
   ]
 
   // ---------------------------------------------------------------------
-  // SECTION 6 — Prompt Builder (13 fixed sections, real production path)
+  // SECTION 4 — Prompt Builder — Prompt Final (10 fixed blocks)
   // ---------------------------------------------------------------------
-  const referenceUsagePolicyActive = composedAssets.referencesByCategory.size > 0 || baseHeroAvailable
-  const referenceBindingContent = buildReferenceBinding({
-    customerPhoto: true,
-    baseHero: baseHeroAvailable,
-    collar: composedAssets.referencesByCategory.has('kerah'),
-    placket: composedAssets.referencesByCategory.has('plaket'),
-    pocket: composedAssets.referencesByCategory.has('saku'),
-  })
-  const promptLayers = buildPromptLayers({
-    entries,
-    masterRecipe,
-    identityPreservation: IDENTITY_PRESERVATION,
-    referenceBinding: referenceBindingContent,
-    referenceUsagePolicy: referenceUsagePolicyActive,
-  })
-  const layerCompression = compressPromptByLayers(promptLayers)
-  const compressionIssues = includesRegressionString(layerCompression.compressed)
+  const extractReferenceText = (category: MasterDataCategory): string | null => {
+    const entry = resolved.find(({ option }) => option.category === category)
+    if (!entry) return null
+    const garment = entry.recipe.garment as Record<string, unknown>
+    const raw = category === 'warna_bahan' ? garment.color : garment.referenceInstruction
+    return typeof raw === 'string' && raw.trim().length > 0 ? raw : null
+  }
+
+  const promptFinalSections = {
+    material: extractReferenceText('bahan'),
+    color: extractReferenceText('warna_bahan'),
+    lookCutting: extractReferenceText('look_cutting'),
+    kerah: extractReferenceText('kerah'),
+    plaket: extractReferenceText('plaket'),
+    saku: extractReferenceText('saku'),
+    manset: extractReferenceText('manset'),
+    aksesori: extractReferenceText('aksesori'),
+    bordir: extractReferenceText('bordir'),
+    handmadeZigzag: extractReferenceText('handmade_zigzag'),
+  }
+  const finalPrompt = buildFinalPrompt(promptFinalSections)
+  const promptIssues = includesRegressionString(finalPrompt)
 
   // ---------------------------------------------------------------------
-  // SECTION 7 — Final AI Request (payload that WOULD be / IS sent)
+  // SECTION 5 — Final AI Request (payload that WOULD be / IS sent)
   // ---------------------------------------------------------------------
   const usesEdit = referenceImageUrls.length > 0
-  const activePrompt = layerCompression.ok ? layerCompression.compressed : null
   const finalRequest = {
     model: 'gpt-image-1',
     endpoint: usesEdit ? 'images.edit' : 'images.generate',
-    prompt: activePrompt,
+    prompt: finalPrompt,
     referenceImages: referenceImageUrls,
     mask: null as string | null,
     input_fidelity: usesEdit ? 'high' : null,
@@ -384,16 +347,16 @@ export async function POST(req: NextRequest) {
   const renderRequestValidator = validateRenderRequest({
     customerPhotoUrl,
     referenceImageUrls,
-    prompt: activePrompt,
+    prompt: finalPrompt,
     usesEdit,
     endpoint: finalRequest.endpoint,
     model: finalRequest.model,
     imageCount: finalRequest.imageCount,
   })
-  const canSendRequest = capability.mode !== 'BLOCKED' && layerCompression.ok && renderRequestValidator.valid
+  const canSendRequest = capability.mode !== 'BLOCKED' && renderRequestValidator.valid
 
   // ---------------------------------------------------------------------
-  // SECTION 8 — AI Response (only when dryRun === false AND validators PASS)
+  // SECTION 6 — AI Response (only when dryRun === false AND validators PASS)
   // ---------------------------------------------------------------------
   let aiResponse: {
     executed: boolean
@@ -415,11 +378,10 @@ export async function POST(req: NextRequest) {
       cancelled: true,
       cancelReason: [
         ...(capability.mode === 'BLOCKED' ? [`[Capability] ${capability.blockedReason}`] : []),
-        ...(!layerCompression.ok ? [`[Compression] ${layerCompression.error}`] : []),
         ...renderRequestValidator.checks.filter((c) => c.status === 'FAIL').map((c) => c.label),
       ].join('; ') || 'Validator gagal.',
     }
-  } else if (!dryRun && instruction && activePrompt) {
+  } else if (!dryRun && resolved.length > 0) {
     const {
       data: { user: debugUser },
     } = await supabase.auth.getUser()
@@ -436,7 +398,7 @@ export async function POST(req: NextRequest) {
 
     const startedAtMs = Date.now()
     const { result, requestCount, retryCount } = await generateImageWithControlledRetry({
-      input: { instruction, referenceImageUrls, promptOverride: activePrompt },
+      input: { referenceImageUrls, promptOverride: finalPrompt },
     })
     const latencyMs = Date.now() - startedAtMs
 
@@ -479,7 +441,7 @@ export async function POST(req: NextRequest) {
       : null
 
   // ---------------------------------------------------------------------
-  // SECTION 9 — Validation checklist
+  // SECTION 7 — Validation checklist
   // ---------------------------------------------------------------------
   const validation = [
     {
@@ -493,7 +455,7 @@ export async function POST(req: NextRequest) {
       label: 'Model Thobe — Prompt Assembly participation',
       status: 'INFO' as const,
       reason:
-        'Model Thobe adalah catalog-only sejak Architecture Lock (2026-08-04) — tidak lagi menyumbang Hero Image, Reference Instruction, atau Component Rules ke Prompt Assembly.',
+        'Model Thobe adalah catalog-only sejak Architecture Lock (2026-08-04) — tidak lagi menyumbang apa pun ke Prompt Assembly.',
     },
     {
       id: 'render_recipe_ready',
@@ -524,16 +486,10 @@ export async function POST(req: NextRequest) {
     {
       id: 'no_object_object',
       label: 'Prompt bukan [object Object] / undefined / null literal',
-      status: serializerIssues.length === 0 && compressionIssues.length === 0 ? 'PASS' : 'FAIL',
-      reason: [...serializerIssues, ...compressionIssues].length === 0
+      status: promptIssues.length === 0 ? 'PASS' : 'FAIL',
+      reason: promptIssues.length === 0
         ? 'Tidak ditemukan literal [object Object]/undefined/null di prompt.'
-        : `Ditemukan: ${Array.from(new Set([...serializerIssues, ...compressionIssues])).join(', ')}`,
-    },
-    {
-      id: 'compression_ok',
-      label: 'Prompt Builder Compression OK (Priority 0 muat dalam budget)',
-      status: layerCompression.ok ? 'PASS' : 'FAIL',
-      reason: layerCompression.ok ? `${layerCompression.totalTokens} token terpakai.` : (layerCompression.error ?? ''),
+        : `Ditemukan: ${promptIssues.join(', ')}`,
     },
     ...renderRequestValidator.checks.map((check) => ({ id: `render_validator_${check.id}`, label: `[Render Validator] ${check.label}`, status: check.status, reason: check.reason })),
     ...(renderValidator
@@ -554,25 +510,10 @@ export async function POST(req: NextRequest) {
     rawDna,
     resolvedDna,
     componentsMissing,
-    recipeComposer: {
-      masterRecipe,
-      trace,
-      overrides,
-    },
-    promptBuilder: {
-      instruction,
-      instructionValidation,
-      layers: promptLayers,
-      layerReport: layerCompression.layerReport,
-      compressed: layerCompression.compressed,
-      compressionOk: layerCompression.ok,
-      compressionError: layerCompression.error,
-      totalTokens: layerCompression.totalTokens,
-      issues: compressionIssues,
-    },
-    serializer: {
-      uncompressed,
-      issues: serializerIssues,
+    promptFinal: {
+      sections: promptFinalSections,
+      text: finalPrompt,
+      issues: promptIssues,
     },
     finalRequest,
     referenceImages,

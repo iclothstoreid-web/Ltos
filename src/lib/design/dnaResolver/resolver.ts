@@ -1,5 +1,4 @@
 import type { AiDesignDna } from '@/lib/design/aiDna/types'
-import type { RenderRecipeEntry } from '@/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '@/lib/design/renderRecipe/types'
 import type { DNAResolverInput, DNAResolverOutput } from './types'
 import { resolveComponentRules } from './resolveComponentRules'
@@ -112,18 +111,4 @@ export function resolveDNA(input: DNAResolverInput): DNAResolverOutput {
   const recipe: RenderRecipe = { ...input.renderRecipe, garment, componentRules }
 
   return { recipe, ready: true, errors: [] }
-}
-
-// Bridges a resolved item straight into Recipe Composer's own input shape —
-// so a future caller can go MasterDataOption[] -> resolveDNA -> this ->
-// composeRenderRecipe(...) without Recipe Composer ever needing to know
-// AI Design DNA or Render Recipe exist. `priority` stays a caller-supplied
-// argument: it is a per-render ordering decision (which item is "more
-// specific" for this particular composition), not something a single
-// item's own DNA/Recipe can determine on its own.
-export function toRenderRecipeEntry(input: DNAResolverInput, priority: number): RenderRecipeEntry | null {
-  const { recipe } = resolveDNA(input)
-  if (!recipe) return null
-
-  return { itemId: input.itemId, category: input.category, recipe, priority }
 }

@@ -27,10 +27,18 @@
 // ReferenceRole, its own REFERENCE_PRIORITY entry, a new optional input on
 // ComposeAiAssetsInput, and its own inclusion rule in composeAiAssets — all
 // additive, following the exact same shape COLLAR_REFERENCE did.
+// CUFF_REFERENCE (role CUFF_SHAPE) — added this sprint ("Hero Image Manset"
+// revision): Manset's Prompt text stays ONE shared template across every
+// Manset item (no per-item variation, per the brief), but its Hero Image is
+// now sent to GPT Image alongside Base Hero/Collar/Placket/Pocket — this UAT
+// is explicitly testing whether GPT Image needs the visual reference even
+// though the text is identical across items. Same 4-condition gate as
+// COLLAR_REFERENCE (composer.ts's isAiAssetActive).
 export type ReferenceType =
   | 'COLLAR_REFERENCE'
   | 'PLAKET_REFERENCE'
   | 'POCKET_REFERENCE'
+  | 'CUFF_REFERENCE'
   | 'FABRIC_REFERENCE'
   | 'EMBROIDERY_REFERENCE'
   | 'PATTERN_REFERENCE'
@@ -44,9 +52,11 @@ export type ReferenceType =
 //                spacing/stitch-line geometry ONLY
 //   POCKET_SHAPE (POCKET_REFERENCE) — pocket outline/placement/proportion
 //                geometry ONLY
+//   CUFF_SHAPE (CUFF_REFERENCE) — cuff outline/proportion/construction
+//                geometry ONLY, never fabric/color/stitching/lighting
 // A future FABRIC_REFERENCE/EMBROIDERY_REFERENCE/PATTERN_REFERENCE would
 // each need their own role added here — none is guessed/invented in advance.
-export type ReferenceRole = 'COLLAR_SHAPE' | 'PLAKET_SHAPE' | 'POCKET_SHAPE'
+export type ReferenceRole = 'COLLAR_SHAPE' | 'PLAKET_SHAPE' | 'POCKET_SHAPE' | 'CUFF_SHAPE'
 
 // Priority mirrors "more specific overrides more generic" — same ordering
 // principle recipeComposer/composer.ts already uses for text DNA. Only
@@ -57,6 +67,7 @@ export const REFERENCE_PRIORITY: Partial<Record<ReferenceType, number>> = {
   COLLAR_REFERENCE: 90,
   PLAKET_REFERENCE: 80,
   POCKET_REFERENCE: 70,
+  CUFF_REFERENCE: 60,
 }
 
 export interface ReferenceImageDescriptor {

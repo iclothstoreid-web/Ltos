@@ -1,14 +1,19 @@
 import OpenAI, { APIConnectionTimeoutError, APIError } from "openai";
-import type { RenderInstruction } from "@/lib/design/promptBuilder/types";
-import { serializeOpenAI } from "@/lib/design/promptBuilder/serializer";
 import { getOpenAIClient } from "../client";
 
 // Image Generation Service — the ONLY door from LTOS domain code into an AI
 // provider for image generation. Domain must never call src/lib/ai/providers
-// directly; it calls this service, which reads the neutral RenderInstruction,
-// asks the domain's own Prompt Serializer for provider-flavored prompt text,
-// then hands that off to the OpenAI provider client. No storage, no DB, no UI
-// this sprint — raw SDK output only.
+// directly; it calls this service, which hands the caller-supplied final
+// prompt string (`promptOverride` — see promptBuilder/finalPrompt.ts) off to
+// the OpenAI provider client. No storage, no DB, no UI this sprint — raw SDK
+// output only.
+//
+// Prompt UAT Source of Truth realignment (this sprint) — RenderInstruction /
+// Prompt Serializer (the neutral-representation indirection this module used
+// to read through) are retired: every real caller already computes its own
+// final prompt string via promptBuilder/finalPrompt.ts and always supplies
+// it as `promptOverride`, so that indirection had been dead weight (see
+// route.ts's own header comment on the realignment).
 
 export const DEFAULT_MODEL = "gpt-image-1";
 // Final Production Render Test (2026-07-31) — measured real gpt-image-1
@@ -90,7 +95,6 @@ async function fetchReferenceImageFile(url: string): Promise<File> {
 }
 
 export interface GenerateImageInput {
-  instruction: RenderInstruction;
   model?: string;
   timeoutMs?: number;
   // Design Knowledge Pipeline V1 (decision 6-8) — optional visual
@@ -109,13 +113,12 @@ export interface GenerateImageInput {
   // Omitted = fetch them here exactly as before (unchanged default path,
   // still used by the Debug Viewer and QA scripts).
   referenceImageFiles?: File[];
-  // Added 2026-07-27 (DNA Resolver / render-pipeline integration) — lets a
-  // caller that already ran its own token-budgeted compression (see
-  // promptBuilder/compression.ts) hand this service a final prompt string
-  // directly, instead of the service re-deriving one from `instruction` via
-  // serializeOpenAI. Optional and additive: every existing caller keeps
-  // getting the full uncompressed serialization exactly as before.
-  promptOverride?: string;
+  // The final prompt string, already assembled by promptBuilder/
+  // finalPrompt.ts (Identity Lock/Reference Binding/Garment/Material/Color/
+  // Kerah/Plaket/Saku/Manset/Output, concatenated). Every real caller
+  // supplies this — it is the only source of prompt text this service reads
+  // now (see this file's header comment).
+  promptOverride: string;
   // Identity Protection Mask (Render Investigation, 2026-08-06) — see
   // ai/services/identityMask.ts. Optional and additive: omitted (the
   // default) sends the request exactly as before this feature existed.
@@ -169,13 +172,13 @@ export function prefetchReferenceImages(urls: string[]): Promise<File[]> {
 }
 
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageResult> {
-  const prompt = input.promptOverride ?? serializeOpenAI({ instruction: input.instruction });
+  const prompt = input.promptOverride;
 
   if (!prompt) {
     const now = Date.now();
     return {
       ok: false,
-      error: "RenderInstruction could not be serialized into a prompt (Prompt Serializer not implemented yet).",
+      error: "No prompt supplied (promptOverride is required).",
       timing: { requestSentAt: now, responseReceivedAt: now },
     };
   }

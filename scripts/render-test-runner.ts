@@ -2,17 +2,18 @@
 //
 // Loads the Golden Dataset (render-testing/customers + render-testing/dna),
 // runs every customer x DNA-scenario combination through the REAL pipeline
-// (DNA Resolver -> DNA Validator -> Recipe Composer -> Prompt Builder
-// [13 fixed sections] -> Render Validator), and writes a timestamped result
-// + regression report. Never overwrites a previous run — every invocation
-// gets its own timestamp folder/file.
+// (DNA Resolver -> DNA Validator -> Prompt Builder [10 fixed blocks] ->
+// Render Validator), and writes a timestamped result + regression report.
+// Never overwrites a previous run — every invocation gets its own timestamp
+// folder/file.
 //
-// Prompt Architecture Realignment (2026-08-06) — this runner used to
-// compare two parallel prompt architectures (V1 production vs. V2, an
-// experiment that never shipped). V2 and the pre-Sprint-PR-04 legacy
-// compression buckets are both retired; this realignment IS the one locked
-// architecture now, so there is nothing left to compare against — this
-// runner exercises that one real path.
+// Prompt UAT Source of Truth realignment (this sprint) — Recipe Composer and
+// the old 13-fixed-section/token-budget Prompt Builder (promptBuilder/
+// compression.ts) are retired along with the production pipeline they
+// exercised (see route.ts's own header comment). This runner now assembles
+// the Prompt Final the same way route.ts does: each category's own
+// ai_dna.referenceInstruction (Color: its `color` field), read straight off
+// DNA Resolver's output, concatenated by promptBuilder/finalPrompt.ts.
 //
 // Standalone Node script, NOT a Next.js request handler — it builds its own
 // Supabase client from env vars (@/lib/supabase/server's createClient()
@@ -30,14 +31,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 
-import type { MasterDataOption } from '../src/lib/design/masterData'
+import type { MasterDataCategory, MasterDataOption } from '../src/lib/design/masterData'
 import { resolveDNA } from '../src/lib/design/dnaResolver/resolver'
 import type { DNAResolverInput } from '../src/lib/design/dnaResolver/types'
-import { composeRenderRecipe } from '../src/lib/design/recipeComposer/composer'
-import { DEFAULT_GLOBAL_RENDER_POLICY } from '../src/lib/design/recipeComposer/types'
-import type { RenderRecipeEntry } from '../src/lib/design/recipeComposer/types'
 import type { RenderRecipe } from '../src/lib/design/renderRecipe/types'
-import { buildPromptLayers, compressPromptByLayers } from '../src/lib/design/promptBuilder/compression'
+import { buildFinalPrompt } from '../src/lib/design/promptBuilder/finalPrompt'
 import { startRenderSession, finishRenderSession, generateImageWithControlledRetry } from '../src/lib/ai/renderSession/service'
 import { DEFAULT_MODEL } from '../src/lib/ai/services/image'
 import { validateComponentDna } from '../src/lib/design/promptValidation/dnaValidator'
@@ -46,8 +44,6 @@ import { getRenderRunMode, isDebugMode } from '../src/lib/design/promptValidatio
 import { composeAiAssets } from '../src/lib/design/aiAssetComposer/composer'
 import { evaluateCapability } from '../src/lib/design/capabilityEngine/engine'
 import { GLOBAL_BASE_HERO_IMAGE_URL } from '../src/lib/design/renderEngine/baseHero'
-import { IDENTITY_PRESERVATION } from '../src/lib/design/renderEngine/identityPreservation'
-import { buildReferenceBinding } from '../src/lib/design/renderEngine/referenceBinding'
 
 const ROOT = path.resolve(__dirname, '..')
 const RENDER_TESTING_DIR = path.join(ROOT, 'render-testing')
@@ -227,21 +223,21 @@ async function runScenario(customer: CustomerManifestEntry, dna: DnaScenarioMani
     }
   })
 
-  const entries: RenderRecipeEntry[] = resolved.map(({ option, recipe }, index) => ({ itemId: option.id, category: option.category, recipe, priority: index }))
-  const masterRecipe = entries.length > 0 ? composeRenderRecipe({ entries, policy: DEFAULT_GLOBAL_RENDER_POLICY }) : null
-
   const collarSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'kerah')
   const collarOptionRaw = collarSelection ? (rowsById.get(collarSelection.componentId as string) ?? null) : null
   const plaketSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'plaket')
   const plaketOptionRaw = plaketSelection ? (rowsById.get(plaketSelection.componentId as string) ?? null) : null
   const pocketSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'saku')
   const pocketOptionRaw = pocketSelection ? (rowsById.get(pocketSelection.componentId as string) ?? null) : null
+  const mansetSelection = dna.componentSelections.find((c) => rowsById.get(c.componentId as string)?.category === 'manset')
+  const mansetOptionRaw = mansetSelection ? (rowsById.get(mansetSelection.componentId as string) ?? null) : null
 
   const composedAssets = composeAiAssets({
     customerPhotoUrl: customer.photoUrl,
     collarOption: collarOptionRaw,
     plaketOption: plaketOptionRaw,
     pocketOption: pocketOptionRaw,
+    mansetOption: mansetOptionRaw,
   })
   // Global Base Hero (Architecture Lock, 2026-08-04) — mirrors route.ts's
   // insertion exactly.
@@ -262,25 +258,28 @@ async function runScenario(customer: CustomerManifestEntry, dna: DnaScenarioMani
     unresolvedComponents,
   })
 
-  // Prompt Builder — the 13 fixed sections, real production path (see
-  // promptBuilder/compression.ts).
-  const referenceUsagePolicyActive = composedAssets.referencesByCategory.size > 0 || baseHeroAvailable
-  const referenceBindingContent = buildReferenceBinding({
-    customerPhoto: true,
-    baseHero: baseHeroAvailable,
-    collar: composedAssets.referencesByCategory.has('kerah'),
-    placket: composedAssets.referencesByCategory.has('plaket'),
-    pocket: composedAssets.referencesByCategory.has('saku'),
+  // Prompt Builder — Prompt Final (10 fixed blocks, real production path,
+  // see promptBuilder/finalPrompt.ts). Each category reads straight off
+  // `resolved`'s own DNA-Resolver output.
+  const extractReferenceText = (category: MasterDataCategory): string | null => {
+    const entry = resolved.find(({ option }) => option.category === category)
+    if (!entry) return null
+    const garment = entry.recipe.garment as Record<string, unknown>
+    const raw = category === 'warna_bahan' ? garment.color : garment.referenceInstruction
+    return typeof raw === 'string' && raw.trim().length > 0 ? raw : null
+  }
+  const prompt = buildFinalPrompt({
+    material: extractReferenceText('bahan'),
+    color: extractReferenceText('warna_bahan'),
+    lookCutting: extractReferenceText('look_cutting'),
+    kerah: extractReferenceText('kerah'),
+    plaket: extractReferenceText('plaket'),
+    saku: extractReferenceText('saku'),
+    manset: extractReferenceText('manset'),
+    aksesori: extractReferenceText('aksesori'),
+    bordir: extractReferenceText('bordir'),
+    handmadeZigzag: extractReferenceText('handmade_zigzag'),
   })
-  const promptLayers = buildPromptLayers({
-    entries,
-    masterRecipe,
-    identityPreservation: IDENTITY_PRESERVATION,
-    referenceBinding: referenceBindingContent,
-    referenceUsagePolicy: referenceUsagePolicyActive,
-  })
-  const layerCompression = compressPromptByLayers(promptLayers)
-  const prompt = layerCompression.ok ? layerCompression.compressed : null
 
   const usesEdit = referenceImageUrls.length > 0
   const renderRequestValidator = validateRenderRequest({
@@ -293,7 +292,7 @@ async function runScenario(customer: CustomerManifestEntry, dna: DnaScenarioMani
     imageCount: 1,
   })
 
-  const canSend = capability.mode !== 'BLOCKED' && layerCompression.ok && renderRequestValidator.valid
+  const canSend = capability.mode !== 'BLOCKED' && renderRequestValidator.valid
 
   let output: ScenarioRunResult['output'] = { ok: false, cancelled: false, renderedImageUrl: null }
   let revisedPrompt: string | null = null
@@ -306,12 +305,11 @@ async function runScenario(customer: CustomerManifestEntry, dna: DnaScenarioMani
       cancelled: true,
       cancelReason: [
         ...(capability.mode === 'BLOCKED' ? [`[Capability] ${capability.blockedReason}`] : []),
-        ...(!layerCompression.ok ? [`[Compression] ${layerCompression.error}`] : []),
         ...renderRequestValidator.checks.filter((c) => c.status === 'FAIL').map((c) => c.label),
       ].join('; ') || 'Validator gagal.',
       renderedImageUrl: null,
     }
-  } else if (masterRecipe && prompt) {
+  } else if (resolved.length > 0) {
     // Sprint O (Task 5, Trigger Source) — tagged 'test_script' so this
     // golden-dataset spend is always filterable apart from real Design
     // Studio usage in Render History.
@@ -320,11 +318,8 @@ async function runScenario(customer: CustomerManifestEntry, dna: DnaScenarioMani
     const startedAtIso = session.locked ? new Date().toISOString() : session.startedAt
     const historyRowId = session.locked ? null : session.historyRowId
 
-    const { buildRenderInstruction } = await import('../src/lib/design/promptBuilder/builder')
-    const instruction = buildRenderInstruction(masterRecipe)
-
     const { result, requestCount, retryCount } = await generateImageWithControlledRetry({
-      input: { instruction: instruction!, referenceImageUrls, promptOverride: prompt },
+      input: { referenceImageUrls, promptOverride: prompt },
     })
     if (result.ok) {
       output = { ok: true, cancelled: false, renderedImageUrl: result.images[0]?.url ?? null }
@@ -389,7 +384,7 @@ function formatScenarioMarkdown(result: ScenarioRunResult): string {
     `| Reference Images | ${result.referenceImages.length} — ${result.referenceImages.join(', ') || '—'} |`,
     `| Output | ${result.output.cancelled ? `CANCELLED (${result.output.cancelReason ?? '—'})` : result.output.ok ? `OK — ${result.output.renderedImageUrl ?? '(no url)'}` : `ERROR — ${result.output.error ?? '—'}`} |`,
     '',
-    '**Prompt (13 fixed sections, compressed)**',
+    '**Prompt (10 fixed blocks)**',
     '```',
     result.prompt ?? '(null)',
     '```',

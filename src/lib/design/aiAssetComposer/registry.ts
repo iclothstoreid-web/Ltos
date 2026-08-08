@@ -52,6 +52,15 @@ export const PLAKET_REFERENCE_SHAPE_INSTRUCTION =
 export const POCKET_REFERENCE_SHAPE_INSTRUCTION =
   'Transfer only: pocket outline, pocket placement, pocket proportion, pocket flap/opening geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style.'
 
+// Same mechanism as COLLAR_REFERENCE_SHAPE_INSTRUCTION, for Cuff — CUFF_SHAPE
+// geometry only. Added this sprint ("Hero Image Manset" revision) — Manset
+// previously had no AI Asset/Hero Image mechanism anywhere in this codebase
+// (flagged repeatedly in prior sprints); this UAT specifically tests whether
+// GPT Image needs the visual reference even though Manset's Prompt text
+// stays one shared template across every item (no per-item text variation).
+export const CUFF_REFERENCE_SHAPE_INSTRUCTION =
+  'Transfer only: cuff outline, cuff proportion, cuff construction, cuff opening geometry. Do NOT copy: fabric texture, fabric color, stitching thread color, lighting, wrinkles, shadows, background, photography style.'
+
 export interface ReferenceCategoryDefinition {
   category: MasterDataCategory
   type: ReferenceType
@@ -95,5 +104,14 @@ export const REFERENCE_CATEGORY_REGISTRY: ReferenceCategoryDefinition[] = [
     idSuffix: 'pocket',
     instructionLabel: 'Pocket Reference Instruction',
     instruction: POCKET_REFERENCE_SHAPE_INSTRUCTION,
+  },
+  {
+    category: 'manset',
+    type: 'CUFF_REFERENCE',
+    role: 'CUFF_SHAPE',
+    priority: REFERENCE_PRIORITY.CUFF_REFERENCE ?? 60,
+    idSuffix: 'cuff',
+    instructionLabel: 'Cuff Reference Instruction',
+    instruction: CUFF_REFERENCE_SHAPE_INSTRUCTION,
   },
 ]

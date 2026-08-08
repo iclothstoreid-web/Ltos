@@ -24,13 +24,6 @@ interface ValidationRow {
   reason: string
 }
 
-interface OverrideRow {
-  field: string
-  key: string
-  winner: { itemId: string; category: string } | null
-  losers: { itemId: string; category: string }[]
-}
-
 interface DebugResponse {
   success: boolean
   error?: string
@@ -53,23 +46,22 @@ interface DebugResponse {
     garmentKeys: string[]
   }[]
   componentsMissing: { componentId: string; componentType: string; reason: string }[]
-  recipeComposer: {
-    masterRecipe: Record<string, unknown> | null
-    trace: Record<string, { key: string; value: unknown; resolvedFrom: { itemId: string; category: string } | null; overriddenSources: { itemId: string; category: string }[] }[]> | null
-    overrides: OverrideRow[]
-  }
-  promptBuilder: {
-    instruction: Record<string, unknown> | null
-    instructionValidation: { valid: boolean; errors: string[] }
-    layers: { id: string; label: string; priority: 0 | 1 | 2; content: string }[]
-    layerReport: { id: string; label: string; priority: 0 | 1 | 2; tokens: number; included: boolean; truncated: boolean }[]
-    compressed: string
-    compressionOk: boolean
-    compressionError: string | null
-    totalTokens: number
+  promptFinal: {
+    sections: {
+      material: string | null
+      color: string | null
+      lookCutting: string | null
+      kerah: string | null
+      plaket: string | null
+      saku: string | null
+      manset: string | null
+      aksesori: string | null
+      bordir: string | null
+      handmadeZigzag: string | null
+    }
+    text: string
     issues: string[]
   }
-  serializer: { uncompressed: string | null; issues: string[] }
   finalRequest: {
     model: string
     endpoint: string
@@ -134,6 +126,7 @@ interface DebugResponse {
     collarReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
     plaketReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
     pocketReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
+    cuffReference: { type: string; role: string; priority: number; itemId: string; url: string } | null
     urls: string[]
     excluded: { category: string; reason: string }[]
     backgroundReferenceCount: 0
@@ -149,8 +142,6 @@ interface DebugResponse {
     catalogActive: boolean | null
     included: boolean
     validation: { valid: boolean; reason: string }
-    transferredGeometry: string[]
-    ignored: string[]
   }[]
   capability: {
     mode: 'PREMIUM' | 'HIGH' | 'STANDARD' | 'LIMITED' | 'BLOCKED'
@@ -271,8 +262,8 @@ export default function RenderDebugPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900">AI Render — DNA Debug Viewer</h1>
       <p className="mb-6 text-sm text-gray-500">
-        Internal developer tool. Menjalankan pipeline nyata (DNA Resolver → Recipe Composer → Prompt Builder →
-        Serializer → Compression → Image Service) dan menampilkan setiap tahap tanpa menyembunyikan field apa pun.
+        Internal developer tool. Menjalankan pipeline nyata (DNA Resolver → Prompt Builder → Image Service) dan
+        menampilkan setiap tahap tanpa menyembunyikan field apa pun.
       </p>
 
       <div className="mb-6 rounded-[14px] border border-gray-200 bg-white p-4">
@@ -380,16 +371,13 @@ export default function RenderDebugPage() {
             )}
           </div>
 
-          <Section title="Prompt Inspector (Part 5) — DNA → Resolved DNA → Recipe → Serialized → Compressed → Final → GPT Revised Prompt" defaultOpen>
+          <Section title="Prompt Inspector — DNA → Resolved DNA → Prompt Final → GPT Revised Prompt" defaultOpen>
             <div className="space-y-2">
               {[
                 { step: 1, label: 'DNA (raw)', content: result.rawDna.map((r) => `${r.componentType}: ${r.name ?? 'not found'}`).join(' | ') || '—' },
                 { step: 2, label: 'Resolved DNA', content: result.resolvedDna.map((r) => `${r.componentType}: ${r.ready ? 'ready' : 'NOT ready'}`).join(' | ') || '—' },
-                { step: 3, label: 'Recipe (Master Render Recipe)', content: result.recipeComposer.masterRecipe ? Object.keys(result.recipeComposer.masterRecipe).filter((k) => k !== 'sources' && k !== 'composedAt').join(', ') : '(null — compose gagal / entries kosong)' },
-                { step: 4, label: 'Serialized Prompt (uncompressed diagnostic dump)', content: result.serializer.uncompressed ?? '(null)' },
-                { step: 5, label: 'Prompt Builder — 13 fixed sections, compressed', content: result.promptBuilder.compressed || '(belum berjalan)' },
-                { step: 6, label: 'Final Prompt (dikirim ke OpenAI)', content: result.finalRequest.prompt ?? '(null)' },
-                { step: 7, label: 'GPT Revised Prompt', content: result.aiResponse.executed ? (result.aiResponse.revisedPrompt ?? '(OpenAI tidak mengembalikan revised_prompt)') : '(belum dijalankan — dry run atau belum render)' },
+                { step: 3, label: 'Prompt Final (10 fixed blocks, dikirim ke OpenAI)', content: result.promptFinal.text || '(belum berjalan)' },
+                { step: 4, label: 'GPT Revised Prompt', content: result.aiResponse.executed ? (result.aiResponse.revisedPrompt ?? '(OpenAI tidak mengembalikan revised_prompt)') : '(belum dijalankan — dry run atau belum render)' },
               ].map((item, i, arr) => (
                 <div key={item.step}>
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
@@ -404,47 +392,41 @@ export default function RenderDebugPage() {
             </div>
           </Section>
 
-          <Section title="Prompt Builder — 13 Fixed Sections (Identity Preservation → ... → Final Constraints)" defaultOpen>
+          <Section title="Prompt Final — Fixed Blocks (Identity Lock → Reference Binding → Garment → Material → Color → Look Cutting → Kerah → Plaket → Saku → Manset → Aksesori → Bordir → Handmade Zig-Zag → Output)" defaultOpen>
             <div className="mb-2 text-xs italic text-gray-500">
-              Real production assembly order — see promptBuilder/compression.ts. Ordering and truncation tier are
-              decoupled: a section&apos;s position never changes, only how much of it survives the token budget.
+              Real production assembly order — see promptBuilder/finalPrompt.ts. No wrapper/label/priority/token
+              budget of any kind — a category not selected (or resolved as empty) simply contributes no block.
+              Kerah/Plaket/Saku/Manset are the &quot;Exact Component Copy&quot; group (copy-exact-from-reference);
+              Aksesori/Bordir/Handmade Zig-Zag slots are kept ready but empty until their own Prompt UAT is authored.
             </div>
-            <table className="mb-3 w-full text-left text-xs">
-              <thead>
-                <tr className="text-gray-500">
-                  <th className="py-1 pr-2">#</th>
-                  <th className="py-1 pr-2">Section</th>
-                  <th className="py-1 pr-2">Priority</th>
-                  <th className="py-1 pr-2">Tokens</th>
-                  <th className="py-1 pr-2">Included</th>
-                  <th className="py-1 pr-2">Truncated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.promptBuilder.layerReport.map((row, i) => (
-                  <tr key={row.id} className="border-t border-gray-100">
-                    <td className="py-1 pr-2">{i + 1}</td>
-                    <td className="py-1 pr-2">{row.label}</td>
-                    <td className="py-1 pr-2">{row.priority}</td>
-                    <td className="py-1 pr-2">{row.tokens}</td>
-                    <td className="py-1 pr-2">
-                      <StatusBadge status={row.included ? 'PASS' : 'INFO'} />
-                    </td>
-                    <td className="py-1 pr-2">{row.truncated ? '✓' : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="mb-1 text-sm font-semibold text-gray-800">
-              Compression:{' '}
-              <StatusBadge status={result.promptBuilder.compressionOk ? 'PASS' : 'FAIL'} /> — {result.promptBuilder.totalTokens} token
+            <div className="mb-3 space-y-2">
+              {(
+                [
+                  ['Material', result.promptFinal.sections.material],
+                  ['Color', result.promptFinal.sections.color],
+                  ['Look Cutting', result.promptFinal.sections.lookCutting],
+                  ['Kerah', result.promptFinal.sections.kerah],
+                  ['Plaket', result.promptFinal.sections.plaket],
+                  ['Saku', result.promptFinal.sections.saku],
+                  ['Manset', result.promptFinal.sections.manset],
+                  ['Aksesori', result.promptFinal.sections.aksesori],
+                  ['Bordir', result.promptFinal.sections.bordir],
+                  ['Handmade Zig-Zag', result.promptFinal.sections.handmadeZigzag],
+                ] as const
+              ).map(([label, content]) => (
+                <div key={label} className="rounded-lg border border-gray-100 p-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
+                    {label}
+                    <StatusBadge status={content ? 'PASS' : 'INFO'} />
+                  </div>
+                  <div className="mt-1 whitespace-pre-wrap break-words text-xs text-gray-800">{content ?? '(tidak dipilih / kosong)'}</div>
+                </div>
+              ))}
             </div>
-            {!result.promptBuilder.compressionOk && (
-              <div className="mb-2 text-xs font-semibold text-red-600">{result.promptBuilder.compressionError}</div>
-            )}
-            <pre className="whitespace-pre-wrap rounded-lg bg-gray-100 p-3 text-xs text-gray-800">{result.promptBuilder.compressed}</pre>
-            {result.promptBuilder.issues.length > 0 && (
-              <div className="mt-1 text-xs font-semibold text-red-600">FAIL — ditemukan: {result.promptBuilder.issues.join(', ')}</div>
+            <div className="mb-1 text-sm font-semibold text-gray-800">Prompt Final (dikirim ke OpenAI)</div>
+            <pre className="whitespace-pre-wrap rounded-lg bg-gray-100 p-3 text-xs text-gray-800">{result.promptFinal.text}</pre>
+            {result.promptFinal.issues.length > 0 && (
+              <div className="mt-1 text-xs font-semibold text-red-600">FAIL — ditemukan: {result.promptFinal.issues.join(', ')}</div>
             )}
           </Section>
 
@@ -554,44 +536,8 @@ export default function RenderDebugPage() {
             {result.componentsMissing.length > 0 && <JsonBlock value={result.componentsMissing} />}
           </Section>
 
-          <Section title="Section 3 — Recipe Composer (merge + provenance)">
-            <div className="mb-3">
-              <div className="mb-1 text-sm font-semibold text-gray-800">Overrides</div>
-              {result.recipeComposer.overrides.length === 0 ? (
-                <div className="text-xs text-gray-500">Tidak ada override terdeteksi.</div>
-              ) : (
-                <div className="space-y-1">
-                  {result.recipeComposer.overrides.map((override, i) => (
-                    <div key={i} className="rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-800">
-                      <strong>{override.field}.{override.key}</strong> ← <strong>{override.winner?.category ?? '?'}</strong>{' '}
-                      OVERRIDE {override.losers.map((l) => l.category).join(', ')}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="mb-1 text-sm font-semibold text-gray-800">Field provenance trace</div>
-            <JsonBlock value={result.recipeComposer.trace} />
-            <div className="mt-3 mb-1 text-sm font-semibold text-gray-800">Master Render Recipe (merged)</div>
-            <JsonBlock value={result.recipeComposer.masterRecipe} />
-          </Section>
-
-          <Section title="Section 4 — Serializer (RenderInstruction + uncompressed prompt)">
-            <div className="mb-1 text-sm font-semibold text-gray-800">
-              Instruction Validation:{' '}
-              <StatusBadge status={result.promptBuilder.instructionValidation.valid ? 'PASS' : 'FAIL'} />
-            </div>
-            {result.promptBuilder.instructionValidation.errors.length > 0 && (
-              <div className="mb-2 text-xs text-red-600">{result.promptBuilder.instructionValidation.errors.join(' | ')}</div>
-            )}
-            <JsonBlock value={result.promptBuilder.instruction} />
-            <div className="mt-3 mb-1 text-sm font-semibold text-gray-800">Uncompressed prompt</div>
-            <pre className="whitespace-pre-wrap rounded-lg bg-gray-100 p-3 text-xs text-gray-800">
-              {result.serializer.uncompressed ?? '(null)'}
-            </pre>
-            {result.serializer.issues.length > 0 && (
-              <div className="mt-1 text-xs font-semibold text-red-600">FAIL — ditemukan: {result.serializer.issues.join(', ')}</div>
-            )}
+          <Section title="Section 3 — Prompt Final (raw sections JSON)">
+            <JsonBlock value={result.promptFinal.sections} />
           </Section>
 
           <Section title="Section 6 — Final AI Request">
@@ -605,6 +551,7 @@ export default function RenderDebugPage() {
                   ['Collar Reference', result.aiAssetComposer.collarReference],
                   ['Placket Reference', result.aiAssetComposer.plaketReference],
                   ['Pocket Reference', result.aiAssetComposer.pocketReference],
+                  ['Cuff Reference', result.aiAssetComposer.cuffReference],
                 ] as const
               ).map(([label, ref]) => (
                 <div key={label}>
@@ -625,9 +572,9 @@ export default function RenderDebugPage() {
               </div>
               {(result.aiAssetComposer.collarReference || result.aiAssetComposer.plaketReference || result.aiAssetComposer.pocketReference) && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-amber-800">
-                  Component Reference Delta (geometry-only &quot;Transfer only: .../Do NOT copy: ...&quot; instruction) is appended to
-                  that same component&apos;s own Prompt Builder step for every active reference above — see the Prompt Builder
-                  section above.
+                  These Hero Images are sent as image references alongside the Prompt Final text above — Kerah/Plaket/
+                  Saku each contribute only their own item&apos;s referenceInstruction text (no separate geometry
+                  transfer/ignore instruction is appended anymore, per the Prompt UAT Source of Truth realignment).
                 </div>
               )}
             </div>
@@ -647,20 +594,6 @@ export default function RenderDebugPage() {
                     <span className="text-gray-400">(AI Design DNA: {asset.aiDnaStatus ?? '—'}, catalog {asset.catalogActive === null ? '—' : asset.catalogActive ? 'active' : 'inactive'})</span>
                   </div>
                   <div className="text-gray-500">{asset.validation.reason}</div>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="mb-1 font-semibold text-gray-700">Transferred Geometry</div>
-                      {asset.transferredGeometry.map((g) => (
-                        <div key={g} className="text-green-700">✓ {g}</div>
-                      ))}
-                    </div>
-                    <div>
-                      <div className="mb-1 font-semibold text-gray-700">Ignored</div>
-                      {asset.ignored.map((g) => (
-                        <div key={g} className="text-gray-500">✓ {g}</div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>
