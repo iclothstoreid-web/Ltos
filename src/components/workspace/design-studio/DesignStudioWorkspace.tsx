@@ -23,6 +23,7 @@ import type { RenderResult } from '@/lib/types/render'
 import { renderDesign } from '@/lib/services/renderService'
 import { saveRenderFinal, approveRenderFinal, uploadRenderFinalFile, uploadRenderFinalFromDataUrl } from '@/lib/design/renderFinal'
 import type { RenderFinal } from '@/lib/design/renderFinal'
+import { saveDesignSelections, StaleConsultationError } from '@/lib/consultation/notesSave'
 
 interface MaterialStockInfo {
   available_stock: number
@@ -87,11 +88,24 @@ export function DesignStudioWorkspace({
   initialPreviewUrl,
 }: DesignStudioWorkspaceProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [selections, setSelections] = useState<DesignSelections>(() =>
     buildInitialSelections(consultation.notes, masterOptions)
   )
+
+  // PS-01.2 (Optimistic Conflict Protection) — `persist()` used to re-base
+  // every encode on the initial `consultation.notes` prop (never refreshed),
+  // so a second Save within the same session would silently discard
+  // whatever any other section (Fitter Enhancements, Event Information —
+  // see notesSave.ts) had written to the row in between, even without
+  // another user involved. `rawNotes` now tracks the last confirmed DB
+  // value the same way ConsultationReviewWorkspace/MeasurementWorkspace
+  // already do, and `consultationUpdatedAt` gates every write on it still
+  // matching the live row.
+  const [rawNotes, setRawNotes] = useState(consultation.notes ?? '')
+  const [consultationUpdatedAt, setConsultationUpdatedAt] = useState(consultation.updated_at)
+  const [saveConflictError, setSaveConflictError] = useState<string | null>(null)
 
   // Fetch Strategy (STEP 5.3, prefetch) — same reasoning as
   // MeasurementWorkspace: consultation.id is known from page load, well
@@ -172,7 +186,7 @@ export function DesignStudioWorkspace({
   async function persist(nextStatus?: 'review') {
     setLoading(true)
     try {
-      let notesToSave = encodeDesignNotes(consultation.notes || '', selections)
+      let notesToSave = encodeDesignNotes(rawNotes, selections)
 
       // Design Specification Builder — every Save/Continue keeps this
       // permanent, ID-backed object up to date; it never waits for Create
@@ -182,25 +196,31 @@ export function DesignStudioWorkspace({
       notesToSave = encodeDesignSpecification(notesToSave, liveSpecification)
       notesToSave = encodeFabricQuantity(notesToSave, { quantityMeters: fabricQuantityMeters })
 
-      await supabase
-        .from('consultations')
-        .update(nextStatus ? { notes: notesToSave, status: nextStatus } : { notes: notesToSave })
-        .eq('id', consultation.id)
-
-      // emit_event() RPC only accepts p_order_id — consultation-linked
-      // events are inserted directly, same as Measurement's approach
-      await supabase.from('business_events').insert({
-        consultation_id: consultation.id,
-        event_type: nextStatus ? 'design.completed' : 'design.saved',
-        event_data: { ...selections },
-        created_by: userId,
+      // PS-01.5 (Transaction Integrity) — used to be a separate
+      // consultations UPDATE followed by a business_events INSERT; a
+      // failure on the event insert after the notes update already
+      // committed silently lost the audit trail with no retry signal. Now
+      // one RPC call, one transaction — see saveDesignSelections() /
+      // notesSave.ts.
+      const newUpdatedAt = await saveDesignSelections(supabase, {
+        consultationId: consultation.id,
+        notes: notesToSave,
+        nextStatus: nextStatus ?? null,
+        eventType: nextStatus ? 'design.completed' : 'design.saved',
+        eventData: { ...selections },
+        expectedUpdatedAt: consultationUpdatedAt,
+        createdBy: userId,
       })
+      setConsultationUpdatedAt(newUpdatedAt)
+      setRawNotes(notesToSave)
+      setSaveConflictError(null)
 
       if (nextStatus) {
         router.push(`/workspace/consultation-review/${consultation.id}`)
       }
     } catch (err) {
       console.error(err)
+      setSaveConflictError(err instanceof StaleConsultationError ? err.message : null)
     } finally {
       setLoading(false)
     }
@@ -353,7 +373,17 @@ export function DesignStudioWorkspace({
         canManageMasterData={canManageMasterData}
       />
 
-      <main className="pt-20 pb-44 lg:pb-32 w-full flex flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
+      {saveConflictError && (
+        <div className="pt-20 px-4 sm:px-8 lg:px-16">
+          <div className="bg-[#fdecea] border-[0.5px] border-[#c0392b] p-3">
+            <p className="font-sans text-xs font-bold text-[#c0392b] uppercase tracking-widest mb-1">
+              Gagal Menyimpan
+            </p>
+            <p className="font-sans text-xs text-[#c0392b] leading-relaxed">{saveConflictError}</p>
+          </div>
+        </div>
+      )}
+      <main className={`${saveConflictError ? 'pt-4' : 'pt-20'} pb-44 lg:pb-32 w-full flex flex-col lg:h-screen lg:flex-row lg:overflow-hidden`}>
         <GarmentBlueprintPanel
           selections={selections}
           masterOptions={masterOptions}

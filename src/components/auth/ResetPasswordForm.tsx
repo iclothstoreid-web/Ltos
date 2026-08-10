@@ -17,7 +17,7 @@ export function ResetPasswordForm({ app }: { app: AppBranding }) {
   // silently fail with no user in scope.
   const [status, setStatus] = useState<'verifying' | 'ready' | 'invalid'>('verifying')
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   useEffect(() => {
     let cancelled = false

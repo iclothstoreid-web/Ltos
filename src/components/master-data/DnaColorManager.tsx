@@ -76,13 +76,16 @@ function toDnaColorInput(form: EditForm): DnaColorInput {
 // own status lifecycle (draft/active/archived) instead of is_active.
 export function DnaColorManager({ initialColors }: DnaColorManagerProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [colors, setColors] = useState(initialColors)
   const [newName, setNewName] = useState('')
   const [newHex, setNewHex] = useState('#775a19')
 
   const [editingId, setEditingId] = useState<string | null>(null)
+  // PS-01.2 (Optimistic Conflict Protection) — the row's `updated_at` at the
+  // moment Ubah was opened; see dnaColors.ts's updateDnaColor.
+  const [editingUpdatedAt, setEditingUpdatedAt] = useState<string | null>(null)
   const [form, setForm] = useState<EditForm>(EMPTY_FORM)
 
   const [saving, setSaving] = useState(false)
@@ -99,6 +102,7 @@ export function DnaColorManager({ initialColors }: DnaColorManagerProps) {
 
   function startEdit(color: DnaColor) {
     setEditingId(color.id)
+    setEditingUpdatedAt(color.updated_at)
     setForm({
       name: color.name,
       family: color.family ?? '',
@@ -117,6 +121,7 @@ export function DnaColorManager({ initialColors }: DnaColorManagerProps) {
 
   function cancelEdit() {
     setEditingId(null)
+    setEditingUpdatedAt(null)
   }
 
   async function handleAdd() {
@@ -137,12 +142,13 @@ export function DnaColorManager({ initialColors }: DnaColorManagerProps) {
   }
 
   async function handleSaveEdit() {
-    if (!editingId || !form.name.trim()) return
+    if (!editingId || !editingUpdatedAt || !form.name.trim()) return
     setSaving(true)
     setError(null)
     try {
-      await updateDnaColor(supabase, editingId, toDnaColorInput(form))
+      await updateDnaColor(supabase, editingId, toDnaColorInput(form), editingUpdatedAt)
       setEditingId(null)
+      setEditingUpdatedAt(null)
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan DNA Color.')
@@ -156,7 +162,10 @@ export function DnaColorManager({ initialColors }: DnaColorManagerProps) {
     setError(null)
     try {
       await archiveDnaColor(supabase, id)
-      if (editingId === id) setEditingId(null)
+      if (editingId === id) {
+        setEditingId(null)
+        setEditingUpdatedAt(null)
+      }
       await refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal meng-archive DNA Color.')

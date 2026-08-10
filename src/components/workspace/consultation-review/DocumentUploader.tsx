@@ -20,7 +20,7 @@ interface DocumentUploaderProps {
 }
 
 export function DocumentUploader({ consultationId, documents, onChange }: DocumentUploaderProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [category, setCategory] = useState(CATEGORIES[0])
   const [uploading, setUploading] = useState(false)

@@ -19,7 +19,7 @@ interface PendingTemplate {
 }
 
 export function EstimasiWorkspace({ initialCategories, initialMaterials }: EstimasiWorkspaceProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [templates, setTemplates] = useState<MaterialEstimateTemplate[]>([])
   const [sessionKey, setSessionKey] = useState(0)

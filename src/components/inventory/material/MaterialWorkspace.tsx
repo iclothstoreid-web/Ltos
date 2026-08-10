@@ -38,7 +38,7 @@ interface MaterialWorkspaceProps {
 type StockModalMode = 'stock_in' | 'stock_out' | null
 
 export function MaterialWorkspace({ initialCategories, initialMaterials }: MaterialWorkspaceProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const router = useRouter()
   const searchParams = useSearchParams()
 

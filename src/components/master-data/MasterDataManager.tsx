@@ -69,7 +69,7 @@ function rowsToMetadata(rows: SpecRow[]): Record<string, string> {
 // change (a migration extending the DB check constraint + this list).
 export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [options, setOptions] = useState(initialOptions)
   const [activeCategory, setActiveCategory] = useState<MasterDataCategory>(MASTER_DATA_CATEGORIES[0])

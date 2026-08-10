@@ -12,7 +12,7 @@ export function ForgotPasswordForm({ app }: { app: AppBranding }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

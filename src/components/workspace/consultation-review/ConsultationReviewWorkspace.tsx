@@ -44,6 +44,7 @@ import { decodeDesignSpecification, encodeDesignSpecification } from '@/lib/desi
 import type { MasterOptionsByCategory } from '@/lib/design/masterData'
 import type { ServiceValidationResult } from '@/lib/order/service'
 import { computeEstimationValidation } from '@/lib/order/estimationValidation'
+import { saveConsultationFields, StaleConsultationError } from '@/lib/consultation/notesSave'
 
 // Distinguishes validation failures (OrderValidationError, thrown before
 // any Supabase call — e.g. duplicate Create Order) from real Supabase/DB
@@ -85,7 +86,7 @@ export function ConsultationReviewWorkspace({
   userId,
 }: ConsultationReviewWorkspaceProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [loading, setLoading] = useState(false)
   const [approved, setApproved] = useState(false)
@@ -95,6 +96,12 @@ export function ConsultationReviewWorkspace({
   // no new columns, encoded into consultations.notes via their own marker
   // block, same technique as Design Studio's blueprint block.
   const [rawNotes, setRawNotes] = useState(consultation.notes ?? '')
+  // PS-01.2 (Optimistic Conflict Protection) — tracks the `updated_at` this
+  // session last confirmed the DB row was at; advanced after every
+  // successful save (never re-read from the initial `consultation` prop),
+  // so a stale-conflict check always compares against what THIS session
+  // actually last wrote, not what page load originally saw.
+  const [consultationUpdatedAt, setConsultationUpdatedAt] = useState(consultation.updated_at)
   const [enhancements, setEnhancements] = useState<FitterEnhancements>(() =>
     decodeFitterEnhancements(consultation.notes)
   )
@@ -107,6 +114,7 @@ export function ConsultationReviewWorkspace({
     decodeEventInformation(consultation.notes)
   )
   const [savingEventInfo, setSavingEventInfo] = useState(false)
+  const [saveConflictError, setSaveConflictError] = useState<string | null>(null)
   const [serviceValidation, setServiceValidation] = useState<ServiceValidationResult | null>(null)
 
   // Milestone A (Commercial Type Engine) — carried into
@@ -155,15 +163,16 @@ export function ConsultationReviewWorkspace({
         nextNotes = encodeDesignSpecification(nextNotes, specification)
       }
 
-      const { error } = await supabase
-        .from('consultations')
-        .update({ notes: nextNotes })
-        .eq('id', consultation.id)
-      if (error) throw error
+      const newUpdatedAt = await saveConsultationFields(supabase, consultation.id, consultationUpdatedAt, {
+        notes: nextNotes,
+      })
+      setConsultationUpdatedAt(newUpdatedAt)
       setRawNotes(nextNotes)
       setEnhancements(next)
+      setSaveConflictError(null)
     } catch (err) {
       console.error(err)
+      setSaveConflictError(err instanceof StaleConsultationError ? err.message : null)
     } finally {
       setSavingEnhancements(false)
     }
@@ -174,15 +183,16 @@ export function ConsultationReviewWorkspace({
     setSavingEventInfo(true)
     try {
       const nextNotes = encodeEventInformation(rawNotes, next)
-      const { error } = await supabase
-        .from('consultations')
-        .update({ notes: nextNotes })
-        .eq('id', consultation.id)
-      if (error) throw error
+      const newUpdatedAt = await saveConsultationFields(supabase, consultation.id, consultationUpdatedAt, {
+        notes: nextNotes,
+      })
+      setConsultationUpdatedAt(newUpdatedAt)
       setRawNotes(nextNotes)
       setEventInfo(next)
+      setSaveConflictError(null)
     } catch (err) {
       console.error(err)
+      setSaveConflictError(err instanceof StaleConsultationError ? err.message : null)
     } finally {
       setSavingEventInfo(false)
     }
@@ -291,11 +301,18 @@ export function ConsultationReviewWorkspace({
         userId,
       })
 
+      // PS-01.6 (Double-Process Protection) — deliberately do NOT reset
+      // `loading` here. router.push is fire-and-forget; resetting the flag
+      // right after it (the old behavior) re-enabled "Buat Pesanan" while
+      // navigation was still pending, so a second click during that window
+      // called createOrderFromConsultation again. This screen is about to
+      // be replaced by the order-created page anyway, so there's no UI
+      // left that needs `loading` cleared — only the error path (still
+      // showing this screen) does.
       router.push(`/workspace/order-created/${orderId}`)
     } catch (err) {
       console.error(err)
       setOrderError(describeOrderError(err))
-    } finally {
       setLoading(false)
     }
   }
@@ -348,6 +365,14 @@ export function ConsultationReviewWorkspace({
 
         <aside className="w-full md:w-[30%] flex flex-col gap-8">
           <PriceSummaryCard priceSnapshot={liveDesignSpecification?.priceSnapshot ?? null} />
+          {saveConflictError && (
+            <div className="bg-[#fdecea] border-[0.5px] border-[#c0392b] p-3">
+              <p className="font-sans text-xs font-bold text-[#c0392b] uppercase tracking-widest mb-1">
+                Gagal Menyimpan
+              </p>
+              <p className="font-sans text-xs text-[#c0392b] leading-relaxed">{saveConflictError}</p>
+            </div>
+          )}
           <EventInformationCard
             value={eventInfo}
             saving={savingEventInfo}

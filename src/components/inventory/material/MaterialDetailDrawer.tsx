@@ -36,7 +36,7 @@ const USAGE_STATUS_STYLE: Record<MaterialOrderUsage['status'], string> = {
 }
 
 export function MaterialDetailDrawer({ material, onClose, onEdit, onStockIn, onStockOut }: MaterialDetailDrawerProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [tab, setTab] = useState<Tab>('overview')
   const [usage, setUsage] = useState<MaterialOrderUsage[]>([])
   const [movements, setMovements] = useState<StockMovement[]>([])

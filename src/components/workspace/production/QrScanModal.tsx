@@ -45,6 +45,14 @@ export function QrScanModal({
   const [error, setError] = useState<string | null>(null)
   const [manualMode, setManualMode] = useState(false)
   const [manualValue, setManualValue] = useState('')
+  // PS-01.6 (Double-Process Protection) — the camera path already stops
+  // itself after one match (runScanLoop's tick() doesn't reschedule once
+  // handleScanned returns true), but manual entry had no equivalent: two
+  // fast clicks on "Verifikasi" called onSuccess twice. Harmless today
+  // (every current caller's onSuccess just sets local state — see
+  // ProductionPacketWorkspace's Scan QR Penyelesaian), but unguarded, and
+  // a future onSuccess that does I/O directly would double-fire it.
+  const matchedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -112,9 +120,11 @@ export function QrScanModal({
 
   // Returns true when the value matched and scanning should stop.
   function handleScanned(value: string): boolean {
+    if (matchedRef.current) return true
     const trimmed = value.trim()
     const isValid = expectedPayload ? trimmed === expectedPayload : validate ? validate(trimmed) : false
     if (isValid) {
+      matchedRef.current = true
       stopCamera()
       setError(null)
       onSuccess(trimmed)

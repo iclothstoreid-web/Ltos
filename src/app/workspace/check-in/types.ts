@@ -52,6 +52,12 @@ export interface Consultation {
   notes: string | null
   completed_at: string | null
   created_at: string
+  // PS-01.2 (Optimistic Conflict Protection) — every page-load selects
+  // `*` from `consultations`, so this column was always in the fetched row;
+  // only newly exposed on the type so Measurement/Consultation Review/
+  // Design Studio can use it as the optimistic-lock comparison value. See
+  // src/lib/consultation/notesSave.ts.
+  updated_at: string
 }
 
 export interface RecentConsultation {

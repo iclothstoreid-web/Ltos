@@ -361,6 +361,11 @@ export async function saveMaterialPreparation(
   return (data as MaterialPreparationItem[]) || []
 }
 
+// PS-01.2 (Optimistic Conflict Protection) — `expectedUpdatedAt` should be
+// the `updated_at` of the PatternFormulation this session last loaded/saved
+// (null for a genuinely new formulation, i.e. `existing` was null). The RPC
+// refuses the write and raises a clear error if the row has moved on since
+// then; see 20260830000000_ps01_2_optimistic_conflict_protection.sql.
 export async function savePatternFormulation(
   supabase: SupabaseClient,
   params: {
@@ -368,6 +373,7 @@ export async function savePatternFormulation(
     template: PatternTemplate
     patternMeasurements: MeasurementFields
     operatorId: string
+    expectedUpdatedAt?: string | null
   }
 ): Promise<void> {
   const { error } = await supabase.rpc('save_pattern_formulation', {
@@ -375,6 +381,7 @@ export async function savePatternFormulation(
     p_template: params.template,
     p_pattern_measurements: params.patternMeasurements,
     p_operator_id: params.operatorId,
+    p_expected_updated_at: params.expectedUpdatedAt ?? null,
   })
   if (error) throw error
 }

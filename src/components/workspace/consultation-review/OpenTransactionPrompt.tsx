@@ -18,7 +18,7 @@ export function OpenTransactionPrompt({
   onSelectExisting,
   onCreateNew,
 }: OpenTransactionPromptProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [openTransactions, setOpenTransactions] = useState<OpenTransactionForCustomer[]>([])
   const [loading, setLoading] = useState(true)
   const [showPrompt, setShowPrompt] = useState(false)

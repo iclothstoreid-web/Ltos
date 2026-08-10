@@ -24,7 +24,7 @@ interface MaterialFormModalProps {
 }
 
 export function MaterialFormModal({ categories, material, defaultCategoryId, onClose, onSubmit }: MaterialFormModalProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const photoInputRef = useRef<HTMLInputElement | null>(null)
 
   const [categoryId, setCategoryId] = useState(material?.category_id ?? defaultCategoryId ?? categories[0]?.id ?? '')

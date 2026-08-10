@@ -23,6 +23,7 @@ import type { MeasurementFields, MeasurementKey, CuttingModel, WristFinishing, B
 import { MEASUREMENT_BODY_MAP } from '@/lib/measurement/bodyMap'
 import { buildCustomerDigitalProfile } from '@/lib/customerProfile/buildProfile'
 import { decodeCustomerDigitalProfile, encodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
+import { saveConsultationFields, recordMeasurementDecision, StaleConsultationError } from '@/lib/consultation/notesSave'
 
 interface MeasurementWorkspaceProps {
   consultation: Consultation & { customers: { name: string; phone: string | null } }
@@ -40,7 +41,7 @@ export function MeasurementWorkspace({
   fitterName,
 }: MeasurementWorkspaceProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [decoded] = useState(() => decodeNotes(existingMeasurement?.notes ?? null))
 
@@ -48,6 +49,11 @@ export function MeasurementWorkspace({
   // human measurement notes — tracked separately here so the photo-upload
   // write (below) and the valid/remeasure write don't clobber each other.
   const [rawNotes, setRawNotes] = useState(consultation.notes ?? '')
+  // PS-01.2 (Optimistic Conflict Protection) — see notesSave.ts. Advanced
+  // after every successful consultations write this session; never
+  // re-derived from the initial `consultation` prop.
+  const [consultationUpdatedAt, setConsultationUpdatedAt] = useState(consultation.updated_at)
+  const [saveConflictError, setSaveConflictError] = useState<string | null>(null)
 
   const [fields, setFields] = useState<MeasurementFields>({
     ...EMPTY_FIELDS,
@@ -140,46 +146,36 @@ export function MeasurementWorkspace({
       existingProfile: decodeCustomerDigitalProfile(rawNotes),
     })
     const nextNotes = encodeCustomerDigitalProfile(rawNotes, profile)
-    const { error } = await supabase
-      .from('consultations')
-      .update({ notes: nextNotes })
-      .eq('id', consultation.id)
-    if (!error) setRawNotes(nextNotes)
+    try {
+      const newUpdatedAt = await saveConsultationFields(supabase, consultation.id, consultationUpdatedAt, {
+        notes: nextNotes,
+      })
+      setConsultationUpdatedAt(newUpdatedAt)
+      setRawNotes(nextNotes)
+      setSaveConflictError(null)
+    } catch (err) {
+      console.error(err)
+      setSaveConflictError(err instanceof StaleConsultationError ? err.message : null)
+    }
   }
 
   async function handleDecision(decision: 'valid' | 'remeasure') {
     setLoading(true)
+    setSaveConflictError(null)
     try {
       // Only chest/shoulder/sleeve/length are real columns on `measurements`
       // — the other 8 fields + body tags ride along inside `notes` (see
       // notesCodec.ts) since no schema change was authorized this sprint.
       const notes = encodeNotes(humanNotes, fields, tags)
 
-      await supabase.from('measurements').insert({
-        consultation_id: consultation.id,
-        chest: parseFloat(fields.chest) || null,
-        shoulder: parseFloat(fields.shoulder) || null,
-        sleeve: parseFloat(fields.sleeve) || null,
-        length: parseFloat(fields.length) || null,
-        // Basic Body Data (Sprint M) — real columns, not notes-encoded (see
-        // types.ts). A snapshot of the customer's condition at this
-        // measurement session, not part of the sizing formula.
-        height_cm: parseInt(fields.heightCm ?? '', 10) || null,
-        weight_kg: parseFloat(fields.weightKg ?? '') || null,
-        age_years: parseInt(fields.ageYears ?? '', 10) || null,
-        notes,
-      })
-
+      // PS-01.5 (Transaction Integrity) — measurements insert +
+      // business_events insert + consultations status/notes update used to
+      // be 3 separate network calls; a failure on the last one left an
+      // orphaned measurement row with no completion/rejection event and a
+      // status that never advanced. Now one RPC call, one transaction —
+      // see record_measurement_decision() / notesSave.ts.
+      let nextConsultationNotes: string | null = null
       if (decision === 'valid') {
-        // emit_event() RPC only accepts p_order_id, so consultation-linked
-        // events are inserted directly
-        await supabase.from('business_events').insert({
-          consultation_id: consultation.id,
-          event_type: 'measurement.completed',
-          event_data: { ...fields, tags, notes: humanNotes },
-          created_by: userId,
-        })
-
         // Foundation for the future AI Render Engine (Sprint 3): derive the
         // permanent Customer Digital Profile from this measurement session
         // and persist it into the active consultation's notes alongside the
@@ -192,33 +188,41 @@ export function MeasurementWorkspace({
           measuredAt: new Date().toISOString(),
           existingProfile: decodeCustomerDigitalProfile(rawNotes),
         })
-        const nextConsultationNotes = encodeCustomerDigitalProfile(rawNotes, profile)
+        nextConsultationNotes = encodeCustomerDigitalProfile(rawNotes, profile)
+      }
 
-        // Hand off to Design Studio
-        await supabase
-          .from('consultations')
-          .update({ status: 'design', notes: nextConsultationNotes })
-          .eq('id', consultation.id)
+      const newUpdatedAt = await recordMeasurementDecision(supabase, {
+        consultationId: consultation.id,
+        decision,
+        chest: parseFloat(fields.chest) || null,
+        shoulder: parseFloat(fields.shoulder) || null,
+        sleeve: parseFloat(fields.sleeve) || null,
+        length: parseFloat(fields.length) || null,
+        // Basic Body Data (Sprint M) — real columns, not notes-encoded (see
+        // types.ts). A snapshot of the customer's condition at this
+        // measurement session, not part of the sizing formula.
+        heightCm: parseInt(fields.heightCm ?? '', 10) || null,
+        weightKg: parseFloat(fields.weightKg ?? '') || null,
+        ageYears: parseInt(fields.ageYears ?? '', 10) || null,
+        measurementNotes: notes,
+        eventData:
+          decision === 'valid'
+            ? { ...fields, tags, notes: humanNotes }
+            : { reason: 'Ukuran perlu diulang', notes: humanNotes },
+        nextConsultationNotes,
+        expectedUpdatedAt: consultationUpdatedAt,
+        createdBy: userId,
+      })
 
+      if (decision === 'valid') {
         router.push(`/workspace/design-studio/${consultation.id}`)
       } else {
-        // Re-measure: emit event and stay
-        await supabase.from('business_events').insert({
-          consultation_id: consultation.id,
-          event_type: 'measurement.rejected',
-          event_data: { reason: 'Ukuran perlu diulang', notes: humanNotes },
-          created_by: userId,
-        })
-
-        await supabase
-          .from('consultations')
-          .update({ status: 'measurement' })
-          .eq('id', consultation.id)
-
+        setConsultationUpdatedAt(newUpdatedAt)
         router.refresh()
       }
     } catch (err) {
       console.error(err)
+      setSaveConflictError(err instanceof StaleConsultationError ? err.message : null)
     } finally {
       setLoading(false)
     }
@@ -230,6 +234,16 @@ export function MeasurementWorkspace({
       <MeasurementNavAside />
 
       <main className="md:ml-64 pt-20 pb-32 min-h-screen">
+        {saveConflictError && (
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pt-6">
+            <div className="bg-[#fdecea] border-[0.5px] border-[#c0392b] p-3">
+              <p className="font-sans text-xs font-bold text-[#c0392b] uppercase tracking-widest mb-1">
+                Gagal Menyimpan
+              </p>
+              <p className="font-sans text-xs text-[#c0392b] leading-relaxed">{saveConflictError}</p>
+            </div>
+          </div>
+        )}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 flex flex-col lg:flex-row gap-8">
           <MeasurementSidebar
             fields={fields}

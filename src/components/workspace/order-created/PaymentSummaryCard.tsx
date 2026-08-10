@@ -32,6 +32,13 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
   const [paymentType, setPaymentType] = useState<PaymentType>('dp')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('tunai')
   const [saving, setSaving] = useState(false)
+  // PS-01.6 (Double-Process Protection) — one key per payment *intent*,
+  // generated when the form opens (not per click of Simpan) so a
+  // double-click, a browser retry, or a second tab submitting this same
+  // form all replay onto the same record_order_payment call instead of
+  // creating a second payment row. Cleared after a successful save so the
+  // *next* genuinely new payment (e.g. a second installment) gets its own key.
+  const [paymentIntentKey, setPaymentIntentKey] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -67,10 +74,13 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
     setSaving(true)
     setError(null)
     try {
-      await recordOrderPayment(supabase, { orderId, amount: value, paymentType, paymentMethod })
+      const key = paymentIntentKey ?? globalThis.crypto.randomUUID()
+      if (!paymentIntentKey) setPaymentIntentKey(key)
+      await recordOrderPayment(supabase, { orderId, amount: value, paymentType, paymentMethod, idempotencyKey: key })
       setInvoice(await getOrderInvoice(supabase, orderId))
       setAmount('')
       setShowForm(false)
+      setPaymentIntentKey(null)
     } catch (err) {
       console.error('[order-created] record payment failed', err)
       // Commercial Rules (Minimal DP / Full Payment) reject with a specific,

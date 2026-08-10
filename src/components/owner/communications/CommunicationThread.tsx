@@ -29,7 +29,7 @@ function formatTime(iso: string) {
 // CommunicationsCenter — neither mode renders its own copy of a message
 // list, per the brief's "jangan menduplikasi pesan" rule.
 export function CommunicationThread({ orderId, orderLabel, messages, profileId, profileName, onMessageSent }: CommunicationThreadProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)

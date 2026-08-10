@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bell, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -18,6 +18,12 @@ export function AssignedJobsPanel() {
   const [supabase] = useState(() => createClient())
   const [jobs, setJobs] = useState<PendingAssignment[]>([])
   const [open, setOpen] = useState(false)
+  // PS-01.6 (Double-Process Protection) — handleOpenJob's own side effects
+  // (mark-as-read, sessionStorage token, router.push) are all individually
+  // idempotent already, but a fast double-tap still fired
+  // markNotificationRead twice and pushed the same route twice for no
+  // reason. One-shot per job id, reset when the panel closes/reopens.
+  const openingRef = useRef<Set<string>>(new Set())
 
   async function refresh() {
     try {
@@ -33,6 +39,9 @@ export function AssignedJobsPanel() {
   }, [])
 
   function handleOpenJob(job: PendingAssignment) {
+    if (openingRef.current.has(job.notification_id)) return
+    openingRef.current.add(job.notification_id)
+
     // Fire-and-forget — mark-as-read is a bookkeeping side effect, not a
     // gate for entry (ProductionAccessGate grants access via the
     // sessionStorage token below, not via notification read state), so it

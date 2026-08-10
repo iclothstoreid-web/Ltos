@@ -102,7 +102,27 @@ export async function createDnaColor(supabase: SupabaseClient, params: DnaColorI
   return color
 }
 
-export async function updateDnaColor(supabase: SupabaseClient, id: string, params: DnaColorInput): Promise<DnaColor> {
+// PS-01.2 (Optimistic Conflict Protection) — `expectedUpdatedAt` is the
+// `updated_at` DnaColorManager last loaded this row at (set when the Ubah
+// form opens). Without this, two admins editing the same DNA Color around
+// the same time would have the second save's full-form write silently
+// overwrite whatever fields the first admin had just changed — this is a
+// whole-row blind overwrite (every field re-sent every save), the same
+// shape updateMasterDataOption() (design_master_options, Sprint PR-05) was
+// fixed for.
+export class StaleDnaColorError extends Error {
+  constructor() {
+    super('DNA Color ini sudah diubah oleh proses lain sejak terakhir dimuat. Muat ulang sebelum menyimpan lagi.')
+    this.name = 'StaleDnaColorError'
+  }
+}
+
+export async function updateDnaColor(
+  supabase: SupabaseClient,
+  id: string,
+  params: DnaColorInput,
+  expectedUpdatedAt: string
+): Promise<DnaColor> {
   const { data, error } = await supabase
     .from('dna_colors')
     .update({
@@ -120,11 +140,14 @@ export async function updateDnaColor(supabase: SupabaseClient, id: string, param
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('updated_at', expectedUpdatedAt)
     .select('*')
-    .single()
 
   if (error) throw error
-  const color = data as DnaColor
+  if (!data || data.length === 0) {
+    throw new StaleDnaColorError()
+  }
+  const color = data[0] as DnaColor
   await syncDnaColorMirror(supabase, color)
   return color
 }

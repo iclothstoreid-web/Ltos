@@ -56,7 +56,7 @@ interface EstimasiEditorProps {
 }
 
 export function EstimasiEditor({ categories, allMaterials, templates, pendingTemplate, onTemplateSaved }: EstimasiEditorProps) {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   // Generated client-side only, after mount — running Math.random() during
   // the initial render would produce a different value on the server vs.

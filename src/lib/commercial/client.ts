@@ -94,6 +94,14 @@ export async function clearOrderPriceOverride(supabase: SupabaseClient, orderId:
   if (error) throw error
 }
 
+// PS-01.6 (Double-Process Protection) — `idempotencyKey` should be a UUID
+// generated once per "payment intent" (when the Catat Pembayaran form
+// opens, not per click of Simpan) and reused across a double-click, a
+// browser retry of a stalled request, or a second tab racing this one. The
+// RPC returns the SAME payment row for repeated calls with the same key
+// instead of creating a second one — see
+// 20260902000000_ps01_6_double_process_protection.sql. Omitting it (undefined)
+// preserves the old always-insert behavior for any other caller.
 export async function recordOrderPayment(
   supabase: SupabaseClient,
   params: {
@@ -102,6 +110,7 @@ export async function recordOrderPayment(
     paymentType: PaymentType
     paymentMethod: PaymentMethod
     notes?: string
+    idempotencyKey?: string
   }
 ): Promise<OrderPayment> {
   const { data, error } = await supabase.rpc('record_order_payment', {
@@ -110,6 +119,7 @@ export async function recordOrderPayment(
     p_payment_type: params.paymentType,
     p_payment_method: params.paymentMethod,
     p_notes: params.notes || null,
+    p_idempotency_key: params.idempotencyKey ?? null,
   })
   if (error) throw error
   return data as OrderPayment

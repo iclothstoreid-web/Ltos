@@ -57,6 +57,7 @@ export function PatternFormulationPanel({
       (lockedMeasurements ? computePatternFormulation(lockedMeasurements) : ({} as MeasurementFields))
   )
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   function handleTemplateChange(next: PatternTemplate) {
     setTemplate(next)
@@ -70,14 +71,20 @@ export function PatternFormulationPanel({
 
   async function handleSave() {
     setSaving(true)
+    setSaveError(null)
     try {
+      // PS-01.2 — expectedUpdatedAt is `existing`'s updated_at (null for a
+      // brand-new formulation); see production/client.ts.
       await savePatternFormulation(supabase, {
         orderId,
         template,
         patternMeasurements: fields,
         operatorId: operator.id,
+        expectedUpdatedAt: existing?.updated_at ?? null,
       })
       onSaved()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Gagal menyimpan Formulasi Pola.')
     } finally {
       setSaving(false)
     }
@@ -145,6 +152,10 @@ export function PatternFormulationPanel({
           />
         ))}
       </div>
+
+      {saveError && (
+        <p className="mb-3 font-hanken text-xs text-red-600 leading-relaxed">{saveError}</p>
+      )}
 
       <button
         type="button"

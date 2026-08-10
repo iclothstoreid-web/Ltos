@@ -8,9 +8,8 @@ import type { EstimationValidationResult } from './estimationValidation'
 import type { CommercialType } from '@/lib/commercial/commercialType'
 import { buildQrPayload, generateCustomerToken, buildCustomerJourneyUrl } from './qr'
 import { notifyOrderCreated } from './notifications'
-import { mapEstimasiToServiceLevel, setOrderService } from './service'
+import { mapEstimasiToServiceLevel } from './service'
 import { buildOrderSnapshot } from './snapshot'
-import { addGarmentToTransaction } from '@/lib/transaction/client'
 
 interface CreateOrderParams {
   supabase: SupabaseClient
@@ -134,9 +133,14 @@ export async function createOrderFromConsultation({
   // and the transaction is OPEN, the new order is added to that existing
   // transaction instead of creating a new one. This enables the "add
   // garment to running transaction" flow.
-  let transactionId: string
+  // Verify the existing transaction is OPEN — a read, kept client-side so
+  // OrderValidationError's field-tagged UX (describeOrderError) is
+  // unchanged; finalize_order_creation below re-checks this itself too
+  // (defense in depth, same pattern already used by every write RPC in
+  // this app), so nothing is lost if this read races with someone closing
+  // the transaction in between — the RPC would just reject the write.
+  let existingTransactionVerifiedId: string | null = null
   if (existingTransactionId) {
-    // Verify the existing transaction is OPEN
     const { data: existingTx, error: txCheckError } = await supabase
       .from('transactions')
       .select('id, status')
@@ -151,67 +155,22 @@ export async function createOrderFromConsultation({
         'existingTransactionId'
       )
     }
-    transactionId = existingTx.id
-  } else {
-    // Create a new transaction (default/legacy behavior)
-    const transactionNumber = 'LT-TRX-' + orderNumber.slice('LT-ORD-'.length)
-    const { data: transaction, error: transactionError } = await supabase
-      .from('transactions')
-      .insert({
-        transaction_number: transactionNumber,
-        primary_customer_id: consultation.customers.id,
-        status: 'open',
-        commercial_type: commercialType,
-        created_by: userId,
-      })
-      .select('id')
-      .single()
-
-    if (transactionError || !transaction) {
-      throw transactionError || new Error('Transaction insert returned no row')
-    }
-    transactionId = transaction.id
+    existingTransactionVerifiedId = existingTx.id
   }
+  const transactionNumber = 'LT-TRX-' + orderNumber.slice('LT-ORD-'.length)
 
-  // 1. Create the order. current_state check constraint has no 'confirmed'
-  // value — 'order' is the closest existing one and is already labeled
-  // "Order Confirmed" in this app's own STATE_LABELS (src/lib/ltos.ts).
-  //
-  // Milestone B Phase 2 (Decision 1 — single "add garment" implementation):
-  // add_garment_to_transaction() is the one place an order row gets
-  // inserted under a transaction, for both a brand new transaction's first
-  // garment and a garment added to an existingTransactionId. It atomically
-  // validates the transaction is OPEN and computes garment_index — this
-  // used to be a separate select + insert duplicated only here.
-  const addResult = await addGarmentToTransaction(supabase, {
-    transactionId,
-    customerId: consultation.customers.id,
-    orderNumber,
-    customerToken,
-  })
-  const orderId = addResult.order_id
+  // Order id generated here (not by the DB default) so buildQrPayload can
+  // be computed before finalize_order_creation runs — the QR payload is
+  // itself part of the snapshot that RPC persists atomically, so it has to
+  // be known going in. add_garment_to_transaction accepts this id and uses
+  // it as-is instead of generating its own (see PS-01.5 migration).
+  const orderId = globalThis.crypto.randomUUID()
 
-  // 7. QR payload based on Order ID (never Customer ID). Only knowable now
-  // that the insert above has returned a real orderId — this is why
-  // buildOrderSnapshot() below takes qrPayload separately rather than
-  // computing it itself.
+  // 7. QR payload based on Order ID (never Customer ID).
   const qrPayload = buildQrPayload(orderId)
   const customerJourneyUrl = buildCustomerJourneyUrl(customerToken)
 
-  // Service Engine: commit the Fitter's Estimasi Pengerjaan pick (already
-  // previewed with 🟢/🟡/🔴 in EstimationCard) as the order's real
-  // service_level, resolving + locking Hari D at the same time. Best-effort
-  // and non-blocking -- if the Fitter left it unset, or no capacity slot is
-  // found, the order still gets created and get_production_packet falls
-  // back to created_at + 14 days, same as every pre-Sprint-C order.
   const serviceLevel = mapEstimasiToServiceLevel(designSpecification?.estimatedProductionSpeed ?? '')
-  if (serviceLevel) {
-    try {
-      await setOrderService(supabase, orderId, serviceLevel)
-    } catch (err) {
-      console.error('set_order_service failed, order keeps legacy +14 day estimate:', err)
-    }
-  }
 
   // 9/10. Full snapshot — customer, measurement, body tags, design, notes —
   // captured now so it never drifts if the source records change later.
@@ -242,36 +201,38 @@ export async function createOrderFromConsultation({
     qrPayload,
   }
 
-  // 3. Consultation -> order_created
-  await supabase.from('consultations').update({ status: 'order_created' }).eq('id', consultation.id)
-
-  // 2/5/8. Link consultation<->order and log the event carrying the full
-  // snapshot + QR payload. business_events supports both consultation_id
-  // and order_id on the same row, which is what makes the two records
-  // queryably linked without a new FK column.
-  await supabase.from('business_events').insert({
-    consultation_id: consultation.id,
-    order_id: orderId,
-    event_type: 'order.created',
-    event_data: { ...snapshot, order_number: orderNumber },
-    created_by: userId,
+  // PS-01.5 (Transaction Integrity) — 1. Create the order (via
+  // add_garment_to_transaction inside the RPC — current_state check
+  // constraint has no 'confirmed' value, 'order' is the closest existing
+  // one, already labeled "Order Confirmed" in STATE_LABELS), 3. advance the
+  // consultation to order_created, and 2/5/8/9/10 log the 3 business_events
+  // (snapshot + consultation.completed + workflow.order_created), all
+  // atomically in one transaction. This used to be
+  // addGarmentToTransaction() + setOrderService() + 4 separate `.from()`
+  // calls, each committing independently — a failure partway through (e.g.
+  // a dropped connection on the last business_events insert) left a real
+  // `orders` row with no 'order.created' snapshot, which breaks
+  // get_production_packet for that order. See
+  // 20260901000000_ps01_5_transaction_integrity.sql; verified atomic via a
+  // forced mid-flight failure against the live DB (zero orphaned rows).
+  // orderId is already known (generated above), so the RPC's own returned
+  // order_id/transaction_id aren't needed back here.
+  const { error: finalizeError } = await supabase.rpc('finalize_order_creation', {
+    p_consultation_id: consultation.id,
+    p_existing_transaction_id: existingTransactionVerifiedId,
+    p_new_transaction_number: transactionNumber,
+    p_customer_id: consultation.customers.id,
+    p_commercial_type: commercialType,
+    p_order_number: orderNumber,
+    p_customer_token: customerToken,
+    p_service_level: serviceLevel,
+    // RPC merges order_number into this itself (matches the original
+    // `{ ...snapshot, order_number: orderNumber }` event_data literal).
+    p_order_snapshot: snapshot,
+    p_created_by: userId,
+    p_order_id: orderId,
   })
-
-  await supabase.from('business_events').insert({
-    consultation_id: consultation.id,
-    order_id: orderId,
-    event_type: 'consultation.completed',
-    event_data: { order_number: orderNumber },
-    created_by: userId,
-  })
-
-  await supabase.from('business_events').insert({
-    consultation_id: consultation.id,
-    order_id: orderId,
-    event_type: 'workflow.order_created',
-    event_data: { from_status: 'review', to_status: 'order_created', order_state: 'order' },
-    created_by: userId,
-  })
+  if (finalizeError) throw finalizeError
 
   // Inventory reservation/deduction no longer happens here — per the
   // "Pindahkan Konsumsi Inventory ke Production" business rule, Fitter only

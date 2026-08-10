@@ -16,7 +16,7 @@ interface GarmentOrderListProps {
 
 export function GarmentOrderList({ transactionId, orders, onGarmentAdded, onGarmentRemoved }: GarmentOrderListProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 

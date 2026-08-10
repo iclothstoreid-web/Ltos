@@ -32,6 +32,12 @@ export async function addGarmentToTransaction(
     customerId: string
     orderNumber: string
     customerToken: string
+    // PS-01.5 (Transaction Integrity) — optional; finalize_order_creation
+    // passes a client-generated id through here so buildQrPayload(orderId)
+    // can be computed before the insert (see createOrder.ts). Omitted by
+    // every other caller (e.g. GarmentOrderList's "add another garment"),
+    // which keeps the exact prior behavior of the DB generating one.
+    orderId?: string
   }
 ): Promise<AddGarmentResult> {
   const { data, error } = await supabase.rpc('add_garment_to_transaction', {
@@ -39,6 +45,7 @@ export async function addGarmentToTransaction(
     p_customer_id: params.customerId,
     p_order_number: params.orderNumber,
     p_customer_token: params.customerToken,
+    p_order_id: params.orderId ?? null,
   })
   if (error) throw error
   return data as unknown as AddGarmentResult
