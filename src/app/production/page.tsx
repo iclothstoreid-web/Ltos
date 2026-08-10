@@ -1,10 +1,20 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { parseProductionQrPayload } from '@/lib/order/qr'
 import { scanTokenKey } from '@/lib/production/accessToken'
 import { QrScanModal } from '@/components/workspace/production/QrScanModal'
-import { AssignedJobsPanel } from '@/components/workspace/production/AssignedJobsPanel'
+
+// Secondary panel (notification bell, badge count) — pulls in the full
+// Supabase client SDK (~66kB gzipped) to fetch pending assignments on
+// mount. Deferred to its own chunk so that SDK isn't part of the scan
+// entry screen's initial JS. Still server-rendered (default ssr: true), so
+// the bell icon appears in the initial HTML exactly as before — no loading
+// state, no layout shift.
+const AssignedJobsPanel = dynamic(
+  () => import('@/components/workspace/production/AssignedJobsPanel').then(m => m.AssignedJobsPanel)
+)
 
 // Sole entry point of the Production app. There is no order list here —
 // Fitter prints the QR, sticks it on the physical order, and this scanner

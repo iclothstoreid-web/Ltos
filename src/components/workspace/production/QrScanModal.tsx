@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import jsQR from 'jsqr'
+import type JsQRFn from 'jsqr'
 
 interface QrScanModalProps {
   title: string
@@ -37,6 +37,10 @@ export function QrScanModal({
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const rafRef = useRef<number | null>(null)
+  // jsQR (~46kB gzipped) is only ever invoked once the camera stream is
+  // live, so it's loaded on demand here instead of in this module's static
+  // import graph — keeps it out of /production's initial JS bundle.
+  const jsQRRef = useRef<typeof JsQRFn | null>(null)
   const [cameraError, setCameraError] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [manualMode, setManualMode] = useState(false)
@@ -47,13 +51,15 @@ export function QrScanModal({
 
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-        })
+        const [{ default: jsQR }, stream] = await Promise.all([
+          import('jsqr'),
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }),
+        ])
         if (cancelled) {
           stream.getTracks().forEach(t => t.stop())
           return
         }
+        jsQRRef.current = jsQR
         streamRef.current = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream
@@ -88,7 +94,7 @@ export function QrScanModal({
         canvas.height = video.videoHeight
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const code = jsQR(imageData.data, imageData.width, imageData.height)
+        const code = jsQRRef.current?.(imageData.data, imageData.width, imageData.height)
         if (code) {
           const isMatch = handleScanned(code.data)
           if (isMatch) return
