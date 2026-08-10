@@ -3,10 +3,12 @@ import { Fraunces } from 'next/font/google'
 
 // Fonts scoped to the Customer Journey route only, same pattern as every
 // other workspace layout (Fraunces variable name matches tailwind.config's
-// `fraunces` alias so `font-fraunces` works here too).
+// `fraunces` alias so `font-fraunces` works here too). Weight trimmed to
+// 400 (AP-03 audit: no font-fraunces element in this route pairs with a
+// font-weight utility class).
 const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['300', '400', '600'],
+  weight: ['400'],
   variable: '--font-fraunces',
 })
 

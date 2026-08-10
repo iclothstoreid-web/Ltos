@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 
 // MasterDataManager (shared by Owner OS & Fitter) uses material-symbols-outlined
 // icons throughout, but unlike every /workspace/* route this route had no
@@ -18,11 +19,7 @@ export const metadata: Metadata = {
 export default function MasterDataLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      />
+      <MaterialSymbolsLink />
       {children}
     </>
   )

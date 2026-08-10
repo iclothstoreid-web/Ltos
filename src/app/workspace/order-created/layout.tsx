@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fraunces } from 'next/font/google'
+import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 
 export const metadata: Metadata = {
   title: 'Fitter App | Local Tailor',
@@ -8,21 +9,18 @@ export const metadata: Metadata = {
 }
 
 // Fonts scoped to this route only — independent from every other frozen
-// feature's layout.
+// feature's layout. Weight trimmed to 400 (AP-03 audit: no font-fraunces
+// element in this route ever pairs with a font-weight utility class).
 const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['300', '400', '600'],
+  weight: ['400'],
   variable: '--font-fraunces',
 })
 
 export default function OrderCreatedLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`${fraunces.variable} contents`}>
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      />
+      <MaterialSymbolsLink />
       {children}
     </div>
   )

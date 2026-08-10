@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fraunces, Libre_Caslon_Text } from 'next/font/google'
+import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 
 export const metadata: Metadata = {
   title: 'Fitter App | Local Tailor',
@@ -11,9 +12,11 @@ export const metadata: Metadata = {
 // own layout (Check-In is frozen this sprint; nothing here imports from or
 // modifies it). Same CSS variable names as Check-In's layout so the
 // already-additive tailwind.config `fraunces`/`caslon` keys work here too.
+// Fraunces weight trimmed to 400 (AP-03 audit: no font-fraunces element in
+// this route pairs with a font-weight utility class).
 const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['300', '400', '600'],
+  weight: ['400'],
   variable: '--font-fraunces',
 })
 const caslon = Libre_Caslon_Text({
@@ -26,13 +29,7 @@ const caslon = Libre_Caslon_Text({
 export default function MeasurementLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`${fraunces.variable} ${caslon.variable} contents`}>
-      {/* Material Symbols has no next/font/google entry — same justified
-          manual <link> exception as Check-In's layout. */}
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      />
+      <MaterialSymbolsLink />
       {children}
     </div>
   )

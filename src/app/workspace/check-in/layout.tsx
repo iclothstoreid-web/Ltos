@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fraunces, Libre_Caslon_Text } from 'next/font/google'
+import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 
 export const metadata: Metadata = {
   title: 'Fitter App | Local Tailor',
@@ -9,9 +10,11 @@ export const metadata: Metadata = {
 
 // Fonts scoped to the Check-In workspace only — the root layout and its
 // `font-sans`/`font-serif` tokens used by every other page are untouched.
+// Fraunces weight trimmed to 400 (AP-03 audit: no font-fraunces element in
+// this route pairs with a font-weight utility class).
 const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['300', '400', '600'],
+  weight: ['400'],
   variable: '--font-fraunces',
 })
 const caslon = Libre_Caslon_Text({
@@ -24,15 +27,7 @@ const caslon = Libre_Caslon_Text({
 export default function CheckInLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`${fraunces.variable} ${caslon.variable} contents`}>
-      {/*
-        Material Symbols Outlined has no next/font/google entry (icon fonts
-        aren't in that catalog), so it's the one unavoidable manual <link>.
-      */}
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      />
+      <MaterialSymbolsLink />
       {children}
     </div>
   )
