@@ -33,11 +33,16 @@ export function CustomerJourneyShareActions({
     setCanShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
   }, [])
 
+  useEffect(() => {
+    if (!linkCopied) return
+    const timer = setTimeout(() => setLinkCopied(false), 2000)
+    return () => clearTimeout(timer)
+  }, [linkCopied])
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(journeyUrl)
       setLinkCopied(true)
-      setTimeout(() => setLinkCopied(false), 2000)
     } catch {
       // Clipboard API can fail (permissions, non-secure context) — the
       // link is already visible on screen as a fallback.

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { searchCustomers, getCustomerById } from '../actions'
 import type { Customer, RecentConsultation, FitterOrder } from '../types'
@@ -60,27 +60,31 @@ export function CustomerSearch({
   // the same underlying consultation isn't shown twice under two flows.
   const activeConsultations = recentConsultations.filter(c => c.status !== 'order_created')
 
-  const handleSearch = useCallback(
-    async (searchQuery: string) => {
-      setQuery(searchQuery)
-
-      if (searchQuery.length < 2) {
-        setResults([])
-        setShowResults(false)
-        return
-      }
-
-      setLoading(true)
-      const { customers, error } = await searchCustomers(searchQuery)
-
+  // Debounced (300ms) — was firing searchCustomers() on every keystroke,
+  // hitting the DB once per character typed.
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) {
+      setResults([])
+      setShowResults(false)
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    const timeout = setTimeout(async () => {
+      const { customers, error } = await searchCustomers(q)
+      if (cancelled) return
       if (!error) {
         setResults(customers)
         setShowResults(true)
       }
       setLoading(false)
-    },
-    []
-  )
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
+  }, [query])
 
   const handleSelectCustomer = (customer: Customer) => {
     onSelectCustomer(customer)
@@ -111,7 +115,7 @@ export function CustomerSearch({
           <input
             type="text"
             value={query}
-            onChange={e => handleSearch(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
             onFocus={() => query.length >= 2 && setShowResults(true)}
             placeholder="Nama, nomor HP, atau alamat..."
             className="w-full pl-8 pr-4 py-4 bg-transparent border-b border-[#c4c7c7]

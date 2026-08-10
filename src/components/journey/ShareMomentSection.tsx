@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { SectionShell } from './SectionShell'
 
 type SharePlatform = 'whatsapp' | 'instagram' | 'facebook' | 'x' | 'copy'
@@ -32,11 +32,16 @@ export function ShareMomentSection({
 }: ShareMomentSectionProps) {
   const [copied, setCopied] = useState(false)
 
+  useEffect(() => {
+    if (!copied) return
+    const timer = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(timer)
+  }, [copied])
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     } catch {
       // Clipboard API can fail (permissions, non-secure context) — no
       // fallback needed, nothing else on this section depends on it.

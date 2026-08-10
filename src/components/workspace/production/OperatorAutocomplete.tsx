@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Operator } from '@/lib/production/types'
 import { searchOperators, upsertOperator } from '@/lib/production/client'
@@ -80,16 +80,17 @@ export function OperatorAutocomplete({
     if (divisiHintId) setNewDivisionId(prev => prev || divisiHintId)
   }, [divisiHintId])
 
-  // A scoped picker (divisiHint set, e.g. check-in's Fitter picker or a
-  // production stage's operator picker) is searching a short, known list --
-  // safe to show it immediately on an empty query. An unscoped picker (e.g.
-  // ProductionCommunicationPanel's full operator list) still requires
-  // typing, since showing everyone on focus would be the wrong tradeoff
-  // there. Bug: an empty-query field with zero visible options and no
-  // affordance reads as "there is no fitter picker" even though the input
-  // is right there -- see check-in bug report.
-  async function handleSearch(q: string) {
-    setQuery(q)
+  // Debounce ref for the typing path only -- the immediate empty-query
+  // fetch triggered on focus (below) bypasses this and fires right away.
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    }
+  }, [])
+
+  async function runSearch(q: string) {
     if (q.length < 1 && !divisiHintId) {
       setResults([])
       setShowResults(false)
@@ -103,6 +104,27 @@ export function OperatorAutocomplete({
     } finally {
       setLoading(false)
     }
+  }
+
+  // A scoped picker (divisiHint set, e.g. check-in's Fitter picker or a
+  // production stage's operator picker) is searching a short, known list --
+  // safe to show it immediately on an empty query. An unscoped picker (e.g.
+  // ProductionCommunicationPanel's full operator list) still requires
+  // typing, since showing everyone on focus would be the wrong tradeoff
+  // there. Bug: an empty-query field with zero visible options and no
+  // affordance reads as "there is no fitter picker" even though the input
+  // is right there -- see check-in bug report.
+  //
+  // Debounced (300ms) -- was hitting searchOperators() on every keystroke.
+  function handleSearch(q: string) {
+    setQuery(q)
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    if (q.length < 1 && !divisiHintId) {
+      setResults([])
+      setShowResults(false)
+      return
+    }
+    searchTimeoutRef.current = setTimeout(() => runSearch(q), 300)
   }
 
   async function handleCreateNew() {
@@ -179,7 +201,7 @@ export function OperatorAutocomplete({
         onChange={e => handleSearch(e.target.value)}
         onFocus={() => {
           if (query.length >= 1) setShowResults(true)
-          else if (divisiHintId) handleSearch('')
+          else if (divisiHintId) runSearch('')
         }}
         placeholder="Ketik nama operator..."
         className={`w-full py-2 bg-transparent border-b ${borderColor} ${focusBorder}
