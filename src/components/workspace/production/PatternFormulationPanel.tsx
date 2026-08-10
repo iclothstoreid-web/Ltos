@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { MeasurementFields, MeasurementKey } from '@/components/workspace/measurement/types'
 import { CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from '@/components/workspace/measurement/types'
 import { MeasurementInput } from '@/components/workspace/measurement/MeasurementInput'
+import { BasicBodyDataSummary } from '@/components/workspace/measurement/BasicBodyDataSummary'
 import type { Operator, PatternFormulation, PatternTemplate } from '@/lib/production/types'
 import { PATTERN_TEMPLATE_LABELS } from '@/lib/production/stageConfig'
 import { savePatternFormulation } from '@/lib/production/client'
@@ -108,6 +109,10 @@ export function PatternFormulationPanel({
                 : '—'}
             </span>
           </div>
+          <BasicBodyDataSummary
+            fields={lockedMeasurements}
+            wrapperClassName="mt-3 pt-3 border-t border-outline-variant/60 flex gap-6 font-hanken text-xs text-secondary"
+          />
         </div>
       )}
 

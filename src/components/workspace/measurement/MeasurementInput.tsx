@@ -10,6 +10,7 @@ interface MeasurementInputProps {
   onFocusField?: (key: MeasurementKey | null) => void
   tooltip?: string
   step?: number
+  unit?: string
 }
 
 export function MeasurementInput({
@@ -20,6 +21,7 @@ export function MeasurementInput({
   onFocusField,
   tooltip,
   step = 0.5,
+  unit = 'cm',
 }: MeasurementInputProps) {
   const adjust = (delta: number) => {
     const next = Math.max(0, (parseFloat(value) || 0) + delta)
@@ -63,7 +65,7 @@ export function MeasurementInput({
         >
           +
         </button>
-        <span className="ml-2 text-xs text-[#444748]">cm</span>
+        <span className="ml-2 text-xs text-[#444748]">{unit}</span>
       </div>
     </div>
   )

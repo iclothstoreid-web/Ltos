@@ -19,7 +19,7 @@ import { PhotoUploader } from './measurement/PhotoUploader'
 import { WorkflowFooter } from './measurement/WorkflowFooter'
 import { encodeNotes, decodeNotes } from './measurement/notesCodec'
 import { EMPTY_FIELDS, FIELD_LABELS, CUTTING_MODEL_LABELS, WRIST_FINISHING_LABELS } from './measurement/types'
-import type { MeasurementFields, MeasurementKey, CuttingModel, WristFinishing } from './measurement/types'
+import type { MeasurementFields, MeasurementKey, CuttingModel, WristFinishing, BasicBodyDataKey } from './measurement/types'
 import { MEASUREMENT_BODY_MAP } from '@/lib/measurement/bodyMap'
 import { buildCustomerDigitalProfile } from '@/lib/customerProfile/buildProfile'
 import { decodeCustomerDigitalProfile, encodeCustomerDigitalProfile } from '@/lib/customerProfile/codec'
@@ -55,6 +55,9 @@ export function MeasurementWorkspace({
     shoulder: existingMeasurement?.shoulder?.toString() || '',
     sleeve: existingMeasurement?.sleeve?.toString() || '',
     length: existingMeasurement?.length?.toString() || '',
+    heightCm: existingMeasurement?.height_cm?.toString() || '',
+    weightKg: existingMeasurement?.weight_kg?.toString() || '',
+    ageYears: existingMeasurement?.age_years?.toString() || '',
     ...decoded.extras,
   })
   const [humanNotes, setHumanNotes] = useState(decoded.humanNotes)
@@ -120,6 +123,10 @@ export function MeasurementWorkspace({
     setFields(prev => ({ ...prev, wristFinishing: value }))
   }
 
+  const handleBasicBodyDataChange = (key: BasicBodyDataKey, value: string) => {
+    setFields(prev => ({ ...prev, [key]: value }))
+  }
+
   // Measurement is the single source of truth for the customer photo (no
   // more parallel capture in Consultation Review) — the moment an upload
   // succeeds, fold the URL straight into the Customer Digital Profile so it
@@ -154,6 +161,12 @@ export function MeasurementWorkspace({
         shoulder: parseFloat(fields.shoulder) || null,
         sleeve: parseFloat(fields.sleeve) || null,
         length: parseFloat(fields.length) || null,
+        // Basic Body Data (Sprint M) — real columns, not notes-encoded (see
+        // types.ts). A snapshot of the customer's condition at this
+        // measurement session, not part of the sizing formula.
+        height_cm: parseInt(fields.heightCm ?? '', 10) || null,
+        weight_kg: parseFloat(fields.weightKg ?? '') || null,
+        age_years: parseInt(fields.ageYears ?? '', 10) || null,
         notes,
       })
 
@@ -222,6 +235,7 @@ export function MeasurementWorkspace({
             fields={fields}
             onFieldChange={handleFieldChange}
             onFocusField={setFocusedField}
+            onBasicBodyDataChange={handleBasicBodyDataChange}
           />
 
           <section className="w-full lg:w-[45%] flex flex-col items-center">

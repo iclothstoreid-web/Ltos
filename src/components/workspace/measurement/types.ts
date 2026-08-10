@@ -39,16 +39,49 @@ export interface MeasurementFields {
   // existing `{} as MeasurementFields` / EMPTY_FIELDS construction stays valid.
   cuttingModel?: CuttingModel
   wristFinishing?: WristFinishing
+  // Basic Body Data (Sprint M) — a physical-condition snapshot that rides
+  // alongside the 12 measurement fields, not a 13th measurement itself.
+  // Real columns on `measurements` (height_cm/weight_kg/age_years), unlike
+  // the other 8 non-canonical fields above which live inside `notes`. Never
+  // fed into computePatternFormulation's CUTTING_MODEL_DELTA math — purely
+  // reference data for the operator/future Digital Body Profile (LTOS-W4).
+  heightCm?: string
+  weightKg?: string
+  ageYears?: string
 }
 
 export type CuttingModel = 'slim' | 'semi_slim' | 'regular'
 export type WristFinishing = 'manset' | 'sleting' | 'polos'
 
-// The 12 canonical cm measurement keys, excluding the two categorical
-// selections above — used by every Record<..., X> that must cover exactly
-// those 12 fields (labels, body-map, delta tables), since `keyof
-// MeasurementFields` now also includes cuttingModel/wristFinishing.
-export type MeasurementKey = Exclude<keyof MeasurementFields, 'cuttingModel' | 'wristFinishing'>
+// The 12 canonical cm measurement keys, excluding the categorical selection
+// and Basic Body Data fields above — used by every Record<..., X> that must
+// cover exactly those 12 fields (labels, body-map, delta tables), since
+// `keyof MeasurementFields` now also includes cuttingModel/wristFinishing/
+// heightCm/weightKg/ageYears.
+export type MeasurementKey = Exclude<
+  keyof MeasurementFields,
+  'cuttingModel' | 'wristFinishing' | 'heightCm' | 'weightKg' | 'ageYears'
+>
+
+// Basic Body Data's own 3 keys, labels, and units — kept separate from
+// MeasurementKey/FIELD_LABELS above since these aren't body measurements
+// (no body-map highlight, no cm unit, not part of the 12/EMPTY_FIELDS
+// completion count).
+export type BasicBodyDataKey = 'heightCm' | 'weightKg' | 'ageYears'
+
+export const BASIC_BODY_DATA_KEYS: BasicBodyDataKey[] = ['heightCm', 'weightKg', 'ageYears']
+
+export const BASIC_BODY_DATA_LABELS: Record<BasicBodyDataKey, string> = {
+  heightCm: 'Tinggi Badan',
+  weightKg: 'Berat Badan',
+  ageYears: 'Usia',
+}
+
+export const BASIC_BODY_DATA_UNITS: Record<BasicBodyDataKey, string> = {
+  heightCm: 'cm',
+  weightKg: 'kg',
+  ageYears: 'tahun',
+}
 
 export const CUTTING_MODEL_LABELS: Record<CuttingModel, string> = {
   slim: 'Slim Fit',

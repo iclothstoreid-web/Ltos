@@ -73,6 +73,14 @@ export interface Measurement {
   length: number | null
   notes: string | null
   created_at: string
+  // Basic Body Data (Sprint M) — snapshot of the customer's physical
+  // condition at measurement time, not an estimation input. Real columns
+  // (unlike neck/waist/hip/etc, which still ride inside `notes` — see
+  // notesCodec.ts) since this data must persist even if that legacy
+  // encoding is ever replaced.
+  height_cm: number | null
+  weight_kg: number | null
+  age_years: number | null
 }
 
 export interface ProductionStep {

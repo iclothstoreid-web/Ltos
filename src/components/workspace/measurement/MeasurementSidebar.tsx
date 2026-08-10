@@ -1,9 +1,10 @@
 'use client'
 
 import { useLayoutEffect, useState } from 'react'
-import type { MeasurementFields, MeasurementKey } from './types'
+import type { BasicBodyDataKey, MeasurementFields, MeasurementKey } from './types'
 import { MeasurementAccordion } from './MeasurementAccordion'
 import { MeasurementInput } from './MeasurementInput'
+import { BasicBodyDataFields } from './BasicBodyDataFields'
 
 interface FieldSpec {
   key: MeasurementKey
@@ -52,9 +53,15 @@ interface MeasurementSidebarProps {
   fields: MeasurementFields
   onFieldChange: (key: MeasurementKey, value: string) => void
   onFocusField: (key: MeasurementKey | null) => void
+  onBasicBodyDataChange: (key: BasicBodyDataKey, value: string) => void
 }
 
-export function MeasurementSidebar({ fields, onFieldChange, onFocusField }: MeasurementSidebarProps) {
+export function MeasurementSidebar({
+  fields,
+  onFieldChange,
+  onFocusField,
+  onBasicBodyDataChange,
+}: MeasurementSidebarProps) {
   // Reserve the fixed WorkflowFooter's *real* rendered height, not a
   // hardcoded guess — the footer's content row wraps onto two lines
   // whenever it doesn't fit one (long customer name, narrower viewport,
@@ -101,6 +108,9 @@ export function MeasurementSidebar({ fields, onFieldChange, onFocusField }: Meas
         </h1>
         <div className="h-1 w-12 bg-[#775a19] mb-8" />
       </div>
+
+      <BasicBodyDataFields fields={fields} onChange={onBasicBodyDataChange} />
+
       {/* flex-1 + min-h-0 (not a fixed vh guess) so this box always stops
           exactly at the fixed WorkflowFooter's top edge — 7rem covers the
           fixed MeasurementTopBar (h-20) + <main>'s own py-8 top padding,

@@ -1,5 +1,6 @@
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
 import type { MeasurementFields, MeasurementKey } from '@/components/workspace/measurement/types'
+import { BasicBodyDataSummary } from '@/components/workspace/measurement/BasicBodyDataSummary'
 import type { PatternTemplate } from '@/lib/production/types'
 import { FIELD_LABELS } from './PatternFormulationPanel'
 import { PATTERN_TEMPLATE_LABELS } from '@/lib/production/stageConfig'
@@ -102,6 +103,10 @@ export function ProductionSpecificationSheet({
                 Template: <strong>{PATTERN_TEMPLATE_LABELS[template]}</strong>
               </p>
             )}
+            <BasicBodyDataSummary
+              fields={patternMeasurements}
+              wrapperClassName="flex gap-6 text-xs text-secondary mb-3"
+            />
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               {(Object.keys(FIELD_LABELS) as Array<MeasurementKey>).map(key => (
                 <div key={key} className="flex items-baseline justify-between border-b border-outline-variant pb-1">

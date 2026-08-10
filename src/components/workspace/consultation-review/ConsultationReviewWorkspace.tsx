@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Consultation } from '@/app/workspace/check-in/types'
 import type { Measurement } from '@/types'
 import { decodeNotes as decodeMeasurementNotes } from '@/components/workspace/measurement/notesCodec'
-import { EMPTY_FIELDS } from '@/components/workspace/measurement/types'
+import { BASIC_BODY_DATA_KEYS, EMPTY_FIELDS } from '@/components/workspace/measurement/types'
 import { decodeDesignNotes } from '@/components/workspace/design-studio/notesCodec'
 import { DEFAULT_SELECTIONS } from '@/components/workspace/design-studio/types'
 import { decodeFabricQuantity } from '@/components/workspace/design-studio/fabricQuantityCodec'
@@ -198,10 +198,26 @@ export function ConsultationReviewWorkspace({
     shoulder: latestMeasurement?.shoulder?.toString() || '',
     sleeve: latestMeasurement?.sleeve?.toString() || '',
     length: latestMeasurement?.length?.toString() || '',
+    // Basic Body Data (Sprint M) — real columns on `measurements`, read the
+    // same way as chest/shoulder/sleeve/length above (not via
+    // decodedMeasurement.extras, which only covers the notes-encoded
+    // fields). This is what carries height/weight/age into the order.created
+    // snapshot -> get_production_packet's locked_measurements -> Pattern
+    // Formulation/QC Reference/Order History.
+    heightCm: latestMeasurement?.height_cm?.toString() || '',
+    weightKg: latestMeasurement?.weight_kg?.toString() || '',
+    ageYears: latestMeasurement?.age_years?.toString() || '',
     ...decodedMeasurement.extras,
   }
   const totalFields = Object.keys(EMPTY_FIELDS).length
-  const filledCount = Object.values(measurementFields).filter(Boolean).length
+  // Basic Body Data (heightCm/weightKg/ageYears) is deliberately excluded
+  // from this count — it's a reference snapshot, not a required measurement
+  // field, and counting it here would silently change the pre-Sprint-M
+  // measurementComplete signal below (ReadinessGauge) for every order that
+  // has it filled in.
+  const filledCount = Object.entries(measurementFields).filter(
+    ([key, value]) => !BASIC_BODY_DATA_KEYS.includes(key as (typeof BASIC_BODY_DATA_KEYS)[number]) && Boolean(value)
+  ).length
 
   // Same read-only reuse of Design Studio's decoder.
   const designMarkerPresent = Boolean(

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { PatternFormulation, StageRecord } from '@/lib/production/types'
+import type { MeasurementKey } from '@/components/workspace/measurement/types'
+import { BasicBodyDataSummary } from '@/components/workspace/measurement/BasicBodyDataSummary'
 import { PATTERN_TEMPLATE_LABELS } from '@/lib/production/stageConfig'
 import { FIELD_LABELS } from './PatternFormulationPanel'
 
@@ -61,12 +63,17 @@ export function PatternReferenceCard({ patternFormulation, stageRecords }: Patte
           </p>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-hanken text-xs text-secondary">
-            {Object.entries(patternFormulation.pattern_measurements).map(([key, value]) => (
+            {(Object.keys(FIELD_LABELS) as Array<MeasurementKey>).map(key => (
               <span key={key}>
-                {FIELD_LABELS[key as keyof typeof FIELD_LABELS]}: {value || '—'} cm
+                {FIELD_LABELS[key]}: {patternFormulation.pattern_measurements[key] || '—'} cm
               </span>
             ))}
           </div>
+
+          <BasicBodyDataSummary
+            fields={patternFormulation.pattern_measurements}
+            wrapperClassName="flex gap-6 font-hanken text-xs text-secondary"
+          />
 
           {formulationRecord?.notes && (
             <div className="p-3 border-l-4 border-amber-mid bg-amber-mid/5 rounded-r-xl">
