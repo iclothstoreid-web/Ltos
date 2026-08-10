@@ -146,6 +146,12 @@ export function AIPreviewPanel({
       {previewImageUrl ? (
         <div className="w-full max-w-lg flex flex-col items-center justify-center gap-3">
           <div className="relative w-full aspect-[3/4] border border-[#c4c7c7]">
+            {/* AP-06: when previewImageUrl is set, this is the dominant visual
+                of the Design Studio result view, above the fold with no
+                interaction needed — priority skips lazy-loading it. No
+                placeholder="blur": src is either a fresh data: URI or a
+                per-session Supabase signed URL, neither has a precomputable
+                static blur value without a new blurhash pipeline. */}
             <Image
               key={transformFailed ? 'raw' : 'transformed'}
               src={previewImageUrl as string}
@@ -155,6 +161,7 @@ export function AIPreviewPanel({
               fill
               sizes="(min-width: 1024px) 512px, 100vw"
               className="object-cover"
+              priority
               onError={() => setTransformFailed(true)}
             />
             {renderFinal && (
