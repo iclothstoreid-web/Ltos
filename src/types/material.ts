@@ -250,3 +250,47 @@ export interface FabricRenderContext {
     character: string | null
   } | null
 }
+
+// Sprint W3-5 §2/§13/§14 — FAQ Schema + AI-readable content. Generated
+// from a material's own real fields (getMaterialFaq()), never invented
+// per-SKU claims.
+export interface FabricFaqItem {
+  question: string
+  answer: string
+}
+
+// Sprint W3-5 §6/§14 — Internal Linking Engine. One consolidated fetch
+// (getInternalLinkTargets()) instead of each section/component querying
+// independently — every list is already published-only, self-excluded,
+// and capped by the repository, so components just render what they're
+// given.
+export interface InternalLinkTargets {
+  related: FabricMaterial[]
+  comparison: FabricMaterial[]
+  sameTexture: FabricMaterial[]
+  sameColorFamily: FabricMaterial[]
+}
+
+// Sprint W3-5 §14 — lightweight SEO/navigation context (category label +
+// sibling categories), distinct from InternalLinkTargets: this is pure
+// derivation over the fixed category taxonomy, no DB call, used for
+// breadcrumb/category-hub navigation rather than material-to-material
+// link rendering.
+export interface SeoNeighbors {
+  category: FabricCategory
+  categoryLabel: string
+  siblingCategories: FabricCategory[]
+}
+
+// Sprint W3-5 §5 — Material Authority Content. Every field is a sentence
+// or two derived strictly from the material's own real data (composition,
+// texture, season, weight, specifications, care_instruction) — never an
+// invented claim about a specific SKU (see
+// getMaterialAuthorityContent() in materialRepository.ts).
+export interface MaterialAuthorityContent {
+  whyChoose: string
+  whenToWear: string
+  climateSuitability: string
+  tailoringRecommendation: string
+  maintenanceGuide: string
+}

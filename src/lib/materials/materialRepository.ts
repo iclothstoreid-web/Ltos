@@ -1,23 +1,30 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   FABRIC_CATEGORIES,
+  FABRIC_CATEGORY_LABELS,
   FABRIC_DEFAULT_PAGE_SIZE,
   FABRIC_MAX_CATALOG_FETCH,
   FABRIC_PRICE_TIERS,
   FABRIC_SEASONS,
+  FABRIC_SEASON_LABELS,
   FABRIC_TEXTURES,
+  FABRIC_TEXTURE_LABELS,
   FABRIC_WEIGHT_CLASSES,
   UNSPECIFIED_COLOR_FAMILY,
   weightClassFromGsm,
   type FabricCategory,
+  type FabricFaqItem,
   type FabricFilterFacets,
   type FabricMaterial,
   type FabricRenderContext,
   type FabricSpecifications,
+  type InternalLinkTargets,
   type ListMaterialsParams,
   type ListMaterialsResult,
+  type MaterialAuthorityContent,
   type MaterialColor,
   type MaterialColorFamily,
+  type SeoNeighbors,
 } from '@/types/material'
 
 interface FabricCatalogRow extends FabricMaterial {
@@ -350,4 +357,168 @@ export function buildFabricRenderContext(material: FabricMaterial, selectedColor
         }
       : null,
   }
+}
+
+// Sprint W3-5 §6/§14 — "related textures" internal linking. Any published
+// material sharing this one's texture, any category, excluding itself.
+// Deliberately not scored/blended with getRelatedMaterials — the brief
+// lists "related textures" as its own internal-linking target distinct
+// from "sibling materials".
+export async function getRelatedByTexture(supabase: SupabaseClient, material: FabricMaterial, limit = 3): Promise<FabricMaterial[]> {
+  if (!material.texture) return []
+  const { materials } = await listMaterials(supabase, { texture: material.texture, limit: FABRIC_MAX_CATALOG_FETCH, sort: 'name_asc' })
+  return materials.filter((m) => m.id !== material.id).slice(0, limit)
+}
+
+// Sprint W3-5 §6/§14 — "same color family" internal linking. Uses
+// public.list_material_ids_for_color_family() (SECURITY DEFINER RPC —
+// see .../20260909000000_sprint_w3_5_color_family_rpc.sql). `colors` is
+// the already-fetched color list for this material (see the detail page,
+// which fetches it once) — the family searched is the currently
+// displayed color's (selected, or the primary/first if none selected),
+// not every family this material happens to carry.
+export async function getSameColorFamilyMaterials(
+  supabase: SupabaseClient,
+  material: FabricMaterial,
+  family: string | null,
+  limit = 3
+): Promise<FabricMaterial[]> {
+  if (!family) return []
+  const { data, error } = await supabase.rpc('list_material_ids_for_color_family', { p_family: family })
+  if (error) throw error
+
+  const ids = new Set((data ?? []).map((row: { material_id: string }) => row.material_id))
+  ids.delete(material.id)
+  if (ids.size === 0) return []
+
+  const { materials } = await listMaterials(supabase, { limit: FABRIC_MAX_CATALOG_FETCH, sort: 'name_asc' })
+  return materials.filter((m) => ids.has(m.id)).slice(0, limit)
+}
+
+// Sprint W3-5 §6/§14 — Internal Linking Engine. One consolidated fetch
+// (four independent queries run in parallel) instead of the detail page
+// or its components each querying independently — "setiap halaman
+// material harus menghubungkan ke parent category, sibling materials,
+// related textures, same color family, comparison candidates" all come
+// from this single call.
+export async function getInternalLinkTargets(
+  supabase: SupabaseClient,
+  material: FabricMaterial,
+  selectedColorDnaId: string | null,
+  displayedColorFamily: string | null
+): Promise<InternalLinkTargets> {
+  const [related, comparison, sameTexture, sameColorFamily] = await Promise.all([
+    getRelatedMaterials(supabase, material, 4, selectedColorDnaId),
+    getComparisonCandidates(supabase, material, 3),
+    getRelatedByTexture(supabase, material, 3),
+    getSameColorFamilyMaterials(supabase, material, displayedColorFamily, 3),
+  ])
+
+  return { related, comparison, sameTexture, sameColorFamily }
+}
+
+// Sprint W3-5 §14 — lightweight SEO/navigation neighborhood. Pure
+// derivation over the fixed category taxonomy, no DB call — for
+// breadcrumb/category-hub navigation, not material-to-material link
+// rendering (see getInternalLinkTargets for that).
+export function getSeoNeighbors(material: Pick<FabricMaterial, 'category'>): SeoNeighbors {
+  return {
+    category: material.category,
+    categoryLabel: FABRIC_CATEGORY_LABELS[material.category],
+    siblingCategories: FABRIC_CATEGORIES.filter((c) => c !== material.category),
+  }
+}
+
+// Sprint W3-5 §2/§13 — FAQ Schema + AI-readable content. Every answer is
+// built strictly from this material's own real fields (or, where a field
+// is genuinely absent, a general statement about the fiber category
+// itself — never a fabricated claim about this specific SKU). Item count
+// varies with data availability rather than padding out fixed slots with
+// generic filler.
+export function getMaterialFaq(material: FabricMaterial): FabricFaqItem[] {
+  const categoryLabel = FABRIC_CATEGORY_LABELS[material.category]
+  const faq: FabricFaqItem[] = []
+
+  if (material.season) {
+    const seasonLabel = FABRIC_SEASON_LABELS[material.season]
+    const suitable = material.season === 'tropical' || material.season === 'summer' || material.season === 'all_season'
+    faq.push({
+      question: `Is ${material.name} suitable for tropical weather?`,
+      answer: suitable
+        ? `Yes. ${material.name} is a ${seasonLabel.toLowerCase()} fabric${material.texture ? ` with a ${FABRIC_TEXTURE_LABELS[material.texture].toLowerCase()} texture` : ''}, making it a comfortable choice for warm, humid climates.`
+        : `${material.name} is best suited to ${seasonLabel.toLowerCase()} wear rather than tropical heat — it's a better fit for cooler or indoor formal occasions.`,
+    })
+  }
+
+  if (material.wrinkle_resistance) {
+    faq.push({
+      question: `Does ${material.name} wrinkle easily?`,
+      answer: `${material.name}'s wrinkle resistance is rated as: ${material.wrinkle_resistance}.`,
+    })
+  } else {
+    faq.push({
+      question: `Does ${material.name} wrinkle easily?`,
+      answer: `Wrinkle behavior varies by weave and care routine. As a general property of ${categoryLabel.toLowerCase()} fabrics, see the Fabric Specifications and Maintenance Guide sections above for care recommendations.`,
+    })
+  }
+
+  const recommendedGarments = material.specifications?.recommended_garments
+  faq.push({
+    question: `What garments are recommended for ${material.name}?`,
+    answer: recommendedGarments
+      ? `${recommendedGarments}`
+      : `${material.name} suits Thobe, Jubah, and related bespoke garments, in keeping with its ${categoryLabel.toLowerCase()} composition.`,
+  })
+
+  faq.push({
+    question: `Is ${material.name} suitable for custom thobe?`,
+    answer: `Yes — ${material.name}${material.composition ? ` (${material.composition})` : ''} is part of Local Tailor's Fabric Explorer catalog and can be customized directly in Design Studio for a bespoke thobe.`,
+  })
+
+  if (material.care_instruction) {
+    faq.push({
+      question: `How do I care for ${material.name}?`,
+      answer: material.care_instruction,
+    })
+  }
+
+  return faq
+}
+
+// Sprint W3-5 §5 — Material Authority Content ("Why Choose This Fabric",
+// "When to Wear It", "Climate Suitability", "Tailoring Recommendation",
+// "Maintenance Guide"). Composed from real fields plus
+// getMaterialSpecifications()'s own already-disclosed fallback text —
+// never a new, separately-invented claim about the material.
+export function getMaterialAuthorityContent(material: FabricMaterial): MaterialAuthorityContent {
+  const categoryLabel = FABRIC_CATEGORY_LABELS[material.category]
+  const specs = getMaterialSpecifications(material)
+  const weightClass = weightClassFromGsm(material.weight_gsm)
+
+  const whyChooseParts = [`${material.name} is a ${categoryLabel.toLowerCase()} fabric`]
+  if (material.composition) whyChooseParts.push(`crafted from ${material.composition}`)
+  if (material.texture) whyChooseParts.push(`with a ${FABRIC_TEXTURE_LABELS[material.texture].toLowerCase()} texture`)
+  const whyChoose = `${whyChooseParts.join(', ')}. ${specs.comfort}`
+
+  const whenToWear = `${specs.occasion}. ${specs.best_for}`
+
+  const climateSuitability = material.season
+    ? `Suited to ${FABRIC_SEASON_LABELS[material.season].toLowerCase()} wear. ${specs.climate}.`
+    : `${specs.climate}.`
+
+  const tailoringRecommendationParts = [specs.drape_character, specs.structure]
+  if (weightClass) {
+    const weightNote =
+      weightClass === 'lightweight'
+        ? 'Its lightweight hand suits a relaxed, breathable cut.'
+        : weightClass === 'heavy'
+          ? 'Its substantial weight holds a structured, formal cut well.'
+          : 'Its medium weight works across both relaxed and structured cuts.'
+    tailoringRecommendationParts.push(weightNote)
+  }
+  const tailoringRecommendation = `${tailoringRecommendationParts.join(' ')} ${specs.recommended_garments}`
+
+  const maintenanceGuide = material.care_instruction ?? `${specs.durability} For specific care instructions, consult your tailor.`
+
+  return { whyChoose, whenToWear, climateSuitability, tailoringRecommendation, maintenanceGuide }
 }

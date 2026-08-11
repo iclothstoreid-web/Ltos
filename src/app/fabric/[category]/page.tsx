@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createPublicClient } from '@/lib/supabase/public'
 import { getMaterialFilterFacets, listMaterials } from '@/lib/materials/materialRepository'
-import { buildFabricCategoryMetadata } from '@/lib/materials/seo'
+import { buildFabricCategoryBreadcrumbSchema, buildFabricCategoryMetadata } from '@/lib/materials/seo'
 import { parseListMaterialsParams, buildLoadMoreHref, type FabricSearchParams } from '@/lib/materials/searchParamsHelpers'
 import { FABRIC_CATEGORIES, FABRIC_CATEGORY_DESCRIPTIONS, FABRIC_CATEGORY_LABELS, isFabricCategory } from '@/types/material'
 import { MaterialHero } from '@/components/fabric/MaterialHero'
@@ -14,6 +14,7 @@ import { FabricFiltersPanel } from '@/components/fabric/FabricFiltersPanel'
 import { MobileFilterDrawer } from '@/components/fabric/MobileFilterDrawer'
 import { ActiveFilterChips } from '@/components/fabric/ActiveFilterChips'
 import { SortLinks } from '@/components/fabric/SortLinks'
+import { CategoryEditorialSection } from '@/components/fabric/CategoryEditorialSection'
 
 interface PageProps {
   params: { category: string }
@@ -62,80 +63,134 @@ export default async function FabricCategoryPage({ params, searchParams }: PageP
   const supabase = createPublicClient()
   const parsed = parseListMaterialsParams(searchParams, { lockedCategory: category })
 
-  const [{ materials, totalCount }, facets] = await Promise.all([
+  const [{ materials, totalCount }, facets, { materials: popular }] = await Promise.all([
     listMaterials(supabase, parsed),
     getMaterialFilterFacets(supabase, category),
+    listMaterials(supabase, { category, limit: 4, sort: 'featured' }),
   ])
 
   const currentLimit = parsed.limit ?? materials.length
   const hasMore = totalCount > materials.length
   const siblingCategories = FABRIC_CATEGORIES.filter((c) => c !== category)
+  const breadcrumbSchema = buildFabricCategoryBreadcrumbSchema(category)
+  // Popular rail only earns its place when it's showing a different view
+  // than the (unfiltered, default-sorted) main grid already would —
+  // otherwise it's a redundant duplicate of the same 4 cards.
+  const showPopularRail = popular.length > 0 && (totalCount > popular.length || parsed.sort !== undefined || Object.keys(searchParams).length > 0)
 
   return (
     <div className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
+      {/* eslint-disable-next-line react/no-danger */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+
       <div className="mx-auto max-w-6xl">
-        <p className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">
-          <Link href="/fabric" className="hover:text-luxury-gold">
-            Fabric Explorer
-          </Link>{' '}
-          / {label}
-        </p>
-
-        <div className="mt-4">
-          <MaterialHero eyebrow="Category" title={`${label} Fabrics`} description={FABRIC_CATEGORY_DESCRIPTIONS[category]}>
-            <FabricSearchForm basePath={basePath} searchParams={searchParams} lockedCategory={category} />
-          </MaterialHero>
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <ActiveFilterChips basePath={basePath} searchParams={searchParams} lockedCategory={category} />
-          <div className="ml-auto flex items-center gap-4">
-            <MobileFilterDrawer resultCount={totalCount}>
-              <FabricFiltersPanel basePath={basePath} searchParams={searchParams} facets={facets} lockedCategory={category} />
-            </MobileFilterDrawer>
-            <SortLinks basePath={basePath} searchParams={searchParams} />
-          </div>
-        </div>
-
-        <div className="mt-8 grid gap-10 lg:grid-cols-[220px_1fr]">
-          <aside className="hidden lg:block" aria-label="Fabric filters">
-            <FabricFiltersPanel basePath={basePath} searchParams={searchParams} facets={facets} lockedCategory={category} />
-          </aside>
-
-          <div>
-            <p role="status" className="mb-4 font-luxury-sans text-xs text-luxury-taupe">
-              {totalCount === 0
-                ? `No ${label} fabrics yet.`
-                : `Showing ${materials.length} of ${totalCount} ${label} fabric${totalCount === 1 ? '' : 's'}`}
-            </p>
-
-            <MaterialGrid materials={materials} emptyMessage={`No ${label} fabrics match your search.`} />
-
-            {hasMore && (
-              <div className="mt-8 text-center">
-                <Link
-                  href={buildLoadMoreHref(basePath, searchParams, currentLimit)}
-                  scroll={false}
-                  className="inline-flex items-center rounded-full border border-luxury-gold/30 px-6 py-2.5 font-luxury-sans text-[11px] uppercase tracking-[0.14em] text-luxury-ivory transition hover:border-luxury-gold hover:text-luxury-gold focus-visible:ring-2 focus-visible:ring-luxury-gold/50"
-                >
-                  Load More
+        <header>
+          <nav aria-label="Breadcrumb" className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">
+            <ol className="flex flex-wrap items-center gap-1">
+              <li>
+                <Link href="/" className="hover:text-luxury-gold">
+                  Home
                 </Link>
-              </div>
-            )}
+              </li>
+              <li aria-hidden="true">/</li>
+              <li>
+                <Link href="/fabric" className="hover:text-luxury-gold">
+                  Fabric Explorer
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li aria-current="page" className="text-luxury-ivory">
+                {label}
+              </li>
+            </ol>
+          </nav>
+
+          <div className="mt-4">
+            <MaterialHero eyebrow="Category" title={`${label} Fabrics`} description={FABRIC_CATEGORY_DESCRIPTIONS[category]}>
+              <FabricSearchForm basePath={basePath} searchParams={searchParams} lockedCategory={category} />
+            </MaterialHero>
           </div>
+        </header>
+
+        {showPopularRail && (
+          <section aria-labelledby="popular-materials-heading" className="mt-10">
+            <h2 id="popular-materials-heading" className="font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-ivory">
+              Popular in {label}
+            </h2>
+            <div className="mt-4">
+              <MaterialGrid materials={popular} />
+            </div>
+          </section>
+        )}
+
+        <section aria-labelledby="category-catalog-heading" className="mt-16">
+          <h2 id="category-catalog-heading" className="sr-only">
+            All {label} Fabrics
+          </h2>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <ActiveFilterChips basePath={basePath} searchParams={searchParams} lockedCategory={category} />
+            <div className="ml-auto flex items-center gap-4">
+              <MobileFilterDrawer resultCount={totalCount}>
+                <FabricFiltersPanel basePath={basePath} searchParams={searchParams} facets={facets} lockedCategory={category} />
+              </MobileFilterDrawer>
+              <SortLinks basePath={basePath} searchParams={searchParams} />
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-10 lg:grid-cols-[220px_1fr]">
+            <aside className="hidden lg:block" aria-label="Fabric filters">
+              <FabricFiltersPanel basePath={basePath} searchParams={searchParams} facets={facets} lockedCategory={category} />
+            </aside>
+
+            <div>
+              <p role="status" className="mb-4 font-luxury-sans text-xs text-luxury-taupe">
+                {totalCount === 0
+                  ? `No ${label} fabrics yet.`
+                  : `Showing ${materials.length} of ${totalCount} ${label} fabric${totalCount === 1 ? '' : 's'}`}
+              </p>
+
+              <MaterialGrid materials={materials} emptyMessage={`No ${label} fabrics match your search.`} />
+
+              {hasMore && (
+                <div className="mt-8 text-center">
+                  <Link
+                    href={buildLoadMoreHref(basePath, searchParams, currentLimit)}
+                    scroll={false}
+                    className="inline-flex items-center rounded-full border border-luxury-gold/30 px-6 py-2.5 font-luxury-sans text-[11px] uppercase tracking-[0.14em] text-luxury-ivory transition hover:border-luxury-gold hover:text-luxury-gold focus-visible:ring-2 focus-visible:ring-luxury-gold/50"
+                  >
+                    Load More
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Category SEO Content (§4) — 400-800 word editorial section */}
+        <div className="mt-16 border-t border-luxury-gold/10 pt-10">
+          <CategoryEditorialSection category={category} />
         </div>
 
-        {/* Internal linking (§9) — every category page links to every
-            sibling category, so crawlers and users can reach the full
-            taxonomy from any single category landing page. */}
-        <div className="mt-16 border-t border-luxury-gold/10 pt-8">
-          <p className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">Explore Other Fabrics</p>
-          <div className="mt-3 flex flex-wrap gap-2">
+        {/* Related Categories (§7 Category Hub Navigation) — every category
+            page links to every sibling category, so crawlers and users can
+            reach the full taxonomy from any single category landing page. */}
+        <aside aria-labelledby="related-categories-heading" className="mt-16 border-t border-luxury-gold/10 pt-8">
+          <h2 id="related-categories-heading" className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">
+            Related Categories
+          </h2>
+          <nav aria-label="Related fabric categories" className="mt-3 flex flex-wrap gap-2">
             {siblingCategories.map((c) => (
               <CategoryChip key={c} category={c} />
             ))}
-          </div>
-        </div>
+          </nav>
+        </aside>
+
+        <footer className="mt-16 border-t border-luxury-gold/10 pt-8">
+          <Link href="/fabric" className="font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe hover:text-luxury-gold">
+            ← Explore the Full Fabric Explorer
+          </Link>
+        </footer>
       </div>
     </div>
   )
