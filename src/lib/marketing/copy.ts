@@ -165,8 +165,8 @@ export const finalCtaCopy = {
 }
 
 export const navCopy = {
-  brand: 'Bespoke Tailor',
-  brandSuffix: 'by Local Tailor',
+  brand: 'Local Tailor',
+  brandSuffix: 'by Local Project',
   links: [
     { label: 'Design Studio', href: '/#configurator' },
     { label: 'Fabrics', href: '/#fabric' },

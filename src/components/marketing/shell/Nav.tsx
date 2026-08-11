@@ -24,9 +24,9 @@ export function Nav() {
       }`}
     >
       <nav aria-label="Primary" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
-        <a href="/" className="flex flex-col leading-tight">
+        <a href="/" className="flex flex-col">
           <span className="font-fraunces text-lg tracking-wide text-luxury-ivory">{navCopy.brand}</span>
-          <span className="font-luxury-sans text-[10px] font-light uppercase tracking-[0.16em] text-luxury-taupe">
+          <span className="mt-1 font-luxury-sans text-[10px] font-light uppercase tracking-[0.2em] text-luxury-taupe">
             {navCopy.brandSuffix}
           </span>
         </a>
