@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { FabricMaterial } from '@/types/material'
-import { FABRIC_CATEGORY_LABELS, type FabricCategory } from '@/types/material'
+import { FABRIC_CATEGORY_LABELS, FABRIC_TEXTURE_LABELS, type FabricCategory } from '@/types/material'
 
 // Static origin, not headers()-derived — src/app/design/[slug]/page.tsx
 // reads headers() for its origin, but that route is fully dynamic. This
@@ -56,15 +56,70 @@ export function buildFabricCategoryMetadata(category: FabricCategory): Metadata 
   })
 }
 
+// Sprint W3-3 — matches the brief's own worked example:
+// "Oxford Cotton Fabric | Premium Cotton for Custom Thobe | Local Tailor"
+// (the "| Local Tailor" suffix is appended by buildFabricMetadata itself).
+// `qualifier` comes from price_tier when set (Basic/Premium/Luxury), else
+// falls back to the generic "Quality" — never fabricated from luxury_level,
+// which has no defined vocabulary (see FABRIC_SORT_LABELS.luxury_level's
+// comment in types/material.ts).
+const PRICE_TIER_QUALIFIER: Record<string, string> = {
+  basic: 'Quality',
+  premium: 'Premium',
+  luxury: 'Luxury',
+}
+
 export function buildFabricMaterialMetadata(material: FabricMaterial): Metadata {
   const label = FABRIC_CATEGORY_LABELS[material.category]
-  const description = material.composition
-    ? `${material.name} — ${label}, ${material.composition}.`
-    : `${material.name} — koleksi material ${label} dari Local Tailor.`
+  const qualifier = (material.price_tier && PRICE_TIER_QUALIFIER[material.price_tier]) ?? 'Quality'
+  const title = `${material.name} Fabric | ${qualifier} ${label} for Custom Thobe`
+
+  const descriptionParts = [`Explore ${material.name} fabric`]
+  if (material.texture) descriptionParts.push(`with a ${FABRIC_TEXTURE_LABELS[material.texture]} texture`)
+  if (material.composition) descriptionParts.push(material.texture ? `and ${material.composition}` : material.composition)
+  const description = `${descriptionParts.join(' ')} for custom thobe tailoring.`
+
   return buildFabricMetadata({
-    title: material.name,
+    title,
     description,
     url: `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}`,
     image: material.hero_image,
   })
+}
+
+// schema.org Product — mirrors src/lib/configurator/seo.ts's
+// buildDesignProductSchema shape/conventions. No price/availability claim
+// (Material Master's `price` column is Inventory-internal, never exposed
+// through list_fabric_catalog() — see the SECURITY DEFINER RPC's column
+// allowlist), so `offers` is omitted rather than showing a fabricated or
+// stale price.
+export function buildFabricMaterialProductSchema(material: FabricMaterial) {
+  const label = FABRIC_CATEGORY_LABELS[material.category]
+  const url = `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}`
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: material.name,
+    description: material.composition ?? `${label} fabric from ${FABRIC_BRAND_NAME}.`,
+    category: `${label} Fabric`,
+    url,
+    ...(material.hero_image ? { image: [material.hero_image] } : {}),
+    brand: {
+      '@type': 'Brand',
+      name: FABRIC_BRAND_NAME,
+    },
+  }
+}
+
+export function buildFabricMaterialBreadcrumbSchema(material: FabricMaterial) {
+  const label = FABRIC_CATEGORY_LABELS[material.category]
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Fabric Explorer', item: `${FABRIC_SITE_ORIGIN}/fabric` },
+      { '@type': 'ListItem', position: 2, name: label, item: `${FABRIC_SITE_ORIGIN}/fabric/${material.category}` },
+      { '@type': 'ListItem', position: 3, name: material.name, item: `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}` },
+    ],
+  }
 }

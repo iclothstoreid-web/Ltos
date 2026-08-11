@@ -119,6 +119,22 @@ export function isFabricSortOption(value: string): value is FabricSortOption {
   return (FABRIC_SORT_OPTIONS as readonly string[]).includes(value)
 }
 
+// Sprint W3-3 §6 (Fabric Specifications) — free-form jsonb, all keys
+// optional. No enum/vocabulary given by the brief for any of these, unlike
+// texture/season/price_tier — stored as-authored text, rendered as-is or
+// replaced by a generic safe fallback when absent (see
+// getMaterialSpecifications() in materialRepository.ts).
+export interface FabricSpecifications {
+  best_for?: string
+  recommended_garments?: string
+  climate?: string
+  occasion?: string
+  drape_character?: string
+  structure?: string
+  comfort?: string
+  durability?: string
+}
+
 export interface FabricMaterial {
   id: string
   slug: string
@@ -136,6 +152,15 @@ export interface FabricMaterial {
   hero_image: string | null
   video_url: string | null
   published: boolean
+  // Sprint W3-3 — gallery/specs/use-case data, all nullable (older rows
+  // and freshly-created ones alike have none of this until an admin fills
+  // it in). Every consumer must go through getMaterialGallery() /
+  // getMaterialSpecifications() / getMaterialUseCases() rather than reading
+  // these raw fields, so the "safe fallback when absent" behavior lives in
+  // exactly one place.
+  gallery_images: string[] | null
+  specifications: FabricSpecifications | null
+  use_cases: string[] | null
 }
 
 // Repository filter/sort/pagination input (Sprint W3-2 §10) — mirrors
