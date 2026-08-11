@@ -1,26 +1,56 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
-import { FABRIC_CATEGORY_LABELS, type FabricMaterial } from '@/types/material'
+import Image from 'next/image'
+import { supabaseImageLoader } from '@/lib/supabase/imageLoader'
+import {
+  FABRIC_CATEGORY_LABELS,
+  FABRIC_TEXTURE_LABELS,
+  weightClassFromGsm,
+  FABRIC_WEIGHT_CLASS_LABELS,
+  type FabricMaterial,
+} from '@/types/material'
 
 interface MaterialCardProps {
   material: FabricMaterial
+  priority?: boolean
 }
 
-// Foundation-only — no hover zoom, no video preview yet (both explicitly
-// out of scope for W3-1). Links to the detail route via the material's own
-// category, matching the [category]/[slug] route shape.
-export function MaterialCard({ material }: MaterialCardProps) {
+// Client component (not Server) for the same reason as Design Studio's
+// CatalogCard.tsx: next/image needs an onError handler to fall back to an
+// unoptimized <Image> when Supabase's transform endpoint rejects a source
+// (legacy/oversized photos) — that fallback can't be expressed without
+// client-side state. No data fetching happens here; `material` is a plain
+// prop from an already-server-rendered list.
+//
+// "Available color count" from the brief is deliberately omitted — color
+// linkage lives in the DNA Color Repository / material_colors bridge table
+// (Design Studio's domain), which this sprint is explicitly barred from
+// touching. Rendering a count would mean either a fake number or a new
+// cross-system read this brief doesn't ask for.
+export function MaterialCard({ material, priority = false }: MaterialCardProps) {
+  const [transformFailed, setTransformFailed] = useState(false)
+  const weightClass = weightClassFromGsm(material.weight_gsm)
+
   return (
     <Link
       href={`/fabric/${material.category}/${material.slug}`}
-      className="group block overflow-hidden rounded-2xl border border-luxury-gold/10 bg-luxury-charcoal/30 transition hover:border-luxury-gold/40"
+      className="group block overflow-hidden rounded-2xl border border-luxury-gold/10 bg-luxury-charcoal/30 transition hover:border-luxury-gold/40 hover:shadow-[0_0_0_1px_rgba(200,162,74,0.15)] focus-visible:ring-2 focus-visible:ring-luxury-gold/50"
     >
-      <div className="aspect-[4/5] w-full overflow-hidden bg-luxury-navy-deep">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-luxury-navy-deep">
         {material.hero_image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
+            key={transformFailed ? 'raw' : 'transformed'}
             src={material.hero_image}
             alt={material.name}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+            loader={transformFailed ? undefined : supabaseImageLoader}
+            unoptimized={transformFailed}
+            fill
+            priority={priority}
+            sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw"
+            className="object-cover transition duration-300 group-hover:scale-[1.03]"
+            onError={() => setTransformFailed(true)}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center font-luxury-sans text-[11px] uppercase tracking-[0.14em] text-luxury-taupe">
@@ -33,9 +63,29 @@ export function MaterialCard({ material }: MaterialCardProps) {
           {FABRIC_CATEGORY_LABELS[material.category]}
         </p>
         <h3 className="mt-1 font-luxury-sans text-sm text-luxury-ivory">{material.name}</h3>
-        {material.composition && (
-          <p className="mt-1 font-luxury-sans text-xs text-luxury-taupe">{material.composition}</p>
+        {material.composition && <p className="mt-1 font-luxury-sans text-xs text-luxury-taupe">{material.composition}</p>}
+
+        {(material.texture || weightClass) && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {material.texture && (
+              <span className="rounded-full border border-luxury-gold/15 px-2 py-0.5 font-luxury-sans text-[10px] text-luxury-taupe">
+                {FABRIC_TEXTURE_LABELS[material.texture]}
+              </span>
+            )}
+            {weightClass && (
+              <span className="rounded-full border border-luxury-gold/15 px-2 py-0.5 font-luxury-sans text-[10px] text-luxury-taupe">
+                {FABRIC_WEIGHT_CLASS_LABELS[weightClass]}
+              </span>
+            )}
+          </div>
         )}
+
+        <span className="mt-3 inline-flex items-center gap-1 font-luxury-sans text-[11px] uppercase tracking-[0.1em] text-luxury-gold opacity-80 transition group-hover:opacity-100">
+          Explore Fabric
+          <span aria-hidden="true" className="transition group-hover:translate-x-0.5">
+            →
+          </span>
+        </span>
       </div>
     </Link>
   )
