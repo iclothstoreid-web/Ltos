@@ -10,8 +10,11 @@
     "render:test": "tsx scripts/render-test-runner.ts"
   },
   "dependencies": {
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.44.4",
+    "framer-motion": "^13.0.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "jsqr": "^1.4.0",
@@ -21,7 +24,9 @@
     "qrcode.react": "^3.2.0",
     "react": "^18",
     "react-dom": "^18",
-    "sharp": "^0.35.3"
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.3",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/node": "^20",

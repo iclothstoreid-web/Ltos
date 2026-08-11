@@ -27,6 +27,15 @@ const config: Config = {
         // since the shell markup references them by these names.
         'surface-01': '#FCFAF8',
         'text-primary': '#1B1B1C',
+        // Sprint W1 — public homepage (Design Direction: dark luxury + warm
+        // neutral). Namespaced under `luxury-*` so this palette can never
+        // collide with the internal app's Material-style tokens above.
+        'luxury-black': '#0A0908',
+        'luxury-charcoal': '#1C1A18',
+        'luxury-ivory': '#F4EEE4',
+        'luxury-gold': '#C9A24B',
+        'luxury-bronze': '#8A6B3D',
+        'luxury-linen': '#E8E1D3',
       },
       fontFamily: {
         serif: ['Georgia', 'Cambria', 'serif'],
@@ -41,6 +50,9 @@ const config: Config = {
         // export) — additive only, same reasoning as fraunces/caslon above.
         hanken: ['var(--font-hanken)', 'sans-serif'],
         jetbrains: ['var(--font-jetbrains)', 'monospace'],
+        // Sprint W1 — public homepage sans. Fraunces (above) already covers
+        // the editorial serif role, reused as-is for the homepage's H1/H2.
+        'luxury-sans': ['var(--font-luxury-sans)', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'display': ['48px', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
@@ -72,6 +84,10 @@ const config: Config = {
         // glow. Kept separate from pulse-dot since that one is shared with
         // Owner Workspace's critical-alert dots and must not change shape.
         'highlight-breathe': 'highlightBreathe 2.75s ease-in-out infinite',
+        // Sprint W1 — homepage fabric/CTA light-sweep (hover-triggered, not
+        // looping) and slow ambient drift used by luxury placeholder art.
+        'light-sweep': 'lightSweep 900ms ease-out',
+        'luxury-drift': 'luxuryDrift 12s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -89,6 +105,15 @@ const config: Config = {
         highlightBreathe: {
           '0%, 100%': { transform: 'translate(-50%, -50%) scale(1)', opacity: '0.55' },
           '50%': { transform: 'translate(-50%, -50%) scale(1.04)', opacity: '0.85' },
+        },
+        lightSweep: {
+          '0%': { transform: 'translateX(-120%) skewX(-12deg)', opacity: '0' },
+          '30%': { opacity: '0.5' },
+          '100%': { transform: 'translateX(120%) skewX(-12deg)', opacity: '0' },
+        },
+        luxuryDrift: {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '50%': { transform: 'translate(-1.5%, 1.5%) scale(1.03)' },
         },
       },
     },
