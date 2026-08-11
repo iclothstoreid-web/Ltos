@@ -1,9 +1,13 @@
-import type { FabricMaterial } from '@/types/material'
+import type { FabricMaterial, MaterialColor } from '@/types/material'
 import { MaterialCard } from './MaterialCard'
 
 interface MaterialGridProps {
   materials: FabricMaterial[]
   emptyMessage?: string
+  // Sprint W3-4 §9 — optional, keyed by material id. Only bounded call
+  // sites (Related Materials, capped at 4) pass this; the main Explorer
+  // grid omits it, same reasoning as MaterialCard's own `colors` prop.
+  colorsByMaterialId?: Record<string, MaterialColor[]>
 }
 
 // First row's worth of cards get `priority` (LCP candidates, above the
@@ -11,7 +15,7 @@ interface MaterialGridProps {
 // next/image already does by default.
 const PRIORITY_COUNT = 4
 
-export function MaterialGrid({ materials, emptyMessage = 'No fabrics match your search.' }: MaterialGridProps) {
+export function MaterialGrid({ materials, emptyMessage = 'No fabrics match your search.', colorsByMaterialId }: MaterialGridProps) {
   if (materials.length === 0) {
     return (
       <div role="status" className="rounded-2xl border border-luxury-gold/10 bg-luxury-charcoal/20 py-16 text-center font-luxury-sans text-sm text-luxury-taupe">
@@ -23,7 +27,12 @@ export function MaterialGrid({ materials, emptyMessage = 'No fabrics match your 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {materials.map((material, i) => (
-        <MaterialCard key={material.id} material={material} priority={i < PRIORITY_COUNT} />
+        <MaterialCard
+          key={material.id}
+          material={material}
+          priority={i < PRIORITY_COUNT}
+          colors={colorsByMaterialId?.[material.id]}
+        />
       ))}
     </div>
   )

@@ -1,11 +1,12 @@
-import type { FabricMaterial } from '@/types/material'
+import type { FabricMaterial, MaterialColor } from '@/types/material'
 import { MaterialGrid } from './MaterialGrid'
 
 interface RelatedMaterialsSectionProps {
   materials: FabricMaterial[]
+  colorsByMaterialId?: Record<string, MaterialColor[]>
 }
 
-export function RelatedMaterialsSection({ materials }: RelatedMaterialsSectionProps) {
+export function RelatedMaterialsSection({ materials, colorsByMaterialId }: RelatedMaterialsSectionProps) {
   if (materials.length === 0) return null
 
   return (
@@ -14,7 +15,7 @@ export function RelatedMaterialsSection({ materials }: RelatedMaterialsSectionPr
         Related Materials
       </h2>
       <div className="mt-4">
-        <MaterialGrid materials={materials} />
+        <MaterialGrid materials={materials} colorsByMaterialId={colorsByMaterialId} />
       </div>
     </section>
   )

@@ -4,8 +4,12 @@ import type { ServiceLevel } from '@/lib/order/service'
 export type { ServiceLevel }
 
 // Public-safe fields of a LTOS Product Knowledge Base row — never carries
-// ai_dna/render_recipe/internal_notes/construction_type, same exclusion
-// fetchActiveMasterOptions already applies (src/lib/design/masterData.ts).
+// ai_dna/render_recipe/internal_notes/construction_type, matching the
+// column allowlist public.list_active_design_master_options() (Sprint
+// W3-4) exposes to anon. materialId/dnaColorId are plain UUIDs (no
+// business content) — Fabric Explorer's Design Studio deep-link
+// (?fabric=slug&color=slug) matches against them to preselect a 'bahan'/
+// 'warna_bahan' option server-side.
 export interface ConfiguratorOption {
   id: string
   category: MasterDataCategory
@@ -14,6 +18,8 @@ export interface ConfiguratorOption {
   photoUrl: string | null
   sellingPoints: string[]
   sortOrder: number
+  materialId: string | null
+  dnaColorId: string | null
 }
 
 // One selectable slot in the configurator. Each maps to exactly one Master

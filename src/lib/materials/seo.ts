@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import type { FabricMaterial } from '@/types/material'
+import type { FabricMaterial, MaterialColor } from '@/types/material'
 import { FABRIC_CATEGORY_LABELS, FABRIC_TEXTURE_LABELS, type FabricCategory } from '@/types/material'
 
 // Static origin, not headers()-derived — src/app/design/[slug]/page.tsx
@@ -69,21 +69,39 @@ const PRICE_TIER_QUALIFIER: Record<string, string> = {
   luxury: 'Luxury',
 }
 
-export function buildFabricMaterialMetadata(material: FabricMaterial): Metadata {
+// Sprint W3-4 — `selectedColor` swaps in the brief's own worked example
+// ("Oxford Cotton Fabric in Navy | Local Tailor"). `url` (and therefore the
+// canonical tag) is always the bare fabric page regardless of the color
+// param — "Jangan menghasilkan duplicate canonical. Canonical tetap
+// halaman fabric utama" — so every ?color= variant of a material's page
+// shares one canonical URL.
+export function buildFabricMaterialMetadata(material: FabricMaterial, selectedColor?: MaterialColor | null): Metadata {
   const label = FABRIC_CATEGORY_LABELS[material.category]
-  const qualifier = (material.price_tier && PRICE_TIER_QUALIFIER[material.price_tier]) ?? 'Quality'
-  const title = `${material.name} Fabric | ${qualifier} ${label} for Custom Thobe`
+  const canonicalUrl = `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}`
 
-  const descriptionParts = [`Explore ${material.name} fabric`]
-  if (material.texture) descriptionParts.push(`with a ${FABRIC_TEXTURE_LABELS[material.texture]} texture`)
-  if (material.composition) descriptionParts.push(material.texture ? `and ${material.composition}` : material.composition)
-  const description = `${descriptionParts.join(' ')} for custom thobe tailoring.`
+  let title: string
+  let description: string
+
+  if (selectedColor) {
+    title = `${material.name} Fabric in ${selectedColor.name}`
+    description = `Explore ${material.name} fabric in ${selectedColor.name}${
+      selectedColor.character ? ` — ${selectedColor.character}` : ''
+    } for custom thobe tailoring.`
+  } else {
+    const qualifier = (material.price_tier && PRICE_TIER_QUALIFIER[material.price_tier]) ?? 'Quality'
+    title = `${material.name} Fabric | ${qualifier} ${label} for Custom Thobe`
+
+    const descriptionParts = [`Explore ${material.name} fabric`]
+    if (material.texture) descriptionParts.push(`with a ${FABRIC_TEXTURE_LABELS[material.texture]} texture`)
+    if (material.composition) descriptionParts.push(material.texture ? `and ${material.composition}` : material.composition)
+    description = `${descriptionParts.join(' ')} for custom thobe tailoring.`
+  }
 
   return buildFabricMetadata({
     title,
     description,
-    url: `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}`,
-    image: material.hero_image,
+    url: canonicalUrl,
+    image: selectedColor?.reference_image ?? material.hero_image,
   })
 }
 

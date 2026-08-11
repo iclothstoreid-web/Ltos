@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import type { ConfiguratorCatalog } from '@/lib/configurator/mapping'
 import { trackConfiguratorOpened } from '@/lib/configurator/analytics'
 import { fetchWithTimeout, isOnline } from '@/lib/configurator/network'
+import { useConfiguratorStore } from '@/stores/configurator-store'
 import { ConfiguratorPanel } from './ConfiguratorPanel'
 import { GarmentPreview } from './GarmentPreview'
 import { PriceSummaryCard } from './PriceSummaryCard'
@@ -28,12 +29,23 @@ const MobileConfiguratorDrawer = dynamic(() => import('./MobileConfiguratorDrawe
 // around the same fetch. The config->estimate debounce effect is unchanged
 // too, just relocated into EstimateSync so this shell never subscribes to
 // `config` itself.
-export function DesignStudioClient() {
+interface DesignStudioClientProps {
+  // Sprint W3-4 §8 — Design Studio Preselection. Already-resolved
+  // configurator option ids (see src/app/design-studio/page.tsx's
+  // resolveInitialSelection), or null when there was no ?fabric=/&color=
+  // in the URL, or it didn't resolve to anything in this catalog.
+  initialFabricId?: string | null
+  initialColorId?: string | null
+}
+
+export function DesignStudioClient({ initialFabricId = null, initialColorId = null }: DesignStudioClientProps) {
   const [catalog, setCatalog] = useState<ConfiguratorCatalog | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [retryNonce, setRetryNonce] = useState(0)
   const openedRef = useRef(false)
+  const preselectedRef = useRef(false)
+  const updateConfig = useConfiguratorStore((state) => state.updateConfig)
 
   useEffect(() => {
     // Guards against React StrictMode's dev-only double-invoke firing this
@@ -43,6 +55,23 @@ export function DesignStudioClient() {
     openedRef.current = true
     trackConfiguratorOpened()
   }, [])
+
+  // Applies the deep-link preselection exactly once, as soon as the
+  // resolved ids are available — doesn't wait on `catalog` since the ids
+  // were already validated against it server-side. Store-level, not a
+  // ConfiguratorPanel prop, so every consumer of useConfiguratorStore
+  // (GarmentPreview, PriceSummaryCard, EstimateSync) sees it identically to
+  // a real user selection, no workflow branching added anywhere else.
+  useEffect(() => {
+    if (preselectedRef.current) return
+    if (!initialFabricId && !initialColorId) return
+    preselectedRef.current = true
+    updateConfig({
+      ...(initialFabricId ? { fabricId: initialFabricId } : {}),
+      ...(initialColorId ? { colorId: initialColorId } : {}),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFabricId, initialColorId])
 
   const retryCatalog = useCallback(() => setRetryNonce((n) => n + 1), [])
 

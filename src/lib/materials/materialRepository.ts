@@ -7,13 +7,17 @@ import {
   FABRIC_SEASONS,
   FABRIC_TEXTURES,
   FABRIC_WEIGHT_CLASSES,
+  UNSPECIFIED_COLOR_FAMILY,
   weightClassFromGsm,
   type FabricCategory,
   type FabricFilterFacets,
   type FabricMaterial,
+  type FabricRenderContext,
   type FabricSpecifications,
   type ListMaterialsParams,
   type ListMaterialsResult,
+  type MaterialColor,
+  type MaterialColorFamily,
 } from '@/types/material'
 
 interface FabricCatalogRow extends FabricMaterial {
@@ -199,8 +203,23 @@ export function getMaterialUseCases(material: Pick<FabricMaterial, 'use_cases' |
 // luxury_level match is a best-effort case-insensitive string compare —
 // unlike category/texture it has no defined vocabulary (see
 // FABRIC_SORT_LABELS.luxury_level's comment).
-export async function getRelatedMaterials(supabase: SupabaseClient, material: FabricMaterial, limit = 4): Promise<FabricMaterial[]> {
-  const { materials } = await listMaterials(supabase, { limit: FABRIC_MAX_CATALOG_FETCH })
+//
+// Sprint W3-4 §10 — Color-aware boost: when `selectedColorDnaId` is given
+// (the DNA Color the user currently has selected on this material's detail
+// page), materials that also carry that same color get a same-weight boost
+// as a category match (+3) — "if viewing Navy Oxford Cotton, prioritize
+// other materials that also come in Navy." One extra RPC call, not an
+// N-query fan-out per candidate.
+export async function getRelatedMaterials(
+  supabase: SupabaseClient,
+  material: FabricMaterial,
+  limit = 4,
+  selectedColorDnaId?: string | null
+): Promise<FabricMaterial[]> {
+  const [{ materials }, sameColorMaterialIds] = await Promise.all([
+    listMaterials(supabase, { limit: FABRIC_MAX_CATALOG_FETCH }),
+    selectedColorDnaId ? getMaterialIdsForColor(supabase, selectedColorDnaId) : Promise.resolve<Set<string>>(new Set()),
+  ])
 
   const scored = materials
     .filter((m) => m.id !== material.id)
@@ -209,6 +228,7 @@ export async function getRelatedMaterials(supabase: SupabaseClient, material: Fa
       if (m.category === material.category) score += 3
       if (material.texture && m.texture === material.texture) score += 2
       if (material.luxury_level && m.luxury_level && m.luxury_level.toLowerCase() === material.luxury_level.toLowerCase()) score += 1
+      if (sameColorMaterialIds.has(m.id)) score += 3
       return { material: m, score }
     })
     .filter((entry) => entry.score > 0)
@@ -234,4 +254,100 @@ export async function getComparisonCandidates(supabase: SupabaseClient, material
     if (candidates.length >= limit) break
   }
   return candidates
+}
+
+// Sprint W3-4 §1-2 — Material Color Integration. public.list_material_colors()
+// (SECURITY DEFINER RPC — see .../20260908000100_sprint_w3_4_material_colors_rpc.sql)
+// is the only public read path onto material_colors/dna_colors, both
+// staff-only under RLS; already filtered to active colors + active DNA
+// Colors + a published material, so every caller here can treat the
+// result as "this material's real, available colors" with no further
+// checks. In-memory per-request result, not cached across requests —
+// "tidak melakukan query DNA Color berulang" (§13) is honored by every
+// caller on this page fetching colors exactly once and passing the result
+// down as props, not by each component re-fetching independently.
+export async function getMaterialColors(supabase: SupabaseClient, materialId: string): Promise<MaterialColor[]> {
+  const { data, error } = await supabase.rpc('list_material_colors', { p_material_id: materialId })
+  if (error) throw error
+  return (data ?? []) as MaterialColor[]
+}
+
+// No `is_primary`/featured flag exists on material_colors — "primary"
+// here is simply the first color in getMaterialColors()'s own order
+// (dna_colors.name asc), a deterministic, disclosed choice rather than an
+// invented ranking. Pure overload (primaryMaterialColorFrom) exists so a
+// caller that already has the full color list (the detail page, which
+// also needs the family grouping) doesn't re-fetch just to find the
+// first entry — see §13 "tidak melakukan query DNA Color berulang".
+export function primaryMaterialColorFrom(colors: MaterialColor[]): MaterialColor | null {
+  return colors[0] ?? null
+}
+
+export async function getPrimaryMaterialColor(supabase: SupabaseClient, materialId: string): Promise<MaterialColor | null> {
+  const colors = await getMaterialColors(supabase, materialId)
+  return primaryMaterialColorFrom(colors)
+}
+
+// Sprint W3-4 §6 — Color Family grouping. Real `family` values only;
+// colors with no family set are grouped under UNSPECIFIED_COLOR_FAMILY
+// rather than dropped, and that bucket always sorts last so real families
+// lead the section. Pure overload (groupMaterialColorsByFamily) for the
+// same single-fetch reason as primaryMaterialColorFrom above.
+export function groupMaterialColorsByFamily(colors: MaterialColor[]): MaterialColorFamily[] {
+  const byFamily = new Map<string, MaterialColor[]>()
+  for (const color of colors) {
+    const family = color.family || UNSPECIFIED_COLOR_FAMILY
+    const bucket = byFamily.get(family) ?? []
+    bucket.push(color)
+    byFamily.set(family, bucket)
+  }
+
+  return Array.from(byFamily.entries())
+    .sort(([a], [b]) => {
+      if (a === UNSPECIFIED_COLOR_FAMILY) return 1
+      if (b === UNSPECIFIED_COLOR_FAMILY) return -1
+      return a.localeCompare(b)
+    })
+    .map(([family, familyColors]) => ({ family, colors: familyColors }))
+}
+
+export async function getMaterialColorFamilies(supabase: SupabaseClient, materialId: string): Promise<MaterialColorFamily[]> {
+  const colors = await getMaterialColors(supabase, materialId)
+  return groupMaterialColorsByFamily(colors)
+}
+
+// Backs getRelatedMaterials()'s color-aware boost (§10) — which published
+// materials also carry this DNA Color, via public.list_material_ids_for_color().
+async function getMaterialIdsForColor(supabase: SupabaseClient, dnaColorId: string): Promise<Set<string>> {
+  const { data, error } = await supabase.rpc('list_material_ids_for_color', { p_dna_color_id: dnaColorId })
+  if (error) throw error
+  return new Set((data ?? []).map((row: { material_id: string }) => row.material_id))
+}
+
+// Sprint W3-4 §11 — AI Render Context Preparation. Pure data assembly, no
+// AI/render API call of any kind (the brief: "Belum perlu memanggil
+// OpenAI. Hanya menyiapkan context object.") — a future render integration
+// consumes this shape without this sprint needing to know what that
+// integration looks like.
+export function buildFabricRenderContext(material: FabricMaterial, selectedColor: MaterialColor | null): FabricRenderContext {
+  return {
+    material: {
+      id: material.id,
+      slug: material.slug,
+      name: material.name,
+      category: material.category,
+    },
+    composition: material.composition,
+    texture: material.texture,
+    weightGsm: material.weight_gsm,
+    selectedColor: selectedColor
+      ? {
+          id: selectedColor.dna_color_id,
+          name: selectedColor.name,
+          hex: selectedColor.hex,
+          family: selectedColor.family,
+          character: selectedColor.character,
+        }
+      : null,
+  }
 }

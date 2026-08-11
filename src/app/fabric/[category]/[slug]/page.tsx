@@ -3,14 +3,18 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createPublicClient } from '@/lib/supabase/public'
 import {
+  buildFabricRenderContext,
   getAllMaterials,
   getComparisonCandidates,
   getMaterialBySlug,
+  getMaterialColors,
   getMaterialGallery,
   getRelatedMaterials,
+  groupMaterialColorsByFamily,
+  primaryMaterialColorFrom,
 } from '@/lib/materials/materialRepository'
 import { buildFabricMaterialBreadcrumbSchema, buildFabricMaterialMetadata, buildFabricMaterialProductSchema } from '@/lib/materials/seo'
-import { FABRIC_CATEGORY_LABELS, isFabricCategory } from '@/types/material'
+import { FABRIC_CATEGORY_LABELS, isFabricCategory, type MaterialColor } from '@/types/material'
 import { FabricGallery } from '@/components/fabric/FabricGallery'
 import { MaterialDnaSection } from '@/components/fabric/MaterialDnaSection'
 import { FabricSpecificationsSection } from '@/components/fabric/FabricSpecificationsSection'
@@ -19,9 +23,13 @@ import { FabricVideoSection } from '@/components/fabric/FabricVideoSection'
 import { RelatedMaterialsSection } from '@/components/fabric/RelatedMaterialsSection'
 import { ComparisonPreviewSection } from '@/components/fabric/ComparisonPreviewSection'
 import { DesignStudioCta } from '@/components/fabric/DesignStudioCta'
+import { FabricColorSwatches } from '@/components/fabric/FabricColorSwatches'
+import { DnaColorInfoPanel } from '@/components/fabric/DnaColorInfoPanel'
+import { ColorFamilySection } from '@/components/fabric/ColorFamilySection'
 
 interface PageParams {
   params: { category: string; slug: string }
+  searchParams: { color?: string }
 }
 
 // One catalog fetch, reused for every [category]/[slug] pair — cheaper at
@@ -35,10 +43,17 @@ export async function generateStaticParams() {
   return materials.map((material) => ({ category: material.category, slug: material.slug }))
 }
 
-export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
+// Sprint W3-4 — `?color=` affects title/description/OG image but never the
+// canonical tag (buildFabricMaterialMetadata always canonicalizes to the
+// bare fabric URL) and generateStaticParams above never enumerates color
+// combinations, so ?color= variants render dynamically, on top of the same
+// statically-generated base page.
+export async function generateMetadata({ params, searchParams }: PageParams): Promise<Metadata> {
   const material = await resolveMaterial(params)
   if (!material) return { title: 'Material Not Found | Local Tailor' }
-  return buildFabricMaterialMetadata(material)
+
+  const selectedColor = searchParams.color ? await resolveSelectedColor(material.id, searchParams.color) : null
+  return buildFabricMaterialMetadata(material, selectedColor)
 }
 
 export const revalidate = 3600
@@ -55,20 +70,40 @@ async function resolveMaterial(params: { category: string; slug: string }) {
   return material
 }
 
-export default async function FabricMaterialPage({ params }: PageParams) {
+async function resolveSelectedColor(materialId: string, colorSlug: string): Promise<MaterialColor | null> {
+  const supabase = createPublicClient()
+  const colors = await getMaterialColors(supabase, materialId)
+  return colors.find((c) => c.slug === colorSlug) ?? null
+}
+
+export default async function FabricMaterialPage({ params, searchParams }: PageParams) {
   const material = await resolveMaterial(params)
   if (!material) notFound()
 
   const supabase = createPublicClient()
+  const colors = await getMaterialColors(supabase, material.id)
+  const selectedColor = searchParams.color ? colors.find((c) => c.slug === searchParams.color) ?? null : null
+  const primaryColor = primaryMaterialColorFrom(colors)
+  const displayedColor = selectedColor ?? primaryColor
+  const colorFamilies = groupMaterialColorsByFamily(colors)
+
   const [related, comparisonCandidates] = await Promise.all([
-    getRelatedMaterials(supabase, material, 4),
+    getRelatedMaterials(supabase, material, 4, selectedColor?.dna_color_id ?? null),
     getComparisonCandidates(supabase, material, 3),
   ])
 
+  // Bounded fan-out (max 4, Related Materials' own cap) for the color
+  // strip on each related card — see MaterialGrid's colorsByMaterialId
+  // comment on why this is deliberately not done for the full Explorer grid.
+  const relatedColorEntries = await Promise.all(related.map(async (m) => [m.id, await getMaterialColors(supabase, m.id)] as const))
+  const relatedColorsByMaterialId = Object.fromEntries(relatedColorEntries)
+
   const label = FABRIC_CATEGORY_LABELS[material.category]
+  const basePath = `/fabric/${material.category}/${material.slug}`
   const gallery = getMaterialGallery(material)
   const productSchema = buildFabricMaterialProductSchema(material)
   const breadcrumbSchema = buildFabricMaterialBreadcrumbSchema(material)
+  const renderContext = buildFabricRenderContext(material, selectedColor)
 
   return (
     <div className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
@@ -76,6 +111,15 @@ export default async function FabricMaterialPage({ params }: PageParams) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      {/* Sprint W3-4 §11 — AI Render Context Preparation. A data island, not
+          a call to any render/AI API — a future render integration reads
+          this instead of re-deriving material+color context itself. */}
+      {/* eslint-disable-next-line react/no-danger */}
+      <script
+        type="application/json"
+        id="fabric-render-context"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(renderContext) }}
+      />
 
       <div className="mx-auto max-w-6xl">
         <nav aria-label="Breadcrumb" className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">
@@ -107,7 +151,14 @@ export default async function FabricMaterialPage({ params }: PageParams) {
             <h1 className="mt-2 font-luxury-sans text-2xl text-luxury-ivory md:text-3xl">{material.name}</h1>
             {material.composition && <p className="mt-2 font-luxury-sans text-sm text-luxury-taupe">{material.composition}</p>}
 
-            <DesignStudioCta slug={material.slug} className="mt-6" />
+            {colors.length > 0 && displayedColor && (
+              <div className="mt-5 space-y-4">
+                <FabricColorSwatches basePath={basePath} colors={colors} selectedColorSlug={selectedColor?.slug ?? null} />
+                <DnaColorInfoPanel color={displayedColor} />
+              </div>
+            )}
+
+            <DesignStudioCta slug={material.slug} colorSlug={selectedColor?.slug ?? null} className="mt-6" />
 
             <div className="mt-10 space-y-10">
               <FabricSpecificationsSection material={material} />
@@ -121,6 +172,13 @@ export default async function FabricMaterialPage({ params }: PageParams) {
           <MaterialDnaSection material={material} />
         </div>
 
+        {/* Color families */}
+        {colorFamilies.length > 0 && (
+          <div className="mt-16">
+            <ColorFamilySection basePath={basePath} families={colorFamilies} selectedColorSlug={selectedColor?.slug ?? null} />
+          </div>
+        )}
+
         {/* Video */}
         <div className="mt-16">
           <FabricVideoSection videoUrl={material.video_url} materialName={material.name} />
@@ -128,7 +186,7 @@ export default async function FabricMaterialPage({ params }: PageParams) {
 
         {/* Related materials */}
         <div className="mt-16">
-          <RelatedMaterialsSection materials={related} />
+          <RelatedMaterialsSection materials={related} colorsByMaterialId={relatedColorsByMaterialId} />
         </div>
 
         {/* Comparison preview */}

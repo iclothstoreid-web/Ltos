@@ -197,3 +197,56 @@ export interface FabricFilterFacets {
   seasons: FabricSeason[]
   priceTiers: FabricPriceTier[]
 }
+
+// Sprint W3-4 — public-safe shape of one material_colors row joined to its
+// dna_colors row, scoped to the columns public.list_material_colors()
+// exposes (see supabase/migrations/20260908000100_sprint_w3_4_material_colors_rpc.sql).
+// `id` is the material_colors row's own id (the material<->color link),
+// `dna_color_id` is the DNA Color Repository's real id — Design Studio
+// deep-linking matches against the latter, never the former.
+export interface MaterialColor {
+  id: string
+  dna_color_id: string
+  name: string
+  slug: string
+  hex: string | null
+  rgb: string | null
+  family: string | null
+  character: string | null
+  reference_image: string | null
+}
+
+// "Color Family" grouping (§6) — real `family` values only, no invented
+// taxonomy; a color with no `family` set falls into an explicit "Other"
+// bucket rather than being silently dropped from the section.
+export interface MaterialColorFamily {
+  family: string
+  colors: MaterialColor[]
+}
+
+export const UNSPECIFIED_COLOR_FAMILY = 'Other'
+
+// AI render context preparation (§11) — a plain data object, never calls
+// any AI/render API itself (the brief: "Belum perlu memanggil OpenAI").
+// Mirrors the same fields the eventual render pipeline would need from a
+// Fabric Explorer selection, without depending on or duplicating that
+// pipeline's own types (renderService/DNA Resolver are Design Studio's,
+// untouched by this sprint).
+export interface FabricRenderContext {
+  material: {
+    id: string
+    slug: string
+    name: string
+    category: FabricCategory
+  }
+  composition: string | null
+  texture: FabricTexture | null
+  weightGsm: number | null
+  selectedColor: {
+    id: string
+    name: string
+    hex: string | null
+    family: string | null
+    character: string | null
+  } | null
+}
