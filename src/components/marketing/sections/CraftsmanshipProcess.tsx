@@ -7,7 +7,7 @@ const VARIANTS = ['a', 'b', 'c', 'a'] as const
 
 export function CraftsmanshipProcess() {
   return (
-    <section id="craftsmanship" aria-labelledby="craftsmanship-heading" className="bg-luxury-charcoal px-6 py-24 md:px-10">
+    <section id="craftsmanship" aria-labelledby="craftsmanship-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />
@@ -28,7 +28,7 @@ export function CraftsmanshipProcess() {
                 {String(i + 1).padStart(2, '0')}
               </p>
               <h3 className="mt-2 font-fraunces text-lg text-luxury-ivory">{step.title}</h3>
-              <p className="mt-2 font-luxury-sans text-xs text-luxury-ivory/50">{step.description}</p>
+              <p className="mt-2 font-luxury-sans text-xs text-luxury-taupe">{step.description}</p>
             </Reveal>
           ))}
         </ol>

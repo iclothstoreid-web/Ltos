@@ -5,12 +5,12 @@
 import { fabricPhotos, garmentPhotos } from './assets'
 
 export const heroCopy = {
-  eyebrow: 'Bespoke Thobe, Bogor',
+  eyebrow: 'Bespoke Thobe, Bandung',
   headline: 'Custom Thobe, Crafted Exclusively for You',
   subheadline: 'Designed around your body, your lifestyle, and your identity.',
   primaryCta: 'Design My Thobe',
   secondaryCta: 'Book a Private Appointment',
-  trustStrip: ['Premium Imported Fabrics', 'Personal Measurement', 'Crafted in Bogor', 'Custom Pattern'],
+  trustStrip: ['Premium Imported Fabrics', 'Personal Measurement', 'Crafted in Bandung', 'Custom Pattern'],
 }
 
 // Sprint W1 revision — Savile Row-style appointment section, positioned
@@ -20,8 +20,8 @@ export const appointmentCopy = {
   eyebrow: 'By Appointment',
   heading: 'Book a Private Appointment',
   body: 'Personal consultation, fabric selection, body measurement, and design guidance in a private tailoring session.',
-  location: 'Private Appointment — Bogor',
-  address: 'Workshop & Showroom, Bogor, West Java',
+  location: 'Private Appointment — Bandung',
+  address: 'Workshop & Showroom, Bandung, West Java',
   cta: 'Book a Private Appointment',
   photoAlt: 'Bespoke black pinstripe thobe presented on a mannequin, editorial studio photography',
 }
@@ -90,7 +90,7 @@ export const craftsmanshipCopy = {
     { title: 'Consultation', description: 'A private session to understand your occasion, silhouette preference, and lifestyle.' },
     { title: 'Measurement', description: 'Full-body measurement captured by a trained fitter, recorded to the millimeter.' },
     { title: 'Pattern Formulation', description: 'Your measurements become a pattern block that exists nowhere else.' },
-    { title: 'Handcrafted Production', description: 'Cut, sewn, and finished by hand in our Bogor workshop.' },
+    { title: 'Handcrafted Production', description: 'Cut, sewn, and finished by hand in our Bandung workshop.' },
   ],
 }
 
@@ -114,7 +114,7 @@ export const storiesCopy = {
   eyebrow: 'Customer Stories',
   heading: 'Worn, Not Just Made',
   stories: [
-    { name: 'Ahmad R.', city: 'Bogor', fabric: 'Wool Blend Twill', purpose: 'Wedding', quote: 'The fit was exact — nothing I have worn compares.' },
+    { name: 'Ahmad R.', city: 'Bandung', fabric: 'Wool Blend Twill', purpose: 'Wedding', quote: 'The fit was exact — nothing I have worn compares.' },
     { name: 'Faisal H.', city: 'Jakarta', fabric: 'Linen Weave', purpose: 'Umrah', quote: 'Lightweight, breathable, and it still looked formal for the occasion.' },
     { name: 'Yusuf M.', city: 'Surabaya', fabric: 'Egyptian Cotton', purpose: 'Daily', quote: 'I ordered one and came back for three more.' },
   ],
@@ -149,7 +149,7 @@ export const faqCopy = {
     },
     {
       question: 'Where is my thobe made?',
-      answer: 'Every garment is cut, sewn, and finished by hand in our workshop in Bogor, Indonesia.',
+      answer: 'Every garment is cut, sewn, and finished by hand in our workshop in Bandung, Indonesia.',
     },
   ],
 }
@@ -166,6 +166,7 @@ export const finalCtaCopy = {
 
 export const navCopy = {
   brand: 'Bespoke Tailor',
+  brandSuffix: 'by Local Tailor',
   links: [
     { label: 'Design Studio', href: '/#configurator' },
     { label: 'Fabrics', href: '/#fabric' },
@@ -176,7 +177,7 @@ export const navCopy = {
 }
 
 export const footerCopy = {
-  tagline: 'Bespoke thobe, handcrafted in Bogor.',
+  tagline: 'Bespoke thobe, handcrafted in Bandung.',
   columns: [
     {
       title: 'Explore',

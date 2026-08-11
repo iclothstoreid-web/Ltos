@@ -4,7 +4,7 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 
 export function KnowledgePreview() {
   return (
-    <section id="knowledge" aria-labelledby="knowledge-heading" className="bg-luxury-black px-6 py-24 md:px-10">
+    <section id="knowledge" aria-labelledby="knowledge-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-xl">
           <GoldAccentLine className="mb-4" />
@@ -20,10 +20,10 @@ export function KnowledgePreview() {
               as="li"
               key={card.title}
               delay={i * 0.08}
-              className="group cursor-pointer rounded-sm border border-luxury-ivory/10 p-6 transition hover:border-luxury-gold/40"
+              className="group cursor-pointer rounded-sm border border-luxury-gold/[0.10] p-6 transition hover:border-luxury-gold/40"
             >
               <h3 className="font-fraunces text-lg text-luxury-ivory group-hover:text-luxury-gold">{card.title}</h3>
-              <p className="mt-3 font-luxury-sans text-xs text-luxury-ivory/50">{card.description}</p>
+              <p className="mt-3 font-luxury-sans text-xs text-luxury-taupe">{card.description}</p>
             </Reveal>
           ))}
         </ul>

@@ -11,7 +11,7 @@ export function Faq() {
   const schema = buildFaqSchema()
 
   return (
-    <section id="faq" aria-labelledby="faq-heading" className="bg-luxury-charcoal px-6 py-24 md:px-10">
+    <section id="faq" aria-labelledby="faq-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 
       <div className="mx-auto max-w-3xl">
@@ -23,7 +23,7 @@ export function Faq() {
           </h2>
         </Reveal>
 
-        <div className="mt-12 divide-y divide-luxury-ivory/10">
+        <div className="mt-12 divide-y divide-luxury-gold/[0.14]">
           {faqCopy.items.map((item, i) => (
             <Reveal key={item.question} delay={i * 0.05}>
               <details className="group py-6">
@@ -33,7 +33,7 @@ export function Faq() {
                     +
                   </span>
                 </summary>
-                <p className="mt-4 font-luxury-sans text-sm text-luxury-ivory/60">{item.answer}</p>
+                <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{item.answer}</p>
               </details>
             </Reveal>
           ))}

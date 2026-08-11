@@ -35,7 +35,7 @@ export function HomePage() {
   const webSiteSchema = buildWebSiteSchema()
 
   return (
-    <div className={`${fraunces.variable} ${jost.variable} bg-luxury-black font-luxury-sans`}>
+    <div className={`${fraunces.variable} ${jost.variable} bg-luxury-navy-deep font-luxury-sans`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }} />
       <ScrollProgress />

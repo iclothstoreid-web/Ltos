@@ -16,7 +16,7 @@ export function PrivateAppointment() {
     <section
       id="appointment"
       aria-labelledby="appointment-heading"
-      className="grid grid-cols-1 bg-luxury-charcoal lg:grid-cols-[45fr_55fr]"
+      className="grid grid-cols-1 bg-luxury-navy-deep lg:grid-cols-[45fr_55fr]"
     >
       <div className="relative aspect-[4/5] w-full lg:aspect-auto lg:min-h-[720px]">
         <Image
@@ -39,9 +39,9 @@ export function PrivateAppointment() {
           </h2>
 
           <p className="mt-8 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-gold">{appointmentCopy.location}</p>
-          <p className="mt-2 font-luxury-sans text-sm text-luxury-ivory/60">{appointmentCopy.address}</p>
+          <p className="mt-2 font-luxury-sans text-sm text-luxury-taupe">{appointmentCopy.address}</p>
 
-          <p className="mt-8 font-luxury-sans text-base leading-relaxed text-luxury-ivory/70">{appointmentCopy.body}</p>
+          <p className="mt-8 font-luxury-sans text-base leading-relaxed text-luxury-taupe">{appointmentCopy.body}</p>
 
           <MagneticButton href="#" variant="primary" className="mt-10">
             {appointmentCopy.cta}

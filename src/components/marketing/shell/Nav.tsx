@@ -20,12 +20,15 @@ export function Nav() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-40 transition-colors duration-500 ${
-        scrolled ? 'bg-luxury-black/80 backdrop-blur-md' : 'bg-transparent'
+        scrolled ? 'bg-luxury-navy-deep/80 backdrop-blur-md' : 'bg-transparent'
       }`}
     >
       <nav aria-label="Primary" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
-        <a href="/" className="font-fraunces text-lg tracking-wide text-luxury-ivory">
-          {navCopy.brand}
+        <a href="/" className="flex flex-col leading-tight">
+          <span className="font-fraunces text-lg tracking-wide text-luxury-ivory">{navCopy.brand}</span>
+          <span className="font-luxury-sans text-[10px] font-light uppercase tracking-[0.16em] text-luxury-taupe">
+            {navCopy.brandSuffix}
+          </span>
         </a>
 
         <ul className="hidden items-center gap-10 md:flex">
@@ -33,7 +36,7 @@ export function Nav() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-ivory/80 transition-colors hover:text-luxury-gold"
+                className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-taupe transition-colors hover:text-luxury-gold"
               >
                 {link.label}
               </a>
@@ -43,7 +46,7 @@ export function Nav() {
 
         <a
           href="/#appointment"
-          className="hidden cursor-pointer rounded-full border border-luxury-gold/50 px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold hover:text-luxury-black md:inline-flex"
+          className="hidden cursor-pointer rounded-full border border-luxury-gold/50 px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold hover:text-luxury-black hover:shadow-[0_0_16px_rgba(200,162,74,0.25)] md:inline-flex"
         >
           {navCopy.cta}
         </a>
@@ -74,7 +77,7 @@ export function Nav() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden bg-luxury-black md:hidden"
+            className="overflow-hidden bg-luxury-navy-deep md:hidden"
           >
             <ul className="flex flex-col gap-1 px-6 pb-6">
               {navCopy.links.map((link) => (
@@ -82,7 +85,7 @@ export function Nav() {
                   <a
                     href={link.href}
                     onClick={() => setDrawerOpen(false)}
-                    className="block py-3 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-ivory/80"
+                    className="block py-3 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-taupe"
                   >
                     {link.label}
                   </a>

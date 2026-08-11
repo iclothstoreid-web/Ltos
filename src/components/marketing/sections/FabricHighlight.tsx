@@ -9,7 +9,7 @@ const VARIANTS = ['a', 'b', 'c', 'a'] as const
 
 export function FabricHighlight() {
   return (
-    <section id="fabric" aria-labelledby="fabric-heading" className="bg-luxury-charcoal px-6 py-24 md:px-10">
+    <section id="fabric" aria-labelledby="fabric-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-xl">
           <GoldAccentLine className="mb-4" />
@@ -17,7 +17,7 @@ export function FabricHighlight() {
           <h2 id="fabric-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
             {fabricCopy.heading}
           </h2>
-          <p className="mt-4 font-luxury-sans text-sm text-luxury-ivory/60">{fabricCopy.body}</p>
+          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{fabricCopy.body}</p>
         </Reveal>
 
         <ul className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -42,8 +42,8 @@ export function FabricHighlight() {
                 <FabricCardPlaceholder alt={`${card.name} fabric swatch`} variant={VARIANTS[i]} />
               )}
               <h3 className="mt-4 font-fraunces text-lg text-luxury-ivory">{card.name}</h3>
-              <p className="font-luxury-sans text-xs text-luxury-ivory/50">{card.origin}</p>
-              <p className="mt-1 font-luxury-sans text-xs text-luxury-ivory/60">{card.trait}</p>
+              <p className="font-luxury-sans text-xs text-luxury-taupe">{card.origin}</p>
+              <p className="mt-1 font-luxury-sans text-xs text-luxury-taupe">{card.trait}</p>
             </Reveal>
           ))}
         </ul>

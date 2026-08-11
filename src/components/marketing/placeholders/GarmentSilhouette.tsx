@@ -7,7 +7,7 @@ import { useId } from 'react'
 // "empty gradient box." Gradient id is generated per-instance (useId) since
 // multiple placeholders render on the same page (Gallery, Configurator) —
 // a hardcoded id would collide across instances.
-export function GarmentSilhouette({ className = '', color = '#C9A24B' }: { className?: string; color?: string }) {
+export function GarmentSilhouette({ className = '', color = '#C8A24A' }: { className?: string; color?: string }) {
   const gradientId = `garment-stroke-${useId()}`
 
   return (

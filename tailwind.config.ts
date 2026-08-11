@@ -27,15 +27,31 @@ const config: Config = {
         // since the shell markup references them by these names.
         'surface-01': '#FCFAF8',
         'text-primary': '#1B1B1C',
-        // Sprint W1 — public homepage (Design Direction: dark luxury + warm
-        // neutral). Namespaced under `luxury-*` so this palette can never
-        // collide with the internal app's Material-style tokens above.
-        'luxury-black': '#0A0908',
-        'luxury-charcoal': '#1C1A18',
-        'luxury-ivory': '#F4EEE4',
-        'luxury-gold': '#C9A24B',
-        'luxury-bronze': '#8A6B3D',
+        // Sprint W1 — public homepage. W1 ART DIRECTION LOCK revision:
+        // Midnight Navy + Deep Espresso + Brass system (Savile Row / Brunello
+        // Cucinelli / leather-atelier direction), replacing the earlier
+        // navy+charcoal pairing. Namespaced under `luxury-*` so this palette
+        // can never collide with the internal app's Material-style tokens
+        // above.
+        //
+        // REBALANCE revision — navy is the brand-identity color and must
+        // dominate (~70/20/10 navy/deep-navy/espresso+brass): luxury-navy /
+        // luxury-navy-deep are now the section-background workhorses used
+        // by nearly every section; luxury-black (Deep Espresso) and
+        // luxury-charcoal (Smoked Walnut) are demoted to card/panel/surface
+        // accents only — never a full-width section background.
+        'luxury-navy': '#0B1628',
+        'luxury-navy-deep': '#0A1322',
+        'luxury-black': '#151210',
+        'luxury-charcoal': '#1B1714',
+        'luxury-ivory': '#F3EDE6',
+        'luxury-gold': '#C8A24A',
+        'luxury-bronze': '#B9923F',
         'luxury-linen': '#E8E1D3',
+        // New this revision — Soft Taupe for secondary/body text, replacing
+        // the old translucent-ivory-opacity pattern (which read as flat
+        // "digital UI" white-with-opacity rather than a warm material tone).
+        'luxury-taupe': '#B7ACA0',
       },
       fontFamily: {
         serif: ['Georgia', 'Cambria', 'serif'],

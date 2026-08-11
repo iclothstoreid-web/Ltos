@@ -66,13 +66,14 @@ export function Hero() {
       id="hero"
       ref={sectionRef}
       aria-label="Hero"
-      className="relative flex min-h-[100svh] items-center overflow-hidden bg-[#0A0A0B]"
+      className="relative flex min-h-[100svh] items-center overflow-hidden bg-luxury-navy-deep"
     >
-      {/* The shader itself paints the full background — deep navy (top/
-          right) flowing into warm charcoal (bottom), the archipelago as a
-          soft luminance
-          hint, grain, and a velocity-reactive lift — all in one continuous
-          pass, per this round's "harus terasa seperti satu ruang
+      {/* The shader itself paints the full background — W1 REBALANCE: pure
+          two-tone Midnight Navy, no espresso hand-off (navy is the brand
+          identity and must dominate; espresso is a card/panel accent only
+          now, never a section background) — the archipelago as a soft
+          luminance hint, grain, and a velocity-reactive lift, all in one
+          continuous pass, per this round's "harus terasa seperti satu ruang
           sinematik" (no separate panels or hard edges between layers).
           See HeroDepthField.tsx. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
@@ -85,15 +86,24 @@ export function Hero() {
       {!show3D && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(160deg,_#07111D_0%,_#0A0A0B_70%)]"
+          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(165deg,_#0B1628_0%,_#0A1322_55%,_#0A1322_100%)]"
         />
       )}
 
-      {/* Slightly darker on the left where the headline sits, easing off
-          toward the right — legibility without a flat scrim. */}
+      {/* Soft radial navy glow (W1 ART DIRECTION LOCK) — "cahaya kota yang
+          dipantulkan" sitting in the upper field where the navy dominates,
+          reinforcing the read without introducing a new object or panel. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#0A0A0B] via-[#0A0A0B]/70 to-[#0A0A0B]/25"
+        className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_30%_18%,_rgba(11,22,40,0.45)_0%,_rgba(10,19,34,0.30)_45%,_transparent_75%)]"
+      />
+
+      {/* Slightly darker (navy-toned, not flat black) on the left where the
+          headline sits, easing off toward the right — legibility without a
+          flat scrim. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-[#0A1322] via-[#0A1322]/70 to-[#0A1322]/25"
       />
 
       {/* Content — moves least (0.1x) of everything in the scene. */}
@@ -117,7 +127,7 @@ export function Hero() {
             {heroCopy.headline}
           </h1>
 
-          <motion.p variants={item} className="mt-6 max-w-md font-luxury-sans text-base text-luxury-ivory/70 md:text-lg">
+          <motion.p variants={item} className="mt-6 max-w-md font-luxury-sans text-base text-luxury-taupe md:text-lg">
             {heroCopy.subheadline}
           </motion.p>
 
@@ -132,7 +142,7 @@ export function Hero() {
 
           <motion.ul variants={item} className="mt-14 flex max-w-lg flex-wrap items-center gap-x-8 gap-y-3">
             {heroCopy.trustStrip.map((label) => (
-              <li key={label} className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-ivory/50">
+              <li key={label} className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-taupe">
                 {label}
               </li>
             ))}

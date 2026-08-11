@@ -17,7 +17,7 @@ export function Gallery() {
   )
 
   return (
-    <section id="gallery" aria-labelledby="gallery-heading" className="bg-luxury-black px-6 py-24 md:px-10">
+    <section id="gallery" aria-labelledby="gallery-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-xl">
           <GoldAccentLine className="mb-4" />
@@ -37,7 +37,7 @@ export function Gallery() {
               className={`cursor-pointer rounded-full border px-4 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] transition ${
                 activeFilter === filter
                   ? 'border-luxury-gold text-luxury-gold'
-                  : 'border-luxury-ivory/20 text-luxury-ivory/60 hover:border-luxury-ivory/40'
+                  : 'border-luxury-gold/[0.14] text-luxury-taupe hover:border-luxury-gold/30'
               }`}
             >
               {filter}
@@ -65,7 +65,7 @@ export function Gallery() {
                   variant={item.variant}
                 />
               )}
-              <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-ivory/60">{item.category}</p>
+              <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe">{item.category}</p>
             </motion.li>
           ))}
         </motion.ul>

@@ -41,12 +41,14 @@ const VERTEX_SHADER = /* glsl */ `
 // procedural circular "blob" masks (smoothstep against a distance field)
 // are replaced by one texture-sampled mask (the real archipelago silhouette)
 // with its own slow drift; their single flat background color is replaced
-// with a two-color diagonal gradient per this revision's palette spec.
+// with a four-stop Midnight Navy -> Deep Espresso gradient, primarily
+// vertical (W1 ART DIRECTION LOCK revision) — the site's locked color
+// system, not a one-off reference match.
 const FRAGMENT_SHADER = /* glsl */ `
   varying vec2 vUv;
 
-  uniform vec3 uColorNavy;
-  uniform vec3 uColorCharcoal;
+  uniform vec3 uColorMidnightNavy;
+  uniform vec3 uColorTransitionNavy;
   uniform vec3 uColorGold;
   uniform sampler2D uMapTexture;
   uniform float uMapStrength;
@@ -60,13 +62,17 @@ const FRAGMENT_SHADER = /* glsl */ `
   }
 
   void main() {
-    // One continuous cinematic gradient, no panels: navy dominant at the
-    // top/right (~60% of the frame), flowing down into warm charcoal at
-    // the bottom (~30%) so the transition into the next section on scroll
-    // reads as continuous rather than a cut — "jangan ada garis batas
-    // antar warna."
-    float diag = clamp(vUv.y * 0.65 + vUv.x * 0.35, 0.0, 1.0);
-    vec3 color = mix(uColorCharcoal, uColorNavy, smoothstep(0.22, 0.85, diag));
+    // W1 REBALANCE revision — navy is the brand-identity color and must
+    // stay dominant, so the Hero no longer eases down into an
+    // espresso/warm-dark band (that read as "brown background" once
+    // espresso was demoted to a card-only accent). Pure two-tone navy,
+    // vertical-biased: top-left #0B1628 blended across x into #0A1322,
+    // settling into flat #0A1322 for the lower ~60% — which is exactly the
+    // color PrivateAppointment (the next section) now uses, so the hand-off
+    // is seamless rather than a color change.
+    float b = clamp(1.0 - vUv.y, 0.0, 1.0);
+    vec3 topBlend = mix(uColorMidnightNavy, uColorTransitionNavy, clamp(vUv.x, 0.0, 1.0));
+    vec3 color = mix(topBlend, uColorTransitionNavy, smoothstep(0.0, 0.4, b));
 
     // The archipelago silhouette — pre-blurred offline, sampled here as a
     // soft luminance mask, drifting very slowly (idle + scroll + pointer,
@@ -128,9 +134,9 @@ function DepthPlane({
 
   const uniforms = useMemo(
     () => ({
-      uColorNavy: { value: new THREE.Color('#07111D') },
-      uColorCharcoal: { value: new THREE.Color('#0A0A0B') },
-      uColorGold: { value: new THREE.Color('#C9A876') },
+      uColorMidnightNavy: { value: new THREE.Color('#0B1628') },
+      uColorTransitionNavy: { value: new THREE.Color('#0A1322') },
+      uColorGold: { value: new THREE.Color('#C8A24A') },
       uMapTexture: { value: texture },
       uMapStrength: { value: 0.16 },
       uTime: { value: 0 },

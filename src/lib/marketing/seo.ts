@@ -5,14 +5,14 @@ import { faqCopy } from './copy'
 const BUSINESS = {
   name: 'Bespoke Tailor',
   url: 'https://ltos-local-tailor.vercel.app',
-  addressLocality: 'Bogor',
+  addressLocality: 'Bandung',
   addressCountry: 'ID',
 }
 
 export const homepageMetadata: Metadata = {
   title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
   description:
-    'Bespoke thobe, handcrafted in Bogor. A pattern formulated from your measurements alone, made from imported fabrics and finished by hand.',
+    'Bespoke thobe, handcrafted in Bandung. A pattern formulated from your measurements alone, made from imported fabrics and finished by hand.',
   openGraph: {
     title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
     description: 'Designed around your body, your lifestyle, and your identity.',
