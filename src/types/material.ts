@@ -100,6 +100,22 @@ export function weightClassFromGsm(gsm: number | null): FabricWeightClass | null
   return 'heavy'
 }
 
+// Sprint W3-6 §3 — centralizes the luxury_level ordinal ranking that used
+// to live only inside MaterialDnaSection.tsx's local LUXURY_RANK (now
+// imports this instead) — one definition instead of two that could drift.
+// Same best-effort case-insensitive mapping list_fabric_catalog()'s own
+// sort-by-luxury_level SQL uses (see FABRIC_SORT_LABELS.luxury_level's
+// comment above) — luxury_level has no defined vocabulary, unlike
+// price_tier, so this is a pragmatic ranking of common free-text values,
+// not a validated enum.
+export const LUXURY_LEVEL_RANK: Record<string, number> = { luxury: 3, premium: 2, basic: 1, standard: 1 }
+export const LUXURY_LEVEL_MAX_RANK = 3
+
+export function luxuryScoreFromLevel(luxuryLevel: string | null): number | null {
+  if (!luxuryLevel) return null
+  return LUXURY_LEVEL_RANK[luxuryLevel.toLowerCase()] ?? null
+}
+
 // Sprint W3-2 §6 — 'featured' (default) has no dedicated column to sort
 // by; list_fabric_catalog() falls through to catalog insertion order
 // (created_at asc) for it. 'luxury_level' sorts against a best-effort
@@ -249,6 +265,14 @@ export interface FabricRenderContext {
     family: string | null
     character: string | null
   } | null
+  // Sprint W3-6 §5 — enrichment only, still zero AI/render API calls
+  // ("Belum melakukan OpenAI call. Hanya memperkaya context."). Every
+  // field is composed from data already on FabricRenderContext, not a new
+  // query.
+  materialCharacter: string
+  textureDescription: string | null
+  luxuryDescription: string | null
+  renderKeywords: string[]
 }
 
 // Sprint W3-5 §2/§13/§14 — FAQ Schema + AI-readable content. Generated
@@ -293,4 +317,89 @@ export interface MaterialAuthorityContent {
   climateSuitability: string
   tailoringRecommendation: string
   maintenanceGuide: string
+}
+
+// Sprint W3-6 §3 — a small, stable shape for cross-referencing another
+// material without re-embedding its full record (used in
+// SemanticMaterialObject.related_materials and RecommendationContext) —
+// name/slug/category/url are enough for an LLM or recommendation engine
+// to identify and link to the material without duplicating its whole DNA.
+export interface MaterialReference {
+  name: string
+  slug: string
+  category: FabricCategory
+  url: string
+}
+
+// Sprint W3-6 §2/§3 — Semantic Material Object: the full AI Material
+// Schema (§2's field list) plus the semantic enrichment fields (§3).
+// Composed by buildSemanticMaterialObject() from data the caller already
+// fetched (material + colors + colorFamilies + related materials) — never
+// a query of its own, so it's equally cheap to call once (list endpoint,
+// stripped down) or fully (single-material endpoint).
+//
+// `recommended_for`/`avoid_for` are derived only from real, defined-
+// vocabulary fields (season, weight class) — never a fabricated claim
+// about a specific SKU's untested performance. `luxury_score` is null
+// whenever `luxury_level` doesn't match the known ranking (see
+// luxuryScoreFromLevel) — never defaulted to 0, which would misrepresent
+// "unknown" as "lowest tier".
+export interface SemanticMaterialObject {
+  name: string
+  slug: string
+  url: string
+  category: FabricCategory
+  composition: string | null
+  texture: FabricTexture | null
+  weight_gsm: number | null
+  weight_class: FabricWeightClass | null
+  breathability: string | null
+  wrinkle_resistance: string | null
+  luxury_level: string | null
+  luxury_score: number | null
+  season: FabricSeason | null
+  care_instruction: string | null
+  specifications: FabricSpecifications
+  use_cases: string[]
+  dna_colors: MaterialColor[]
+  color_families: string[]
+  related_materials: MaterialReference[]
+  recommended_for: string[]
+  avoid_for: string[]
+  climate: string
+  occasion: string
+  drape: string
+  structure: string
+}
+
+// Sprint W3-6 §4 — Recommendation Context: a SemanticMaterialObject plus
+// its neighbor lists reshaped for matching/recommendation use
+// (material/style/color recommendation, a future chatbot) rather than
+// on-page link rendering (that's InternalLinkTargets, W3-5). `tags` is a
+// flat, deduplicated set of short matchable terms (category, texture,
+// season, price_tier, use_cases, color family names) for simple
+// tag-overlap style matching without needing full-text search.
+export interface RecommendationContext {
+  material: SemanticMaterialObject
+  similar_texture: MaterialReference[]
+  similar_color_family: MaterialReference[]
+  comparison_candidates: MaterialReference[]
+  tags: string[]
+}
+
+// Sprint W3-6 §12 — AI Discovery Endpoint summary: a catalog-wide overview
+// for future AI indexing, not per-material detail (that's /api/materials/
+// [slug]). `recommendation_graph` is a simple category-to-category
+// adjacency (categories that share at least one texture or color family
+// with each other in the current catalog) — intentionally not a full
+// material-to-material graph, which would make this endpoint's payload
+// scale with O(n²) materials.
+export interface MaterialDiscoverySummary {
+  categories: { slug: FabricCategory; label: string; materialCount: number }[]
+  materials: MaterialReference[]
+  colorFamilies: string[]
+  textures: FabricTexture[]
+  seasons: FabricSeason[]
+  recommendationGraph: { category: FabricCategory; relatedCategories: FabricCategory[] }[]
+  generatedAt: string
 }

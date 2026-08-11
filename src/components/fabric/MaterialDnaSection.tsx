@@ -1,4 +1,11 @@
-import { FABRIC_TEXTURE_LABELS, weightClassFromGsm, FABRIC_WEIGHT_CLASS_LABELS, type FabricMaterial } from '@/types/material'
+import {
+  FABRIC_TEXTURE_LABELS,
+  FABRIC_WEIGHT_CLASS_LABELS,
+  LUXURY_LEVEL_MAX_RANK,
+  luxuryScoreFromLevel,
+  weightClassFromGsm,
+  type FabricMaterial,
+} from '@/types/material'
 
 interface MaterialDnaSectionProps {
   material: FabricMaterial
@@ -7,15 +14,14 @@ interface MaterialDnaSectionProps {
 // Weight bar is proportional against a 0-400gsm reference range (covers
 // the realistic apparel-fabric span; heavier coatings are rare for a
 // bespoke thobe catalog) — an honest visual since weight_gsm is a real
-// number. Luxury level gets a 3-dot rating against the same best-effort
-// basic/standard=1 < premium=2 < luxury=3 ranking list_fabric_catalog()'s
-// sort already uses (see types/material.ts's FABRIC_SORT_LABELS comment)
-// — the only two DNA properties with a bar/rating are the only two with an
-// actual ordinal scale behind them. Everything else (composition, texture,
-// breathability, wrinkle resistance, season, care) is free text or a
-// closed label set with no natural 1-N scale, so it renders as a plain
-// labeled row rather than a fabricated bar.
-const LUXURY_RANK: Record<string, number> = { luxury: 3, premium: 2, basic: 1, standard: 1 }
+// number. Luxury level gets a 3-dot rating against luxuryScoreFromLevel()'s
+// shared best-effort ranking (types/material.ts — Sprint W3-6 centralized
+// this out of a local copy here) — the only two DNA properties with a bar/
+// rating are the only two with an actual ordinal scale behind them.
+// Everything else (composition, texture, breathability, wrinkle
+// resistance, season, care) is free text or a closed label set with no
+// natural 1-N scale, so it renders as a plain labeled row rather than a
+// fabricated bar.
 const WEIGHT_REFERENCE_MAX_GSM = 400
 
 interface DnaRow {
@@ -51,12 +57,12 @@ export function MaterialDnaSection({ material }: MaterialDnaSectionProps) {
     rows.push({ icon: 'compress', label: 'Wrinkle Resistance', value: material.wrinkle_resistance })
   }
   if (material.luxury_level) {
-    const rank = LUXURY_RANK[material.luxury_level.toLowerCase()] ?? 0
+    const rank = luxuryScoreFromLevel(material.luxury_level)
     rows.push({
       icon: 'workspace_premium',
       label: 'Luxury Level',
       value: material.luxury_level,
-      rating: rank > 0 ? { value: rank, max: 3 } : undefined,
+      rating: rank ? { value: rank, max: LUXURY_LEVEL_MAX_RANK } : undefined,
     })
   }
   if (material.season) {

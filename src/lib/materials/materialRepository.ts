@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   FABRIC_CATEGORIES,
@@ -10,7 +11,9 @@ import {
   FABRIC_TEXTURES,
   FABRIC_TEXTURE_LABELS,
   FABRIC_WEIGHT_CLASSES,
+  LUXURY_LEVEL_MAX_RANK,
   UNSPECIFIED_COLOR_FAMILY,
+  luxuryScoreFromLevel,
   weightClassFromGsm,
   type FabricCategory,
   type FabricFaqItem,
@@ -18,14 +21,20 @@ import {
   type FabricMaterial,
   type FabricRenderContext,
   type FabricSpecifications,
+  type FabricTexture,
   type InternalLinkTargets,
   type ListMaterialsParams,
   type ListMaterialsResult,
   type MaterialAuthorityContent,
   type MaterialColor,
   type MaterialColorFamily,
+  type MaterialDiscoverySummary,
+  type MaterialReference,
+  type RecommendationContext,
+  type SemanticMaterialObject,
   type SeoNeighbors,
 } from '@/types/material'
+import { FABRIC_SITE_ORIGIN } from './seo'
 
 interface FabricCatalogRow extends FabricMaterial {
   total_count: number
@@ -61,10 +70,19 @@ export async function listMaterials(supabase: SupabaseClient, params: ListMateri
   return { materials, totalCount }
 }
 
-export async function getAllMaterials(supabase: SupabaseClient): Promise<FabricMaterial[]> {
+// Sprint W3-6 §10 — cache()-wrapped: the fabric detail page's
+// generateMetadata and page body both resolve the same material by slug
+// (each via getMaterialBySlug -> getAllMaterials), and the category page
+// separately calls getMaterialFilterFacets/getMaterialCategories, which
+// also go through this. Combined with createPublicClient() now also being
+// cache()-wrapped (src/lib/supabase/public.ts) so every call site within
+// one request shares the same client instance, repeated calls collapse
+// into a single actual Supabase round trip per request instead of one per
+// call site.
+export const getAllMaterials = cache(async function getAllMaterials(supabase: SupabaseClient): Promise<FabricMaterial[]> {
   const { materials } = await listMaterials(supabase, { limit: FABRIC_MAX_CATALOG_FETCH, sort: 'name_asc' })
   return materials
-}
+})
 
 export async function getMaterialBySlug(supabase: SupabaseClient, slug: string): Promise<FabricMaterial | null> {
   const materials = await getAllMaterials(supabase)
@@ -331,12 +349,38 @@ async function getMaterialIdsForColor(supabase: SupabaseClient, dnaColorId: stri
   return new Set((data ?? []).map((row: { material_id: string }) => row.material_id))
 }
 
-// Sprint W3-4 §11 — AI Render Context Preparation. Pure data assembly, no
-// AI/render API call of any kind (the brief: "Belum perlu memanggil
-// OpenAI. Hanya menyiapkan context object.") — a future render integration
-// consumes this shape without this sprint needing to know what that
-// integration looks like.
+// Sprint W3-4 §11 / W3-6 §5 — AI Render Context Preparation. Pure data
+// assembly, no AI/render API call of any kind (the brief: "Belum perlu
+// memanggil OpenAI. Hanya memperkaya context.") — a future render
+// integration consumes this shape without this sprint needing to know
+// what that integration looks like. W3-6 enrichment (materialCharacter/
+// textureDescription/luxuryDescription/renderKeywords) is composed
+// entirely from fields already on `material`/`selectedColor`, not a new
+// query or claim.
 export function buildFabricRenderContext(material: FabricMaterial, selectedColor: MaterialColor | null): FabricRenderContext {
+  const categoryLabel = FABRIC_CATEGORY_LABELS[material.category]
+  const textureLabel = material.texture ? FABRIC_TEXTURE_LABELS[material.texture] : null
+
+  const characterParts = [material.composition, textureLabel ? `${textureLabel.toLowerCase()} texture` : null].filter(
+    (v): v is string => !!v
+  )
+  const materialCharacter = characterParts.length > 0 ? characterParts.join(', ') : `${categoryLabel} fabric`
+
+  const textureDescription = textureLabel ? `${textureLabel} texture` : null
+
+  const luxuryScore = luxuryScoreFromLevel(material.luxury_level)
+  const luxuryDescription = material.luxury_level
+    ? `${material.luxury_level}${luxuryScore ? ` (${luxuryScore}/${LUXURY_LEVEL_MAX_RANK})` : ''} tier`
+    : null
+
+  const renderKeywords = Array.from(
+    new Set(
+      [categoryLabel, textureLabel, material.luxury_level, selectedColor?.name, selectedColor?.family].filter(
+        (v): v is string => !!v
+      )
+    )
+  )
+
   return {
     material: {
       id: material.id,
@@ -356,6 +400,10 @@ export function buildFabricRenderContext(material: FabricMaterial, selectedColor
           character: selectedColor.character,
         }
       : null,
+    materialCharacter,
+    textureDescription,
+    luxuryDescription,
+    renderKeywords,
   }
 }
 
@@ -522,3 +570,169 @@ export function getMaterialAuthorityContent(material: FabricMaterial): MaterialA
 
   return { whyChoose, whenToWear, climateSuitability, tailoringRecommendation, maintenanceGuide }
 }
+
+function toMaterialReference(material: FabricMaterial): MaterialReference {
+  return {
+    name: material.name,
+    slug: material.slug,
+    category: material.category,
+    url: `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}`,
+  }
+}
+
+// Sprint W3-6 §3 — recommended_for / avoid_for derivation. Both lists are
+// built only from fields with a real, defined vocabulary (season, weight
+// class) plus getMaterialSpecifications()'s own already-disclosed text —
+// never a fabricated claim about a specific SKU's untested performance
+// ("Hindari klaim yang tidak didukung", carried forward from W3-5 §5).
+function deriveRecommendedFor(material: FabricMaterial, specs: Required<FabricSpecifications>): string[] {
+  const items = new Set<string>()
+  if (specs.best_for) items.add(specs.best_for)
+  if (material.season === 'tropical' || material.season === 'summer') items.add('Warm, humid climates')
+  if (material.season === 'formal') items.add('Formal, indoor, cooler-weather occasions')
+  if (material.season === 'all_season') items.add('Year-round wear')
+
+  const weightClass = weightClassFromGsm(material.weight_gsm)
+  if (weightClass === 'lightweight') items.add('Hot-weather daily wear')
+  if (weightClass === 'heavy') items.add('Cooler-weather formal wear')
+
+  return Array.from(items)
+}
+
+function deriveAvoidFor(material: FabricMaterial): string[] {
+  const items = new Set<string>()
+  if (material.season === 'formal') items.add('Very hot, humid outdoor conditions')
+  if (material.season === 'tropical' || material.season === 'summer') items.add('Cold or heavily air-conditioned indoor settings')
+
+  const weightClass = weightClassFromGsm(material.weight_gsm)
+  if (weightClass === 'heavy') items.add('Hot, humid climates')
+  if (weightClass === 'lightweight') items.add('Cold weather without additional layering')
+
+  return Array.from(items)
+}
+
+// Sprint W3-6 §2/§3 — Semantic Material Object: the full AI Material
+// Schema plus semantic enrichment. Composed entirely from already-fetched
+// data (material + colors + colorFamilies + related materials) — the
+// caller (a page or API route) fetches each of those exactly once via the
+// existing repository functions and passes them in here; this function
+// itself never queries anything, so it's equally cheap to call for a
+// single material or in a loop over a list.
+export function buildSemanticMaterialObject(
+  material: FabricMaterial,
+  colors: MaterialColor[],
+  colorFamilies: MaterialColorFamily[],
+  relatedMaterials: FabricMaterial[]
+): SemanticMaterialObject {
+  const specs = getMaterialSpecifications(material)
+  const useCases = getMaterialUseCases(material)
+
+  return {
+    name: material.name,
+    slug: material.slug,
+    url: `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}`,
+    category: material.category,
+    composition: material.composition,
+    texture: material.texture,
+    weight_gsm: material.weight_gsm,
+    weight_class: weightClassFromGsm(material.weight_gsm),
+    breathability: material.breathability,
+    wrinkle_resistance: material.wrinkle_resistance,
+    luxury_level: material.luxury_level,
+    luxury_score: luxuryScoreFromLevel(material.luxury_level),
+    season: material.season,
+    care_instruction: material.care_instruction,
+    specifications: specs,
+    use_cases: useCases,
+    dna_colors: colors,
+    color_families: colorFamilies.map((f) => f.family),
+    related_materials: relatedMaterials.map(toMaterialReference),
+    recommended_for: deriveRecommendedFor(material, specs),
+    avoid_for: deriveAvoidFor(material),
+    climate: specs.climate,
+    occasion: specs.occasion,
+    drape: specs.drape_character,
+    structure: specs.structure,
+  }
+}
+
+// Sprint W3-6 §4 — Recommendation Context. Wraps a SemanticMaterialObject
+// with neighbor lists reshaped for matching/recommendation use (a future
+// chatbot, material/style/color recommendation) — distinct from
+// InternalLinkTargets (W3-5), which is for on-page link rendering.
+// `tags` is a flat, deduplicated set of short matchable terms for simple
+// tag-overlap matching without full-text search.
+export function buildRecommendationContext(
+  semanticMaterial: SemanticMaterialObject,
+  linkTargets: Pick<InternalLinkTargets, 'sameTexture' | 'sameColorFamily' | 'comparison'>
+): RecommendationContext {
+  const tags = new Set<string>([
+    semanticMaterial.category,
+    ...(semanticMaterial.texture ? [semanticMaterial.texture] : []),
+    ...(semanticMaterial.season ? [semanticMaterial.season] : []),
+    ...semanticMaterial.use_cases,
+    ...semanticMaterial.color_families,
+  ])
+
+  return {
+    material: semanticMaterial,
+    similar_texture: linkTargets.sameTexture.map(toMaterialReference),
+    similar_color_family: linkTargets.sameColorFamily.map(toMaterialReference),
+    comparison_candidates: linkTargets.comparison.map(toMaterialReference),
+    tags: Array.from(tags),
+  }
+}
+
+// Sprint W3-6 §12 — AI Discovery Endpoint summary. Catalog-wide overview,
+// not per-material detail (that's /api/materials/[slug]).
+// `recommendationGraph` is category-to-category adjacency based on shared
+// texture within the current catalog — deliberately not a full
+// material-to-material graph (or one also factoring in color families,
+// which would need a per-material color fetch), which would make this
+// endpoint's payload scale with catalog size rather than staying a fixed,
+// small summary.
+export const getMaterialDiscoverySummary = cache(async function getMaterialDiscoverySummary(
+  supabase: SupabaseClient
+): Promise<MaterialDiscoverySummary> {
+  const [materials, colorFamiliesResult] = await Promise.all([getAllMaterials(supabase), supabase.rpc('list_distinct_color_families')])
+
+  if (colorFamiliesResult.error) throw colorFamiliesResult.error
+  const colorFamilies = ((colorFamiliesResult.data ?? []) as { family: string }[]).map((row) => row.family)
+
+  const presentCategories = FABRIC_CATEGORIES.filter((c) => materials.some((m) => m.category === c))
+  const categories = presentCategories.map((slug) => ({
+    slug,
+    label: FABRIC_CATEGORY_LABELS[slug],
+    materialCount: materials.filter((m) => m.category === slug).length,
+  }))
+
+  const texturesByCategory = new Map<FabricCategory, Set<FabricTexture>>()
+  for (const m of materials) {
+    if (!m.texture) continue
+    const set = texturesByCategory.get(m.category) ?? new Set<FabricTexture>()
+    set.add(m.texture)
+    texturesByCategory.set(m.category, set)
+  }
+  const recommendationGraph = presentCategories.map((category) => {
+    const ownTextures = texturesByCategory.get(category) ?? new Set<FabricTexture>()
+    const relatedCategories = presentCategories.filter((other) => {
+      if (other === category) return false
+      const otherTextures = texturesByCategory.get(other) ?? new Set<FabricTexture>()
+      return Array.from(ownTextures).some((t) => otherTextures.has(t))
+    })
+    return { category, relatedCategories }
+  })
+
+  const presentTextures = FABRIC_TEXTURES.filter((t) => materials.some((m) => m.texture === t))
+  const presentSeasons = FABRIC_SEASONS.filter((s) => materials.some((m) => m.season === s))
+
+  return {
+    categories,
+    materials: materials.map(toMaterialReference),
+    colorFamilies,
+    textures: presentTextures,
+    seasons: presentSeasons,
+    recommendationGraph,
+    generatedAt: new Date().toISOString(),
+  }
+})
