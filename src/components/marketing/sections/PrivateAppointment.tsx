@@ -25,7 +25,6 @@ export function PrivateAppointment() {
           fill
           sizes="(min-width: 1024px) 45vw, 100vw"
           className="object-cover"
-          priority
         />
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-luxury-black/40 via-transparent to-transparent lg:bg-gradient-to-r" />
       </div>

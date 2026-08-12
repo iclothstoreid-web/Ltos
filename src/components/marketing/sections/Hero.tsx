@@ -42,13 +42,33 @@ export function Hero() {
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduceMotion) return
-    const isSmallScreen = window.innerWidth < 768
-    const lowEndDevice = (navigator.hardwareConcurrency ?? 8) <= 4
-    const probe = document.createElement('canvas')
-    const hasWebGL2 = !!probe.getContext('webgl2')
-    if (hasWebGL2 && !(isSmallScreen && lowEndDevice)) {
-      setCanRender3D(true)
+
+    function checkCapability() {
+      const isSmallScreen = window.innerWidth < 768
+      const lowEndDevice = (navigator.hardwareConcurrency ?? 8) <= 4
+      const probe = document.createElement('canvas')
+      const hasWebGL2 = !!probe.getContext('webgl2')
+      if (hasWebGL2 && !(isSmallScreen && lowEndDevice)) {
+        setCanRender3D(true)
+      }
     }
+
+    // P0 — deferred to browser idle time (was: synchronous in the mount
+    // effect). Setting canRender3D immediately on mount triggered the
+    // HeroDepthField dynamic import right away, putting three.js's ~750KB
+    // (uncompressed) parse/execute cost directly in the critical
+    // hydration window on every page load. Idle-deferring it means the
+    // static fallback (HeroImagePlaceholder) paints first, hydration and
+    // interactivity finish uncontested, and the shader swaps in a beat
+    // later once the browser actually has spare time — imperceptible in
+    // practice, but off the critical path.
+    const ric = window.requestIdleCallback as typeof window.requestIdleCallback | undefined
+    if (ric) {
+      const id = ric(checkCapability, { timeout: 2000 })
+      return () => window.cancelIdleCallback?.(id)
+    }
+    const id = window.setTimeout(checkCapability, 200)
+    return () => window.clearTimeout(id)
   }, [])
 
   useEffect(() => {

@@ -1,7 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import * as THREE from 'three'
+// W1P — named imports instead of `import * as THREE` so webpack can
+// tree-shake the rest of the three.js namespace (geometries, materials,
+// loaders, animation/audio systems, etc.) that this file never touches.
+import { Color, Vector2, TextureLoader, ClampToEdgeWrapping, LinearFilter, MathUtils } from 'three'
+import type { ShaderMaterial } from 'three'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import type { MotionValue } from 'framer-motion'
 
@@ -111,16 +115,16 @@ function DepthPlane({
   scrollProgress: MotionValue<number>
   scrollVelocity: MotionValue<number>
 }) {
-  const materialRef = useRef<THREE.ShaderMaterial>(null)
+  const materialRef = useRef<ShaderMaterial>(null)
   const pointer = useRef({ x: 0, y: 0 })
   const smoothedVelocity = useRef(0)
   const clock = useRef(0)
-  const texture = useLoader(THREE.TextureLoader, '/hero/indonesia-map-glow.webp')
+  const texture = useLoader(TextureLoader, '/hero/indonesia-map-glow.webp')
 
   useEffect(() => {
-    texture.wrapS = THREE.ClampToEdgeWrapping
-    texture.wrapT = THREE.ClampToEdgeWrapping
-    texture.minFilter = THREE.LinearFilter
+    texture.wrapS = ClampToEdgeWrapping
+    texture.wrapT = ClampToEdgeWrapping
+    texture.minFilter = LinearFilter
   }, [texture])
 
   useEffect(() => {
@@ -138,14 +142,14 @@ function DepthPlane({
     () => ({
       // Names kept from the pre-W1R navy grading to minimize diff — values
       // are now Smoked Walnut / Deep Espresso, see comment above.
-      uColorMidnightNavy: { value: new THREE.Color('#1B1714') },
-      uColorTransitionNavy: { value: new THREE.Color('#151210') },
-      uColorGold: { value: new THREE.Color('#C8A24A') },
+      uColorMidnightNavy: { value: new Color('#1B1714') },
+      uColorTransitionNavy: { value: new Color('#151210') },
+      uColorGold: { value: new Color('#C8A24A') },
       uMapTexture: { value: texture },
       uMapStrength: { value: 0.16 },
       uTime: { value: 0 },
       uVelocityIntensity: { value: 0 },
-      uParallax: { value: new THREE.Vector2(0, 0) },
+      uParallax: { value: new Vector2(0, 0) },
       uGrainStrength: { value: 0.018 },
     }),
     [texture],
@@ -157,7 +161,7 @@ function DepthPlane({
     // practice) smoothed hard — this is meant to register as a slow mood
     // shift while scrolling fast, never a per-frame flicker.
     const rawVelocity = scrollVelocity.get()
-    smoothedVelocity.current = THREE.MathUtils.lerp(smoothedVelocity.current, Math.min(Math.abs(rawVelocity), 2.5) / 2.5, 0.05)
+    smoothedVelocity.current = MathUtils.lerp(smoothedVelocity.current, Math.min(Math.abs(rawVelocity), 2.5) / 2.5, 0.05)
 
     const scroll = scrollProgress.get()
     // Idle drift (always alive) + scroll-linked drift, at a "far/mid"
@@ -203,7 +207,11 @@ export function HeroDepthField({
 }) {
   return (
     <Canvas
-      dpr={[1, 1.5]}
+      // W1P — reduced from [1, 1.5]: fewer pixels rendered on high-DPI
+      // (2x/3x) laptop/mobile screens, meaningfully cheaper GPU fill-rate
+      // for an ambient full-screen backdrop where the extra sharpness
+      // isn't perceptible.
+      dpr={[1, 1.25]}
       gl={{ antialias: false, alpha: false, powerPreference: 'low-power' }}
       className="!absolute inset-0"
     >
