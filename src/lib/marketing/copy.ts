@@ -190,6 +190,54 @@ export const deliveryCopy = {
   cta: 'Book Your First Bespoke Consultation',
 }
 
+// Sprint W5-5 — Craftsmanship & Workshop. Named craftsmanshipDetailsCopy
+// (not craftsmanshipCopy — that name is already taken by the existing
+// CraftsmanshipProcess section below, id="craftsmanship"). This section's
+// own id is "craftsmanship-details" to avoid colliding with it. Both CTAs
+// default to /#craftsmanship, same override pattern as W5-3/W5-4 — and
+// here the target genuinely sits later on the page (CraftsmanshipProcess
+// renders after FabricHighlight/WhyLocalTailor), so "explore further" is a
+// real forward link, not just a repeated anchor.
+//
+// statement ("Craftsmanship is measured by what remains invisible.") is a
+// verbatim repeat of productionCopy.statement (W5-3) — given as-is in this
+// sprint's own brief, not introduced here; implemented as specified.
+export const craftsmanshipDetailsCopy = {
+  eyebrow: 'Craftsmanship',
+  heading: 'The Difference Is in the Details',
+  subheadline: 'True bespoke quality is built through small decisions, careful construction, and disciplined finishing.',
+  cards: [
+    { title: 'Hand Finishing', description: 'Selected finishing work is completed by hand for greater precision and longevity.' },
+    { title: 'Fabric Precision', description: 'Patterns are aligned carefully to preserve visual consistency across the garment.' },
+    { title: 'Structural Construction', description: 'Garment balance and drape are built through tailoring structure, not shortcuts.' },
+    { title: 'Final Pressing', description: 'Every garment is professionally pressed before final inspection and delivery.' },
+  ],
+  statement: 'Craftsmanship is measured by what remains invisible.',
+  cta: 'Explore Our Craftsmanship',
+}
+
+// No dedicated workshop-interior photography exists in assets.ts (garmentPhotos
+// is mannequin/curtain/rug editorial, fabricPhotos is macro swatch shots — real
+// photography, just not literal workshop-in-use shots). Per the brief's own
+// instruction ("if no workshop photo is available, use the closest existing
+// composition, no new stock image"), WorkshopSection composes garmentPhotos.navy
+// (unused as a hero elsewhere — only a small Gallery grid thumbnail today) with
+// a fabricPhotos macro shot, both genuine photography, so the authenticityCallout
+// below stays a true claim rather than describing an illustration.
+export const workshopCopy = {
+  eyebrow: 'The Workshop',
+  heading: 'A Real Workshop. Real Tailors. Real Craftsmanship.',
+  subheadline:
+    'Our garments are produced inside a dedicated tailoring workshop where consultation, pattern drafting, cutting, construction, and finishing happen under one process.',
+  pillarsLabel: 'Inside the Workshop',
+  pillars: ['Consultation & Design', 'Pattern Drafting', 'Tailoring & Construction', 'Quality Inspection'],
+  authenticityLabel: 'Authenticity',
+  authenticityCallout: 'Every photograph represents our real tailoring environment, tools, materials, and production process.',
+  cta: 'Visit Our Workshop Process',
+  photoAlt: 'Bespoke thobe presented on a mannequin inside the Local Tailor workshop, editorial studio photography',
+  fabricAlt: 'Close-up weave detail from the Local Tailor fabric collection',
+}
+
 export const fabricCopy = {
   eyebrow: 'Material',
   heading: 'Fabric Is Where Craft Begins',
