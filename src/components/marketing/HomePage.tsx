@@ -31,6 +31,10 @@ const jost = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], va
 // hydrate them independently rather than as one blocking unit.
 const PrivateAppointment = dynamic(() => import('./sections/PrivateAppointment').then((m) => m.PrivateAppointment))
 const BespokeProcessSection = dynamic(() => import('./sections/BespokeProcessSection').then((m) => m.BespokeProcessSection))
+const ConsultationSection = dynamic(() => import('./sections/ConsultationSection').then((m) => m.ConsultationSection))
+const MeasurementSection = dynamic(() => import('./sections/MeasurementSection').then((m) => m.MeasurementSection))
+const PatternFormulationSection = dynamic(() => import('./sections/PatternFormulationSection').then((m) => m.PatternFormulationSection))
+const ProductionSection = dynamic(() => import('./sections/ProductionSection').then((m) => m.ProductionSection))
 const FabricHighlight = dynamic(() => import('./sections/FabricHighlight').then((m) => m.FabricHighlight))
 const WhyLocalTailor = dynamic(() => import('./sections/WhyLocalTailor').then((m) => m.WhyLocalTailor))
 const CraftsmanshipProcess = dynamic(() => import('./sections/CraftsmanshipProcess').then((m) => m.CraftsmanshipProcess))
@@ -59,6 +63,18 @@ export function HomePage() {
         <ConfiguratorPreview />
         <Suspense fallback={null}>
           <BespokeProcessSection />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ConsultationSection />
+        </Suspense>
+        <Suspense fallback={null}>
+          <MeasurementSection />
+        </Suspense>
+        <Suspense fallback={null}>
+          <PatternFormulationSection />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ProductionSection />
         </Suspense>
         <Suspense fallback={null}>
           <FabricHighlight />

@@ -72,6 +72,83 @@ export const bespokeProcessCopy = {
   secondaryCta: 'View Full Bespoke Process',
 }
 
+// Sprint W5-2 — Consultation & Measurement. Reuses garmentPhotos.maroonPiping
+// (previously only referenced inside galleryCopy's data array, never
+// rendered as a section's own hero image) so this doesn't repeat
+// PrivateAppointment's blackPinstripe photo one section later.
+export const consultationCopy = {
+  eyebrow: 'Consultation',
+  heading: 'Every Bespoke Journey Starts with a Conversation',
+  subheadline:
+    'We begin by understanding your purpose, lifestyle, and preferences before recommending fabrics, construction, and fit.',
+  bullets: [
+    'One-on-one consultation',
+    'Style recommendation',
+    'Fabric guidance',
+    'Transparent production timeline',
+    'Pricing discussed before production begins',
+  ],
+  cta: 'Book Your Consultation',
+  photoAlt: 'Tailor and client reviewing fabric and style options during a private consultation, editorial studio photography',
+}
+
+// The "Digital Body Profile" here is the real fitter-verified measurement
+// record (LTOS workspace/measurement) — deliberately NOT the same thing as
+// /free-body-profile-estimator (a public DIY estimate, explicitly never
+// treated as production measurement per that route's own Sprint W0.1
+// comment). The CTA below points at the real path into that record:
+// booking an in-person measurement session.
+export const measurementCopy = {
+  eyebrow: 'Measurement',
+  heading: 'Precision Begins with Measurement',
+  subheadline: 'Your measurements become the foundation for every future garment we create.',
+  cardLabel: 'Digital Body Profile',
+  cardItems: [
+    'Securely stored measurements',
+    'Reusable for future orders',
+    'Updated whenever your body changes',
+    'Faster repeat ordering',
+    'Consistent fit over time',
+  ],
+  statement: 'Your measurements are not treated as numbers. They are treated as a long-term personal profile.',
+  cta: 'Save Your Measurements for Future Orders',
+  mannequinAlt: 'Digital fitting mannequin representing a customer’s stored Digital Body Profile',
+}
+
+// Sprint W5-3 — Pattern Formulation & Production. Both CTAs point at the
+// homepage's own Craftsmanship section (#craftsmanship) — its "Pattern
+// Formulation" and "Handcrafted Production" steps are the closest existing
+// detail on either topic — rather than a new page, per the "no routing
+// changes" brief. Same reusable-href pattern as BespokeProcessSection.
+export const patternFormulationCopy = {
+  eyebrow: 'Pattern Formulation',
+  heading: 'Your Personal Pattern Is Created Before Any Fabric Is Cut',
+  subheadline: 'A bespoke garment begins with a pattern drafted specifically for your body profile, posture, and movement.',
+  determinesLabel: 'Your pattern determines',
+  determines: ['Shoulder balance', 'Sleeve rotation', 'Chest allowance', 'Body shape', 'Movement comfort', 'Garment drape'],
+  statement: 'Fabric can be replaced. A personal pattern cannot.',
+  cta: 'See How Your Pattern Is Created',
+  motifAlt: 'Editorial illustration of a bespoke pattern draft — paper, ruler, and a marked pattern piece',
+}
+
+// metrics intentionally leaves 3 of 4 items without a `detail` line — only
+// "Dedicated Pattern — One per customer" was given as a label/value pair in
+// the brief; the rest are single facts, not fabricated pairings.
+export const productionCopy = {
+  eyebrow: 'Production',
+  heading: 'Crafted by Experienced Tailors, Not Assembly-Line Manufacturing',
+  subheadline: 'Every garment moves through a structured tailoring workflow handled by experienced artisans.',
+  stages: ['Cutting', 'Assembly', 'Collar Construction', 'Sleeve Attachment', 'Hand Finishing', 'Pressing & Final Detailing'],
+  metrics: [
+    { label: 'Dedicated Pattern', detail: 'One per customer' },
+    { label: 'Specialized Production Stages' },
+    { label: 'Human Craftsmanship' },
+    { label: 'Final Quality Inspection' },
+  ] as { label: string; detail?: string }[],
+  statement: 'Craftsmanship is measured by what remains invisible.',
+  cta: 'Explore Our Production Process',
+}
+
 export const fabricCopy = {
   eyebrow: 'Material',
   heading: 'Fabric Is Where Craft Begins',
