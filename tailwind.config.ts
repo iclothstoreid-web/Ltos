@@ -104,6 +104,10 @@ const config: Config = {
         // looping) and slow ambient drift used by luxury placeholder art.
         'light-sweep': 'lightSweep 900ms ease-out',
         'luxury-drift': 'luxuryDrift 12s ease-in-out infinite',
+        // Sprint W0.3 — InteractiveBodySilhouette idle motion (breathing +
+        // gentle float). Applied via `motion-safe:` so it's skipped
+        // entirely under prefers-reduced-motion, not just paused.
+        'silhouette-idle': 'silhouetteIdle 4.5s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -130,6 +134,10 @@ const config: Config = {
         luxuryDrift: {
           '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
           '50%': { transform: 'translate(-1.5%, 1.5%) scale(1.03)' },
+        },
+        silhouetteIdle: {
+          '0%, 100%': { transform: 'translateY(0) scale(1)' },
+          '50%': { transform: 'translateY(-6px) scale(1.015)' },
         },
       },
     },

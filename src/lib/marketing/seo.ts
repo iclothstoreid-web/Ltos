@@ -49,6 +49,25 @@ export function buildWebSiteSchema() {
   }
 }
 
+// Sprint W0.1 — Body Profile Estimator landing page. Marketing/acquisition
+// layer only ("W0 = Estimasi"); never confused with LTOS W4's fitter-
+// verified Digital Body Profile ("W4 = Profil Terverifikasi").
+export const bodyEstimatorMetadata: Metadata = {
+  title: 'Cek Ukuran Thobe Gratis — Body Profile Estimator | Bespoke Tailor',
+  description:
+    'Dapatkan estimasi ukuran thobe, rekomendasi fit, dan body profile Anda dalam kurang dari 30 detik. Gratis, tanpa pengukuran manual.',
+  openGraph: {
+    title: 'Cek Ukuran Thobe Anda Gratis',
+    description: 'Estimasi ukuran thobe berdasarkan tinggi, berat, dan usia — hasil dalam kurang dari 30 detik.',
+    url: `${BUSINESS.url}/free-body-profile-estimator`,
+    siteName: BUSINESS.name,
+    type: 'website',
+  },
+  alternates: {
+    canonical: `${BUSINESS.url}/free-body-profile-estimator`,
+  },
+}
+
 export function buildFaqSchema() {
   return {
     '@context': 'https://schema.org',

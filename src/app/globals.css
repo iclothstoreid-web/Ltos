@@ -100,12 +100,14 @@
 }
 
 /* Cetak QR (Order Created) / Estimasi Biaya (Material Workspace) / Production
-   Specification Sheet (Pattern Formulation) — isolate whichever print area is
-   present so only that content prints. #production-qr-print-area /
+   Specification Sheet (Pattern Formulation) / Body Profile Estimator (W0.4
+   "Download Estimated Profile") — isolate whichever print area is present
+   so only that content prints. #production-qr-print-area /
    #customer-journey-qr-print-area / #material-estimate-print-area /
-   #production-spec-sheet-print-area are unrelated panels; only one is ever
-   printed at a time. Each off-screen area lives at -9999px for html2canvas
-   capture the rest of the time — print pulls it on-screen. */
+   #production-spec-sheet-print-area / #body-profile-print-area are unrelated
+   panels; only one is ever printed at a time. Each off-screen area lives at
+   -9999px for html2canvas capture the rest of the time — print pulls it
+   on-screen. */
 @media print {
   body * {
     visibility: hidden;
@@ -117,13 +119,16 @@
   #material-estimate-print-area,
   #material-estimate-print-area *,
   #production-spec-sheet-print-area,
-  #production-spec-sheet-print-area * {
+  #production-spec-sheet-print-area *,
+  #body-profile-print-area,
+  #body-profile-print-area * {
     visibility: visible;
   }
   #production-qr-print-area,
   #customer-journey-qr-print-area,
   #material-estimate-print-area,
-  #production-spec-sheet-print-area {
+  #production-spec-sheet-print-area,
+  #body-profile-print-area {
     position: absolute;
     top: 0;
     left: 0;
