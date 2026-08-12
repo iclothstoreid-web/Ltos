@@ -238,6 +238,28 @@ export const workshopCopy = {
   fabricAlt: 'Close-up weave detail from the Local Tailor fabric collection',
 }
 
+// Sprint W5-6 — Heritage / Authority. CTA defaults to /#why (WhyLocalTailor,
+// "Why Bespoke Tailor" — the section that actually defines Ready-Made vs
+// Mass Tailoring vs Bespoke Tailor) rather than the already-heavily-reused
+// /#craftsmanship anchor from W5-3/4/5 — "Learn About Our Bespoke Standard"
+// is a closer literal match to that section's own content.
+export const authorityCopy = {
+  eyebrow: 'Heritage & Authority',
+  heading: 'Built on Tailoring Knowledge, Not Trends',
+  subheadline:
+    'Our workshop is dedicated exclusively to custom garments. Every order contributes to a continuously refined body of tailoring knowledge, fit refinement, fabric understanding, and pattern development.',
+  trustParagraph:
+    'Every measurement is stored, every pattern is refined, and every fitting adds to our practical tailoring experience. This is the foundation of our system — the reason quality becomes more consistent over time, not less.',
+  statement: 'Every garment we make improves the next one.',
+  metrics: [
+    { value: '100%', label: 'Custom-made garments' },
+    { value: '1 Pattern', label: 'Personal pattern per customer' },
+    { value: 'Multi-stage', label: 'Production workflow' },
+    { value: 'Permanent', label: 'Measurement retention' },
+  ],
+  cta: 'Learn About Our Bespoke Standard',
+}
+
 export const fabricCopy = {
   eyebrow: 'Material',
   heading: 'Fabric Is Where Craft Begins',
