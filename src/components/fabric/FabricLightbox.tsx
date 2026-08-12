@@ -94,7 +94,7 @@ export function FabricLightbox({ images, alt, initialIndex, onClose }: FabricLig
         type="button"
         onClick={onClose}
         aria-label="Close fullscreen viewer"
-        className="absolute right-4 top-4 z-10 rounded-full bg-luxury-charcoal/60 p-2 text-luxury-ivory transition hover:bg-luxury-charcoal focus-visible:ring-2 focus-visible:ring-luxury-gold/50"
+        className="absolute right-4 top-4 z-10 rounded-full bg-luxury-charcoal/60 p-2 text-luxury-ivory transition hover:bg-luxury-espresso-elevated focus-visible:ring-2 focus-visible:ring-luxury-gold/50"
       >
         <span aria-hidden="true" className="block h-5 w-5 text-lg leading-none">
           ×
@@ -106,7 +106,7 @@ export function FabricLightbox({ images, alt, initialIndex, onClose }: FabricLig
           type="button"
           onClick={goPrev}
           aria-label="Previous image"
-          className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-luxury-charcoal/60 p-3 text-luxury-ivory transition hover:bg-luxury-charcoal focus-visible:ring-2 focus-visible:ring-luxury-gold/50 md:left-4"
+          className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-luxury-charcoal/60 p-3 text-luxury-ivory transition hover:bg-luxury-espresso-elevated focus-visible:ring-2 focus-visible:ring-luxury-gold/50 md:left-4"
         >
           <span aria-hidden="true">‹</span>
         </button>
@@ -129,7 +129,7 @@ export function FabricLightbox({ images, alt, initialIndex, onClose }: FabricLig
           type="button"
           onClick={goNext}
           aria-label="Next image"
-          className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-luxury-charcoal/60 p-3 text-luxury-ivory transition hover:bg-luxury-charcoal focus-visible:ring-2 focus-visible:ring-luxury-gold/50 md:right-4"
+          className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-luxury-charcoal/60 p-3 text-luxury-ivory transition hover:bg-luxury-espresso-elevated focus-visible:ring-2 focus-visible:ring-luxury-gold/50 md:right-4"
         >
           <span aria-hidden="true">›</span>
         </button>

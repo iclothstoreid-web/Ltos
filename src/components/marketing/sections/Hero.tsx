@@ -68,42 +68,43 @@ export function Hero() {
       aria-label="Hero"
       className="relative flex min-h-[100svh] items-center overflow-hidden bg-luxury-navy-deep"
     >
-      {/* The shader itself paints the full background — W1 REBALANCE: pure
-          two-tone Midnight Navy, no espresso hand-off (navy is the brand
-          identity and must dominate; espresso is a card/panel accent only
-          now, never a section background) — the archipelago as a soft
-          luminance hint, grain, and a velocity-reactive lift, all in one
-          continuous pass, per this round's "harus terasa seperti satu ruang
-          sinematik" (no separate panels or hard edges between layers).
-          See HeroDepthField.tsx. */}
+      {/* The shader itself paints the full background — W1R: Deep Espresso
+          Atelier grading (espresso/walnut two-tone; navy is now an
+          atmospheric accent only, never a section background) — the
+          archipelago as a soft luminance hint, grain, and a
+          velocity-reactive lift, all in one continuous pass, per this
+          round's "harus terasa seperti satu ruang sinematik" (no separate
+          panels or hard edges between layers). See HeroDepthField.tsx. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
         {show3D && <HeroDepthField scrollProgress={smoothScroll} scrollVelocity={scrollVelocity} />}
       </div>
 
       {/* Fallback for reduced-motion / no-WebGL2 / low-end: the shader's
           own base gradient, reproduced as a static CSS gradient so there's
-          still a cinematic backdrop, just without the animated map hint. */}
+          still a cinematic backdrop, just without the animated map hint.
+          W1R — Deep Espresso cinematic base (was Midnight Navy). */}
       {!show3D && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(165deg,_#0B1628_0%,_#0A1322_55%,_#0A1322_100%)]"
+          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(135deg,_#151210_0%,_#1B1714_55%,_#221C18_100%)]"
         />
       )}
 
-      {/* Soft radial navy glow (W1 ART DIRECTION LOCK) — "cahaya kota yang
-          dipantulkan" sitting in the upper field where the navy dominates,
-          reinforcing the read without introducing a new object or panel. */}
+      {/* W1R — navy demoted from dominant tone to a very soft atmospheric
+          glow, "seperti pantulan cahaya pada kain atau kaca" over the
+          espresso base, not a background color in its own right. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_30%_18%,_rgba(11,22,40,0.45)_0%,_rgba(10,19,34,0.30)_45%,_transparent_75%)]"
+        className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_30%_18%,_rgba(11,22,40,0.22)_0%,_rgba(11,22,40,0.08)_30%,_transparent_60%)]"
       />
 
-      {/* Slightly darker (navy-toned, not flat black) on the left where the
-          headline sits, easing off toward the right — legibility without a
-          flat scrim. */}
+      {/* Slightly darker (espresso-toned) on the left where the headline
+          sits, easing off toward the right — legibility without a flat
+          scrim. W1R — espresso, not navy, keeps this "one material" with
+          the rest of the site. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-[#0A1322] via-[#0A1322]/70 to-[#0A1322]/25"
+        className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-[#151210] via-[#151210]/70 to-[#151210]/25"
       />
 
       {/* Content — moves least (0.1x) of everything in the scene. */}

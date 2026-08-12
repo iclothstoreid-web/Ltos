@@ -34,14 +34,23 @@ const config: Config = {
         // can never collide with the internal app's Material-style tokens
         // above.
         //
-        // REBALANCE revision — navy is the brand-identity color and must
-        // dominate (~70/20/10 navy/deep-navy/espresso+brass): luxury-navy /
-        // luxury-navy-deep are now the section-background workhorses used
-        // by nearly every section; luxury-black (Deep Espresso) and
-        // luxury-charcoal (Smoked Walnut) are demoted to card/panel/surface
-        // accents only — never a full-width section background.
-        'luxury-navy': '#0B1628',
-        'luxury-navy-deep': '#0A1322',
+        // W1R — GLOBAL COLOR REBRAND: DEEP ESPRESSO ATELIER. Inverts the
+        // REBALANCE revision's dominance: luxury-navy / luxury-navy-deep
+        // (previously the ~70% dominant section-background workhorses) are
+        // repointed onto luxury-black's existing Deep Espresso value — every
+        // section that referenced them keeps its className untouched but now
+        // renders the same warm espresso "one material" as the rest of the
+        // site, with zero alternating navy/charcoal striping. luxury-black
+        // (Deep Espresso) and luxury-charcoal (Smoked Walnut) keep their own
+        // values unchanged — they were already exactly the brief's Primary/
+        // Secondary Background hex, just previously scoped to cards/panels
+        // only. Genuine Midnight Navy (#0B1628 / #0A1322) is deliberately
+        // NOT a token anymore: it now only appears as literal hex inside the
+        // Hero/FinalCta atmospheric glow gradients and the HeroDepthField
+        // shader uniforms, at deliberately low opacity — "ambient glow /
+        // depth layer," never a solid fill.
+        'luxury-navy': '#151210',
+        'luxury-navy-deep': '#151210',
         'luxury-black': '#151210',
         'luxury-charcoal': '#1B1714',
         'luxury-ivory': '#F3EDE6',
@@ -52,6 +61,13 @@ const config: Config = {
         // the old translucent-ivory-opacity pattern (which read as flat
         // "digital UI" white-with-opacity rather than a warm material tone).
         'luxury-taupe': '#B7ACA0',
+        // W1R — Dark Walnut, one tier lighter than luxury-charcoal. Elevated
+        // surface only: hover/modal/dropdown/floating elements — never a
+        // base card or section fill.
+        'luxury-espresso-elevated': '#221C18',
+        // W1R — third typography tier (Primary=ivory, Secondary=taupe,
+        // Muted=this) for fully de-emphasized captions/labels.
+        'luxury-muted': '#8E847A',
       },
       fontFamily: {
         serif: ['Georgia', 'Cambria', 'serif'],

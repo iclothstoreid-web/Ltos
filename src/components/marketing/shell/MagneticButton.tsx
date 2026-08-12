@@ -39,8 +39,8 @@ export function MagneticButton({ href, children, variant = 'primary', className 
 
   const base =
     variant === 'primary'
-      ? 'bg-luxury-gold text-luxury-black hover:brightness-110 hover:shadow-[0_0_24px_rgba(200,162,74,0.45)]'
-      : 'border border-luxury-gold/[0.18] text-luxury-ivory hover:border-luxury-gold/60 hover:text-luxury-gold hover:shadow-[0_0_16px_rgba(200,162,74,0.18)]'
+      ? 'bg-luxury-gold text-luxury-black hover:bg-[#D3AF59] hover:shadow-[0_0_24px_rgba(200,162,74,0.45)]'
+      : 'border border-luxury-gold/[0.18] text-luxury-ivory hover:border-luxury-gold/60 hover:bg-luxury-gold/[0.06] hover:text-luxury-gold hover:shadow-[0_0_16px_rgba(200,162,74,0.18)]'
 
   return (
     <motion.a

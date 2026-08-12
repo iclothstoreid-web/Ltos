@@ -19,7 +19,7 @@ export function CustomerStories() {
 
         <ul className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
           {storiesCopy.stories.map((story, i) => (
-            <Reveal as="li" key={story.name} delay={i * 0.1} className="rounded-sm border border-luxury-gold/[0.10] bg-luxury-black/40 p-8">
+            <Reveal as="li" key={story.name} delay={i * 0.1} className="rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-8">
               <p className="font-fraunces text-lg italic text-luxury-ivory/90">&ldquo;{story.quote}&rdquo;</p>
               <div className="mt-6 flex items-center gap-4">
                 <TestimonialPhotoPlaceholder alt={`${story.name} portrait`} variant={VARIANTS[i % VARIANTS.length]} />

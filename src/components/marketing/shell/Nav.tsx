@@ -20,7 +20,7 @@ export function Nav() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-40 transition-colors duration-500 ${
-        scrolled ? 'bg-luxury-navy-deep/80 backdrop-blur-md' : 'bg-transparent'
+        scrolled ? 'bg-luxury-navy-deep/[0.78] backdrop-blur-md' : 'bg-transparent'
       }`}
     >
       <nav aria-label="Primary" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
