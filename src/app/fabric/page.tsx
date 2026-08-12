@@ -43,7 +43,7 @@ export default async function FabricExplorerPage({ searchParams }: PageProps) {
   const hasMore = totalCount > materials.length
 
   return (
-    <div className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
+    <main className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
       <div className="mx-auto max-w-6xl">
         <MaterialHero
           title="Fabric Explorer"
@@ -97,6 +97,6 @@ export default async function FabricExplorerPage({ searchParams }: PageProps) {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
