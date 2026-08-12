@@ -77,6 +77,11 @@ export default async function FabricExplorerPage({ searchParams }: PageProps) {
           </aside>
 
           <div>
+            {/* sr-only — MaterialHero's own title is the page's only visible
+                h1, and MaterialCard renders each result as an h3; without
+                this, real results skip straight from h1 to h3. Was latent
+                (nothing to trigger it) until real catalog data existed. */}
+            <h2 className="sr-only">Fabric Results</h2>
             <p role="status" className="mb-4 font-luxury-sans text-xs text-luxury-taupe">
               {totalCount === 0 ? 'No fabrics found.' : `Showing ${materials.length} of ${totalCount} fabric${totalCount === 1 ? '' : 's'}`}
             </p>

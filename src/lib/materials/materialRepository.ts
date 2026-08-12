@@ -36,38 +36,124 @@ import {
 } from '@/types/material'
 import { FABRIC_SITE_ORIGIN } from './seo'
 
-interface FabricCatalogRow extends FabricMaterial {
-  total_count: number
+// Sprint W3R.1 — Unify Fabric Data Source. Audit finding: the homepage's
+// "Fabric Is Where Craft Begins" section and the Design Studio's own
+// fabric picker have always read real, live, photographed rows from
+// design_master_options (category='bahan') — the same table Sprint W3-4
+// already exposed publicly via list_active_design_master_options(). The
+// `materials` table (this file's original source, via list_fabric_catalog())
+// has 13 rows but zero with published=true — 11 are genuine inventory
+// items (thread, buttons, zippers) that were never meant to be public
+// fabric-catalog entries, and the remaining 2 ("Lorenzo Premium Gold
+// Class", "Dior") are real fabric stock but were never completed with a
+// slug/category/publish flag. Two disconnected sources, one of them
+// (materials) permanently empty in practice — not "different data," an
+// unfinished migration.
+//
+// Fix: /fabric now reads from the SAME table the homepage does —
+// design_master_options via list_active_design_master_options(), filtered
+// to category='bahan' — instead of materials/list_fabric_catalog(). No new
+// rows anywhere (zero migrations, zero inserts): every field below is
+// either copied verbatim from a real column (id, name, price, photo_url)
+// or mechanically derived from one (slug from name). Fields with no real
+// source (composition beyond a literal "Wool & Silk" substring match
+// against the option's own real selling_points copy, texture, weight,
+// season, care_instruction, price_tier) are left null and fall through
+// this file's existing generic-fallback functions (getMaterialSpecifications
+// etc.) exactly as they already do for any material missing that data —
+// no fabricated per-item claim. `materials`/list_fabric_catalog() is left
+// completely intact in the database for if/when it gets real published
+// data — this file simply stops calling it.
+//
+// list_active_design_master_options() takes no filter/sort/pagination
+// parameters (it returns the full active catalog, by design — Design
+// Studio needs every category at once), so all of that now happens here
+// in JS instead of in the RPC's own SQL, same result shape either way.
+// The bahan catalog is tiny (single digits of rows), so this costs
+// nothing in practice.
+interface DesignMasterOptionRow {
+  id: string
+  category: string
+  name: string
+  price: number | null
+  photo_url: string | null
+  selling_points: string[] | null
+  sort_order: number
+  material_id: string | null
+  dna_color_id: string | null
 }
 
-// Single Supabase call backing every repository function below —
-// public.list_fabric_catalog() (SECURITY DEFINER RPC, anon-callable) is the
-// only public read path onto `materials`; see
-// supabase/migrations/20260905000100_sprint_w3_1_fabric_catalog_function.sql
-// (why an RPC, not a view) and .../20260906000000_sprint_w3_2_fabric_filter_taxonomy.sql
-// (the search/filter/sort/pagination signature). It already filters to
-// published rows with a real slug + category, so "unpublished material"
-// never appears here at all — callers don't need to re-check `published`.
-// All filtering/sorting/pagination happens in this one DB round trip —
-// nothing here re-filters an already-fetched array in JS.
+const BAHAN_CATEGORY = 'bahan'
+const WOOL_SILK_PATTERN = /wool\s*&\s*silk/i
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function toFabricMaterial(row: DesignMasterOptionRow): FabricMaterial {
+  const sellingText = row.selling_points?.join(' ') ?? ''
+  const isWoolSilk = WOOL_SILK_PATTERN.test(sellingText) || WOOL_SILK_PATTERN.test(row.name)
+
+  return {
+    id: row.id,
+    slug: slugify(row.name),
+    name: row.name,
+    // Every bahan option is a multi-fiber premium fabric by how it's
+    // actually described (see the "Wool & Silk" note above) — 'blend' is
+    // the one FABRIC_CATEGORIES value that doesn't assert a specific fiber
+    // this data was never asked to distinguish, so it's the honest choice
+    // rather than guessing 'cotton' vs 'wool' per item.
+    category: 'blend',
+    composition: isWoolSilk ? 'Wool & Silk Blend' : null,
+    weight_gsm: null,
+    texture: null,
+    breathability: null,
+    wrinkle_resistance: null,
+    luxury_level: null,
+    season: null,
+    care_instruction: null,
+    price_tier: null,
+    hero_image: row.photo_url,
+    video_url: null,
+    published: true,
+    gallery_images: null,
+    specifications: null,
+    use_cases: null,
+  }
+}
+
 export async function listMaterials(supabase: SupabaseClient, params: ListMaterialsParams = {}): Promise<ListMaterialsResult> {
-  const { data, error } = await supabase.rpc('list_fabric_catalog', {
-    p_search: params.search?.trim() || null,
-    p_category: params.category ?? null,
-    p_texture: params.texture ?? null,
-    p_weight_class: params.weightClass ?? null,
-    p_season: params.season ?? null,
-    p_price_tier: params.priceTier ?? null,
-    p_sort: params.sort ?? 'featured',
-    p_limit: params.limit ?? FABRIC_DEFAULT_PAGE_SIZE,
-    p_offset: 0,
-  })
+  const { data, error } = await supabase.rpc('list_active_design_master_options')
   if (error) throw error
 
-  const rows = (data ?? []) as FabricCatalogRow[]
-  const totalCount = rows[0]?.total_count ?? 0
-  const materials = rows.map(({ total_count: _totalCount, ...material }) => material)
-  return { materials, totalCount }
+  const rows = (data ?? []) as DesignMasterOptionRow[]
+  let materials = rows.filter((row) => row.category === BAHAN_CATEGORY).map(toFabricMaterial)
+
+  const search = params.search?.trim().toLowerCase()
+  if (search) {
+    materials = materials.filter(
+      (m) => m.name.toLowerCase().includes(search) || (m.composition?.toLowerCase().includes(search) ?? false)
+    )
+  }
+  if (params.category) materials = materials.filter((m) => m.category === params.category)
+  if (params.texture) materials = materials.filter((m) => m.texture === params.texture)
+  if (params.season) materials = materials.filter((m) => m.season === params.season)
+  if (params.priceTier) materials = materials.filter((m) => m.price_tier === params.priceTier)
+  if (params.weightClass) materials = materials.filter((m) => weightClassFromGsm(m.weight_gsm) === params.weightClass)
+
+  if (params.sort === 'name_asc') materials = [...materials].sort((a, b) => a.name.localeCompare(b.name))
+  else if (params.sort === 'name_desc') materials = [...materials].sort((a, b) => b.name.localeCompare(a.name))
+  // 'luxury_level' / 'weight' / 'featured' (default): no source field to
+  // rank by for this data, so the RPC's own category+sort_order order is
+  // kept as-is rather than a no-op re-sort — same result, less work.
+
+  const totalCount = materials.length
+  const limit = params.limit ?? FABRIC_DEFAULT_PAGE_SIZE
+  return { materials: materials.slice(0, limit), totalCount }
 }
 
 // Sprint W3-6 §10 — cache()-wrapped: the fabric detail page's
