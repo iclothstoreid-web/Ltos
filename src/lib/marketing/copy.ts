@@ -2,7 +2,7 @@
 // also feeds the FAQPage JSON-LD in seo.ts, so UI and structured data can
 // never drift apart.
 
-import { fabricPhotos, garmentPhotos } from './assets'
+import { fabricPhotos, garmentPhotos, measurementMannequinSrc } from './assets'
 
 export const heroCopy = {
   eyebrow: 'Bespoke Thobe, Bandung',
@@ -258,6 +258,98 @@ export const authorityCopy = {
     { value: 'Permanent', label: 'Measurement retention' },
   ],
   cta: 'Learn About Our Bespoke Standard',
+}
+
+// Sprint W5-7 — Gallery Architecture. Named gallerySectionCopy (not
+// galleryCopy — that name and id="gallery" are already taken by the
+// existing Gallery.tsx masonry section further down the homepage, and by
+// the real Supabase-backed /gallery page). This section's own id is
+// "gallery-showcase". CTAs link to the real /gallery route (not a "#"
+// placeholder) since it already exists — nothing new was created here.
+//
+// Only 8 real photos exist anywhere in assets.ts (4 fabric macro shots, 3
+// garment editorial shots, 1 fitting mannequin) — each is used exactly
+// once below, zero repetition within this section, so the authenticity
+// statement stays a true claim. "Workshop Process" and "Customer Fit" have
+// smaller grids (2 and 1 image) because no dedicated process/fitting
+// photography exists yet — flagged in the implementation report rather
+// than padded out with a repeated image.
+export const gallerySectionCopy = {
+  eyebrow: 'Gallery',
+  heading: 'Real Customers. Real Craftsmanship. Real Results.',
+  subheadline: 'Every gallery image represents garments, materials, details, and tailoring work created through our bespoke process.',
+  categories: [
+    {
+      title: 'Finished Garments',
+      description: 'Completed bespoke garments, photographed after final pressing and inspection.',
+      viewMoreLabel: 'View More Garments',
+      images: [
+        {
+          src: garmentPhotos.blackPinstripe,
+          alt: 'Black pinstripe bespoke thobe presented on a mannequin, finished garment photography',
+          caption: 'Black Pinstripe Thobe',
+        },
+        {
+          src: garmentPhotos.navy,
+          alt: 'Navy bespoke thobe presented on a mannequin, finished garment photography',
+          caption: 'Navy Thobe',
+        },
+      ],
+    },
+    {
+      title: 'Fabric & Detail',
+      description: 'Close-up material photography showing weave, texture, and construction detail.',
+      viewMoreLabel: 'View More Fabrics',
+      images: [
+        {
+          src: fabricPhotos.woolBlendTwill,
+          alt: 'Close-up of wool blend twill fabric weave, imported from Italy',
+          caption: 'Wool Blend Twill',
+        },
+        {
+          src: fabricPhotos.egyptianCotton,
+          alt: 'Close-up of Egyptian cotton fabric weave, breathable crisp finish',
+          caption: 'Egyptian Cotton',
+        },
+        {
+          src: fabricPhotos.linenWeave,
+          alt: 'Close-up of linen weave fabric, lightweight and warm-climate ready',
+          caption: 'Linen Weave',
+        },
+      ],
+    },
+    {
+      title: 'Workshop Process',
+      description: 'Material and finishing detail from garments moving through our tailoring workshop.',
+      viewMoreLabel: 'View the Full Process',
+      images: [
+        {
+          src: fabricPhotos.silkCottonBlend,
+          alt: 'Close-up of silk-cotton blend fabric with subtle sheen, part of our workshop material selection',
+          caption: 'Silk-Cotton Blend',
+        },
+        {
+          src: garmentPhotos.maroonPiping,
+          alt: 'Maroon thobe with contrast piping detail, finishing work from our tailoring workshop',
+          caption: 'Contrast Piping Detail',
+        },
+      ],
+    },
+    {
+      title: 'Customer Fit',
+      description: 'The fitting reference used to verify measurements and garment fit for every customer.',
+      viewMoreLabel: 'Learn About Fitting',
+      images: [
+        {
+          src: measurementMannequinSrc,
+          alt: 'Digital fitting mannequin used to verify customer measurements and garment fit',
+          caption: 'Fitting Reference',
+        },
+      ],
+    },
+  ],
+  authenticityStatement: 'Every image shown here represents our actual garments, fabrics, or tailoring process.',
+  cta: 'Explore the Full Gallery',
 }
 
 export const fabricCopy = {

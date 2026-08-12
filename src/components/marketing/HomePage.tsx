@@ -40,6 +40,7 @@ const DeliverySection = dynamic(() => import('./sections/DeliverySection').then(
 const CraftsmanshipSection = dynamic(() => import('./sections/CraftsmanshipSection').then((m) => m.CraftsmanshipSection))
 const WorkshopSection = dynamic(() => import('./sections/WorkshopSection').then((m) => m.WorkshopSection))
 const AuthoritySection = dynamic(() => import('./sections/AuthoritySection').then((m) => m.AuthoritySection))
+const GallerySection = dynamic(() => import('./sections/GallerySection').then((m) => m.GallerySection))
 const FabricHighlight = dynamic(() => import('./sections/FabricHighlight').then((m) => m.FabricHighlight))
 const WhyLocalTailor = dynamic(() => import('./sections/WhyLocalTailor').then((m) => m.WhyLocalTailor))
 const CraftsmanshipProcess = dynamic(() => import('./sections/CraftsmanshipProcess').then((m) => m.CraftsmanshipProcess))
@@ -95,6 +96,9 @@ export function HomePage() {
         </Suspense>
         <Suspense fallback={null}>
           <AuthoritySection />
+        </Suspense>
+        <Suspense fallback={null}>
+          <GallerySection />
         </Suspense>
         <Suspense fallback={null}>
           <FabricHighlight />
