@@ -195,6 +195,19 @@ export const footerCopy = {
         { label: 'FAQ', href: '/#faq' },
       ],
     },
+    // Sprint W0.5 — SEO Content Cluster. Real routes (not homepage anchors
+    // like the two columns above) so the site's highest-authority page
+    // links directly to the estimator and every guide article.
+    {
+      title: 'Panduan Ukuran',
+      links: [
+        { label: 'Cek Ukuran Gratis', href: '/free-body-profile-estimator' },
+        { label: 'Cek Ukuran Thobe', href: '/cek-ukuran-thobe' },
+        { label: 'Ukuran Thobe Pria', href: '/ukuran-thobe-pria' },
+        { label: 'Cara Mengukur Thobe', href: '/cara-mengukur-thobe' },
+        { label: 'Size Chart Thobe', href: '/size-chart-thobe' },
+      ],
+    },
   ],
   legal: `© ${new Date().getFullYear()} Bespoke Tailor. All rights reserved.`,
 }

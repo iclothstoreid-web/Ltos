@@ -52,16 +52,33 @@ export function buildWebSiteSchema() {
 // Sprint W0.1 — Body Profile Estimator landing page. Marketing/acquisition
 // layer only ("W0 = Estimasi"); never confused with LTOS W4's fitter-
 // verified Digital Body Profile ("W4 = Profil Terverifikasi").
+//
+// Sprint W0.5 §1 SEO audit — added the `robots` signal (matches the Fabric
+// Explorer's explicit index/follow convention, buildFabricMetadata) and a
+// `twitter` block. No `images` on either openGraph or twitter: this page
+// has no real photography, only SVG/gradient illustration — a `summary`
+// card needs no image, unlike `summary_large_image`, so this is a complete
+// (not partial) Twitter Card rather than a placeholder pointing at a
+// fabricated asset.
 export const bodyEstimatorMetadata: Metadata = {
   title: 'Cek Ukuran Thobe Gratis — Body Profile Estimator | Bespoke Tailor',
   description:
     'Dapatkan estimasi ukuran thobe, rekomendasi fit, dan body profile Anda dalam kurang dari 30 detik. Gratis, tanpa pengukuran manual.',
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: 'Cek Ukuran Thobe Anda Gratis',
     description: 'Estimasi ukuran thobe berdasarkan tinggi, berat, dan usia — hasil dalam kurang dari 30 detik.',
     url: `${BUSINESS.url}/free-body-profile-estimator`,
     siteName: BUSINESS.name,
     type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Cek Ukuran Thobe Anda Gratis',
+    description: 'Estimasi ukuran thobe berdasarkan tinggi, berat, dan usia — hasil dalam kurang dari 30 detik.',
   },
   alternates: {
     canonical: `${BUSINESS.url}/free-body-profile-estimator`,

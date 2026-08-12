@@ -3,6 +3,7 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { getAllMaterials } from '@/lib/materials/materialRepository'
 import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 import { FABRIC_CATEGORIES } from '@/types/material'
+import { ALL_ARTICLES } from '@/lib/content/articles'
 
 // Sprint W3-5 §11 — first sitemap this project has had. Deliberately
 // scoped to the public Fabric Explorer + homepage, matching this sprint's
@@ -12,6 +13,10 @@ import { FABRIC_CATEGORIES } from '@/types/material'
 // getAllMaterials() already only returns published rows (the RPC behind
 // it filters published=true), so "hanya material published" is satisfied
 // by construction, not a separate filter here.
+//
+// Sprint W0.5 — added the estimator (previously missing from the sitemap
+// entirely, despite being a real indexable page since W0.1) and the 4
+// SEO content-cluster articles.
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -25,6 +30,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${FABRIC_SITE_ORIGIN}/fabric/${category}`,
       changeFrequency: 'daily' as const,
       priority: 0.8,
+    })),
+    { url: `${FABRIC_SITE_ORIGIN}/free-body-profile-estimator`, changeFrequency: 'weekly', priority: 0.9 },
+    ...ALL_ARTICLES.map((article) => ({
+      url: `${FABRIC_SITE_ORIGIN}/${article.slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
     })),
   ]
 

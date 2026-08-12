@@ -3,7 +3,7 @@ import { footerCopy, navCopy } from '@/lib/marketing/copy'
 export function Footer() {
   return (
     <footer className="border-t border-luxury-gold/[0.14] bg-luxury-navy-deep px-6 py-16 md:px-10">
-      <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
           <p className="font-fraunces text-xl text-luxury-ivory">{navCopy.brand}</p>
           <p className="mt-1 font-luxury-sans text-[10px] font-light uppercase tracking-[0.2em] text-luxury-taupe">

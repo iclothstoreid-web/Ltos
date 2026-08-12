@@ -4,7 +4,10 @@ import { BodySilhouettePanel } from '@/components/body-estimator/BodySilhouetteP
 import { EstimatorProgress } from '@/components/body-estimator/EstimatorProgress'
 import { BodyEstimatorForm } from '@/components/body-estimator/BodyEstimatorForm'
 import { PremiumCTASection } from '@/components/body-estimator/PremiumCTASection'
-import { bodyEstimatorMetadata } from '@/lib/marketing/seo'
+import { bodyEstimatorMetadata, buildLocalBusinessSchema } from '@/lib/marketing/seo'
+import { buildOrganizationSchema } from '@/lib/content/seo'
+import { ARTICLE_NAV } from '@/lib/content/articles'
+import { RelatedArticles } from '@/components/content/RelatedArticles'
 
 export const metadata: Metadata = bodyEstimatorMetadata
 
@@ -15,8 +18,17 @@ export const metadata: Metadata = bodyEstimatorMetadata
 // single source of truth for production (W0 = Estimasi, W4 = Profil
 // Terverifikasi). Landing page + form only, per brief.
 export default function FreeBodyProfileEstimatorPage() {
+  const organizationSchema = buildOrganizationSchema()
+  const localBusinessSchema = buildLocalBusinessSchema()
+  const articleSlugs = ARTICLE_NAV.map((entry) => entry.slug)
+
   return (
     <div className="min-h-screen bg-luxury-navy-deep pb-20">
+      {/* eslint-disable-next-line react/no-danger */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+      {/* eslint-disable-next-line react/no-danger */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
+
       <main>
         <EstimatorHero />
 
@@ -33,6 +45,13 @@ export default function FreeBodyProfileEstimatorPage() {
 
         <div className="mt-20">
           <PremiumCTASection />
+        </div>
+
+        {/* Sprint W0.5 — content cluster cross-link, so the estimator
+            (highest-intent W0 page) also feeds SEO traffic toward the new
+            guide articles and back. */}
+        <div className="mx-auto mt-16 max-w-6xl px-6 md:px-10">
+          <RelatedArticles slugs={articleSlugs} />
         </div>
       </main>
     </div>
