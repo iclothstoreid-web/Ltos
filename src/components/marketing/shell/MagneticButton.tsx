@@ -9,13 +9,18 @@ type MagneticButtonProps = {
   children: React.ReactNode
   variant?: 'primary' | 'ghost'
   className?: string
+  // Sprint W4.5 — optional, only used by external links (e.g. the
+  // WhatsApp CTA on /book-appointment). Undefined for every existing
+  // caller, so this changes no current behavior.
+  target?: string
+  rel?: string
 }
 
 // Shared CTA primitive for every button on the homepage: magnetic pull
 // toward the cursor, soft gold glow, and a depth-press on click. Motion is
 // skipped entirely under prefers-reduced-motion — the button still works,
 // it just doesn't chase the cursor.
-export function MagneticButton({ href, children, variant = 'primary', className = '' }: MagneticButtonProps) {
+export function MagneticButton({ href, children, variant = 'primary', className = '', target, rel }: MagneticButtonProps) {
   const ref = useRef<HTMLAnchorElement>(null)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const reduceMotion = useReducedMotion()
@@ -41,6 +46,8 @@ export function MagneticButton({ href, children, variant = 'primary', className 
     <motion.a
       ref={ref}
       href={href}
+      target={target}
+      rel={rel}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       animate={{ x: offset.x, y: offset.y }}

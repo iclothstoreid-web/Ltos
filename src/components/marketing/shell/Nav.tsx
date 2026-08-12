@@ -45,7 +45,7 @@ export function Nav() {
         </ul>
 
         <a
-          href="/#appointment"
+          href="/book-appointment"
           className="hidden cursor-pointer rounded-full border border-luxury-gold/50 px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold hover:text-luxury-black hover:shadow-[0_0_16px_rgba(200,162,74,0.25)] md:inline-flex"
         >
           {navCopy.cta}
@@ -93,7 +93,7 @@ export function Nav() {
               ))}
               <li>
                 <a
-                  href="/#appointment"
+                  href="/book-appointment"
                   onClick={() => setDrawerOpen(false)}
                   className="mt-2 block rounded-full border border-luxury-gold/50 px-5 py-3 text-center font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold"
                 >

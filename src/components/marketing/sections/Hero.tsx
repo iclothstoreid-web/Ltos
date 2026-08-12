@@ -132,10 +132,10 @@ export function Hero() {
           </motion.p>
 
           <motion.div variants={item} className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <MagneticButton href="/#configurator" variant="primary">
+            <MagneticButton href="/design-studio" variant="primary">
               {heroCopy.primaryCta}
             </MagneticButton>
-            <MagneticButton href="/#appointment" variant="ghost">
+            <MagneticButton href="/book-appointment" variant="ghost">
               {heroCopy.secondaryCta}
             </MagneticButton>
           </motion.div>

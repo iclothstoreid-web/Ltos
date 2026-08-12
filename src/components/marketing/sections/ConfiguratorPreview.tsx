@@ -110,7 +110,7 @@ export function ConfiguratorPreview() {
             </div>
           </div>
 
-          <MagneticButton href="/#final-cta" variant="primary" className="mt-8">
+          <MagneticButton href="/design-studio" variant="primary" className="mt-8">
             {configuratorCopy.cta}
           </MagneticButton>
         </Reveal>

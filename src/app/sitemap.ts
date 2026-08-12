@@ -17,6 +17,10 @@ import { ALL_ARTICLES } from '@/lib/content/articles'
 // Sprint W0.5 — added the estimator (previously missing from the sitemap
 // entirely, despite being a real indexable page since W0.1) and the 4
 // SEO content-cluster articles.
+//
+// Sprint W4.5 — added /design-studio (real since W2, never in the sitemap
+// either) and the 3 new navigation placeholders (/gallery, /journal,
+// /book-appointment).
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -25,6 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticEntries: MetadataRoute.Sitemap = [
     { url: FABRIC_SITE_ORIGIN, changeFrequency: 'weekly', priority: 1 },
+    { url: `${FABRIC_SITE_ORIGIN}/design-studio`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${FABRIC_SITE_ORIGIN}/fabric`, changeFrequency: 'daily', priority: 0.9 },
     ...FABRIC_CATEGORIES.map((category) => ({
       url: `${FABRIC_SITE_ORIGIN}/fabric/${category}`,
@@ -37,6 +42,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
+    { url: `${FABRIC_SITE_ORIGIN}/book-appointment`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${FABRIC_SITE_ORIGIN}/gallery`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${FABRIC_SITE_ORIGIN}/journal`, changeFrequency: 'monthly', priority: 0.5 },
   ]
 
   const materialEntries: MetadataRoute.Sitemap = materials.map((material) => ({

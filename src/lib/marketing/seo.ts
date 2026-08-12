@@ -85,6 +85,39 @@ export const bodyEstimatorMetadata: Metadata = {
   },
 }
 
+// Sprint W4.5 §"SEO" — shared metadata builder for the 3 new navigation
+// placeholder pages (/gallery, /journal, /book-appointment). Same shape as
+// bodyEstimatorMetadata above, but `type: 'website'` rather than 'article'
+// — these aren't editorial content (that's src/lib/content/seo.ts's
+// buildArticleMetadata, used by the W0.5 guides), just simple pages.
+export function buildSimplePageMetadata(params: { title: string; description: string; path: string }): Metadata {
+  const url = `${BUSINESS.url}${params.path}`
+  const fullTitle = `${params.title} | ${BUSINESS.name}`
+  return {
+    title: fullTitle,
+    description: params.description,
+    robots: {
+      index: true,
+      follow: true,
+    },
+    openGraph: {
+      title: fullTitle,
+      description: params.description,
+      url,
+      siteName: BUSINESS.name,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title: fullTitle,
+      description: params.description,
+    },
+    alternates: {
+      canonical: url,
+    },
+  }
+}
+
 export function buildFaqSchema() {
   return {
     '@context': 'https://schema.org',

@@ -164,14 +164,19 @@ export const finalCtaCopy = {
   urgency: 'Currently booking private appointments for this month.',
 }
 
+// Sprint W4.5 — Public Navigation Integration. hrefs now point at the real
+// W2/W3 pages (`/design-studio`, `/fabric`) and the new elegant
+// placeholders (`/gallery`, `/journal`) instead of homepage anchors — see
+// PLAN/audit note: every one of these routes already existed and worked
+// when opened directly, nothing here was reachable from the nav before.
 export const navCopy = {
   brand: 'Local Tailor',
   brandSuffix: 'by Local Project',
   links: [
-    { label: 'Design Studio', href: '/#configurator' },
-    { label: 'Fabrics', href: '/#fabric' },
-    { label: 'Gallery', href: '/#gallery' },
-    { label: 'Journal', href: '/#knowledge' },
+    { label: 'Design Studio', href: '/design-studio' },
+    { label: 'Fabrics', href: '/fabric' },
+    { label: 'Gallery', href: '/gallery' },
+    { label: 'Journal', href: '/journal' },
   ],
   cta: 'Book Appointment',
 }
@@ -182,16 +187,16 @@ export const footerCopy = {
     {
       title: 'Explore',
       links: [
-        { label: 'Design Studio', href: '/#configurator' },
-        { label: 'Fabrics', href: '/#fabric' },
-        { label: 'Gallery', href: '/#gallery' },
-        { label: 'Knowledge', href: '/#knowledge' },
+        { label: 'Design Studio', href: '/design-studio' },
+        { label: 'Fabrics', href: '/fabric' },
+        { label: 'Gallery', href: '/gallery' },
+        { label: 'Journal', href: '/journal' },
       ],
     },
     {
       title: 'Studio',
       links: [
-        { label: 'Book a Private Appointment', href: '/#appointment' },
+        { label: 'Book a Private Appointment', href: '/book-appointment' },
         { label: 'FAQ', href: '/#faq' },
       ],
     },

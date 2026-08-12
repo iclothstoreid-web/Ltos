@@ -28,7 +28,7 @@ export function StickyMobileCta() {
           className="fixed inset-x-0 bottom-0 z-40 border-t border-luxury-gold/20 bg-luxury-navy-deep/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
         >
           <a
-            href="/#configurator"
+            href="/design-studio"
             className="block cursor-pointer rounded-full bg-luxury-gold py-3 text-center font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-black"
           >
             {heroCopy.primaryCta}

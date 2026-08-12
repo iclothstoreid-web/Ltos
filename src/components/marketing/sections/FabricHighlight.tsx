@@ -49,7 +49,7 @@ export function FabricHighlight() {
         </ul>
 
         <Reveal delay={0.2} className="mt-12">
-          <MagneticButton href="/#configurator" variant="ghost">
+          <MagneticButton href="/fabric" variant="ghost">
             {fabricCopy.cta}
           </MagneticButton>
         </Reveal>

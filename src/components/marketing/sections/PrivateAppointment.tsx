@@ -43,7 +43,7 @@ export function PrivateAppointment() {
 
           <p className="mt-8 font-luxury-sans text-base leading-relaxed text-luxury-taupe">{appointmentCopy.body}</p>
 
-          <MagneticButton href="#" variant="primary" className="mt-10">
+          <MagneticButton href="/book-appointment" variant="primary" className="mt-10">
             {appointmentCopy.cta}
           </MagneticButton>
         </Reveal>
