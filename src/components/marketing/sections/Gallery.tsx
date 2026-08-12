@@ -54,7 +54,7 @@ export function Gallery() {
                     src={item.photo}
                     alt={`${item.category} bespoke thobe, editorial studio photography`}
                     fill
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    sizes="(min-width: 1024px) 384px, (min-width: 640px) 50vw, 100vw"
                     className="object-cover"
                   />
                 </div>
@@ -63,6 +63,7 @@ export function Gallery() {
                   alt={`${item.category} bespoke thobe, gallery piece`}
                   tall={item.tall}
                   variant={item.variant}
+                  idSuffix={i}
                 />
               )}
               <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe">{item.category}</p>

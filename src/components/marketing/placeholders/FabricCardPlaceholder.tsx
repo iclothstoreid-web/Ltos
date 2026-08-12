@@ -1,10 +1,10 @@
-'use client'
-
 import { LuxuryGradientField } from './LuxuryGradientField'
 import { LinenTexture } from './LinenTexture'
 
 // Aspect ratio locked 4:5 — matches the final cinematic fabric card crop, so
 // swapping in real photography later never reflows the grid.
+// P1 — no hooks/state (the hover sweep is pure CSS `group-hover:`), so this
+// is a Server Component.
 export function FabricCardPlaceholder({ alt, variant = 'a' }: { alt: string; variant?: 'a' | 'b' | 'c' }) {
   return (
     <div role="img" aria-label={alt} className="group relative aspect-[4/5] w-full overflow-hidden rounded-sm">

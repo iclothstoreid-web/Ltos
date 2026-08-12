@@ -10,7 +10,7 @@ export function HeroImagePlaceholder({ alt }: { alt: string }) {
     <div role="img" aria-label={alt} className="absolute inset-0 overflow-hidden">
       <LuxuryGradientField variant="a" />
       <LinenTexture opacity={0.12} />
-      <GarmentSilhouette className="h-[70%] w-auto opacity-70" />
+      <GarmentSilhouette className="h-[70%] w-auto opacity-70" idSuffix="hero" />
       <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-transparent" />
     </div>
   )

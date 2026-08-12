@@ -1,20 +1,13 @@
 import { Fraunces, Jost } from 'next/font/google'
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
 import { Nav } from './shell/Nav'
 import { Footer } from './shell/Footer'
 import { ScrollProgress } from './shell/ScrollProgress'
 import { StickyMobileCta } from './shell/StickyMobileCta'
 import { Hero } from './sections/Hero'
-import { PrivateAppointment } from './sections/PrivateAppointment'
 import { TrustBar } from './sections/TrustBar'
 import { ConfiguratorPreview } from './sections/ConfiguratorPreview'
-import { FabricHighlight } from './sections/FabricHighlight'
-import { WhyLocalTailor } from './sections/WhyLocalTailor'
-import { CraftsmanshipProcess } from './sections/CraftsmanshipProcess'
-import { Gallery } from './sections/Gallery'
-import { CustomerStories } from './sections/CustomerStories'
-import { KnowledgePreview } from './sections/KnowledgePreview'
-import { Faq } from './sections/Faq'
-import { FinalCta } from './sections/FinalCta'
 import { buildLocalBusinessSchema, buildWebSiteSchema } from '@/lib/marketing/seo'
 
 // Serif role reuses the Fraunces token already established elsewhere in
@@ -26,10 +19,26 @@ const fraunces = Fraunces({ subsets: ['latin'], weight: ['300', '400', '500'], v
 // product UI. See blueprint §11 for the ui-ux-pro-max pairing rationale.
 const jost = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-luxury-sans', display: 'swap' })
 
-// All 11 sections are server-rendered (no ssr:false splitting) so their
-// copy is crawlable by search/AI engines on first response — the one
-// exception is the Hero's 3D canvas (non-textual, dynamically imported in
-// Hero.tsx), which is the actual heavy payload worth deferring.
+// P1 — sections below the "Hero / Trust / Configurator teaser" priority
+// line are code-split via next/dynamic (ssr stays true, the default) so
+// each becomes its own chunk instead of one monolithic homepage bundle.
+// All 11 sections are STILL server-rendered on the initial response — this
+// intentionally does not gate on client-side intersection, since that
+// would pull their copy out of the first-response HTML and break the
+// "crawlable by search/AI engines on first response" requirement this
+// homepage has carried since Sprint W1 (see the removed comment this one
+// replaces). Suspense boundaries around each additionally let React 18
+// hydrate them independently rather than as one blocking unit.
+const PrivateAppointment = dynamic(() => import('./sections/PrivateAppointment').then((m) => m.PrivateAppointment))
+const FabricHighlight = dynamic(() => import('./sections/FabricHighlight').then((m) => m.FabricHighlight))
+const WhyLocalTailor = dynamic(() => import('./sections/WhyLocalTailor').then((m) => m.WhyLocalTailor))
+const CraftsmanshipProcess = dynamic(() => import('./sections/CraftsmanshipProcess').then((m) => m.CraftsmanshipProcess))
+const Gallery = dynamic(() => import('./sections/Gallery').then((m) => m.Gallery))
+const CustomerStories = dynamic(() => import('./sections/CustomerStories').then((m) => m.CustomerStories))
+const KnowledgePreview = dynamic(() => import('./sections/KnowledgePreview').then((m) => m.KnowledgePreview))
+const Faq = dynamic(() => import('./sections/Faq').then((m) => m.Faq))
+const FinalCta = dynamic(() => import('./sections/FinalCta').then((m) => m.FinalCta))
+
 export function HomePage() {
   const localBusinessSchema = buildLocalBusinessSchema()
   const webSiteSchema = buildWebSiteSchema()
@@ -42,17 +51,35 @@ export function HomePage() {
       <Nav />
       <main>
         <Hero />
-        <PrivateAppointment />
+        <Suspense fallback={null}>
+          <PrivateAppointment />
+        </Suspense>
         <TrustBar />
         <ConfiguratorPreview />
-        <FabricHighlight />
-        <WhyLocalTailor />
-        <CraftsmanshipProcess />
-        <Gallery />
-        <CustomerStories />
-        <KnowledgePreview />
-        <Faq />
-        <FinalCta />
+        <Suspense fallback={null}>
+          <FabricHighlight />
+        </Suspense>
+        <Suspense fallback={null}>
+          <WhyLocalTailor />
+        </Suspense>
+        <Suspense fallback={null}>
+          <CraftsmanshipProcess />
+        </Suspense>
+        <Suspense fallback={null}>
+          <Gallery />
+        </Suspense>
+        <Suspense fallback={null}>
+          <CustomerStories />
+        </Suspense>
+        <Suspense fallback={null}>
+          <KnowledgePreview />
+        </Suspense>
+        <Suspense fallback={null}>
+          <Faq />
+        </Suspense>
+        <Suspense fallback={null}>
+          <FinalCta />
+        </Suspense>
       </main>
       <Footer />
       <StickyMobileCta />

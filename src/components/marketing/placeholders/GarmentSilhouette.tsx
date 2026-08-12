@@ -1,14 +1,20 @@
-'use client'
-
-import { useId } from 'react'
-
 // Abstract thobe silhouette rendered as a soft-stroked SVG path — used inside
 // placeholders so an empty photo slot still reads as "garment," not just
-// "empty gradient box." Gradient id is generated per-instance (useId) since
-// multiple placeholders render on the same page (Gallery, Configurator) —
-// a hardcoded id would collide across instances.
-export function GarmentSilhouette({ className = '', color = '#C8A24A' }: { className?: string; color?: string }) {
-  const gradientId = `garment-stroke-${useId()}`
+// "empty gradient box." P1 — gradient id now comes from the caller
+// (idSuffix) instead of useId(), since multiple placeholders render on the
+// same page (Gallery) and a hardcoded id would collide across instances;
+// this keeps the component hook-free so it (and everything that only
+// wraps it, e.g. GalleryImagePlaceholder) can be a Server Component.
+export function GarmentSilhouette({
+  className = '',
+  color = '#C8A24A',
+  idSuffix,
+}: {
+  className?: string
+  color?: string
+  idSuffix: string | number
+}) {
+  const gradientId = `garment-stroke-${idSuffix}`
 
   return (
     <svg

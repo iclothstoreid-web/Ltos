@@ -4,7 +4,11 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 
 export function WhyLocalTailor() {
   return (
-    <section id="why" aria-labelledby="why-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
+    <section
+      id="why"
+      aria-labelledby="why-heading"
+      className="bg-luxury-navy-deep px-6 py-24 md:px-10 [content-visibility:auto] [contain-intrinsic-size:auto_650px]"
+    >
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />

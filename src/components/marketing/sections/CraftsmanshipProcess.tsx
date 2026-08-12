@@ -7,7 +7,11 @@ const VARIANTS = ['a', 'b', 'c', 'a'] as const
 
 export function CraftsmanshipProcess() {
   return (
-    <section id="craftsmanship" aria-labelledby="craftsmanship-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
+    <section
+      id="craftsmanship"
+      aria-labelledby="craftsmanship-heading"
+      className="bg-luxury-navy px-6 py-24 md:px-10 [content-visibility:auto] [contain-intrinsic-size:auto_550px]"
+    >
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />

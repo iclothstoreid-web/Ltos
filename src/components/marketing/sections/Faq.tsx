@@ -11,7 +11,11 @@ export function Faq() {
   const schema = buildFaqSchema()
 
   return (
-    <section id="faq" aria-labelledby="faq-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
+    <section
+      id="faq"
+      aria-labelledby="faq-heading"
+      className="bg-luxury-navy px-6 py-24 md:px-10 [content-visibility:auto] [contain-intrinsic-size:auto_600px]"
+    >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 
       <div className="mx-auto max-w-3xl">

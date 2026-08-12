@@ -1,5 +1,3 @@
-'use client'
-
 import { LuxuryGradientField } from './LuxuryGradientField'
 import { LinenTexture } from './LinenTexture'
 import { GarmentSilhouette } from './GarmentSilhouette'
@@ -7,7 +5,20 @@ import { GarmentSilhouette } from './GarmentSilhouette'
 // Masonry-friendly — height varies by `tall` so the gallery reads as
 // editorial masonry rather than a rigid grid, without needing real image
 // dimensions yet.
-export function GalleryImagePlaceholder({ alt, tall = false, variant = 'a' }: { alt: string; tall?: boolean; variant?: 'a' | 'b' | 'c' }) {
+// P1 — no hooks/state of its own (the `group-hover:` effect is pure CSS),
+// so this is a Server Component; only GarmentSilhouette below it is a
+// client leaf. idSuffix threads through to it (see that file for why).
+export function GalleryImagePlaceholder({
+  alt,
+  tall = false,
+  variant = 'a',
+  idSuffix,
+}: {
+  alt: string
+  tall?: boolean
+  variant?: 'a' | 'b' | 'c'
+  idSuffix: string | number
+}) {
   return (
     <div
       role="img"
@@ -16,7 +27,10 @@ export function GalleryImagePlaceholder({ alt, tall = false, variant = 'a' }: { 
     >
       <LuxuryGradientField variant={variant} />
       <LinenTexture opacity={0.14} />
-      <GarmentSilhouette className="h-[55%] w-auto opacity-40 transition-transform duration-500 group-hover:scale-105" />
+      <GarmentSilhouette
+        className="h-[55%] w-auto opacity-40 transition-transform duration-500 group-hover:scale-105"
+        idSuffix={idSuffix}
+      />
     </div>
   )
 }

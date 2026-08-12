@@ -18,7 +18,7 @@ export function FinalCta() {
     <section
       id="final-cta"
       aria-labelledby="final-cta-heading"
-      className="relative overflow-hidden bg-luxury-navy-deep px-6 py-28 text-center md:px-10"
+      className="relative overflow-hidden bg-luxury-navy-deep px-6 py-28 text-center md:px-10 [content-visibility:auto] [contain-intrinsic-size:auto_550px]"
     >
       <div
         aria-hidden="true"

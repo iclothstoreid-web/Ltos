@@ -4,7 +4,11 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 
 export function KnowledgePreview() {
   return (
-    <section id="knowledge" aria-labelledby="knowledge-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
+    <section
+      id="knowledge"
+      aria-labelledby="knowledge-heading"
+      className="bg-luxury-navy-deep px-6 py-24 md:px-10 [content-visibility:auto] [contain-intrinsic-size:auto_500px]"
+    >
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-xl">
           <GoldAccentLine className="mb-4" />
