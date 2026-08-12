@@ -149,6 +149,47 @@ export const productionCopy = {
   cta: 'Explore Our Production Process',
 }
 
+// Sprint W5-4 — Quality Control & Delivery. Both CTAs follow the same
+// override pattern as the W5-3 sections. Note: deliveryCopy.experience
+// deliberately overlaps 3 of 5 items with measurementCopy.cardItems
+// (reusable / faster ordering / consistent fit) — that repetition is in
+// the brief's own copy for both sections, not introduced here; both are
+// implemented as specified.
+export const qualityControlCopy = {
+  eyebrow: 'Quality Control',
+  heading: 'Every Garment Is Inspected Before It Leaves Our Workshop',
+  subheadline:
+    'Before delivery, every garment passes through a dedicated inspection process to ensure consistency, accuracy, and finishing quality.',
+  checklist: [
+    'Stitch consistency',
+    'Measurement accuracy',
+    'Collar alignment',
+    'Cuff symmetry',
+    'Fabric inspection',
+    'Pressing quality',
+    'Final finishing review',
+  ],
+  statement: 'If a garment does not meet our internal standard, it does not reach the customer.',
+  trustCallout: 'Dedicated Quality Control Inspection',
+  cta: 'See Our Quality Standards',
+}
+
+export const deliveryCopy = {
+  eyebrow: 'Delivery',
+  heading: 'The Final Step Is the First Step of Your Next Order',
+  subheadline: 'Delivery includes final fit verification and permanent measurement retention for future bespoke orders.',
+  experienceLabel: 'What Delivery Includes',
+  experience: [
+    'Final fit verification',
+    'Garment care guidance',
+    'Measurement retention',
+    'Faster future ordering',
+    'Consistent fit over time',
+  ],
+  statement: 'Your first order creates the profile. Every order after that becomes easier.',
+  cta: 'Book Your First Bespoke Consultation',
+}
+
 export const fabricCopy = {
   eyebrow: 'Material',
   heading: 'Fabric Is Where Craft Begins',
