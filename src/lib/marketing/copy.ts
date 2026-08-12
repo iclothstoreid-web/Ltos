@@ -352,6 +352,73 @@ export const gallerySectionCopy = {
   cta: 'Explore the Full Gallery',
 }
 
+// Sprint W5-8 — Reviews & Testimonial System. Named reviewsCopy / id="reviews"
+// — distinct from the existing storiesCopy / id="stories" (CustomerStories.tsx),
+// which is a separate homepage section further down the page, not replaced or
+// touched here. Content note: this sprint's own testimonial ("Ahmad" / Jakarta
+// / Wedding) is close to but not the same as storiesCopy's "Ahmad R." / Bandung
+// / Wedding — both are implemented exactly as each sprint specified them, not
+// reconciled into one, since neither brief asked for that.
+//
+// No real customer photography exists (assets.ts explicitly excludes
+// consultation-photos/production-evidence as "not publishable"), so each
+// review's image is a real garment photo — reused from the same pool
+// GallerySection already draws from — captioned as the garment shown, never
+// claimed to be a photo of that reviewer. `id` on each review is a stable
+// slug specifically so this array can become a dynamic/DB-backed source
+// later (Sprint SEO requirement) without changing its shape.
+export const reviewsCopy = {
+  eyebrow: 'Reviews',
+  heading: 'Trusted by Clients Who Value Fit, Craftsmanship, and Personal Service',
+  subheadline: 'Our clients return because the process is personal, the fit is consistent, and the experience improves with every order.',
+  reviews: [
+    {
+      id: 'ahmad-jakarta-wedding',
+      name: 'Ahmad',
+      city: 'Jakarta',
+      context: 'Wedding',
+      rating: 5,
+      quote:
+        'The fit was noticeably different from anything ready-made. The consultation and measurement process made the result feel truly personal.',
+      image: garmentPhotos.blackPinstripe,
+      imageAlt: 'Black pinstripe bespoke thobe on a mannequin, finished garment photography',
+      imageCaption: 'Black Pinstripe Thobe',
+    },
+    {
+      id: 'yusuf-bandung-umrah',
+      name: 'Yusuf',
+      city: 'Bandung',
+      context: 'Umrah',
+      rating: 5,
+      quote:
+        'What impressed me most was how the second order became easier because my measurements and pattern were already stored.',
+      image: garmentPhotos.navy,
+      imageAlt: 'Navy bespoke thobe on a mannequin, finished garment photography',
+      imageCaption: 'Navy Thobe',
+    },
+    {
+      id: 'rizky-surabaya-daily-wear',
+      name: 'Rizky',
+      city: 'Surabaya',
+      context: 'Daily Wear',
+      rating: 5,
+      quote: 'The finishing quality and overall drape made the garment feel significantly more refined than standard tailoring.',
+      image: garmentPhotos.maroonPiping,
+      imageAlt: 'Maroon thobe with contrast piping on a mannequin, finished garment photography',
+      imageCaption: 'Maroon Piping Thobe',
+    },
+  ],
+  metrics: [
+    { value: '4.9/5', label: 'Average Rating' },
+    { value: 'Verified', label: 'Customer Reviews' },
+    { value: 'Real', label: 'Workshop Process' },
+    { value: 'Personal', label: 'Measurement Retention' },
+  ],
+  authenticityStatement:
+    'Every testimonial shown here reflects an actual bespoke tailoring experience and is presented as a representation of the type of client feedback our workshop receives.',
+  cta: 'Read More Client Stories',
+}
+
 export const fabricCopy = {
   eyebrow: 'Material',
   heading: 'Fabric Is Where Craft Begins',

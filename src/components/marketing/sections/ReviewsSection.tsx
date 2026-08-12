@@ -1,0 +1,81 @@
+import Image from 'next/image'
+import { reviewsCopy } from '@/lib/marketing/copy'
+import { Reveal } from '../shell/Reveal'
+import { MagneticButton } from '../shell/MagneticButton'
+import { GoldAccentLine } from '../placeholders/GoldAccentLine'
+import { GoldStarRating } from '../placeholders/GoldStarRating'
+
+// Sprint W5-8 — Reviews & Testimonial System. Centered header + 3-card grid
+// + metrics strip (reusing the ProductionSection metrics-strip pattern) +
+// authenticity statement + CTA, matching the established full-width section
+// convention. Each card's image is a real garment photo (no customer
+// photography exists to use) — the <figcaption> names the garment shown,
+// never the reviewer, so the image never claims to be a photo of that
+// person. CTA falls back to /#gallery per this sprint's own brief, since
+// /reviews doesn't exist yet.
+export function ReviewsSection() {
+  return (
+    <section id="reviews" aria-labelledby="reviews-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
+      <div className="mx-auto max-w-6xl">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <GoldAccentLine className="mx-auto mb-4" />
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{reviewsCopy.eyebrow}</p>
+          <h2 id="reviews-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
+            {reviewsCopy.heading}
+          </h2>
+          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{reviewsCopy.subheadline}</p>
+        </Reveal>
+
+        <ul className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {reviewsCopy.reviews.map((review, i) => (
+            <Reveal as="li" key={review.id} delay={i * 0.1}>
+              <article aria-label={`Review from ${review.name}, ${review.city}`} className="h-full rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-8">
+                <GoldStarRating rating={review.rating} />
+
+                <blockquote className="mt-4">
+                  <p className="font-fraunces text-lg italic leading-snug text-luxury-ivory/90">&ldquo;{review.quote}&rdquo;</p>
+                </blockquote>
+
+                <div className="mt-6 flex items-center gap-4">
+                  <figure className="flex-shrink-0">
+                    <div className="relative h-14 w-14 overflow-hidden rounded-sm">
+                      <Image src={review.image} alt={review.imageAlt} fill sizes="56px" className="object-cover" />
+                    </div>
+                    <figcaption className="sr-only">{review.imageCaption}</figcaption>
+                  </figure>
+                  <div>
+                    <p className="font-luxury-sans text-sm text-luxury-ivory">{review.name}</p>
+                    <p className="font-luxury-sans text-xs text-luxury-taupe">
+                      {review.city} · {review.context}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </ul>
+
+        <Reveal delay={0.15} className="mt-16 border-y border-luxury-gold/[0.14] py-10">
+          <ul className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+            {reviewsCopy.metrics.map((metric) => (
+              <li key={metric.label} className="text-center">
+                <p className="font-fraunces text-lg text-luxury-gold md:text-xl">{metric.value}</p>
+                <p className="mt-1 font-luxury-sans text-xs uppercase tracking-[0.08em] text-luxury-taupe">{metric.label}</p>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+
+        <Reveal delay={0.2} className="mt-14 text-center">
+          <blockquote className="mx-auto max-w-xl border-l-2 border-luxury-gold/40 pl-5 text-left">
+            <p className="font-luxury-sans text-sm italic leading-relaxed text-luxury-taupe">{reviewsCopy.authenticityStatement}</p>
+          </blockquote>
+
+          <MagneticButton href="/#gallery" variant="primary" className="mt-10">
+            {reviewsCopy.cta}
+          </MagneticButton>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
