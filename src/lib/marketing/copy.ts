@@ -48,6 +48,30 @@ export const configuratorCopy = {
   mannequinAlt: 'Digital fitting mannequin from the Bespoke Tailor Design Studio, used for measurement and design preview',
 }
 
+// Sprint W5-1 — Process Storytelling. Distinct from craftsmanshipCopy below:
+// this is the homepage's trust/conversion backbone (fuller step copy, its
+// own primary/secondary CTAs, positioned right after the configurator
+// teaser), not a replacement for the existing Craftsmanship section further
+// down the page. The two intentionally overlap on 3 of 6 step names —
+// craftsmanshipCopy stays untouched per the "don't redesign what wasn't
+// asked" brief.
+export const bespokeProcessCopy = {
+  eyebrow: 'Process Storytelling',
+  heading: 'From Consultation to Delivery — Every Garment Is Built Specifically for You',
+  subheadline:
+    'A bespoke garment is not selected from stock. It is designed, measured, patterned, crafted, inspected, and finished for one individual.',
+  steps: [
+    { title: 'Consultation', description: 'Discuss purpose, style, fabric, and fit preferences.' },
+    { title: 'Measurement', description: 'Detailed body measurements and posture assessment.' },
+    { title: 'Pattern Formulation', description: 'A personal pattern is drafted specifically for your body profile.' },
+    { title: 'Production', description: 'Cutting, construction, and hand-finished tailoring.' },
+    { title: 'Quality Control', description: 'Every garment is inspected before it leaves the workshop.' },
+    { title: 'Delivery', description: 'Final fitting and delivery with long-term customer profile retention.' },
+  ],
+  primaryCta: 'Book Consultation',
+  secondaryCta: 'View Full Bespoke Process',
+}
+
 export const fabricCopy = {
   eyebrow: 'Material',
   heading: 'Fabric Is Where Craft Begins',

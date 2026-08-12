@@ -30,6 +30,7 @@ const jost = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], va
 // replaces). Suspense boundaries around each additionally let React 18
 // hydrate them independently rather than as one blocking unit.
 const PrivateAppointment = dynamic(() => import('./sections/PrivateAppointment').then((m) => m.PrivateAppointment))
+const BespokeProcessSection = dynamic(() => import('./sections/BespokeProcessSection').then((m) => m.BespokeProcessSection))
 const FabricHighlight = dynamic(() => import('./sections/FabricHighlight').then((m) => m.FabricHighlight))
 const WhyLocalTailor = dynamic(() => import('./sections/WhyLocalTailor').then((m) => m.WhyLocalTailor))
 const CraftsmanshipProcess = dynamic(() => import('./sections/CraftsmanshipProcess').then((m) => m.CraftsmanshipProcess))
@@ -56,6 +57,9 @@ export function HomePage() {
         </Suspense>
         <TrustBar />
         <ConfiguratorPreview />
+        <Suspense fallback={null}>
+          <BespokeProcessSection />
+        </Suspense>
         <Suspense fallback={null}>
           <FabricHighlight />
         </Suspense>
