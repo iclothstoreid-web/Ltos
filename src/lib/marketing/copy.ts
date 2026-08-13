@@ -536,17 +536,6 @@ export const storiesCopy = {
   ],
 }
 
-export const knowledgeCopy = {
-  eyebrow: 'Knowledge',
-  heading: 'Learn Before You Design',
-  cards: [
-    { title: 'Best Fabric for Umrah', description: 'Breathability and drape for long hours of worship in warm climates.' },
-    { title: 'Slim Fit vs Relaxed Fit', description: 'How each silhouette changes movement, formality, and comfort.' },
-    { title: 'How We Measure', description: 'Inside the 20-point measurement process behind every pattern.' },
-    { title: 'Wedding Thobe Guide', description: 'Fabric, color, and fit considerations for the day itself.' },
-  ],
-}
-
 export const faqCopy = {
   eyebrow: 'FAQ',
   heading: 'Common Questions',
@@ -591,6 +580,10 @@ export const navCopy = {
   links: [
     { label: 'Design Studio', href: '/design-studio' },
     { label: 'Fabrics', href: '/fabric' },
+    // Sprint W6R.1 — LTOS Integration Rule: every public-facing route must
+    // reach the header nav, not just the footer. Same real-page pattern as
+    // its 4 siblings here (no homepage anchors in this list).
+    { label: 'Knowledge', href: '/knowledge' },
     { label: 'Gallery', href: '/gallery' },
     { label: 'Journal', href: '/journal' },
   ],
