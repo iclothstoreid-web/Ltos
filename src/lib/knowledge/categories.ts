@@ -223,6 +223,74 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     relatedCategories: ['measurements', 'care'],
     status: 'live',
   },
+  {
+    // Sprint W6-10 — FAQ Domination Layer. Same [category]/[slug]
+    // architecture, 24 short question-first pages instead of deep guides.
+    slug: 'questions',
+    label: 'Pertanyaan',
+    eyebrow: 'FAQ',
+    title: 'Pertanyaan Umum Seputar Thobe Bespoke',
+    metaDescription:
+      'Jawaban singkat dan langsung untuk pertanyaan paling umum seputar thobe bespoke — bahan, ukuran, gaya, pernikahan, umrah, tailoring, dan perawatan.',
+    intro: [
+      'Halaman ini kumpulan jawaban singkat dan langsung untuk pertanyaan spesifik yang paling sering muncul seputar thobe bespoke — berbeda dari panduan mendalam di kategori lain, setiap halaman di sini fokus menjawab satu pertanyaan secara ringkas.',
+      'Setiap jawaban di sini juga terhubung ke panduan lengkap yang relevan di kategori Bahan, Pengukuran, Gaya, Pernikahan, Umrah, Tailoring, atau Perawatan, jika Anda ingin mendalami topik tersebut lebih jauh.',
+    ],
+    faq: [
+      {
+        question: 'Kenapa halaman FAQ ini terpisah dari panduan lengkap?',
+        answer:
+          'FAQ dirancang untuk menjawab satu pertanyaan spesifik secara cepat dan langsung, sementara panduan lengkap di kategori lain membahas topik secara menyeluruh — keduanya saling melengkapi, bukan menggantikan.',
+      },
+      {
+        question: 'Apakah semua pertanyaan tentang thobe bespoke ada di sini?',
+        answer:
+          'Belum semua — halaman ini mencakup 24 pertanyaan paling umum saat ini dan akan terus bertambah. Untuk pertanyaan spesifik yang belum tercakup, konsultasikan langsung dengan tim kami.',
+      },
+      {
+        question: 'Bisakah saya bertanya langsung jika jawaban di sini belum cukup?',
+        answer: 'Tentu — gunakan tombol konsultasi gratis di bagian bawah setiap halaman untuk bertanya langsung ke tim kami.',
+      },
+    ],
+    relatedCategories: ['fabrics', 'measurements'],
+    status: 'live',
+  },
+  {
+    // Sprint W6-10 — Local Authority Layer. Honest positioning only — no
+    // fabricated address, founding year, customer count, or awards. Every
+    // claim here is either already stated elsewhere in this codebase
+    // (homepage: "Bespoke Thobe, Bandung") or a general description of the
+    // real process (consultation, measurement, pattern, production,
+    // fitting, delivery) already documented across the other 8 clusters.
+    slug: 'bandung',
+    label: 'Bandung',
+    eyebrow: 'Local Tailor Bandung',
+    title: 'Local Tailor di Bandung — Layanan Bespoke Thobe',
+    metaDescription:
+      'Local Tailor adalah layanan bespoke thobe berbasis di Bandung — konsultasi, pengukuran, dan produksi custom untuk kebutuhan harian, pernikahan, dan umrah.',
+    intro: [
+      'Local Tailor adalah layanan bespoke thobe yang berbasis di Bandung, melayani konsultasi, pengukuran presisi oleh fitter, hingga produksi thobe custom yang dijahit khusus berdasarkan ukuran dan preferensi setiap klien.',
+      'Halaman ini dan tiga halaman turunannya menjelaskan layanan kami secara spesifik untuk kebutuhan custom thobe harian, proses bespoke tailoring, thobe pernikahan, dan thobe umrah — semuanya berbasis proses yang sama: konsultasi, pengukuran, pembentukan pola, produksi, fitting, dan pengiriman.',
+    ],
+    faq: [
+      {
+        question: 'Di mana saya bisa berkonsultasi dengan Local Tailor?',
+        answer:
+          'Konsultasi dapat dijadwalkan melalui halaman Booking Konsultasi kami. Tim kami akan mengonfirmasi detail lokasi dan waktu sesuai jadwal yang tersedia.',
+      },
+      {
+        question: 'Apakah Local Tailor melayani pengukuran langsung?',
+        answer:
+          'Ya, pengukuran dilakukan langsung oleh fitter kami untuk membentuk Digital Body Profile yang akurat, digunakan sebagai acuan produksi thobe bespoke Anda.',
+      },
+      {
+        question: 'Apakah thobe custom bisa dikirim setelah selesai?',
+        answer: 'Ya, thobe yang sudah selesai diproduksi dapat dikirimkan sesuai kesepakatan yang dikonfirmasi saat konsultasi.',
+      },
+    ],
+    relatedCategories: ['tailoring', 'wedding'],
+    status: 'live',
+  },
 ]
 
 export function getCategoryBySlug(slug: string): KnowledgeCategory | undefined {

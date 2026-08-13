@@ -219,6 +219,14 @@ export default function KnowledgeArticlePage({ params }: PageProps) {
           />
         )}
 
+        {article.decisionFramework && (
+          <KeyTakeaways items={article.decisionFramework} heading="Kerangka Keputusan" headingId="article-decision-framework-heading" />
+        )}
+
+        {article.whenToChoose && (
+          <QuickAnswer answer={article.whenToChoose} heading="Kapan Memilih Ini" headingId="article-when-to-choose-heading" />
+        )}
+
         <FAQSection items={article.faq} headingId="article-faq-heading" />
         <RelatedFabrics fabrics={relatedFabrics} headingId="related-fabrics-heading" />
         <RelatedArticles articles={relatedArticles} heading="Baca Selanjutnya" headingId="related-articles-heading" />
@@ -235,10 +243,7 @@ export default function KnowledgeArticlePage({ params }: PageProps) {
           </section>
         )}
 
-        <KnowledgeCTAGroup
-          heading="Siap Melanjutkan ke Langkah Berikutnya?"
-          body="Konsultasikan kebutuhan Anda, jelajahi koleksi bahan, atau cek Digital Body Profile Anda sebelum memesan thobe bespoke."
-        />
+        <KnowledgeCTAGroup category={article.category} />
       </article>
     </div>
   )

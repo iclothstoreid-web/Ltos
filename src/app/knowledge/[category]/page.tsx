@@ -129,10 +129,7 @@ export default function KnowledgeCategoryPage({ params }: PageProps) {
           </section>
         )}
 
-        <KnowledgeCTAGroup
-          heading="Punya Pertanyaan Lebih Lanjut?"
-          body="Tim kami siap membantu Anda memilih bahan, memastikan ukuran, dan menyusun gaya yang tepat untuk kebutuhan Anda."
-        />
+        <KnowledgeCTAGroup category={category.slug} />
       </article>
     </div>
   )

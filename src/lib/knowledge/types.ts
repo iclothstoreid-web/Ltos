@@ -5,7 +5,12 @@
 // files — the "reusable content architecture" the sprint brief asks for is
 // this schema + registry, not a component-per-page.
 
-export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring'
+// Sprint W6-10 — 'questions' (FAQ domination layer) and 'bandung' (local
+// authority layer) added to the same closed union the [category]/[slug]
+// route already drives off of. Same architecture as the original 7, not a
+// parallel system — this is the "Gunakan Knowledge Engine yang sudah ada"
+// instruction taken literally.
+export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring' | 'questions' | 'bandung'
 
 export interface KnowledgeFaqItem {
   question: string
@@ -103,6 +108,14 @@ export interface KnowledgeArticle {
   // the ComparisonTable component (distinct styling from a plain table
   // block inside `sections`).
   comparisonTable?: { caption: string; headers: string[]; rows: string[][] }
+  // Sprint W6-10 — AI citation optimization: a decision framework (bullet
+  // criteria a reader weighs) and a direct "when to choose this" verdict.
+  // Reuses KeyTakeaways/QuickAnswer's visual components with heading
+  // overrides rather than new components — same content shape, different
+  // label. Applied to the W6-10 FAQ/Bandung pages; not retrofitted onto
+  // the 58 W6-1..8 articles (that would be a rewrite, not an addition).
+  decisionFramework?: string[]
+  whenToChoose?: string
   faq: KnowledgeFaqItem[]
   relatedArticles: KnowledgeRef[]
   // Styling -> Fabric linking rule. Optional — only styling articles set
@@ -114,6 +127,14 @@ export interface KnowledgeArticle {
   relatedCategories?: KnowledgeCategorySlug[]
   // Sprint W6-7 — Related Content Engine tag dimensions.
   tags?: KnowledgeTags
+  // Sprint W6-10 — Content Refresh Engine metadata. Optional; freshness.ts
+  // falls back to CONTENT_PUBLISHED_DATE (src/lib/content/seo.ts) for
+  // articles that don't set these, so the freshness system works
+  // uniformly across all articles even though only W6-10's new pages set
+  // them explicitly.
+  publishedDate?: string
+  lastReviewed?: string
+  reviewIntervalDays?: number
 }
 
 export interface KnowledgeCategory {

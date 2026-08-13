@@ -6,6 +6,8 @@ import { WEDDING_ARTICLES } from './wedding'
 import { UMRAH_ARTICLES } from './umrah'
 import { TAILORING_ARTICLES } from './tailoring'
 import { CARE_ARTICLES } from './care'
+import { QUESTION_ARTICLES } from './questions'
+import { BANDUNG_ARTICLES } from './bandung'
 
 export const ALL_KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
   ...FABRIC_ARTICLES,
@@ -15,6 +17,8 @@ export const ALL_KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
   ...UMRAH_ARTICLES,
   ...TAILORING_ARTICLES,
   ...CARE_ARTICLES,
+  ...QUESTION_ARTICLES,
+  ...BANDUNG_ARTICLES,
 ]
 
 export function getKnowledgeArticle(category: string, slug: string): KnowledgeArticle | undefined {
@@ -25,4 +29,14 @@ export function getArticlesByCategory(category: KnowledgeCategorySlug): Knowledg
   return ALL_KNOWLEDGE_ARTICLES.filter((article) => article.category === category)
 }
 
-export { FABRIC_ARTICLES, MEASUREMENT_ARTICLES, STYLING_ARTICLES, WEDDING_ARTICLES, UMRAH_ARTICLES, TAILORING_ARTICLES, CARE_ARTICLES }
+export {
+  FABRIC_ARTICLES,
+  MEASUREMENT_ARTICLES,
+  STYLING_ARTICLES,
+  WEDDING_ARTICLES,
+  UMRAH_ARTICLES,
+  TAILORING_ARTICLES,
+  CARE_ARTICLES,
+  QUESTION_ARTICLES,
+  BANDUNG_ARTICLES,
+}
