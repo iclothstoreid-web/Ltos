@@ -1,42 +1,23 @@
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/shell/Reveal'
 import { GoldAccentLine } from '@/components/marketing/placeholders/GoldAccentLine'
-import type { LocationConfig } from '@/lib/seo/locations'
+import type { CityConfig } from '@/lib/seo/cityConfig'
 
 interface LocationServicesProps {
-  location: LocationConfig
+  city: CityConfig
 }
 
-// Sprint W8-1 — "Services" section. Every card links to a real, already-
-// live route — /design-studio for the configurator, and the Knowledge
-// base's wedding/umrah hubs for occasion-specific guidance — rather than
-// inventing new service pages this sprint (see the W7-3/W7-4 scope
-// decision this project already made: schema/links on real pages, not new
-// page creation for every named service).
-const SERVICES = [
-  {
-    title: 'Bespoke Tailoring',
-    description: 'Pola diformulasikan dari pengukuran tubuh Anda sendiri — bukan ukuran standar.',
-    href: '/design-studio',
-  },
-  {
-    title: 'Custom Thobe',
-    description: 'Pilih Model, Kerah, Manset, Material, dan Warna langsung di Design Studio.',
-    href: '/design-studio',
-  },
-  {
-    title: 'Wedding Thobe',
-    description: 'Thobe custom untuk acara akad dan resepsi, dengan pertimbangan material formal.',
-    href: '/knowledge/wedding',
-  },
-  {
-    title: 'Umrah Thobe',
-    description: 'Thobe custom yang dirancang untuk kenyamanan selama ibadah umrah.',
-    href: '/knowledge/umrah',
-  },
-] as const
+// Sprint W8-1, migrated to cityConfig.ts in W8-2/3 — now renders
+// city.services (unique per-city framing authored in cityConfig.ts, e.g.
+// Jakarta's business-attire angle vs Bekasi's family/wedding angle) instead
+// of one hardcoded array shared by every city, per this sprint's "no
+// copy-paste between cities" instruction. Links stay fixed to real,
+// already-live routes — /design-studio and the Knowledge base's
+// wedding/umrah hubs — since the underlying services offered don't change
+// by city, only how they're described.
+const SERVICE_LINKS = ['/design-studio', '/design-studio', '/knowledge/wedding', '/knowledge/umrah']
 
-export function LocationServices({ location }: LocationServicesProps) {
+export function LocationServices({ city }: LocationServicesProps) {
   return (
     <section aria-labelledby="location-services-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
@@ -44,15 +25,15 @@ export function LocationServices({ location }: LocationServicesProps) {
           <GoldAccentLine className="mx-auto mb-4" />
           <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">Layanan</p>
           <h2 id="location-services-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            Layanan Bespoke Tailoring untuk Klien di {location.cityName}
+            Layanan Bespoke Tailoring untuk Klien di {city.city}
           </h2>
         </Reveal>
 
         <ul className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {SERVICES.map((service, i) => (
+          {city.services.map((service, i) => (
             <Reveal as="li" key={service.title} delay={i * 0.08}>
               <Link
-                href={service.href}
+                href={SERVICE_LINKS[i] ?? '/design-studio'}
                 className="block h-full rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-6 transition hover:border-luxury-gold/40"
               >
                 <h3 className="font-fraunces text-lg text-luxury-ivory">{service.title}</h3>

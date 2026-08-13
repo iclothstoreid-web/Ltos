@@ -1,7 +1,8 @@
 import type { JsonLdSchema } from '@/lib/seo/schema'
-import { LOCATION_BUSINESS, LOCATION_GEO, LOCATION_SITE_ORIGIN, type LocationConfig } from '@/lib/seo/locations'
+import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_SITE_ORIGIN, type CityConfig } from '@/lib/seo/cityConfig'
 
-// Sprint W8-1 — LocalBusiness schema generator for /locations pages.
+// Sprint W8-1, migrated to cityConfig.ts in W8-2/3 — LocalBusiness schema
+// generator for /locations pages.
 //
 // Local Tailor has exactly one physical location (the Bandung workshop).
 // The other 4 city routes (Jakarta/Bekasi/Tangerang/Surabaya) are
@@ -16,10 +17,10 @@ import { LOCATION_BUSINESS, LOCATION_GEO, LOCATION_SITE_ORIGIN, type LocationCon
 //
 // Every page's schema shares the same `@id` (the canonical business URL) —
 // they all describe the same real-world entity, just from different pages.
-const BUSINESS_ID = `${LOCATION_SITE_ORIGIN}/#local-tailor-bandung`
+const BUSINESS_ID = `${CITY_SITE_ORIGIN}/#local-tailor-bandung`
 
-export function buildLocationLocalBusinessSchema(location: LocationConfig): JsonLdSchema {
-  const pageUrl = `${LOCATION_SITE_ORIGIN}/locations/${location.slug}`
+export function buildLocationLocalBusinessSchema(city: CityConfig): JsonLdSchema {
+  const pageUrl = `${CITY_SITE_ORIGIN}/locations/${city.slug}`
 
   return {
     '@context': 'https://schema.org',
@@ -28,35 +29,34 @@ export function buildLocationLocalBusinessSchema(location: LocationConfig): Json
     // off-the-shelf inventory.
     '@type': 'Tailor',
     '@id': BUSINESS_ID,
-    name: LOCATION_BUSINESS.name,
+    name: CITY_BUSINESS.name,
     url: pageUrl,
-    telephone: `+${LOCATION_BUSINESS.whatsappInternational}`,
+    telephone: `+${CITY_BUSINESS.whatsappInternational}`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: LOCATION_BUSINESS.streetAddress,
-      addressLocality: LOCATION_BUSINESS.addressLocality,
-      addressRegion: LOCATION_BUSINESS.addressRegion,
-      postalCode: LOCATION_BUSINESS.postalCode,
-      addressCountry: LOCATION_BUSINESS.addressCountry,
+      streetAddress: CITY_BUSINESS.streetAddress,
+      addressLocality: CITY_BUSINESS.addressLocality,
+      addressRegion: CITY_BUSINESS.addressRegion,
+      postalCode: CITY_BUSINESS.postalCode,
+      addressCountry: CITY_BUSINESS.addressCountry,
     },
-    // Street-level geocode (see locations.ts comment) — omitted with the
-    // same rooftop-precision caveat as everywhere geo data appears in this
-    // module. Only present on the Bandung page (the real location) — a
-    // service-area city page reusing the Bandung geo point would visually
-    // imply a pin in that city on a map card, which is exactly the
-    // fabricated-local-presence signal this generator otherwise avoids.
-    ...(location.isPrimary
+    // Only present when the config itself carries real coordinates
+    // (Bandung only) — a service-area city page reusing the Bandung geo
+    // point would visually imply a pin in that city on a map card, which
+    // is exactly the fabricated-local-presence signal this generator
+    // otherwise avoids.
+    ...(city.geo
       ? {
           geo: {
             '@type': 'GeoCoordinates',
-            latitude: LOCATION_GEO.latitude,
-            longitude: LOCATION_GEO.longitude,
+            latitude: city.geo.latitude,
+            longitude: city.geo.longitude,
           },
         }
       : {}),
     areaServed: {
       '@type': 'City',
-      name: location.cityName,
+      name: city.city,
     },
   }
 }
@@ -67,27 +67,27 @@ export function buildLocationLocalBusinessSchema(location: LocationConfig): Json
 // made-to-order and quoted per consultation (see
 // src/lib/materials/seo.ts's documented reasoning for the same choice on
 // Product schema) — a fabricated `$$` estimate would misrepresent that.
-export function buildLocationsHubLocalBusinessSchema(locations: LocationConfig[]): JsonLdSchema {
+export function buildLocationsHubLocalBusinessSchema(cities: CityConfig[]): JsonLdSchema {
   return {
     '@context': 'https://schema.org',
     '@type': 'Tailor',
     '@id': BUSINESS_ID,
-    name: LOCATION_BUSINESS.name,
-    url: `${LOCATION_SITE_ORIGIN}/locations`,
-    telephone: `+${LOCATION_BUSINESS.whatsappInternational}`,
+    name: CITY_BUSINESS.name,
+    url: `${CITY_SITE_ORIGIN}/locations`,
+    telephone: `+${CITY_BUSINESS.whatsappInternational}`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: LOCATION_BUSINESS.streetAddress,
-      addressLocality: LOCATION_BUSINESS.addressLocality,
-      addressRegion: LOCATION_BUSINESS.addressRegion,
-      postalCode: LOCATION_BUSINESS.postalCode,
-      addressCountry: LOCATION_BUSINESS.addressCountry,
+      streetAddress: CITY_BUSINESS.streetAddress,
+      addressLocality: CITY_BUSINESS.addressLocality,
+      addressRegion: CITY_BUSINESS.addressRegion,
+      postalCode: CITY_BUSINESS.postalCode,
+      addressCountry: CITY_BUSINESS.addressCountry,
     },
     geo: {
       '@type': 'GeoCoordinates',
-      latitude: LOCATION_GEO.latitude,
-      longitude: LOCATION_GEO.longitude,
+      latitude: CITY_GEO_BANDUNG.latitude,
+      longitude: CITY_GEO_BANDUNG.longitude,
     },
-    areaServed: locations.map((location) => ({ '@type': 'City', name: location.cityName })),
+    areaServed: cities.map((city) => ({ '@type': 'City', name: city.city })),
   }
 }

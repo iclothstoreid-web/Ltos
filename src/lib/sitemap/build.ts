@@ -6,7 +6,7 @@ import { ALL_ARTICLES } from '@/lib/content/articles'
 import { KNOWLEDGE_CATEGORIES } from '@/lib/knowledge/categories'
 import { ALL_KNOWLEDGE_ARTICLES } from '@/lib/knowledge/articles'
 import { fabricPhotos, garmentPhotos, measurementMannequinSrc } from '@/lib/marketing/assets'
-import { LOCATIONS } from '@/lib/seo/locations'
+import { CITY_CONFIGS } from '@/lib/seo/cityConfig'
 
 // Sprint W6-8 — sitemap split. Previously one src/app/sitemap.ts covered
 // every route; now that /knowledge alone is 34 routes (soon 66), one flat
@@ -53,10 +53,10 @@ export async function buildPagesSitemapEntries(supabase: SupabaseClient): Promis
     { url: `${FABRIC_SITE_ORIGIN}/book-appointment`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${FABRIC_SITE_ORIGIN}/gallery`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${FABRIC_SITE_ORIGIN}/journal`, changeFrequency: 'monthly', priority: 0.5 },
-    // Sprint W8-1 — Location SEO Foundation.
+    // Sprint W8-1 — Location SEO Foundation, migrated to cityConfig.ts in W8-2/3.
     { url: `${FABRIC_SITE_ORIGIN}/locations`, changeFrequency: 'monthly', priority: 0.8 },
-    ...LOCATIONS.map((location) => ({
-      url: `${FABRIC_SITE_ORIGIN}/locations/${location.slug}`,
+    ...CITY_CONFIGS.map((city) => ({
+      url: `${FABRIC_SITE_ORIGIN}/locations/${city.slug}`,
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),

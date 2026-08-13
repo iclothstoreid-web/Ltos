@@ -10,7 +10,7 @@ import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
 import { breadcrumbSchema } from '@/lib/seo/schema'
 import { buildLocationsHubLocalBusinessSchema } from '@/lib/seo/localBusiness'
 import { buildLocationsHubMetadata } from '@/lib/seo/locationMetadata'
-import { LOCATIONS, LOCATION_BUSINESS } from '@/lib/seo/locations'
+import { CITY_CONFIGS, CITY_BUSINESS } from '@/lib/seo/cityConfig'
 
 export const metadata: Metadata = buildLocationsHubMetadata()
 
@@ -19,15 +19,15 @@ const BREADCRUMB_ITEMS = [
   { name: 'Locations', path: '/locations' },
 ]
 
-// Sprint W8-1 §6 — internal linking hub connecting all 5 city pages. Real
-// data only: LOCATIONS is the same registry every city page reads from, so
-// this hub can never link to a city that doesn't actually have a page (and
-// vice versa — a new city added to locations.ts appears here with zero
-// changes to this file).
+// Sprint W8-1 §6, migrated to cityConfig.ts in W8-2/3 — internal linking
+// hub connecting all city pages. Real data only: CITY_CONFIGS is the same
+// registry every city page reads from, so this hub can never link to a
+// city that doesn't actually have a page (and vice versa — a new city
+// added to cityConfig.ts appears here with zero changes to this file).
 export default function LocationsHubPage() {
   return (
     <div className="bg-luxury-navy-deep">
-      <JsonLd data={[buildLocationsHubLocalBusinessSchema(LOCATIONS), breadcrumbSchema(BREADCRUMB_ITEMS)]} />
+      <JsonLd data={[buildLocationsHubLocalBusinessSchema(CITY_CONFIGS), breadcrumbSchema(BREADCRUMB_ITEMS)]} />
       <Nav />
       <main>
         <section className="relative overflow-hidden px-6 py-24 text-center md:px-10 md:py-32">
@@ -40,7 +40,7 @@ export default function LocationsHubPage() {
                 Custom Thobe di Seluruh Indonesia
               </h1>
               <p className="mx-auto mt-6 max-w-xl font-luxury-sans text-base text-luxury-taupe md:text-lg">
-                {LOCATION_BUSINESS.name} berbasis di {LOCATION_BUSINESS.addressLocality} — melayani konsultasi dan
+                {CITY_BUSINESS.name} berbasis di {CITY_BUSINESS.addressLocality} — melayani konsultasi dan
                 pengiriman custom thobe ke kota-kota berikut.
               </p>
             </Reveal>
@@ -54,17 +54,17 @@ export default function LocationsHubPage() {
               Kota yang Kami Layani
             </h2>
             <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {LOCATIONS.map((location, i) => (
-                <Reveal as="li" key={location.slug} delay={i * 0.08}>
+              {CITY_CONFIGS.map((city, i) => (
+                <Reveal as="li" key={city.slug} delay={i * 0.08}>
                   <Link
-                    href={`/locations/${location.slug}`}
+                    href={`/locations/${city.slug}`}
                     className="block h-full rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-8 transition hover:border-luxury-gold/40"
                   >
                     <p className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-gold">
-                      {location.isPrimary ? 'Workshop & Showroom' : 'Layanan Konsultasi Remote'}
+                      {city.isPrimary ? 'Workshop & Showroom' : 'Layanan Konsultasi Remote'}
                     </p>
-                    <h3 className="mt-3 font-fraunces text-2xl text-luxury-ivory">Custom Thobe {location.cityName}</h3>
-                    <p className="mt-2 font-luxury-sans text-xs text-luxury-taupe">{location.province}</p>
+                    <h3 className="mt-3 font-fraunces text-2xl text-luxury-ivory">Custom Thobe {city.city}</h3>
+                    <p className="mt-2 font-luxury-sans text-xs text-luxury-taupe">{city.province}</p>
                   </Link>
                 </Reveal>
               ))}

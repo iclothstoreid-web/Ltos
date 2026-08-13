@@ -12,6 +12,13 @@ type ReviewsSectionProps = {
   // section would otherwise ship a dead anchor. Override on any page that
   // doesn't include it.
   ctaHref?: string
+  // Sprint W8-2/3 — added for the location-page template's CityReviews
+  // wrapper. Moves the review matching this id (one of reviewsCopy.reviews'
+  // own real `id`s) to the front, so a city page can surface its one
+  // genuinely matching testimonial first — never invents a new review, only
+  // reorders the existing real ones. Undefined (the default) renders the
+  // array in its original order, so every existing caller is unaffected.
+  highlightReviewId?: string
 }
 
 // Sprint W5-8 — Reviews & Testimonial System. Centered header + 3-card grid
@@ -22,7 +29,11 @@ type ReviewsSectionProps = {
 // never the reviewer, so the image never claims to be a photo of that
 // person. CTA defaults to /#gallery per this sprint's own brief, since
 // /reviews doesn't exist yet.
-export function ReviewsSection({ ctaHref = '/#gallery' }: ReviewsSectionProps = {}) {
+export function ReviewsSection({ ctaHref = '/#gallery', highlightReviewId }: ReviewsSectionProps = {}) {
+  const orderedReviews = highlightReviewId
+    ? [...reviewsCopy.reviews].sort((a, b) => (a.id === highlightReviewId ? -1 : b.id === highlightReviewId ? 1 : 0))
+    : reviewsCopy.reviews
+
   return (
     <section id="reviews" aria-labelledby="reviews-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
@@ -36,7 +47,7 @@ export function ReviewsSection({ ctaHref = '/#gallery' }: ReviewsSectionProps = 
         </Reveal>
 
         <ul className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {reviewsCopy.reviews.map((review, i) => (
+          {orderedReviews.map((review, i) => (
             <Reveal as="li" key={review.id} delay={i * 0.1}>
               <article aria-label={`Review from ${review.name}, ${review.city}`} className="h-full rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-8">
                 <GoldStarRating rating={review.rating} />
