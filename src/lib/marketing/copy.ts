@@ -419,6 +419,42 @@ export const reviewsCopy = {
   cta: 'Read More Client Stories',
 }
 
+// Sprint W5-9 — Trust Badges & Premium Copywriting. Named trustBadgesCopy /
+// id="trust-badges" — distinct from trustBarCopy / id="trust" (TrustBar.tsx,
+// the numeric-counter section near the top of the homepage). This section's
+// own finalCta block deliberately echoes FinalCtaCopy's structure (headline
+// + subheadline + primary/secondary CTA) — that overlap is intentional per
+// this sprint's own goal ("conversion trigger terakhir sebelum CTA utama"):
+// it primes the reader right before the page's real FinalCta further down,
+// not a replacement for it. Both CTA targets are existing, already-used
+// routes (no new route): /book-appointment and /fabric.
+export const trustBadgesCopy = {
+  eyebrow: 'Trust & Confidence',
+  heading: 'Why Clients Feel Confident Ordering Bespoke From Us',
+  subheadline: 'Our process is designed to reduce uncertainty, preserve consistency, and deliver a garment built specifically for you.',
+  primaryCards: [
+    { title: 'Personal Pattern', description: 'Created specifically for your body.' },
+    { title: 'Measurement Retention', description: 'Future orders become significantly faster.' },
+    { title: 'Quality Control', description: 'Every garment is inspected before delivery.' },
+  ],
+  secondaryBadges: [
+    'Premium Fabric Selection',
+    'Transparent Production Timeline',
+    'Dedicated Tailor Consultation',
+    'Secure Customer Profile',
+  ],
+  summary: {
+    heading: 'Bespoke Tailoring Is Not About Buying Clothing',
+    body: 'It is about creating a garment that exists because you do. From consultation and measurement to pattern formulation, production, quality control, and delivery, every stage is designed to produce a garment that fits more naturally, lasts longer, and becomes easier to reorder over time.',
+  },
+  finalCta: {
+    heading: 'Ready to Experience Bespoke Tailoring?',
+    subheadline: 'Book a consultation and begin the process of creating a garment built specifically for you.',
+    primaryCta: 'Book Consultation',
+    secondaryCta: 'Explore Fabrics',
+  },
+}
+
 export const fabricCopy = {
   eyebrow: 'Material',
   heading: 'Fabric Is Where Craft Begins',
