@@ -2,6 +2,7 @@ import { faqCopy } from '@/lib/marketing/copy'
 import { Reveal } from '../shell/Reveal'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 import { buildFaqSchema } from '@/lib/marketing/seo'
+import { JsonLd } from '@/components/seo/JsonLd'
 
 // Built on native <details>/<summary> — crawlable and keyboard-accessible
 // without JS, per PLAN_SPRINT_W1_HOMEPAGE_LUXURY_BLUEPRINT.md §8. The
@@ -16,7 +17,7 @@ export function Faq() {
       aria-labelledby="faq-heading"
       className="bg-luxury-navy px-6 py-24 md:px-10 [content-visibility:auto] [contain-intrinsic-size:auto_600px]"
     >
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <JsonLd data={schema} />
 
       <div className="mx-auto max-w-3xl">
         <Reveal className="text-center">

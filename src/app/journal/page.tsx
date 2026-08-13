@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import { buildSimplePageMetadata } from '@/lib/marketing/seo'
 import { MagneticButton } from '@/components/marketing/shell/MagneticButton'
 import { LuxuryGradientField } from '@/components/marketing/placeholders/LuxuryGradientField'
+import { breadcrumbSchema } from '@/lib/seo/schema'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
 
 export const metadata: Metadata = buildSimplePageMetadata({
   title: 'Journal',
@@ -9,16 +12,23 @@ export const metadata: Metadata = buildSimplePageMetadata({
   path: '/journal',
 })
 
+const BREADCRUMB_ITEMS = [
+  { name: 'Home', path: '/' },
+  { name: 'Journal', path: '/journal' },
+]
+
 // Sprint W4.5 — elegant placeholder. The CTA below is a genuine link, not
 // a dead end: the W0.5 sizing guides (/cek-ukuran-thobe et al.) already
 // exist and are exactly "journal"-style content, so this page routes
 // visitors to real, live articles rather than nothing.
 export default function JournalPage() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-luxury-navy-deep px-6 py-20 text-center">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-luxury-navy-deep px-6 py-20 text-center">
+      <JsonLd data={breadcrumbSchema(BREADCRUMB_ITEMS)} />
       <LuxuryGradientField variant="c" />
 
       <div className="relative mx-auto max-w-xl">
+        <Breadcrumbs items={BREADCRUMB_ITEMS} />
         <p className="font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">Journal</p>
         <h1 className="mt-6 font-fraunces text-4xl leading-[1.1] text-luxury-ivory sm:text-5xl">
           The Journal Is Coming Soon
@@ -37,6 +47,6 @@ export default function JournalPage() {
           </MagneticButton>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

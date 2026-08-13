@@ -8,8 +8,16 @@ import { bodyEstimatorMetadata, buildLocalBusinessSchema } from '@/lib/marketing
 import { buildOrganizationSchema } from '@/lib/content/seo'
 import { ARTICLE_NAV } from '@/lib/content/articles'
 import { RelatedArticles } from '@/components/content/RelatedArticles'
+import { breadcrumbSchema } from '@/lib/seo/schema'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
 
 export const metadata: Metadata = bodyEstimatorMetadata
+
+const BREADCRUMB_ITEMS = [
+  { name: 'Home', path: '/' },
+  { name: 'Free Body Profile Estimator', path: '/free-body-profile-estimator' },
+]
 
 // Sprint W0.1 — W0 Body Profile Estimator (marketing/acquisition layer).
 // Deliberately standalone: no estimation engine, no database, no AI, no
@@ -24,12 +32,12 @@ export default function FreeBodyProfileEstimatorPage() {
 
   return (
     <div className="min-h-screen bg-luxury-navy-deep pb-20">
-      {/* eslint-disable-next-line react/no-danger */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
-      {/* eslint-disable-next-line react/no-danger */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
+      <JsonLd data={[organizationSchema, localBusinessSchema, breadcrumbSchema(BREADCRUMB_ITEMS)]} />
 
       <main>
+        <div className="mx-auto max-w-6xl px-6 pt-8 md:px-10">
+          <Breadcrumbs items={BREADCRUMB_ITEMS} />
+        </div>
         <EstimatorHero />
 
         <section aria-label="Body profile estimator" className="mx-auto mt-14 max-w-6xl px-6 md:px-10">

@@ -3,11 +3,24 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { getConfiguratorCatalog, findOptionByMaterialId, findOptionByDnaColorId } from '@/lib/configurator/mapping'
 import { getMaterialBySlug, getMaterialColors } from '@/lib/materials/materialRepository'
 import { DesignStudioClient } from '@/components/configurator/DesignStudioClient'
+import { buildSimplePageMetadata } from '@/lib/marketing/seo'
+import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
+import { serviceSchema, breadcrumbSchema } from '@/lib/seo/schema'
+import { JsonLd } from '@/components/seo/JsonLd'
 
-export const metadata: Metadata = {
-  title: 'Design Studio | Local Tailor',
-  description: 'Rangkai jubah bespoke Anda — pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga secara langsung.',
-}
+const DESIGN_STUDIO_DESCRIPTION =
+  'Rangkai jubah bespoke Anda — pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga secara langsung.'
+
+// Sprint W7-11 — was a bare { title, description } literal with no
+// canonical/OG/Twitter/robots signal, unlike every other marketing page
+// (gallery, journal, book-appointment) which already goes through this same
+// builder. Bringing it in line closes that metadata gap without changing
+// anything about the page's actual content.
+export const metadata: Metadata = buildSimplePageMetadata({
+  title: 'Design Studio',
+  description: DESIGN_STUDIO_DESCRIPTION,
+  path: '/design-studio',
+})
 
 interface PageProps {
   searchParams: { fabric?: string; color?: string }
@@ -58,5 +71,26 @@ async function resolveInitialSelection(fabricSlug?: string, colorSlug?: string) 
 export default async function DesignStudioPage({ searchParams }: PageProps) {
   const { initialFabricId, initialColorId } = await resolveInitialSelection(searchParams.fabric, searchParams.color)
 
-  return <DesignStudioClient initialFabricId={initialFabricId} initialColorId={initialColorId} />
+  // Sprint W7-3/W7-6 — Service + Breadcrumb JSON-LD only, no visible markup
+  // change: this page is a fixed-viewport configurator tool
+  // (DesignStudioClient's own layout owns h-screen panels), so a visible
+  // breadcrumb bar or FAQ block doesn't belong here without redesigning
+  // that layout, which this sprint is explicitly not doing.
+  const service = serviceSchema({
+    name: 'Bespoke Tailoring Service',
+    description: DESIGN_STUDIO_DESCRIPTION,
+    url: `${FABRIC_SITE_ORIGIN}/design-studio`,
+    serviceType: 'Bespoke Tailoring',
+  })
+  const breadcrumb = breadcrumbSchema([
+    { name: 'Home', path: '/' },
+    { name: 'Design Studio', path: '/design-studio' },
+  ])
+
+  return (
+    <>
+      <JsonLd data={[service, breadcrumb]} />
+      <DesignStudioClient initialFabricId={initialFabricId} initialColorId={initialColorId} />
+    </>
+  )
 }

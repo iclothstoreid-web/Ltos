@@ -5,12 +5,20 @@ import { getGalleryPieces } from '@/lib/gallery/galleryRepository'
 import { buildSimplePageMetadata } from '@/lib/marketing/seo'
 import { MagneticButton } from '@/components/marketing/shell/MagneticButton'
 import { MaterialHero } from '@/components/fabric/MaterialHero'
+import { breadcrumbSchema } from '@/lib/seo/schema'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
 
 export const metadata: Metadata = buildSimplePageMetadata({
   title: 'Gallery',
   description: 'A curated collection of finished bespoke thobe from Local Tailor.',
   path: '/gallery',
 })
+
+const BREADCRUMB_ITEMS = [
+  { name: 'Home', path: '/' },
+  { name: 'Gallery', path: '/gallery' },
+]
 
 // Without searchParams/cookies/headers, Next would statically freeze this
 // page's RPC result at build time — a newly-activated master data option
@@ -30,7 +38,9 @@ export default async function GalleryPage() {
 
   return (
     <main className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
+      <JsonLd data={breadcrumbSchema(BREADCRUMB_ITEMS)} />
       <div className="mx-auto max-w-6xl">
+        <Breadcrumbs items={BREADCRUMB_ITEMS} />
         <MaterialHero
           eyebrow="Gallery"
           title="A Record of Craft"

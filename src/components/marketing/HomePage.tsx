@@ -9,6 +9,8 @@ import { Hero } from './sections/Hero'
 import { TrustBar } from './sections/TrustBar'
 import { ConfiguratorPreview } from './sections/ConfiguratorPreview'
 import { buildLocalBusinessSchema, buildWebSiteSchema } from '@/lib/marketing/seo'
+import { organizationSchema } from '@/lib/seo/schema'
+import { JsonLd } from '@/components/seo/JsonLd'
 
 // Serif role reuses the Fraunces token already established elsewhere in
 // this repo (Check-In/Production workspace rebuilds) rather than
@@ -55,11 +57,19 @@ const FinalCta = dynamic(() => import('./sections/FinalCta').then((m) => m.Final
 export function HomePage() {
   const localBusinessSchema = buildLocalBusinessSchema()
   const webSiteSchema = buildWebSiteSchema()
+  // Sprint W7-2 — Organization is a broader entity identity than the
+  // existing LocalBusiness schema above; both can coexist on the same page
+  // (LocalBusiness is itself a subtype of Organization in schema.org, and
+  // sites commonly emit both). No `sameAs`/`logo` — no social profile URLs
+  // or deployed logo asset exist yet (see src/lib/seo/entities.ts comment);
+  // omitted rather than fabricated. No SearchAction on the WebSite schema
+  // either — this site has no working site-wide search endpoint to point
+  // one at yet.
+  const orgSchema = organizationSchema()
 
   return (
     <div className={`${fraunces.variable} ${jost.variable} bg-luxury-navy-deep font-luxury-sans`}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }} />
+      <JsonLd data={[localBusinessSchema, webSiteSchema, orgSchema]} />
       <ScrollProgress />
       <Nav />
       <main>
