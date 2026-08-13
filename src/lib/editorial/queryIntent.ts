@@ -28,6 +28,11 @@ export const CATEGORY_INTENT_PROFILE: Record<KnowledgeCategorySlug, QueryIntentP
   care: { funnelStage: 'TOFU', intent: 'informational' },
   questions: { funnelStage: 'TOFU', intent: 'informational' },
   bandung: { funnelStage: 'BOFU', intent: 'local' },
+  // Sprint Y — Digital Bespoke Tailoring cluster. High purchase-intent:
+  // every article here directly answers "can I order without visiting
+  // Bandung" and funnels to /design-studio, the same commercial-conversion
+  // role wedding/umrah play for their own occasions.
+  'design-studio': { funnelStage: 'BOFU', intent: 'commercial' },
 }
 
 // Article-level overrides — content whose own structure (a comparison

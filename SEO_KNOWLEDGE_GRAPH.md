@@ -30,8 +30,15 @@ This document — plus the `Organization`/`LocalBusiness`/`Article`/`Product`/`S
 | Bandung Tailor | Place | `/` | `/book-appointment` |
 | Thobe Measurement | Service | `/cara-mengukur-thobe` | `/cek-ukuran-thobe`, `/size-chart-thobe`, `/knowledge/measurements` |
 | Islamic Menswear | Thing | `/` | `/knowledge`, `/knowledge/umrah`, `/knowledge/wedding` |
+| Digital Bespoke Tailoring | Service | `/design-studio` | `/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bandung`, `/knowledge/design-studio` |
+| Design Studio | Service | `/design-studio` | `/knowledge/design-studio/apa-itu-design-studio-local-tailor`, `/knowledge/design-studio/cara-mendesain-thobe-sebelum-dijahit` |
+| Video Call Fitting | Service | `/design-studio` | `/knowledge/design-studio/fitting-video-call-apakah-akurat`, `/knowledge/design-studio/konsultasi-tailor-online-gratis` |
+| Home Visit Tailor | Service | `/design-studio` | `/knowledge/design-studio/layanan-home-visit-bandung`, `/knowledge/design-studio/home-visit-wedding-keluarga` |
+| Custom Thobe Online | Product | `/design-studio` | `/knowledge/design-studio/custom-thobe-online-panduan-lengkap`, `/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota` |
 
 Each row's `Related pages` is the internal linking a future editor should preserve (or extend) when touching those routes — cutting a link here quietly weakens the entity graph even if nothing "breaks."
+
+**Sprint Y note**: Digital Bespoke Tailoring is this sprint's own "primary entity" for the `/design-studio` pillar page specifically, but it's registered here as a secondary entity rather than replacing the sitewide Primary Entity above (Local Tailor) — redefining the whole site's primary entity for one feature was out of this sprint's scope.
 
 ## Content clusters feeding the graph
 
@@ -40,6 +47,7 @@ These already existed before Sprint W7 and are the actual substance behind the e
 - **W0.5 sizing cluster** (`src/lib/content/`) — `/cek-ukuran-thobe`, `/ukuran-thobe-pria`, `/cara-mengukur-thobe`, `/size-chart-thobe`
 - **Knowledge base** (`src/lib/knowledge/`) — 7 categories (`bandung`, `care`, `fabrics`, `measurements`, `questions`, `styling`, `tailoring`, `umrah`, `wedding`), each with multiple articles, each already carrying `Article` + `FAQPage` + (where applicable) `HowTo` schema
 - **Fabric Explorer** (`src/lib/materials/`) — `/fabric` and its material detail pages, each with `Product` schema
+- **Digital Bespoke Tailoring cluster** (`src/lib/knowledge/articles/designStudio.ts`, Sprint Y) — 1 cornerstone + 14 supporting articles under the `design-studio` Knowledge category, all cross-linked and all funneling to `/design-studio` via the shared `KnowledgeCTAGroup` config
 
 ## Deliberately absent relationships
 

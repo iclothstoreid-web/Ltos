@@ -10,7 +10,11 @@
 // route already drives off of. Same architecture as the original 7, not a
 // parallel system — this is the "Gunakan Knowledge Engine yang sudah ada"
 // instruction taken literally.
-export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring' | 'questions' | 'bandung'
+// Sprint Y — 'design-studio' added for the Digital Bespoke Tailoring
+// content cluster (cornerstone + 14 supporting articles, all pointing back
+// at /design-studio), same closed-union architecture as every category
+// before it.
+export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring' | 'questions' | 'bandung' | 'design-studio'
 
 export interface KnowledgeFaqItem {
   question: string

@@ -3,40 +3,69 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { getConfiguratorCatalog, findOptionByMaterialId, findOptionByDnaColorId } from '@/lib/configurator/mapping'
 import { getMaterialBySlug, getMaterialColors } from '@/lib/materials/materialRepository'
 import { DesignStudioClient } from '@/components/configurator/DesignStudioClient'
-import { buildSimplePageMetadata } from '@/lib/marketing/seo'
-import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
-import { serviceSchema, breadcrumbSchema } from '@/lib/seo/schema'
+import { Nav } from '@/components/marketing/shell/Nav'
+import { Footer } from '@/components/marketing/shell/Footer'
+import { DigitalBespokeHero } from '@/components/design-studio/DigitalBespokeHero'
+import { WhatIsDesignStudio } from '@/components/design-studio/WhatIsDesignStudio'
+import { ExperienceCards } from '@/components/design-studio/ExperienceCards'
+import { ProcessTimeline, type ProcessTimelineStep } from '@/components/design-studio/ProcessTimeline'
+import { ProblemSolutionTable, type ProblemSolutionRow } from '@/components/design-studio/ProblemSolutionTable'
+import { BookingCTA } from '@/components/design-studio/BookingCTA'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
+import { FaqSection } from '@/components/seo/FaqSection'
+import {
+  organizationSchema,
+  localBusinessSchema,
+  websiteSchema,
+  serviceSchema,
+  breadcrumbSchema,
+  faqSchema,
+  howToSchema,
+  type FaqSchemaItem,
+} from '@/lib/seo/schema'
+import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
+import { garmentPhotos } from '@/lib/marketing/assets'
+import { DIGITAL_BESPOKE_EXPERIENCES } from '@/lib/design-studio/experienceCopy'
 
-const DESIGN_STUDIO_DESCRIPTION =
-  'Rangkai jubah bespoke Anda — pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga secara langsung.'
+// Sprint Y §Y-4 — metadata copy verbatim from the brief. Hand-built rather
+// than buildSimplePageMetadata (which appends "| Bespoke Tailor", not the
+// brief's exact "| Local Tailor" suffix) so the title matches the brief
+// literally.
+const PAGE_TITLE = 'Design Studio — Bespoke Tailoring Tanpa Batas Jarak | Local Tailor'
+const PAGE_DESCRIPTION =
+  'Rancang thobe Anda dari mana saja melalui video call fitting, Design Studio online, dan layanan home visit. Pengalaman bespoke tanpa harus datang ke Bandung.'
+const PAGE_URL = `${FABRIC_SITE_ORIGIN}/design-studio`
 
-// Sprint W7-11 — was a bare { title, description } literal with no
-// canonical/OG/Twitter/robots signal, unlike every other marketing page
-// (gallery, journal, book-appointment) which already goes through this same
-// builder. Bringing it in line closes that metadata gap without changing
-// anything about the page's actual content.
-export const metadata: Metadata = buildSimplePageMetadata({
-  title: 'Design Studio',
-  description: DESIGN_STUDIO_DESCRIPTION,
-  path: '/design-studio',
-})
+export const metadata: Metadata = {
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
+  alternates: { canonical: PAGE_URL },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
+    url: PAGE_URL,
+    siteName: 'Local Tailor',
+    type: 'website',
+    images: [{ url: garmentPhotos.navy, width: 1200, height: 1500, alt: 'Bespoke thobe navy, presented on a mannequin, editorial studio photography' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
+    images: [garmentPhotos.navy],
+  },
+}
 
 interface PageProps {
   searchParams: { fabric?: string; color?: string }
 }
 
-// Sprint W3-4 §7-8 — Design Studio Deep Link / Preselection. Resolves
-// Fabric Explorer's ?fabric=<materials.slug>&color=<dna_colors.slug> into
-// this catalog's own option ids server-side (fabric/color have no
-// meaning to the client-side configurator catalog on their own — it only
-// knows design_master_options ids). A fabric/color slug that exists in
-// Material Master but was never linked into the Design Studio catalog
-// (no matching material_id/dna_color_id on a 'bahan'/'warna_bahan' option)
-// simply resolves to null — DesignStudioClient's normal unselected-state
-// behavior, "fallback normal" per the brief. Design Studio's own workflow
-// (ConfiguratorPanel, the Zustand store, estimate/save flow) is completely
-// unchanged; this only adds two optional initial values.
+// Sprint W3-4 §7-8 — Design Studio Deep Link / Preselection. Unchanged by
+// this sprint — resolves Fabric Explorer's ?fabric=&color= into the
+// configurator's own option ids. See prior sprint comments for the full
+// reasoning; this function's behavior is untouched.
 async function resolveInitialSelection(fabricSlug?: string, colorSlug?: string) {
   if (!fabricSlug) return { initialFabricId: null, initialColorId: null }
 
@@ -53,9 +82,6 @@ async function resolveInitialSelection(fabricSlug?: string, colorSlug?: string) 
 
   if (!colorSlug) return { initialFabricId: fabricOption.id, initialColorId: null }
 
-  // A color only has meaning in context of this specific material (same
-  // as Fabric Explorer's own ?color=) — resolved against this material's
-  // real available colors, not the flat DNA Color list.
   const materialColors = await getMaterialColors(supabase, material.id)
   const dnaColorId = materialColors.find((c) => c.slug === colorSlug)?.dna_color_id ?? null
   const colorOption = findOptionByDnaColorId(catalog.fields.colorId, dnaColorId)
@@ -63,34 +89,139 @@ async function resolveInitialSelection(fabricSlug?: string, colorSlug?: string) 
   return { initialFabricId: fabricOption.id, initialColorId: colorOption?.id ?? null }
 }
 
-// Sprint W2-1 foundation — public configurator, distinct from the internal
-// Fitter-facing Design Studio at /workspace/design-studio (untouched by
-// this sprint). Catalog data is fetched client-side from
-// GET /api/design/options, which is the only thing that reads Master Data
-// (via the integration layer, src/lib/configurator/mapping.ts).
+const BREADCRUMB_ITEMS = [
+  { name: 'Home', path: '/' },
+  { name: 'Design Studio', path: '/design-studio' },
+]
+
+const JOURNEY_STEPS: ProcessTimelineStep[] = [
+  { title: 'Book Session', description: 'Jadwalkan Free Video Call via WhatsApp.' },
+  { title: 'Video Call', description: 'Konsultasi kebutuhan dan panduan awal desain.' },
+  { title: 'Design Studio', description: 'Tentukan kombinasi Model, Kerah, Manset, Material, dan Warna.' },
+  { title: 'Approve Design', description: 'Setujui desain final sebelum produksi dimulai.' },
+  { title: 'Production', description: 'Pola dibentuk dan diproduksi di workshop Bandung.' },
+  { title: 'Delivery', description: 'Thobe dikirim ke alamat Anda di mana pun berada.' },
+]
+
+const COMPARISON_ROWS: ProblemSolutionRow[] = [
+  { problem: 'Jauh dari Bandung', solution: 'Konsultasi dan desain via video call, produksi tetap presisi di workshop kami' },
+  { problem: 'Tidak sempat datang', solution: 'Book Free Video Call kapan saja sesuai jadwal Anda' },
+  { problem: 'Ingin konsultasi langsung', solution: 'Home visit membawa fabric book, sample, dan alat ukur ke lokasi Anda' },
+  { problem: 'Ingin pengalaman premium', solution: 'Home visit personal untuk wedding, keluarga, corporate, dan VIP' },
+  { problem: 'Beda kota / negara', solution: 'Produksi tetap di Bandung, dikirim ke seluruh Indonesia dan luar negeri' },
+]
+
+// Sprint Y §Y-1 — landing page FAQ (distinct from, but consistent with, the
+// Digital Bespoke Tailoring Knowledge cluster's own per-article FAQs).
+const PAGE_FAQ: FaqSchemaItem[] = [
+  {
+    question: 'Apakah saya bisa memesan thobe custom tanpa datang ke Bandung?',
+    answer:
+      'Ya. Konsultasi, pemilihan desain, dan panduan pengukuran bisa dilakukan sepenuhnya lewat video call fitting gratis dan Design Studio — pengukuran final dikonfirmasi lewat home visit atau kunjungan ke workshop.',
+  },
+  {
+    question: 'Apakah Video Call Fitting benar-benar gratis?',
+    answer: 'Ya, sesi video call fitting tidak dikenakan biaya. Anda hanya membayar untuk garmen bespoke yang benar-benar dipesan.',
+  },
+  {
+    question: 'Bagaimana cara kerja Home Visit?',
+    answer: 'Tim kami datang ke lokasi Anda membawa fabric book, sample komponen, tablet Design Studio, dan alat ukur — cocok untuk keluarga, pasangan, wedding, corporate, dan VIP.',
+  },
+  {
+    question: 'Apakah saya tetap bisa datang langsung ke showroom?',
+    answer: 'Tentu. Showroom Experience tetap terbuka bagi Anda yang ingin konsultasi dan pengukuran tatap muka di workshop kami di Buah Batu, Bandung.',
+  },
+  {
+    question: 'Apakah hasil pengukuran jarak jauh akurat?',
+    answer: 'Video call memberi panduan dan estimasi awal yang akurat untuk desain, namun pengukuran yang dipakai untuk produksi tetap dikonfirmasi langsung oleh fitter — via home visit maupun kunjungan ke workshop.',
+  },
+  {
+    question: 'Apakah bisa memesan untuk kebutuhan wedding atau corporate dalam jumlah banyak?',
+    answer: 'Bisa. Home visit khususnya dirancang untuk kebutuhan wedding, keluarga besar, dan corporate yang memesan beberapa garmen sekaligus.',
+  },
+  {
+    question: 'Berapa lama proses dari konsultasi hingga thobe selesai?',
+    answer: 'Umumnya 2-3 minggu dari konsultasi hingga selesai, tergantung kompleksitas desain dan bahan yang dipilih.',
+  },
+  {
+    question: 'Apakah pengiriman menjangkau luar negeri?',
+    answer: 'Ya, garmen yang sudah selesai diproduksi dapat dikirim ke alamat Anda di luar negeri sesuai kesepakatan saat konsultasi.',
+  },
+]
+
+// Sprint W2-1 foundation, rebuilt as the Digital Bespoke Tailoring pillar
+// page in Sprint Y — public configurator, distinct from the internal
+// Fitter-facing Design Studio at /workspace/design-studio (untouched).
+// Sprint Y merges the new marketing pillar content (Hero through Booking
+// CTA) with the existing live configurator tool ON THE SAME PAGE, per
+// explicit decision with the user: the configurator itself
+// (DesignStudioClient, ConfiguratorPanel, the Zustand store, estimate/save
+// flow) is completely untouched, just rendered further down the same page
+// inside its own <section id="the-studio">. "Explore Design Studio"
+// scrolls to it instead of navigating away.
 export default async function DesignStudioPage({ searchParams }: PageProps) {
   const { initialFabricId, initialColorId } = await resolveInitialSelection(searchParams.fabric, searchParams.color)
 
-  // Sprint W7-3/W7-6 — Service + Breadcrumb JSON-LD only, no visible markup
-  // change: this page is a fixed-viewport configurator tool
-  // (DesignStudioClient's own layout owns h-screen panels), so a visible
-  // breadcrumb bar or FAQ block doesn't belong here without redesigning
-  // that layout, which this sprint is explicitly not doing.
   const service = serviceSchema({
-    name: 'Bespoke Tailoring Service',
-    description: DESIGN_STUDIO_DESCRIPTION,
-    url: `${FABRIC_SITE_ORIGIN}/design-studio`,
-    serviceType: 'Bespoke Tailoring',
+    name: 'Digital Bespoke Tailoring',
+    description: PAGE_DESCRIPTION,
+    url: PAGE_URL,
+    serviceType: 'Digital Bespoke Tailoring',
   })
-  const breadcrumb = breadcrumbSchema([
-    { name: 'Home', path: '/' },
-    { name: 'Design Studio', path: '/design-studio' },
-  ])
+  const journey = howToSchema({
+    name: 'Customer Journey Digital Bespoke Tailoring',
+    description: 'Alur pemesanan Digital Bespoke Tailoring dari booking sesi hingga garmen diterima.',
+    steps: JOURNEY_STEPS.map((step) => ({ name: step.title, text: step.description ?? step.title })),
+  })
 
   return (
-    <>
-      <JsonLd data={[service, breadcrumb]} />
-      <DesignStudioClient initialFabricId={initialFabricId} initialColorId={initialColorId} />
-    </>
+    <div className="bg-luxury-navy-deep">
+      <JsonLd
+        data={[
+          service,
+          faqSchema(PAGE_FAQ),
+          breadcrumbSchema(BREADCRUMB_ITEMS),
+          organizationSchema(),
+          localBusinessSchema(),
+          websiteSchema(),
+          journey,
+        ]}
+      />
+      <Nav />
+      <main>
+        <article>
+          <DigitalBespokeHero />
+          <div className="mx-auto max-w-6xl px-6 pt-10 md:px-10">
+            <Breadcrumbs items={BREADCRUMB_ITEMS} />
+          </div>
+          <WhatIsDesignStudio />
+          <ExperienceCards
+            heading="Tiga Cara Menggunakan Design Studio"
+            subheadline="Pilih cara yang paling sesuai dengan lokasi dan kebutuhan Anda."
+            items={DIGITAL_BESPOKE_EXPERIENCES}
+          />
+          <ProcessTimeline
+            heading="Customer Journey"
+            subheadline="Dari booking sesi pertama hingga thobe Anda diterima."
+            steps={JOURNEY_STEPS}
+          />
+          <ProblemSolutionTable heading="Keunggulan Digital Bespoke Tailoring" rows={COMPARISON_ROWS} />
+          <FaqSection items={PAGE_FAQ} headingId="design-studio-faq-heading" heading="Pertanyaan Umum — Design Studio" />
+          <BookingCTA
+            heading="Siap Memulai Digital Bespoke Tailoring Anda?"
+            body="Book Free Video Call untuk konsultasi, atau langsung jelajahi kombinasi desain di Design Studio."
+            whatsappMessage="Halo Local Tailor, saya ingin booking Free Video Call untuk konsultasi Digital Bespoke Tailoring."
+          />
+        </article>
+
+        <section id="the-studio" aria-labelledby="the-studio-heading" className="border-t border-luxury-gold/[0.14]">
+          <h2 id="the-studio-heading" className="sr-only">
+            Design Studio — Konfigurator Desain
+          </h2>
+          <DesignStudioClient initialFabricId={initialFabricId} initialColorId={initialColorId} />
+        </section>
+      </main>
+      <Footer />
+    </div>
   )
 }

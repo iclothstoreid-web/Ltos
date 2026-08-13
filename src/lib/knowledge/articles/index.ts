@@ -8,6 +8,7 @@ import { TAILORING_ARTICLES } from './tailoring'
 import { CARE_ARTICLES } from './care'
 import { QUESTION_ARTICLES } from './questions'
 import { BANDUNG_ARTICLES } from './bandung'
+import { DESIGN_STUDIO_ARTICLES } from './designStudio'
 
 export const ALL_KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
   ...FABRIC_ARTICLES,
@@ -19,6 +20,7 @@ export const ALL_KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
   ...CARE_ARTICLES,
   ...QUESTION_ARTICLES,
   ...BANDUNG_ARTICLES,
+  ...DESIGN_STUDIO_ARTICLES,
 ]
 
 export function getKnowledgeArticle(category: string, slug: string): KnowledgeArticle | undefined {
@@ -39,4 +41,5 @@ export {
   CARE_ARTICLES,
   QUESTION_ARTICLES,
   BANDUNG_ARTICLES,
+  DESIGN_STUDIO_ARTICLES,
 }

@@ -65,6 +65,17 @@ const CATEGORY_CTA_CONFIG: Partial<Record<KnowledgeCategorySlug, KnowledgeCTACon
     showEstimatePrice: true,
     showBodyProfile: true,
   },
+  // Sprint Y — every design-studio cluster article must lead back to
+  // /design-studio (the brief's own requirement); showEstimatePrice is the
+  // existing CTAEstimatePrice component, which already links there.
+  'design-studio': {
+    heading: 'Siap Memulai Digital Bespoke Tailoring Anda?',
+    body: 'Book Free Video Call, atau langsung jelajahi Design Studio untuk melihat kombinasi desain dan estimasi harga.',
+    consultationLabel: 'Book Free Video Call',
+    showFabricExplorer: false,
+    showEstimatePrice: true,
+    showBodyProfile: true,
+  },
 }
 
 export function getCTAConfig(category: KnowledgeCategorySlug): KnowledgeCTAConfig {

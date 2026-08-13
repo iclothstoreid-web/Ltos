@@ -291,6 +291,42 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     relatedCategories: ['tailoring', 'wedding'],
     status: 'live',
   },
+  {
+    // Sprint Y — Digital Bespoke Tailoring cluster. The whole point of this
+    // category is answering "can I order without visiting Bandung?" —
+    // every article here (cornerstone + 14 supporting pages) resolves that
+    // question and points back at /design-studio, the merged pillar +
+    // configurator page.
+    slug: 'design-studio',
+    label: 'Design Studio',
+    eyebrow: 'Digital Bespoke Tailoring',
+    title: 'Digital Bespoke Tailoring — Design Studio, Video Call Fitting, dan Home Visit',
+    metaDescription:
+      'Panduan lengkap Digital Bespoke Tailoring Local Tailor — cara memesan custom thobe dari luar kota, luar pulau, atau luar negeri lewat video call fitting, Design Studio online, dan layanan home visit.',
+    intro: [
+      'Bespoke tailoring secara tradisional selalu mengharuskan pelanggan datang langsung ke tailor — untuk konsultasi, pengukuran, dan pemilihan bahan. Digital Bespoke Tailoring dari Local Tailor menghilangkan batasan itu: seluruh proses, dari konsultasi hingga finalisasi desain, kini bisa dilakukan dari mana saja lewat video call fitting, Design Studio online, dan layanan home visit untuk yang ingin pengalaman lebih personal.',
+      'Halaman ini dan seluruh artikel turunannya menjelaskan bagaimana Digital Bespoke Tailoring bekerja secara spesifik — cara memesan custom thobe online dari luar kota, seberapa akurat fitting lewat video call, bagaimana layanan home visit bekerja untuk keluarga dan acara pernikahan, dan bagaimana Design Studio menjadi titik awal setiap pesanan sebelum kain dipotong.',
+    ],
+    faq: [
+      {
+        question: 'Apakah Digital Bespoke Tailoring sama akuratnya dengan datang langsung ke Bandung?',
+        answer:
+          'Video call fitting dan Design Studio memberi hasil desain dan estimasi ukuran yang sangat mendekati, namun pengukuran final untuk produksi tetap dilakukan langsung oleh fitter kami — baik saat home visit maupun saat Anda berkunjung ke workshop — untuk memastikan Digital Body Profile Anda akurat.',
+      },
+      {
+        question: 'Apakah layanan ini hanya untuk pelanggan di luar Bandung?',
+        answer:
+          'Tidak. Digital Bespoke Tailoring dirancang untuk siapa pun yang tidak sempat datang langsung — termasuk pelanggan sibuk di dalam Bandung sendiri — sekaligus tetap membuka opsi showroom experience bagi yang ingin datang langsung.',
+      },
+      {
+        question: 'Apa yang membedakan Design Studio dari sekadar katalog online?',
+        answer:
+          'Design Studio bukan katalog produk jadi — ini adalah titik awal proses bespoke, tempat Anda memilih Model, Kerah, Manset, Material, dan Warna, lalu melihat kombinasi desain dan estimasi harga secara real-time sebelum pola personal Anda mulai dibentuk.',
+      },
+    ],
+    relatedCategories: ['tailoring', 'measurements'],
+    status: 'live',
+  },
 ]
 
 export function getCategoryBySlug(slug: string): KnowledgeCategory | undefined {

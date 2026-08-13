@@ -121,6 +121,54 @@ export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
     primaryPath: '/',
     relatedPaths: ['/knowledge', '/knowledge/umrah', '/knowledge/wedding'],
   },
+  // Sprint Y — Digital Bespoke Tailoring entity cluster. This is the
+  // sprint's own "primary entity" for the /design-studio positioning, but
+  // it's added here as a secondary entity rather than replacing the
+  // sitewide PRIMARY_ENTITY above (Local Tailor) — redefining the whole
+  // site's primary entity for one feature would overreach this sprint's
+  // scope. `primaryPath` for each points at the real cornerstone or
+  // /design-studio itself; `relatedPaths` link into the real 15-article
+  // Knowledge cluster built alongside it.
+  {
+    slug: 'digital-bespoke-tailoring',
+    name: 'Digital Bespoke Tailoring',
+    type: 'Service',
+    description: 'Proses bespoke tailoring yang dijalankan jarak jauh — konsultasi, desain, dan panduan ukur via video call dan Design Studio, dengan opsi home visit untuk sesi tatap muka.',
+    primaryPath: '/design-studio',
+    relatedPaths: ['/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bandung', '/knowledge/design-studio'],
+  },
+  {
+    slug: 'design-studio',
+    name: 'Design Studio',
+    type: 'Service',
+    description: 'Konfigurator online Local Tailor untuk memilih Model, Kerah, Manset, Material, dan Warna serta melihat estimasi harga secara real-time.',
+    primaryPath: '/design-studio',
+    relatedPaths: ['/knowledge/design-studio/apa-itu-design-studio-local-tailor', '/knowledge/design-studio/cara-mendesain-thobe-sebelum-dijahit'],
+  },
+  {
+    slug: 'video-call-fitting',
+    name: 'Video Call Fitting',
+    type: 'Service',
+    description: 'Sesi konsultasi dan panduan pengukuran gratis via video call, untuk pelanggan yang tidak sempat datang ke Bandung.',
+    primaryPath: '/design-studio',
+    relatedPaths: ['/knowledge/design-studio/fitting-video-call-apakah-akurat', '/knowledge/design-studio/konsultasi-tailor-online-gratis'],
+  },
+  {
+    slug: 'home-visit-tailor',
+    name: 'Home Visit Tailor',
+    type: 'Service',
+    description: 'Layanan kunjungan tim Local Tailor ke lokasi pelanggan, membawa fabric book, sample komponen, tablet Design Studio, dan alat ukur.',
+    primaryPath: '/design-studio',
+    relatedPaths: ['/knowledge/design-studio/layanan-home-visit-bandung', '/knowledge/design-studio/home-visit-wedding-keluarga'],
+  },
+  {
+    slug: 'custom-thobe-online',
+    name: 'Custom Thobe Online',
+    type: 'Product',
+    description: 'Thobe custom yang dipesan sepenuhnya secara online — desain di Design Studio, konsultasi via video call, produksi tetap di workshop Bandung.',
+    primaryPath: '/design-studio',
+    relatedPaths: ['/knowledge/design-studio/custom-thobe-online-panduan-lengkap', '/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota'],
+  },
 ]
 
 export function getEntityBySlug(slug: string): KnowledgeGraphEntity | undefined {
