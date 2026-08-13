@@ -26,7 +26,7 @@ export function CraftsmanshipProcess() {
           {craftsmanshipCopy.steps.map((step, i) => (
             <Reveal as="li" key={step.title} delay={i * 0.12} className="relative text-center">
               <div className="mx-auto w-24">
-                <WorkshopPhotoPlaceholder alt={`${step.title} step illustration`} variant={VARIANTS[i]} />
+                <WorkshopPhotoPlaceholder alt={`${step.title} step illustration`} variant={VARIANTS[i]} idSuffix={`workshop-photo-${i}`} />
               </div>
               <p className="mt-5 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">
                 {String(i + 1).padStart(2, '0')}

@@ -199,9 +199,11 @@ export const deliveryCopy = {
 // renders after FabricHighlight/WhyLocalTailor), so "explore further" is a
 // real forward link, not just a repeated anchor.
 //
-// statement ("Craftsmanship is measured by what remains invisible.") is a
-// verbatim repeat of productionCopy.statement (W5-3) — given as-is in this
-// sprint's own brief, not introduced here; implemented as specified.
+// statement was originally a verbatim repeat of productionCopy.statement
+// (W5-3), given as-is in that sprint's own brief. Sprint W5-10 varies the
+// wording here — same "the real work is invisible" meaning, different
+// sentence — since the two sections now sit close enough together that
+// the identical quote read as an editing mistake rather than a callback.
 export const craftsmanshipDetailsCopy = {
   eyebrow: 'Craftsmanship',
   heading: 'The Difference Is in the Details',
@@ -212,7 +214,7 @@ export const craftsmanshipDetailsCopy = {
     { title: 'Structural Construction', description: 'Garment balance and drape are built through tailoring structure, not shortcuts.' },
     { title: 'Final Pressing', description: 'Every garment is professionally pressed before final inspection and delivery.' },
   ],
-  statement: 'Craftsmanship is measured by what remains invisible.',
+  statement: 'What you never see is exactly what took the longest to get right.',
   cta: 'Explore Our Craftsmanship',
 }
 
@@ -277,7 +279,7 @@ export const authorityCopy = {
 export const gallerySectionCopy = {
   eyebrow: 'Gallery',
   heading: 'Real Customers. Real Craftsmanship. Real Results.',
-  subheadline: 'Every gallery image represents garments, materials, details, and tailoring work created through our bespoke process.',
+  subheadline: 'Every gallery image reflects the garments, materials, and detail work behind each order we complete.',
   categories: [
     {
       title: 'Finished Garments',
@@ -412,7 +414,7 @@ export const reviewsCopy = {
     { value: '4.9/5', label: 'Average Rating' },
     { value: 'Verified', label: 'Customer Reviews' },
     { value: 'Real', label: 'Workshop Process' },
-    { value: 'Personal', label: 'Measurement Retention' },
+    { value: 'Personal', label: 'Saved Measurements' },
   ],
   authenticityStatement:
     'Every testimonial shown here reflects an actual bespoke tailoring experience and is presented as a representation of the type of client feedback our workshop receives.',
@@ -428,13 +430,20 @@ export const reviewsCopy = {
 // it primes the reader right before the page's real FinalCta further down,
 // not a replacement for it. Both CTA targets are existing, already-used
 // routes (no new route): /book-appointment and /fabric.
+//
+// Sprint W5-10 — primaryCards[0]/[1] titles were originally verbatim
+// "Personal Pattern" / "Measurement Retention", the same terms already
+// used moments earlier by AuthoritySection's and ReviewsSection's own
+// metrics. Reworded here (meaning unchanged) since this section functions
+// as a homepage-wide recap and was repeating language the reader had just
+// seen twice in a row.
 export const trustBadgesCopy = {
   eyebrow: 'Trust & Confidence',
   heading: 'Why Clients Feel Confident Ordering Bespoke From Us',
   subheadline: 'Our process is designed to reduce uncertainty, preserve consistency, and deliver a garment built specifically for you.',
   primaryCards: [
-    { title: 'Personal Pattern', description: 'Created specifically for your body.' },
-    { title: 'Measurement Retention', description: 'Future orders become significantly faster.' },
+    { title: 'A Pattern Made for You', description: 'Created specifically for your body.' },
+    { title: 'Stored Fit Profile', description: 'Future orders become significantly faster.' },
     { title: 'Quality Control', description: 'Every garment is inspected before delivery.' },
   ],
   secondaryBadges: [

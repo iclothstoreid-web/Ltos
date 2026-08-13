@@ -5,6 +5,15 @@ import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 
+type WorkshopSectionProps = {
+  // Sprint W5-10 — added; this section was the one single-CTA section
+  // still hardcoded (no override), inconsistent with its siblings.
+  // Defaults to /gallery, not /#craftsmanship — GallerySection has a
+  // literal "Workshop Process" category, a closer content match, and this
+  // also thins out the /#craftsmanship cluster.
+  ctaHref?: string
+}
+
 // Sprint W5-5 — Craftsmanship & Workshop. Editorial visual composed from two
 // real, already-catalogued photos (garmentPhotos.navy + a fabricPhotos macro
 // shot as an offset inset) rather than a single flat image or an illustrated
@@ -12,7 +21,7 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 // the brief explicitly says not to add a new stock image, so this reuses
 // what's real and on-brand. Card-left / content-right, same convention as
 // the section before it.
-export function WorkshopSection() {
+export function WorkshopSection({ ctaHref = '/gallery' }: WorkshopSectionProps = {}) {
   return (
     <section id="workshop" aria-labelledby="workshop-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
@@ -58,7 +67,7 @@ export function WorkshopSection() {
             <p className="mt-2 font-fraunces text-lg italic leading-snug text-luxury-ivory md:text-xl">&ldquo;{workshopCopy.authenticityCallout}&rdquo;</p>
           </blockquote>
 
-          <MagneticButton href="/#craftsmanship" variant="primary" className="mt-8">
+          <MagneticButton href={ctaHref} variant="primary" className="mt-8">
             {workshopCopy.cta}
           </MagneticButton>
         </Reveal>

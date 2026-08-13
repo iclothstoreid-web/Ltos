@@ -26,7 +26,7 @@ export function GalleryImagePlaceholder({
       className={`group relative w-full overflow-hidden rounded-sm ${tall ? 'aspect-[3/4]' : 'aspect-square'}`}
     >
       <LuxuryGradientField variant={variant} />
-      <LinenTexture opacity={0.14} />
+      <LinenTexture opacity={0.14} idSuffix={idSuffix} />
       <GarmentSilhouette
         className="h-[55%] w-auto opacity-40 transition-transform duration-500 group-hover:scale-105"
         idSuffix={idSuffix}

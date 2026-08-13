@@ -3,13 +3,22 @@ import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 
+type TrustBadgesSectionProps = {
+  // Sprint W5-10 — added for landing-page reuse. The primary CTA stays
+  // hardcoded to /book-appointment on purpose — this sprint's own CTA
+  // consolidation rule keeps the primary conversion action constant
+  // everywhere; only the secondary "Explore Fabrics" action is meaningful
+  // to vary per page.
+  secondaryCtaHref?: string
+}
+
 // Sprint W5-9 — Trust Badges & Premium Copywriting. Centered header, 3
 // primary trust cards (article/ul/li, matching CraftsmanshipSection's
 // convention), a compact secondary-badge row (a second ul, lighter pill
 // treatment), a premium copywriting block, and a final CTA area — all
 // nested under one h2, with h3s per sub-block rather than a second h2, to
 // keep one-h2-per-section intact.
-export function TrustBadgesSection() {
+export function TrustBadgesSection({ secondaryCtaHref = '/fabric' }: TrustBadgesSectionProps = {}) {
   return (
     <section id="trust-badges" aria-labelledby="trust-badges-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
@@ -58,7 +67,7 @@ export function TrustBadgesSection() {
             <MagneticButton href="/book-appointment" variant="primary">
               {trustBadgesCopy.finalCta.primaryCta}
             </MagneticButton>
-            <MagneticButton href="/fabric" variant="ghost">
+            <MagneticButton href={secondaryCtaHref} variant="ghost">
               {trustBadgesCopy.finalCta.secondaryCta}
             </MagneticButton>
           </div>

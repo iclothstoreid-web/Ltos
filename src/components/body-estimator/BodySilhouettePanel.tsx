@@ -13,7 +13,7 @@ export function BodySilhouettePanel() {
   return (
     <div className="relative min-h-[420px] overflow-hidden rounded-3xl border border-luxury-gold/[0.14] lg:min-h-full">
       <LuxuryGradientField variant="a" />
-      <LinenTexture opacity={0.08} />
+      <LinenTexture opacity={0.08} idSuffix="body-silhouette" />
 
       {/* Subtle measurement guide lines — reinforces "body estimation"
           without needing real photography. */}

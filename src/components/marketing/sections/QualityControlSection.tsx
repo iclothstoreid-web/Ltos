@@ -5,6 +5,10 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 import { GoldCheckMark } from '../placeholders/GoldCheckMark'
 
 type QualityControlSectionProps = {
+  // Sprint W5-10 — repointed from /#craftsmanship to /#why: that section
+  // never had explicit QC content, while WhyLocalTailor makes the
+  // quality-differentiation case directly; also thins out the
+  // /#craftsmanship cluster (was 6 of 13 sections pointing there).
   ctaHref?: string
 }
 
@@ -13,7 +17,7 @@ type QualityControlSectionProps = {
 // checklist uses GoldCheckMark (not the plain gold-dash bullet used
 // elsewhere) since each item is literally a pass/verified inspection
 // point — the one place on the homepage that motif is warranted.
-export function QualityControlSection({ ctaHref = '/#craftsmanship' }: QualityControlSectionProps = {}) {
+export function QualityControlSection({ ctaHref = '/#why' }: QualityControlSectionProps = {}) {
   const pointCount = qualityControlCopy.checklist.length
 
   return (

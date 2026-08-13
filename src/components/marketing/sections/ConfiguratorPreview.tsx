@@ -30,7 +30,7 @@ export function ConfiguratorPreview() {
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal className="relative aspect-[4/5] w-full overflow-hidden rounded-sm">
           <LuxuryGradientField variant="b" />
-          <LinenTexture opacity={0.15} />
+          <LinenTexture opacity={0.15} idSuffix="configurator-preview" />
           {/* The mannequin itself is the real, neutral Design Studio asset —
               it doesn't recolor. The selected color instead reads as an
               ambient studio-light tint behind it, which is closer to how

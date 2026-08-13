@@ -39,7 +39,7 @@ export function FabricHighlight() {
                   <div className="absolute inset-0 ring-1 ring-inset ring-luxury-gold/10 transition group-hover:ring-luxury-gold/40" />
                 </div>
               ) : (
-                <FabricCardPlaceholder alt={`${card.name} fabric swatch`} variant={VARIANTS[i]} />
+                <FabricCardPlaceholder alt={`${card.name} fabric swatch`} variant={VARIANTS[i]} idSuffix={`fabric-card-${i}`} />
               )}
               <h3 className="mt-4 font-fraunces text-lg text-luxury-ivory">{card.name}</h3>
               <p className="font-luxury-sans text-xs text-luxury-taupe">{card.origin}</p>

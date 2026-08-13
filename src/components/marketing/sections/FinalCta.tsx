@@ -24,7 +24,7 @@ export function FinalCta() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_rgba(11,22,40,0.22)_0%,_rgba(11,22,40,0.08)_30%,_transparent_60%)]"
       />
-      <LinenTexture opacity={0.1} />
+      <LinenTexture opacity={0.1} idSuffix="final-cta" />
 
       <Reveal className="relative mx-auto max-w-2xl">
         <h2 id="final-cta-heading" className="font-fraunces text-4xl text-luxury-ivory md:text-5xl">

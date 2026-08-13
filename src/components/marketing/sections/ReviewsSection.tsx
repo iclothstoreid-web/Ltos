@@ -5,15 +5,24 @@ import { MagneticButton } from '../shell/MagneticButton'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 import { GoldStarRating } from '../placeholders/GoldStarRating'
 
+type ReviewsSectionProps = {
+  // Sprint W5-10 — added. The default (/#gallery) only resolves on the
+  // homepage, where the existing Gallery.tsx section (id="gallery") is
+  // also present; a landing page reusing ReviewsSection without that
+  // section would otherwise ship a dead anchor. Override on any page that
+  // doesn't include it.
+  ctaHref?: string
+}
+
 // Sprint W5-8 — Reviews & Testimonial System. Centered header + 3-card grid
 // + metrics strip (reusing the ProductionSection metrics-strip pattern) +
 // authenticity statement + CTA, matching the established full-width section
 // convention. Each card's image is a real garment photo (no customer
 // photography exists to use) — the <figcaption> names the garment shown,
 // never the reviewer, so the image never claims to be a photo of that
-// person. CTA falls back to /#gallery per this sprint's own brief, since
+// person. CTA defaults to /#gallery per this sprint's own brief, since
 // /reviews doesn't exist yet.
-export function ReviewsSection() {
+export function ReviewsSection({ ctaHref = '/#gallery' }: ReviewsSectionProps = {}) {
   return (
     <section id="reviews" aria-labelledby="reviews-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
@@ -71,7 +80,7 @@ export function ReviewsSection() {
             <p className="font-luxury-sans text-sm italic leading-relaxed text-luxury-taupe">{reviewsCopy.authenticityStatement}</p>
           </blockquote>
 
-          <MagneticButton href="/#gallery" variant="primary" className="mt-10">
+          <MagneticButton href={ctaHref} variant="primary" className="mt-10">
             {reviewsCopy.cta}
           </MagneticButton>
         </Reveal>

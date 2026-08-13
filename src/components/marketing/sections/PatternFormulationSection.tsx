@@ -8,8 +8,11 @@ import { PatternDraftMotif } from '../placeholders/PatternDraftMotif'
 
 type PatternFormulationSectionProps = {
   // Reusable across landing pages, same override pattern as
-  // BespokeProcessSection's secondaryHref. Defaults to the homepage's
-  // existing Craftsmanship section.
+  // BespokeProcessSection's secondaryHref. Sprint W5-10 — repointed from
+  // /#craftsmanship to /#why: WhyLocalTailor's own "Bespoke Tailor" column
+  // already describes pattern formulation ("a pattern formulated from your
+  // measurements alone"), and this also breaks up what was a back-to-back
+  // /#craftsmanship repeat with the ProductionSection right after it.
   ctaHref?: string
 }
 
@@ -17,14 +20,14 @@ type PatternFormulationSectionProps = {
 // matching ConsultationSection's editorial-slot convention — here filled by
 // PatternDraftMotif (illustrated, since no real drafting photography exists)
 // instead of a photo.
-export function PatternFormulationSection({ ctaHref = '/#craftsmanship' }: PatternFormulationSectionProps = {}) {
+export function PatternFormulationSection({ ctaHref = '/#why' }: PatternFormulationSectionProps = {}) {
   return (
     <section id="pattern-formulation" aria-labelledby="pattern-formulation-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal className="relative aspect-[4/5] w-full overflow-hidden rounded-sm">
           <div role="img" aria-label={patternFormulationCopy.motifAlt} className="absolute inset-0">
             <LuxuryGradientField variant="a" />
-            <LinenTexture opacity={0.14} />
+            <LinenTexture opacity={0.14} idSuffix="pattern-formulation" />
             <PatternDraftMotif idSuffix="pattern-formulation" className="h-[85%] w-[85%]" />
           </div>
           <div aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-luxury-gold/10" />
