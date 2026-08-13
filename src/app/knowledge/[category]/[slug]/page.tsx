@@ -1,19 +1,24 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ALL_KNOWLEDGE_ARTICLES, getKnowledgeArticle } from '@/lib/knowledge/articles'
-import { getRelatedArticles, getRelatedCategories, getRelatedFabrics } from '@/lib/knowledge/relatedArticles'
+import { getRelatedArticles, getRelatedByTags, getRelatedCategories, getRelatedFabrics } from '@/lib/knowledge/relatedArticles'
 import { buildKnowledgeBreadcrumb } from '@/lib/knowledge/breadcrumbs'
 import {
   buildKnowledgeArticleMetadata,
   buildKnowledgeArticleSchema,
   buildKnowledgeBreadcrumbSchema,
   buildKnowledgeFaqSchema,
+  buildKnowledgeHowToSchema,
 } from '@/lib/knowledge/seo'
 import { buildOrganizationSchema } from '@/lib/content/seo'
 import { buildLocalBusinessSchema } from '@/lib/marketing/seo'
 import type { KnowledgeContentBlock, KnowledgeSection } from '@/lib/knowledge/types'
 import { Breadcrumbs } from '@/components/knowledge/Breadcrumbs'
 import { KnowledgeHero } from '@/components/knowledge/KnowledgeHero'
+import { QuickAnswer } from '@/components/knowledge/QuickAnswer'
+import { KeyTakeaways } from '@/components/knowledge/KeyTakeaways'
+import { ExpertNote } from '@/components/knowledge/ExpertNote'
+import { ComparisonTable } from '@/components/knowledge/ComparisonTable'
 import { RelatedArticles } from '@/components/knowledge/RelatedArticles'
 import { RelatedFabrics } from '@/components/knowledge/RelatedFabrics'
 import { KnowledgeCategoryGrid } from '@/components/knowledge/KnowledgeCategoryGrid'
@@ -127,6 +132,18 @@ function ArticleSectionBlock({ section, headingId }: { section: KnowledgeSection
       <div className="mt-4">
         <ContentBlock block={section.block} />
       </div>
+      {section.subsections && section.subsections.length > 0 && (
+        <div className="mt-6 space-y-6">
+          {section.subsections.map((subsection, index) => (
+            <div key={index}>
+              <h3 className="font-fraunces text-lg text-luxury-ivory">{subsection.heading}</h3>
+              <div className="mt-3">
+                <ContentBlock block={subsection.block} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
@@ -138,11 +155,16 @@ export default function KnowledgeArticlePage({ params }: PageProps) {
   const relatedArticles = getRelatedArticles(article)
   const relatedFabrics = getRelatedFabrics(article)
   const relatedCategories = getRelatedCategories(article.relatedCategories)
+  // Sprint W6-7 — "Recommended for this occasion" rail, powered by the tag
+  // overlap resolver rather than a hand-picked list, so it stays correct as
+  // future articles add matching tags without any per-article edit here.
+  const relatedByTags = getRelatedByTags(article)
 
   const breadcrumbItems = buildKnowledgeBreadcrumb({ article })
   const articleSchema = buildKnowledgeArticleSchema(article)
   const breadcrumbSchema = buildKnowledgeBreadcrumbSchema(breadcrumbItems)
   const faqSchema = buildKnowledgeFaqSchema(article.faq)
+  const howToSchema = buildKnowledgeHowToSchema(article)
   const organizationSchema = buildOrganizationSchema()
   const localBusinessSchema = buildLocalBusinessSchema()
 
@@ -156,6 +178,10 @@ export default function KnowledgeArticlePage({ params }: PageProps) {
         // eslint-disable-next-line react/no-danger
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
+      {howToSchema && (
+        // eslint-disable-next-line react/no-danger
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
+      )}
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
       {/* eslint-disable-next-line react/no-danger */}
@@ -165,7 +191,9 @@ export default function KnowledgeArticlePage({ params }: PageProps) {
         <Breadcrumbs items={breadcrumbItems} />
         <KnowledgeHero variant="article" eyebrow={article.eyebrow} title={article.title} dek={article.dek} />
 
-        <section aria-labelledby="article-definition-heading" className="mx-auto mt-12 max-w-3xl">
+        {article.quickAnswer && <QuickAnswer answer={article.quickAnswer} headingId="article-quick-answer-heading" />}
+
+        <section aria-labelledby="article-definition-heading" className="mx-auto mt-8 max-w-3xl">
           <h2 id="article-definition-heading" className="sr-only">
             Definisi
           </h2>
@@ -174,13 +202,27 @@ export default function KnowledgeArticlePage({ params }: PageProps) {
           </p>
         </section>
 
+        {article.keyTakeaways && <KeyTakeaways items={article.keyTakeaways} headingId="article-key-takeaways-heading" />}
+
         {article.sections.map((section, index) => (
           <ArticleSectionBlock key={section.heading} section={section} headingId={`article-section-${index}`} />
         ))}
 
+        {article.expertNote && <ExpertNote note={article.expertNote} headingId="article-expert-note-heading" />}
+
+        {article.comparisonTable && (
+          <ComparisonTable
+            caption={article.comparisonTable.caption}
+            headers={article.comparisonTable.headers}
+            rows={article.comparisonTable.rows}
+            headingId="article-comparison-heading"
+          />
+        )}
+
         <FAQSection items={article.faq} headingId="article-faq-heading" />
         <RelatedFabrics fabrics={relatedFabrics} headingId="related-fabrics-heading" />
-        <RelatedArticles articles={relatedArticles} headingId="related-articles-heading" />
+        <RelatedArticles articles={relatedArticles} heading="Baca Selanjutnya" headingId="related-articles-heading" />
+        <RelatedArticles articles={relatedByTags} heading="Rekomendasi untuk Acara Ini" headingId="related-by-occasion-heading" />
 
         {relatedCategories.length > 0 && (
           <section aria-labelledby="related-categories-heading" className="mx-auto mt-14 max-w-3xl">

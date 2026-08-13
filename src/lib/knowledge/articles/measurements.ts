@@ -97,7 +97,9 @@ export const MEASUREMENT_ARTICLES: KnowledgeArticle[] = [
       { category: 'measurements', slug: 'shoulder' },
       { category: 'measurements', slug: 'thobe-size-guide' },
     ],
-    relatedCategories: ['tailoring'],
+    // Sprint W6-7 — Measurement -> Wedding/Umrah link graph rules: accurate
+    // measurement is the prerequisite step before ordering for either occasion.
+    relatedCategories: ['tailoring', 'wedding', 'umrah'],
   },
   {
     slug: 'chest',
@@ -567,7 +569,8 @@ export const MEASUREMENT_ARTICLES: KnowledgeArticle[] = [
       { category: 'measurements', slug: 'slim-vs-regular-fit' },
       { category: 'measurements', slug: 'how-to-measure-body' },
     ],
-    relatedCategories: ['tailoring'],
+    // Sprint W6-7 — Measurement -> Wedding/Umrah link graph rules.
+    relatedCategories: ['tailoring', 'wedding', 'umrah'],
   },
   {
     slug: 'slim-vs-regular-fit',

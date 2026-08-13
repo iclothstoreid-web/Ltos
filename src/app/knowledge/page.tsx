@@ -2,9 +2,10 @@ import type { Metadata } from 'next'
 import { KNOWLEDGE_CATEGORIES } from '@/lib/knowledge/categories'
 import { getKnowledgeArticle } from '@/lib/knowledge/articles'
 import { buildKnowledgeBreadcrumb } from '@/lib/knowledge/breadcrumbs'
-import { buildKnowledgeBreadcrumbSchema, buildKnowledgeLandingMetadata } from '@/lib/knowledge/seo'
+import { buildKnowledgeBreadcrumbSchema, buildKnowledgeCollectionPageSchema, buildKnowledgeLandingMetadata } from '@/lib/knowledge/seo'
 import { buildOrganizationSchema } from '@/lib/content/seo'
 import { buildLocalBusinessSchema } from '@/lib/marketing/seo'
+import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 import { Breadcrumbs } from '@/components/knowledge/Breadcrumbs'
 import { KnowledgeHero } from '@/components/knowledge/KnowledgeHero'
 import { KnowledgeCategoryGrid } from '@/components/knowledge/KnowledgeCategoryGrid'
@@ -37,6 +38,11 @@ const POPULAR_REFS = [
 export default function KnowledgePage() {
   const breadcrumbItems = buildKnowledgeBreadcrumb({})
   const breadcrumbSchema = buildKnowledgeBreadcrumbSchema(breadcrumbItems)
+  const collectionPageSchema = buildKnowledgeCollectionPageSchema({
+    name: 'Local Tailor Knowledge',
+    description: 'Panduan bahan, pengukuran, gaya, pernikahan, umrah, tailoring, dan perawatan thobe bespoke.',
+    url: `${FABRIC_SITE_ORIGIN}/knowledge`,
+  })
   const organizationSchema = buildOrganizationSchema()
   const localBusinessSchema = buildLocalBusinessSchema()
 
@@ -47,6 +53,8 @@ export default function KnowledgePage() {
     <div className="min-h-screen bg-luxury-navy-deep px-6 py-16 md:py-20 lg:px-10">
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      {/* eslint-disable-next-line react/no-danger */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }} />
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
       {/* eslint-disable-next-line react/no-danger */}

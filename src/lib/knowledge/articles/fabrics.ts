@@ -123,7 +123,10 @@ export const FABRIC_ARTICLES: KnowledgeArticle[] = [
       { category: 'fabrics', slug: 'premium-cotton' },
       { category: 'fabrics', slug: 'japanese-cotton' },
     ],
-    relatedCategories: ['care', 'styling'],
+    // Sprint W6-7 — Fabric -> Umrah link graph rule: linen is one of the
+    // umrah cluster's own top fabric recommendations (see umrah/best-fabric),
+    // so the link runs both directions.
+    relatedCategories: ['care', 'styling', 'umrah'],
   },
   {
     slug: 'japanese-cotton',
@@ -239,7 +242,8 @@ export const FABRIC_ARTICLES: KnowledgeArticle[] = [
       { category: 'fabrics', slug: 'egyptian-cotton' },
       { category: 'fabrics', slug: 'premium-cotton' },
     ],
-    relatedCategories: ['care', 'styling'],
+    // Sprint W6-7 — Fabric -> Umrah link graph rule.
+    relatedCategories: ['care', 'styling', 'umrah'],
   },
   {
     slug: 'egyptian-cotton',
@@ -355,7 +359,9 @@ export const FABRIC_ARTICLES: KnowledgeArticle[] = [
       { category: 'fabrics', slug: 'japanese-cotton' },
       { category: 'fabrics', slug: 'premium-cotton' },
     ],
-    relatedCategories: ['care', 'styling'],
+    // Sprint W6-7 — Fabric -> Wedding link graph rule: egyptian-cotton is a
+    // top pick in wedding/premium-thobe-wedding and wedding/resepsi-pria.
+    relatedCategories: ['care', 'styling', 'wedding'],
   },
   {
     slug: 'poplin',
@@ -819,7 +825,9 @@ export const FABRIC_ARTICLES: KnowledgeArticle[] = [
       { category: 'fabrics', slug: 'premium-cotton' },
       { category: 'fabrics', slug: 'twill' },
     ],
-    relatedCategories: ['care', 'styling'],
+    // Sprint W6-7 — Fabric -> Wedding link graph rule: wool blend is the
+    // top pick in wedding/akad-pria and wedding/premium-thobe-wedding.
+    relatedCategories: ['care', 'styling', 'wedding'],
   },
   {
     slug: 'rayon',

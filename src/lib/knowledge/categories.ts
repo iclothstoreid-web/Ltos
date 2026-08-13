@@ -107,8 +107,8 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     metaDescription:
       'Panduan memilih thobe untuk acara pernikahan — warna, bahan, dan gaya yang tepat untuk pengantin pria maupun tamu undangan.',
     intro: [
-      'Pernikahan adalah salah satu acara yang paling menuntut ketepatan dalam memilih thobe — warna harus elegan, bahan harus terlihat premium dari dekat maupun dari jarak foto, dan potongannya harus benar-benar pas di badan. Local Tailor membangun hub ini sebagai titik awal untuk kebutuhan tersebut.',
-      'Konten lengkap untuk kategori ini — termasuk panduan memilih warna berdasarkan tema pernikahan, rekomendasi bahan premium, dan kombinasi aksesori seperti bisht — akan hadir bertahap. Untuk saat ini, panduan gaya pernikahan thobe di kategori Styling sudah bisa Anda jadikan referensi awal.',
+      'Pernikahan adalah salah satu acara yang paling menuntut ketepatan dalam memilih thobe — warna harus elegan, bahan harus terlihat premium dari dekat maupun dari jarak foto, dan potongannya harus benar-benar pas di badan. Kesalahan kecil yang bisa dimaafkan di acara harian akan sangat terlihat di foto pernikahan yang disimpan seumur hidup.',
+      'Panduan ini membahas delapan aspek thobe pernikahan — dari pemilihan gaya akad dan resepsi, thobe couple muslim, timeline pemesanan custom, panduan warna, hingga outfit keluarga dan thobe premium untuk pengantin — masing-masing dengan rekomendasi bahan, kesalahan umum yang perlu dihindari, dan panduan praktis dari konsultasi hingga hari-H.',
     ],
     faq: [
       {
@@ -121,9 +121,14 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
         answer:
           'Ya, melalui proses bespoke penuh — konsultasi, pengukuran oleh fitter, dan pemilihan bahan premium disesuaikan dengan tema dan warna acara pernikahan Anda.',
       },
+      {
+        question: 'Apakah Local Tailor bisa membuat outfit seragam untuk keluarga pengantin?',
+        answer:
+          'Bisa. Kami menerima pesanan family outfit dengan warna dan gaya senada untuk ayah, saudara, atau keluarga inti pengantin — lihat panduan Family Outfit kami untuk detail koordinasi warnanya.',
+      },
     ],
     relatedCategories: ['styling', 'fabrics'],
-    status: 'foundation',
+    status: 'live',
   },
   {
     slug: 'umrah',
@@ -133,8 +138,8 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     metaDescription:
       'Panduan memilih thobe untuk umrah — bahan breathable, warna netral, dan gaya yang praktis untuk perjalanan dan cuaca panas.',
     intro: [
-      'Thobe untuk umrah punya prioritas berbeda dari thobe formal — kenyamanan dan sirkulasi udara jauh lebih penting daripada tampilan semata, mengingat perjalanan panjang dan cuaca panas di Mekkah dan Madinah. Hub ini menjadi titik awal untuk kebutuhan tersebut.',
-      'Konten lengkap kategori ini — termasuk panduan memilih bahan paling breathable, jumlah thobe yang ideal dibawa, dan tips perawatan selama perjalanan — akan hadir bertahap. Panduan gaya umrah thobe di kategori Styling sudah tersedia sebagai referensi awal.',
+      'Thobe untuk umrah punya prioritas berbeda dari thobe formal — kenyamanan dan sirkulasi udara jauh lebih penting daripada tampilan semata, mengingat perjalanan panjang dan cuaca panas di Mekkah dan Madinah, ditambah aktivitas ibadah yang intensif berhari-hari berturut-turut.',
+      'Panduan ini membahas delapan aspek thobe umrah — bahan terbaik, jumlah thobe yang ideal dibawa, panduan warna, tips packing, perawatan selama perjalanan, panduan iklim, hingga outfit umrah premium dan thobe custom khusus umrah — semuanya disusun dari kebutuhan nyata jamaah, bukan asumsi generik.',
     ],
     faq: [
       {
@@ -147,9 +152,14 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
         answer:
           'Sebagai panduan umum, 3–4 thobe biasanya cukup untuk perjalanan umrah standar, dengan mempertimbangkan rotasi cuci dan cadangan jika ada kendala di perjalanan.',
       },
+      {
+        question: 'Apakah Local Tailor menyediakan thobe custom khusus umrah?',
+        answer:
+          'Ya, dengan penyesuaian khusus untuk kebutuhan perjalanan ibadah — bahan breathable, potongan praktis untuk sholat, dan opsi kantong tambahan untuk kebutuhan seperti mushaf saku.',
+      },
     ],
     relatedCategories: ['styling', 'fabrics'],
-    status: 'foundation',
+    status: 'live',
   },
   {
     slug: 'care',
@@ -159,8 +169,8 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     metaDescription:
       'Panduan merawat thobe bespoke — cara mencuci, menyetrika, dan menyimpan thobe agar bahan tetap awet dan tampilan tetap rapi.',
     intro: [
-      'Bahan premium sekalipun akan cepat menurun kualitasnya tanpa perawatan yang tepat — cara mencuci, menyetrika, dan menyimpan thobe sama pentingnya dengan pemilihan bahan itu sendiri. Hub ini menjadi titik awal untuk kebutuhan tersebut.',
-      'Konten lengkap kategori ini — termasuk panduan perawatan spesifik per jenis bahan, cara menghilangkan noda, dan tips menyimpan thobe jangka panjang — akan hadir bertahap. Setiap halaman bahan di kategori Fabrics saat ini sudah menyertakan ringkasan cara perawatan dasarnya masing-masing.',
+      'Bahan premium sekalipun akan cepat menurun kualitasnya tanpa perawatan yang tepat — cara mencuci, menyetrika, dan menyimpan thobe sama pentingnya dengan pemilihan bahan itu sendiri saat membeli. Perawatan yang salah bisa merusak dalam satu kali cuci apa yang butuh berbulan-bulan untuk dibangun lewat pemilihan bahan yang tepat.',
+      'Panduan ini membahas delapan aspek perawatan thobe — cara mencuci linen, menyetrika dengan benar, menyimpan garmen premium, menghilangkan kerutan tanpa setrika, merawat thobe putih, merawat wool blend, memilih antara dry clean dan cuci tangan, hingga tips memperpanjang usia pakai thobe secara keseluruhan.',
     ],
     faq: [
       {
@@ -173,9 +183,14 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
         answer:
           'Gantung thobe menggunakan hanger berbahu lebar (bukan hanger kawat tipis) di tempat yang tidak lembap, dan hindari menumpuk thobe dalam lemari yang terlalu padat.',
       },
+      {
+        question: 'Berapa lama umur pakai rata-rata thobe bespoke dengan perawatan yang benar?',
+        answer:
+          'Dengan perawatan yang tepat, thobe bespoke berbahan premium bisa bertahan bertahun-tahun tanpa penurunan kualitas signifikan — jauh lebih lama dibanding thobe ready-to-wear yang umumnya menurun kualitasnya dalam waktu lebih singkat.',
+      },
     ],
     relatedCategories: ['fabrics', 'tailoring'],
-    status: 'foundation',
+    status: 'live',
   },
   {
     slug: 'tailoring',
@@ -185,8 +200,8 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     metaDescription:
       'Panduan memahami proses tailoring thobe bespoke — dari konsultasi, pengukuran, pembentukan pola, hingga produksi dan quality control.',
     intro: [
-      'Tailoring bespoke adalah proses yang jauh lebih menyeluruh dibanding membeli thobe ready-to-wear — dimulai dari konsultasi, pengukuran presisi, pembentukan pola personal, hingga produksi dan pemeriksaan kualitas bertahap. Hub ini menjadi titik awal untuk memahami proses tersebut.',
-      'Konten lengkap kategori ini — termasuk penjelasan setiap tahap proses bespoke secara mendalam dan istilah-istilah tailoring yang umum digunakan — akan hadir bertahap. Halaman proses bespoke kami di homepage sudah menjelaskan alur ini secara ringkas.',
+      'Tailoring bespoke adalah proses yang jauh lebih menyeluruh dibanding membeli thobe ready-to-wear — dimulai dari konsultasi, pengukuran presisi, pembentukan pola personal, hingga produksi dan pemeriksaan kualitas bertahap. Memahami proses ini membantu Anda menilai apa yang sebenarnya Anda bayar saat memesan thobe bespoke.',
+      'Panduan ini membahas delapan aspek teknis tailoring — definisi bespoke sesungguhnya, perbandingan bespoke vs made-to-measure, proses pembentukan pola, panduan interlining, konstruksi kerah, konstruksi lengan, detail jahitan tangan, hingga proses quality control — ditulis dengan bahasa teknis yang tetap mudah dipahami pembeli awam.',
     ],
     faq: [
       {
@@ -199,9 +214,14 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
         answer:
           'Umumnya 2–3 minggu dari konsultasi hingga thobe selesai, tergantung kompleksitas desain dan ketersediaan bahan yang dipilih.',
       },
+      {
+        question: 'Apa bedanya bespoke dengan made-to-measure?',
+        answer:
+          'Bespoke membentuk pola baru dari nol khusus untuk Anda, sementara made-to-measure menyesuaikan pola standar yang sudah ada dengan ukuran Anda — lihat panduan Bespoke vs Made-to-Measure kami untuk perbandingan lengkap.',
+      },
     ],
     relatedCategories: ['measurements', 'care'],
-    status: 'foundation',
+    status: 'live',
   },
 ]
 

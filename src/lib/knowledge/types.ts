@@ -46,9 +46,34 @@ export interface KnowledgeTableBlock {
 // step sequences, comparison tables) without a separate template per shape.
 export type KnowledgeContentBlock = KnowledgeParagraphBlock | KnowledgeListBlock | KnowledgeStepsBlock | KnowledgeTableBlock
 
+// Sprint W6-8 — one level of H3 subsections under an H2 section, for
+// articles that need "2-4 H3" depth (e.g. a "Panduan Praktis" H2 broken
+// into "Sebelum Berangkat" / "Selama Perjalanan" H3s). Optional and
+// additive — none of the 26 W6-2/3/4 articles use it, so their `sections`
+// data is untouched.
+export interface KnowledgeSubsection {
+  heading: string
+  block: KnowledgeContentBlock
+}
+
 export interface KnowledgeSection {
   heading: string
   block: KnowledgeContentBlock
+  subsections?: KnowledgeSubsection[]
+}
+
+// Sprint W6-7 — tag dimensions for the Related Content Engine. Optional;
+// only set on articles where a dimension genuinely applies (a fabric
+// article has no "occasion", a wedding article has no "season"). Used by
+// getRelatedByTags() to cross-link articles that share a real dimension
+// (e.g. two 'wedding' occasion articles from different categories) rather
+// than only within-category relatedArticles.
+export interface KnowledgeTags {
+  occasion?: string[]
+  fit?: string[]
+  audience?: string[]
+  season?: string[]
+  service?: string[]
 }
 
 export interface KnowledgeArticle {
@@ -63,7 +88,21 @@ export interface KnowledgeArticle {
   // brief's own AI-discoverability example. Rendered first, before any
   // section, and reused verbatim as the Article schema's `description` seed.
   definition: string
+  // Sprint W6-8 — "Quick Answer" box, a 1-2 sentence direct answer shown
+  // above the fold, above even the definition quote. Optional — only the
+  // 32 W6-5/6 articles set this; older articles fall back to `definition`.
+  quickAnswer?: string
+  // Sprint W6-8 — 4-6 bullet summary box (KeyTakeaways component).
+  keyTakeaways?: string[]
   sections: KnowledgeSection[]
+  // Sprint W6-8 — "Tailor's recommendation" callout (ExpertNote component).
+  // Attributed to the brand's tailoring team, never a fabricated named
+  // individual — see seo.ts's buildKnowledgePersonSchema comment for why.
+  expertNote?: string
+  // Sprint W6-8 — dedicated "Perbandingan" comparison table, rendered by
+  // the ComparisonTable component (distinct styling from a plain table
+  // block inside `sections`).
+  comparisonTable?: { caption: string; headers: string[]; rows: string[][] }
   faq: KnowledgeFaqItem[]
   relatedArticles: KnowledgeRef[]
   // Styling -> Fabric linking rule. Optional — only styling articles set
@@ -73,6 +112,8 @@ export interface KnowledgeArticle {
   // e.g. every fabric article points at the `care` hub (Fabric -> Care)
   // even though no /knowledge/care articles exist this sprint.
   relatedCategories?: KnowledgeCategorySlug[]
+  // Sprint W6-7 — Related Content Engine tag dimensions.
+  tags?: KnowledgeTags
 }
 
 export interface KnowledgeCategory {

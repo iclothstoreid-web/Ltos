@@ -4,7 +4,14 @@ import { KNOWLEDGE_CATEGORIES, getCategoryBySlug } from '@/lib/knowledge/categor
 import { getArticlesByCategory } from '@/lib/knowledge/articles'
 import { getRelatedCategories } from '@/lib/knowledge/relatedArticles'
 import { buildKnowledgeBreadcrumb } from '@/lib/knowledge/breadcrumbs'
-import { buildKnowledgeBreadcrumbSchema, buildKnowledgeCategoryMetadata, buildKnowledgeFaqSchema } from '@/lib/knowledge/seo'
+import {
+  buildKnowledgeBreadcrumbSchema,
+  buildKnowledgeCategoryMetadata,
+  buildKnowledgeCollectionPageSchema,
+  buildKnowledgeFaqSchema,
+  buildKnowledgeItemListSchema,
+} from '@/lib/knowledge/seo'
+import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 import { buildOrganizationSchema } from '@/lib/content/seo'
 import { buildLocalBusinessSchema } from '@/lib/marketing/seo'
 import { Breadcrumbs } from '@/components/knowledge/Breadcrumbs'
@@ -45,6 +52,12 @@ export default function KnowledgeCategoryPage({ params }: PageProps) {
   const breadcrumbItems = buildKnowledgeBreadcrumb({ category })
   const breadcrumbSchema = buildKnowledgeBreadcrumbSchema(breadcrumbItems)
   const faqSchema = buildKnowledgeFaqSchema(category.faq)
+  const collectionPageSchema = buildKnowledgeCollectionPageSchema({
+    name: category.title,
+    description: category.metaDescription,
+    url: `${FABRIC_SITE_ORIGIN}/knowledge/${category.slug}`,
+  })
+  const itemListSchema = buildKnowledgeItemListSchema(articles, category.title)
   const organizationSchema = buildOrganizationSchema()
   const localBusinessSchema = buildLocalBusinessSchema()
 
@@ -55,6 +68,12 @@ export default function KnowledgeCategoryPage({ params }: PageProps) {
       {faqSchema && (
         // eslint-disable-next-line react/no-danger
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      )}
+      {/* eslint-disable-next-line react/no-danger */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }} />
+      {itemListSchema && (
+        // eslint-disable-next-line react/no-danger
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
       )}
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
