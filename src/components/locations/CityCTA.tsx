@@ -2,17 +2,22 @@ import { Reveal } from '@/components/marketing/shell/Reveal'
 import { MagneticButton } from '@/components/marketing/shell/MagneticButton'
 import { buildContentWhatsAppUrl } from '@/lib/content/whatsapp'
 import { CITY_BUSINESS, type CityConfig } from '@/lib/seo/cityConfig'
+import { appendUtmNote, type UtmParams } from '@/lib/seo/utm'
 
 interface CityCTAProps {
   city: CityConfig
+  utm?: UtmParams
 }
 
-// Sprint W8-2/3 — renamed from LocationAppointmentCta.tsx (W8-1), no
-// behavior change beyond the cityConfig field names.
-export function CityCTA({ city }: CityCTAProps) {
-  const message = city.isPrimary
-    ? 'Halo Local Tailor, saya ingin booking Private Appointment di workshop Bandung.'
-    : `Halo Local Tailor, saya di ${city.city} dan ingin konsultasi untuk custom thobe.`
+// Sprint W8-2/3 — renamed from LocationAppointmentCta.tsx (W8-1). Sprint
+// W8-B adds `utm` (see CityHero.tsx's comment for why).
+export function CityCTA({ city, utm }: CityCTAProps) {
+  const message = appendUtmNote(
+    city.isPrimary
+      ? 'Halo Local Tailor, saya ingin booking Private Appointment di workshop Bandung.'
+      : `Halo Local Tailor, saya di ${city.city} dan ingin konsultasi untuk custom thobe.`,
+    utm ?? {}
+  )
   const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, message)
 
   return (

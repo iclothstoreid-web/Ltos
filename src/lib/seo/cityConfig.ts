@@ -10,10 +10,13 @@ import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 // route" scalability target this sprint asked for — one config is enough).
 //
 // Domain note (carried over from W8-1, still true): the locked business
-// data's "Website: https://localtailor.id" is a real, separately-hosted
-// WordPress site for the same business, not this Vercel project. Every
-// canonical/OG/schema URL here uses FABRIC_SITE_ORIGIN instead, per the
-// explicit decision made with the user in W8-1.
+// data originally listed "Website: https://localtailor.id" — a real,
+// separately-hosted WordPress site for the same business, not this Vercel
+// project. Every canonical/OG/schema URL in this codebase, including the
+// `website` field on CITY_BUSINESS below, uses FABRIC_SITE_ORIGIN instead,
+// per the explicit decision made with the user in W8-1 and reaffirmed in
+// the W8-B pre-deploy domain audit: this Vercel app is the single
+// canonical domain referenced anywhere in this codebase, full stop.
 export const CITY_SITE_ORIGIN = FABRIC_SITE_ORIGIN
 
 // Business Data (LOCKED). One real physical address — Bandung. Every other
@@ -27,7 +30,7 @@ export const CITY_BUSINESS = {
   addressRegion: 'Jawa Barat',
   postalCode: '40264',
   addressCountry: 'ID',
-  website: 'https://localtailor.id',
+  website: CITY_SITE_ORIGIN,
   whatsappLocal: '085173334251',
   whatsappInternational: '6285173334251',
 } as const
@@ -112,6 +115,17 @@ const REMOTE_CONSULTATION_FAQ: CityFaqItem[] = [
   },
 ]
 
+// Sprint W8-B §5 — Review Engine. Appended to every city's FAQ so the
+// question genuinely exists on every page, not just the review-CTA
+// section — a real, honest answer (no fabricated review count or rating
+// claim), consistent with the same standard reviewsCopy.authenticityStatement
+// already holds sitewide.
+const REVIEW_FAQ_ITEM: CityFaqItem = {
+  question: 'Bagaimana cara memberi ulasan setelah pesanan selesai?',
+  answer:
+    'Setelah garmen Anda selesai, kami akan mengirimkan tautan Google Review via WhatsApp — ulasan Anda membantu klien lain menemukan Local Tailor dan hanya membutuhkan waktu singkat untuk ditulis.',
+}
+
 // -----------------------------------------------------------------------
 // Bandung — the domination page. Real physical location, keyword-dense
 // hero (natural phrasing, not stuffed), 10 FAQ, and honest mentions of the
@@ -184,6 +198,7 @@ const BANDUNG: CityConfig = {
       answer:
         'Tidak ada daftar harga tetap karena setiap garmen dibuat sesuai pesanan (made-to-order) — harga tergantung material dan detail desain, dikonfirmasi saat konsultasi.',
     },
+    REVIEW_FAQ_ITEM,
   ],
   geo: CITY_GEO_BANDUNG,
   reviewHighlightIds: ['yusuf-bandung-umrah'],
@@ -223,7 +238,7 @@ const JAKARTA: CityConfig = {
     { title: 'Digital Body Profile', description: 'Pengukuran dijadwalkan sekali, tersimpan untuk pemesanan berikutnya tanpa perlu diulang.' },
     { title: 'Pengiriman ke Jakarta', description: 'Garmen selesai dikirim langsung ke alamat Anda setelah quality control.' },
   ],
-  faq: REMOTE_CONSULTATION_FAQ,
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
   reviewHighlightIds: ['ahmad-jakarta-wedding'],
   relatedGuides: [
     { category: 'wedding', slug: 'akad-pria' },
@@ -261,7 +276,7 @@ const BEKASI: CityConfig = {
     { title: 'Pengukuran Per Individu', description: 'Setiap anggota keluarga tetap diukur dan dipolakan secara personal.' },
     { title: 'Pengiriman ke Bekasi', description: 'Garmen selesai dikirim ke Summarecon, Grand Galaxy Park, Harapan Indah, dan sekitarnya.' },
   ],
-  faq: REMOTE_CONSULTATION_FAQ,
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
   reviewHighlightIds: [],
   relatedGuides: [
     { category: 'wedding', slug: 'resepsi-pria' },
@@ -299,7 +314,7 @@ const TANGERANG: CityConfig = {
     { title: 'Pola Personal per Individu', description: 'Meski dipesan sebagai grup, setiap garmen tetap dipolakan khusus untuk pemakainya.' },
     { title: 'Pengiriman ke Tangerang', description: 'Garmen selesai dikirim ke BSD, Alam Sutera, Gading Serpong, dan sekitarnya.' },
   ],
-  faq: REMOTE_CONSULTATION_FAQ,
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
   reviewHighlightIds: [],
   relatedGuides: [
     { category: 'umrah', slug: 'climate-guide' },
@@ -337,7 +352,7 @@ const SURABAYA: CityConfig = {
     { title: 'Pengukuran Dijadwalkan', description: 'Fitter kami di Bandung mengonfirmasi ukuran final sebelum produksi.' },
     { title: 'Pengiriman ke Surabaya', description: 'Garmen selesai dikirim ke Pakuwon, Citraland, Darmo, dan sekitarnya.' },
   ],
-  faq: REMOTE_CONSULTATION_FAQ,
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
   reviewHighlightIds: ['rizky-surabaya-daily-wear'],
   relatedGuides: [
     { category: 'measurements', slug: 'thobe-size-guide' },

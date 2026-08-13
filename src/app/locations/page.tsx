@@ -7,7 +7,7 @@ import { GoldAccentLine } from '@/components/marketing/placeholders/GoldAccentLi
 import { LuxuryGradientField } from '@/components/marketing/placeholders/LuxuryGradientField'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
-import { breadcrumbSchema } from '@/lib/seo/schema'
+import { breadcrumbSchema, organizationSchema, websiteSchema } from '@/lib/seo/schema'
 import { buildLocationsHubLocalBusinessSchema } from '@/lib/seo/localBusiness'
 import { buildLocationsHubMetadata } from '@/lib/seo/locationMetadata'
 import { CITY_CONFIGS, CITY_BUSINESS } from '@/lib/seo/cityConfig'
@@ -27,7 +27,14 @@ const BREADCRUMB_ITEMS = [
 export default function LocationsHubPage() {
   return (
     <div className="bg-luxury-navy-deep">
-      <JsonLd data={[buildLocationsHubLocalBusinessSchema(CITY_CONFIGS), breadcrumbSchema(BREADCRUMB_ITEMS)]} />
+      <JsonLd
+        data={[
+          buildLocationsHubLocalBusinessSchema(CITY_CONFIGS),
+          breadcrumbSchema(BREADCRUMB_ITEMS),
+          organizationSchema(),
+          websiteSchema(),
+        ]}
+      />
       <Nav />
       <main>
         <section className="relative overflow-hidden px-6 py-24 text-center md:px-10 md:py-32">

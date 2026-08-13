@@ -60,6 +60,8 @@ export async function buildPagesSitemapEntries(supabase: SupabaseClient): Promis
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
+    // Sprint W8-B — Local Citation Infrastructure.
+    { url: `${FABRIC_SITE_ORIGIN}/contact`, changeFrequency: 'monthly', priority: 0.6 },
   ]
 
   const materialEntries: SitemapUrlEntry[] = materials.map((material) => ({

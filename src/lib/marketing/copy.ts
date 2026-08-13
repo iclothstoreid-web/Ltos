@@ -586,6 +586,10 @@ export const navCopy = {
     { label: 'Knowledge', href: '/knowledge' },
     { label: 'Gallery', href: '/gallery' },
     { label: 'Journal', href: '/journal' },
+    // Sprint W8-B — Local SEO Infrastructure. /locations already existed
+    // (Sprint W8-1/8-2/8-3) but had no link from the primary site nav —
+    // this sprint's brief explicitly asks for it here.
+    { label: 'Locations', href: '/locations' },
   ],
   cta: 'Book Appointment',
 }
@@ -603,6 +607,8 @@ export const footerCopy = {
         // Sprint W6 — Knowledge Engine hub. One link, no column
         // restructuring, so the footer's existing 4-column grid is untouched.
         { label: 'Knowledge', href: '/knowledge' },
+        // Sprint W8-B — location hub, same "add one link" pattern as Knowledge above.
+        { label: 'Locations', href: '/locations' },
       ],
     },
     {
@@ -610,6 +616,8 @@ export const footerCopy = {
       links: [
         { label: 'Book a Private Appointment', href: '/book-appointment' },
         { label: 'FAQ', href: '/#faq' },
+        // Sprint W8-B — the new NAP/citation page (address, WhatsApp, hours).
+        { label: 'Contact', href: '/contact' },
       ],
     },
     // Sprint W0.5 — SEO Content Cluster. Real routes (not homepage anchors

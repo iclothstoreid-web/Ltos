@@ -34,6 +34,8 @@ import {
   personSchema,
   articleSchema,
 } from '../src/lib/seo/schema'
+import { CITY_CONFIGS } from '../src/lib/seo/cityConfig'
+import { buildLocationLocalBusinessSchema, buildLocationsHubLocalBusinessSchema } from '../src/lib/seo/localBusiness'
 
 const APP_DIR = path.join(__dirname, '..', 'src', 'app')
 
@@ -112,6 +114,58 @@ function validateSchemaBuilders() {
 }
 
 // ---------------------------------------------------------------------------
+// 1b. Sprint W8-B §2 — real per-city JSON-LD, empty-field validation.
+// Unlike section 1 above (sample data against the generic builders), this
+// runs the ACTUAL cityConfig.ts data through the ACTUAL page-level schema
+// builders (buildLocationLocalBusinessSchema et al.) and recursively checks
+// for empty strings/arrays — the concrete "tidak ada field kosong"
+// requirement, not just a shape check.
+// ---------------------------------------------------------------------------
+
+function findEmptyFields(value: unknown, path: string): string[] {
+  const empties: string[] = []
+
+  if (typeof value === 'string' && value.trim() === '') {
+    empties.push(path)
+  } else if (value === null) {
+    empties.push(path)
+  } else if (Array.isArray(value)) {
+    if (value.length === 0) empties.push(path)
+    else value.forEach((item, i) => empties.push(...findEmptyFields(item, `${path}[${i}]`)))
+  } else if (typeof value === 'object' && value !== undefined) {
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      empties.push(...findEmptyFields(nested, `${path}.${key}`))
+    }
+  }
+
+  return empties
+}
+
+function validateRealCitySchema() {
+  for (const city of CITY_CONFIGS) {
+    const localBusiness = buildLocationLocalBusinessSchema(city)
+    const emptiesLb = findEmptyFields(localBusiness, `localBusiness(${city.slug})`)
+    check(`/locations/${city.slug} — Tailor schema has no empty fields`, emptiesLb.length === 0, emptiesLb.join(', '))
+
+    const faq = faqSchema(city.faq)
+    const emptiesFaq = faq ? findEmptyFields(faq, `faq(${city.slug})`) : []
+    check(`/locations/${city.slug} — FAQPage schema has no empty fields`, emptiesFaq.length === 0, emptiesFaq.join(', '))
+
+    const breadcrumb = breadcrumbSchema([
+      { name: 'Home', path: '/' },
+      { name: 'Locations', path: '/locations' },
+      { name: city.city, path: `/locations/${city.slug}` },
+    ])
+    const emptiesBc = findEmptyFields(breadcrumb, `breadcrumb(${city.slug})`)
+    check(`/locations/${city.slug} — BreadcrumbList schema has no empty fields`, emptiesBc.length === 0, emptiesBc.join(', '))
+  }
+
+  const hub = buildLocationsHubLocalBusinessSchema(CITY_CONFIGS)
+  const emptiesHub = findEmptyFields(hub, 'locationsHub')
+  check('/locations — hub Tailor schema has no empty fields', emptiesHub.length === 0, emptiesHub.join(', '))
+}
+
+// ---------------------------------------------------------------------------
 // 2. Metadata + heading audit over public page.tsx files
 // ---------------------------------------------------------------------------
 
@@ -170,6 +224,7 @@ function auditPublicPages() {
 
 function main() {
   validateSchemaBuilders()
+  validateRealCitySchema()
   auditPublicPages()
 
   const failed = results.filter((r) => !r.pass)
