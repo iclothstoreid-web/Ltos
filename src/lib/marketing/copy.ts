@@ -607,6 +607,9 @@ export const footerCopy = {
         { label: 'Fabrics', href: '/fabric' },
         { label: 'Gallery', href: '/gallery' },
         { label: 'Journal', href: '/journal' },
+        // Sprint W6 — Knowledge Engine hub. One link, no column
+        // restructuring, so the footer's existing 4-column grid is untouched.
+        { label: 'Knowledge', href: '/knowledge' },
       ],
     },
     {

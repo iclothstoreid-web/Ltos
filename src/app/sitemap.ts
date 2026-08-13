@@ -4,6 +4,8 @@ import { getAllMaterials } from '@/lib/materials/materialRepository'
 import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 import { FABRIC_CATEGORIES } from '@/types/material'
 import { ALL_ARTICLES } from '@/lib/content/articles'
+import { KNOWLEDGE_CATEGORIES } from '@/lib/knowledge/categories'
+import { ALL_KNOWLEDGE_ARTICLES } from '@/lib/knowledge/articles'
 
 // Sprint W3-5 §11 — first sitemap this project has had. Deliberately
 // scoped to the public Fabric Explorer + homepage, matching this sprint's
@@ -45,6 +47,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${FABRIC_SITE_ORIGIN}/book-appointment`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${FABRIC_SITE_ORIGIN}/gallery`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${FABRIC_SITE_ORIGIN}/journal`, changeFrequency: 'monthly', priority: 0.5 },
+    // Sprint W6 — Knowledge Engine. Landing + all 7 category hubs (live and
+    // foundation alike, since every hub renders real SEO content) + all 26
+    // W6-2/3/4 articles. Future W6-5+ articles need no sitemap change —
+    // they're picked up automatically by iterating ALL_KNOWLEDGE_ARTICLES.
+    { url: `${FABRIC_SITE_ORIGIN}/knowledge`, changeFrequency: 'weekly', priority: 0.9 },
+    ...KNOWLEDGE_CATEGORIES.map((category) => ({
+      url: `${FABRIC_SITE_ORIGIN}/knowledge/${category.slug}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })),
+    ...ALL_KNOWLEDGE_ARTICLES.map((article) => ({
+      url: `${FABRIC_SITE_ORIGIN}/knowledge/${article.category}/${article.slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
   ]
 
   const materialEntries: MetadataRoute.Sitemap = materials.map((material) => ({
