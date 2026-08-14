@@ -32,7 +32,15 @@ export function Nav() {
           <Logo variant="horizontal" className="h-8 w-auto text-luxury-ivory md:h-10 lg:h-11" />
         </a>
 
-        <ul className="hidden items-center gap-10 md:flex">
+        {/* Brand System Upgrade — bumped md:(768px) -> lg:(1024px): the
+            bigger logo (now up to 44px tall / ~175px wide, was 30px/~120px)
+            no longer leaves enough room for all 6 links + the CTA button at
+            tablet-portrait widths (iPad's 820px wrapped "Design Studio" and
+            clipped "Book Appointment" off-screen — a real overflow bug
+            caught during verification). Tablets now get the same clean
+            drawer as mobile instead of a cramped inline row, matching the
+            brief's own "tablet isn't just a shrunk desktop" instruction. */}
+        <ul className="hidden items-center gap-10 lg:flex">
           {navCopy.links.map((link) => (
             <li key={link.href}>
               <a
@@ -47,7 +55,7 @@ export function Nav() {
 
         <a
           href="/book-appointment"
-          className="hidden cursor-pointer rounded-full border border-luxury-gold/50 px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold hover:text-luxury-black hover:shadow-[0_0_16px_rgba(200,162,74,0.25)] md:inline-flex"
+          className="hidden cursor-pointer rounded-full border border-luxury-gold/50 px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold hover:text-luxury-black hover:shadow-[0_0_16px_rgba(200,162,74,0.25)] lg:inline-flex"
         >
           {navCopy.cta}
         </a>
@@ -57,7 +65,7 @@ export function Nav() {
           aria-label="Toggle menu"
           aria-expanded={drawerOpen}
           onClick={() => setDrawerOpen((v) => !v)}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center md:hidden"
+          className="flex h-11 w-11 cursor-pointer items-center justify-center lg:hidden"
         >
           <span className="relative block h-4 w-6">
             <span
@@ -78,7 +86,7 @@ export function Nav() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden bg-luxury-navy-deep md:hidden"
+            className="overflow-hidden bg-luxury-navy-deep lg:hidden"
           >
             {/* Brand System Upgrade — mobile drawer: py-3 (~44px, right at
                 the floor) -> py-4 (~52px, matching MagneticButton's own
