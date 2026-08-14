@@ -89,13 +89,15 @@
     box-shadow: 0 2px 4px rgba(27, 27, 28, 0.05), 0 16px 40px rgba(27, 27, 28, 0.08);
   }
 
-  /* Owner OS shell background texture (Owner OS + Komunikasi) — a
-     faint architectural grid, consistent with the diagonal-stripe overlays
-     already used on individual cards. */
+  /* Brand System Upgrade — real walnut wood-grain texture (was a green
+     architectural grid line pattern, flagged as reading as "just lines").
+     Shared across every LTOS app shell that applies .atelier-bg: Owner OS
+     (OwnerCommandCenter, Commercial/Communications/Decision/KPI Fitter/KPI
+     Operator centers) and Inventory Hub — one definition, one image asset. */
   .atelier-bg {
-    background-image:
-      repeating-linear-gradient(0deg, rgba(0, 86, 69, 0.025) 0px, rgba(0, 86, 69, 0.025) 1px, transparent 1px, transparent 64px),
-      repeating-linear-gradient(90deg, rgba(0, 86, 69, 0.025) 0px, rgba(0, 86, 69, 0.025) 1px, transparent 1px, transparent 64px);
+    background-image: url('/textures/walnut-grain.png');
+    background-repeat: repeat;
+    background-size: 512px 512px;
   }
 }
 

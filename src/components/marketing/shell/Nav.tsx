@@ -25,8 +25,11 @@ export function Nav() {
       }`}
     >
       <nav aria-label="Primary" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
-        <a href="/" aria-label={navCopy.brand} className="flex items-center">
-          <Logo variant="horizontal" className="h-6 w-auto text-luxury-ivory md:h-[30px]" />
+        {/* Brand System Upgrade — was h-6/30px (default-small per the
+            brief), now the first, most dominant thing read in the bar,
+            left-aligned consistently across breakpoints. */}
+        <a href="/" aria-label={navCopy.brand} className="flex shrink-0 items-center">
+          <Logo variant="horizontal" className="h-8 w-auto text-luxury-ivory md:h-10 lg:h-11" />
         </a>
 
         <ul className="hidden items-center gap-10 md:flex">
@@ -77,13 +80,17 @@ export function Nav() {
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden bg-luxury-navy-deep md:hidden"
           >
-            <ul className="flex flex-col gap-1 px-6 pb-6">
+            {/* Brand System Upgrade — mobile drawer: py-3 (~44px, right at
+                the floor) -> py-4 (~52px, matching MagneticButton's own
+                comfortable touch target) plus more generous outer padding,
+                per the brief's "drawer harus premium, padding lebih lega". */}
+            <ul className="flex flex-col gap-1 px-6 pb-8 pt-2">
               {navCopy.links.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
                     onClick={() => setDrawerOpen(false)}
-                    className="block py-3 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-taupe"
+                    className="block min-h-[44px] py-4 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-taupe"
                   >
                     {link.label}
                   </a>
@@ -93,7 +100,7 @@ export function Nav() {
                 <a
                   href="/book-appointment"
                   onClick={() => setDrawerOpen(false)}
-                  className="mt-2 block rounded-full border border-luxury-gold/50 px-5 py-3 text-center font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold"
+                  className="mt-3 block min-h-[44px] rounded-full border border-luxury-gold/50 px-5 py-4 text-center font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold"
                 >
                   {navCopy.cta}
                 </a>

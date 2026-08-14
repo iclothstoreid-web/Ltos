@@ -5,7 +5,8 @@ import { Logo } from '@/components/brand/Logo'
 export function JourneyHero() {
   return (
     <header className="px-6 pt-10 pb-6 text-center border-b border-on-surface/10">
-      <Logo variant="horizontal" className="mx-auto mb-2 h-5 w-auto text-secondary" />
+      {/* Brand System Upgrade — 1.8x the previous h-5/20px. */}
+      <Logo variant="horizontal" className="mx-auto mb-2 h-9 w-auto text-secondary" />
       <p className="font-fraunces text-2xl text-on-surface">Customer Journey</p>
     </header>
   )

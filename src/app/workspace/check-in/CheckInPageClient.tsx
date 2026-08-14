@@ -52,6 +52,7 @@ export default function CheckInPageClient({
   const [creating, setCreating] = useState(false)
   const [resolvingCustomer, setResolvingCustomer] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [successData, setSuccessData] = useState<{
     consultationId: string
     consultationNumber: string
@@ -156,14 +157,22 @@ export default function CheckInPageClient({
   }
 
   return (
+    // Brand System Upgrade — real walnut wood-grain texture, replacing the
+    // gold diamond-sparkle data-URI, for consistency with every other LTOS
+    // app's now-shared .atelier-bg texture.
     <div
       className="flex flex-col lg:flex-row min-h-screen lg:h-screen w-full overflow-x-hidden lg:overflow-hidden bg-[#FDFCF8] text-[#151c27] antialiased"
       style={{
-        backgroundImage:
-          "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l5 15 15 5-15 5-5 15-5-15-15-5 15-5z' fill='%23775a19' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E\")",
+        backgroundImage: "url('/textures/walnut-grain.png')",
+        backgroundRepeat: 'repeat',
+        backgroundSize: '512px 512px',
       }}
     >
-      <CheckInSidebar showMasterData={showMasterData} />
+      <CheckInSidebar
+        showMasterData={showMasterData}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={() => setMobileNavOpen(false)}
+      />
 
       <main
         className={`flex-1 flex flex-col lg:overflow-hidden relative ${
@@ -174,7 +183,7 @@ export default function CheckInPageClient({
               : ''
         }`}
       >
-        <CheckInHeader />
+        <CheckInHeader onMenuClick={() => setMobileNavOpen(true)} />
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden">
           <CustomerSearch

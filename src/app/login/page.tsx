@@ -36,7 +36,8 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className="mb-12">
-          <Logo variant="horizontalTagline" className="mb-3 h-6 w-auto text-secondary" />
+          {/* Brand System Upgrade — 1.83x the previous h-6/24px. */}
+          <Logo variant="horizontalTagline" className="mb-3 h-11 w-auto text-secondary" />
           <h1 className="font-serif text-headline text-on-surface">
             LTOS
           </h1>

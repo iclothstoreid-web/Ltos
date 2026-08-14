@@ -76,11 +76,14 @@ function LeftSidebarComponent({ mobileOpen = false, onMobileClose }: LeftSidebar
       <nav className="hidden lg:flex lg:flex-col w-[280px] shrink-0 border-r border-outline-variant/80 bg-surface/75 backdrop-blur-sm relative overflow-hidden">
         {/* architectural base surface */}
         <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(180deg,rgba(252,250,248,0.65)_0%,rgba(240,236,236,0.55)_100%)]" />
-        <div className="absolute inset-0 pointer-events-none bg-[repeating-linear-gradient(90deg,rgba(0,86,69,0.035)_0px,rgba(0,86,69,0.035)_1px,transparent_1px,transparent_56px)] opacity-[0.18]" />
+        {/* Brand System Upgrade — real walnut wood-grain (was a green line
+            grid), matching .atelier-bg's own texture swap. */}
+        <div className="absolute inset-0 pointer-events-none bg-[url('/textures/walnut-grain.png')] bg-repeat [background-size:512px_512px]" />
 
         <div className="relative px-6 py-6 flex flex-col gap-1 border-b border-outline-variant/80">
           <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Owner OS</span>
-          <Logo variant="horizontal" className="h-4 w-auto text-secondary" />
+          {/* Brand System Upgrade — 2x the previous h-4/16px. */}
+          <Logo variant="horizontal" className="h-8 w-auto text-secondary" />
         </div>
 
         <div className="relative flex-1 overflow-auto">
@@ -98,7 +101,8 @@ function LeftSidebarComponent({ mobileOpen = false, onMobileClose }: LeftSidebar
             <div className="px-6 py-6 flex items-center justify-between border-b border-outline-variant/80">
               <div className="flex flex-col gap-1">
                 <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Owner OS</span>
-                <Logo variant="horizontal" className="h-4 w-auto text-secondary" />
+                {/* Brand System Upgrade — 2x the previous h-4/16px. */}
+          <Logo variant="horizontal" className="h-8 w-auto text-secondary" />
               </div>
               <button
                 onClick={onMobileClose}

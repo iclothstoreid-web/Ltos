@@ -18,7 +18,8 @@ export function MeasurementNavAside() {
     <aside className="fixed left-0 top-20 bottom-0 w-64 border-r-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] hidden md:flex flex-col py-8">
       <div className="px-8 mb-16">
         <p className="font-sans text-xs uppercase tracking-widest text-[#444748]">Fitter App</p>
-        <Logo variant="horizontal" className="mt-1 h-4 w-auto text-[#151c27]" />
+        {/* Brand System Upgrade — 2x the previous h-4/16px. */}
+        <Logo variant="horizontal" className="mt-1 h-8 w-auto text-[#151c27]" />
       </div>
       <div className="flex-1 space-y-2">
         {NAV_ITEMS.map(item => (

@@ -70,7 +70,8 @@ export default function OwnerLoginPage() {
           <h1 className="font-serif text-headline text-on-surface">
             Owner OS
           </h1>
-          <Logo variant="horizontalTagline" className="mt-2 h-6 w-auto text-secondary" />
+          {/* Brand System Upgrade — 1.83x the previous h-6/24px. */}
+          <Logo variant="horizontalTagline" className="mt-2 h-11 w-auto text-secondary" />
           <p className="text-label text-secondary/80 mt-3">
             Secure access for Local Tailor management.
           </p>

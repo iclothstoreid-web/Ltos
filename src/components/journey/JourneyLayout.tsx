@@ -9,15 +9,16 @@ interface JourneyLayoutProps {
   children: ReactNode
 }
 
-// Signature background — a barely-there tailoring grid (32px spacing, ~3.5%
-// opacity of the brand primary). Deliberately subtle so it never competes
-// with content, and identical across every milestone so it reads as the
-// Customer Journey's visual identity, not a per-page decoration.
+// Signature background — Brand System Upgrade: real walnut wood-grain
+// texture (was a barely-there tailoring grid line pattern). Deliberately
+// subtle so it never competes with content, and identical across every
+// milestone so it reads as the Customer Journey's visual identity, not a
+// per-page decoration.
 const backgroundStyle = {
   backgroundColor: '#FDFCF8',
-  backgroundImage:
-    'repeating-linear-gradient(0deg, rgba(0,86,69,0.035) 0px, rgba(0,86,69,0.035) 1px, transparent 1px, transparent 32px), ' +
-    'repeating-linear-gradient(90deg, rgba(0,86,69,0.035) 0px, rgba(0,86,69,0.035) 1px, transparent 1px, transparent 32px)',
+  backgroundImage: "url('/textures/walnut-grain.png')",
+  backgroundRepeat: 'repeat' as const,
+  backgroundSize: '512px 512px',
 }
 
 // Reusable shell for every Customer Journey milestone page — Hero and

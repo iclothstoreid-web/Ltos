@@ -1,16 +1,33 @@
 'use client'
 
+import { Menu } from 'lucide-react'
+
 interface CheckInHeaderProps {
   userInitial?: string
+  // Brand System Upgrade — mobile-first fix: this header had no menu
+  // trigger at all, and CheckInSidebar was fully hidden below lg with no
+  // mobile fallback. Optional so nothing breaks if a future caller doesn't
+  // pass it.
+  onMenuClick?: () => void
 }
 
 // Avatar is an initials placeholder rather than a hotlinked photo — the
 // Stitch reference used external googleusercontent demo image URLs, which
 // aren't appropriate to embed in a real production repo.
-export function CheckInHeader({ userInitial = '?' }: CheckInHeaderProps) {
+export function CheckInHeader({ userInitial = '?', onMenuClick }: CheckInHeaderProps) {
   return (
     <header className="h-20 flex justify-between items-center px-4 lg:px-16 w-full border-b-[0.5px] border-[#c4c7c7] bg-[#f9f9ff] shrink-0">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {onMenuClick && (
+          <button
+            type="button"
+            onClick={onMenuClick}
+            aria-label="Buka menu"
+            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-[#444748] hover:bg-black/5 lg:hidden"
+          >
+            <Menu size={20} />
+          </button>
+        )}
         <span className="hidden sm:inline font-sans text-xs uppercase tracking-widest text-[#444748]">Ruang Kerja</span>
         <span className="hidden sm:inline text-[#747878]">/</span>
         <span className="font-sans text-sm font-semibold text-[#151c27]">Penerimaan Pelanggan</span>

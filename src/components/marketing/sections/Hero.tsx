@@ -156,11 +156,13 @@ export function Hero() {
         className="relative z-10 px-6 md:px-10 lg:px-16"
       >
         <div className="max-w-xl">
-          {/* Sprint LTOS Brand System Rollout — primary brand lockup, per
-              the brief's "Hero branding" requirement. Purely additive: the
-              eyebrow/headline/CTA stack below is unchanged. */}
+          {/* Brand System Upgrade — no-tagline lockup ("versi tanpa
+              jargon" per the brief), sized so it's the first thing read
+              before the headline, Huntsman-scale: 30-36px mobile ramping
+              to 44-52px desktop. Purely additive: the eyebrow/headline/CTA
+              stack below is unchanged. */}
           <motion.div variants={item}>
-            <Logo variant="horizontalTagline" title="Local Tailor" className="h-8 w-auto text-luxury-ivory sm:h-9" />
+            <Logo variant="horizontal" title="Local Tailor" className="h-8 w-auto text-luxury-ivory sm:h-9 md:h-11 lg:h-[52px]" />
           </motion.div>
 
           <motion.p variants={item} className="mt-6 font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">
