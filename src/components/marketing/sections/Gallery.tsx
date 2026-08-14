@@ -28,13 +28,19 @@ export function Gallery() {
         </Reveal>
 
         <div role="group" aria-label="Filter gallery by category" className="mt-8 flex flex-wrap gap-2">
+          {/* Walnut Atelier rebrand — bg-luxury-black/70 (Deep Espresso) added:
+              gold/taupe text directly on the section's own luxury-navy-deep
+              (Warm Walnut) had only 2.2:1 / 2.7:1 contrast, caught by
+              Lighthouse. A Deep Espresso chip fill (this system's own
+              shadow/depth color) restores 5.3:1+ without changing the text
+              colors the brief specifies. */}
           {galleryCopy.filters.map((filter) => (
             <button
               key={filter}
               type="button"
               aria-pressed={activeFilter === filter}
               onClick={() => setActiveFilter(filter)}
-              className={`cursor-pointer rounded-full border px-4 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] transition ${
+              className={`cursor-pointer rounded-full border bg-luxury-black/70 px-4 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] transition ${
                 activeFilter === filter
                   ? 'border-luxury-gold text-luxury-gold'
                   : 'border-luxury-gold/[0.14] text-luxury-taupe hover:border-luxury-gold/30'
@@ -66,7 +72,10 @@ export function Gallery() {
                   idSuffix={i}
                 />
               )}
-              <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe">{item.category}</p>
+              {/* text-luxury-ivory, not the usual -taupe caption tier: this
+                  sits directly on the section's own luxury-navy-deep (Warm
+                  Walnut), where taupe only reaches 2.7:1 contrast. */}
+              <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-ivory">{item.category}</p>
             </motion.li>
           ))}
         </motion.ul>

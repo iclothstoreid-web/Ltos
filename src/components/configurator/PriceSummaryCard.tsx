@@ -39,7 +39,13 @@ export function PriceSummaryCard() {
   )
 
   return (
-    <div className="rounded-2xl border border-luxury-gold/15 bg-luxury-charcoal/40 p-6">
+    // Walnut Atelier rebrand — bg-luxury-black/65 (Deep Espresso, was
+    // bg-luxury-charcoal/40 Smoked Walnut): the lighter Smoked Walnut fill
+    // only reached ~2.8-3.4:1 contrast for this card's gold/taupe text
+    // against WCAG's 4.5:1 minimum once the underlying luxury-navy-deep
+    // page bg lightened to Warm Walnut. Deep Espresso is this system's own
+    // shadow/depth color, so this stays inside the brief's palette.
+    <div className="rounded-2xl border border-luxury-gold/15 bg-luxury-black/65 p-6">
       <h3 className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-ivory">Ringkasan Estimasi</h3>
 
       <fieldset className="mt-4">

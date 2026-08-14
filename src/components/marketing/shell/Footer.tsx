@@ -14,7 +14,14 @@ export function Footer() {
   const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, FOOTER_WHATSAPP_MESSAGE)
 
   return (
-    <footer className="border-t border-luxury-gold/[0.14] bg-luxury-navy-deep px-6 py-16 md:px-10">
+    // Walnut Atelier rebrand — bg-luxury-charcoal (Smoked Walnut), not the
+    // page's own luxury-navy-deep (Warm Walnut): the footer's taupe/gold
+    // text only reached 2.2-2.7:1 contrast against Warm Walnut (Lighthouse
+    // caught this), failing WCAG AA's 4.5:1. Smoked Walnut is exactly the
+    // brief's own "Panel, card, sidebar, modal" color — the footer is one
+    // of those, distinct from the page's main background — and restores
+    // 4.8:1+ for the taupe text without changing any text color.
+    <footer className="border-t border-luxury-gold/[0.14] bg-luxury-charcoal px-6 py-16 md:px-10">
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
           <Logo variant="horizontalTagline" title={navCopy.brand} className="h-10 w-auto text-luxury-ivory" />

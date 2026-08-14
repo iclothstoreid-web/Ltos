@@ -67,7 +67,11 @@ export function ConfiguratorPreview() {
                   key={card.name}
                   type="button"
                   onClick={() => setFabricIndex(i)}
-                  className={`cursor-pointer rounded-full border px-4 py-2 font-luxury-sans text-xs transition ${
+                  // Walnut Atelier rebrand — bg-luxury-black/70 (Deep
+                  // Espresso) restores WCAG contrast for gold/taupe text
+                  // against the now-lighter luxury-navy-deep (Warm Walnut)
+                  // section bg; see Gallery.tsx's identical fix.
+                  className={`cursor-pointer rounded-full border bg-luxury-black/70 px-4 py-2 font-luxury-sans text-xs transition ${
                     i === fabricIndex
                       ? 'border-luxury-gold text-luxury-gold'
                       : 'border-luxury-gold/[0.14] text-luxury-taupe hover:border-luxury-gold/30'
