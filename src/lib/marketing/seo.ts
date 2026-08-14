@@ -9,6 +9,18 @@ const BUSINESS = {
   addressCountry: 'ID',
 }
 
+// LTOS Brand System Rollout — official horizontal-with-tagline lockup on
+// the site's own dark brand background (public/brand/og-image.png,
+// generated from public/brand/logo-horizontal-tagline.svg), 1200x630 per
+// the OpenGraph/Twitter `summary_large_image` spec. Single shared constant
+// so every metadata builder below points at the exact same asset.
+const OG_IMAGE = {
+  url: `${BUSINESS.url}/brand/og-image.png`,
+  width: 1200,
+  height: 630,
+  alt: `${BUSINESS.name} — Local Tailor`,
+}
+
 export const homepageMetadata: Metadata = {
   title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
   description:
@@ -19,6 +31,13 @@ export const homepageMetadata: Metadata = {
     url: BUSINESS.url,
     siteName: BUSINESS.name,
     type: 'website',
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
+    description: 'Designed around your body, your lifestyle, and your identity.',
+    images: [OG_IMAGE.url],
   },
   alternates: {
     canonical: BUSINESS.url,
@@ -106,11 +125,13 @@ export function buildSimplePageMetadata(params: { title: string; description: st
       url,
       siteName: BUSINESS.name,
       type: 'website',
+      images: [OG_IMAGE],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: fullTitle,
       description: params.description,
+      images: [OG_IMAGE.url],
     },
     alternates: {
       canonical: url,

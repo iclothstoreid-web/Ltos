@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { canAccessFitterApp, normalizeRole } from '@/lib/rbac/roles'
 import { PasswordUpdatedToast } from '@/components/auth/PasswordUpdatedToast'
 import { APP_BRANDING } from '@/lib/auth/branding'
+import { Logo } from '@/components/brand/Logo'
 
 const branding = APP_BRANDING.fitter
 
@@ -60,9 +61,7 @@ export default function FitterLoginPage() {
           <h1 className="font-serif text-headline text-on-surface">
             Fitter App
           </h1>
-          <p className="text-body text-secondary mt-2">
-            Local Tailor Operating System
-          </p>
+          <Logo variant="horizontalTagline" className="mt-2 h-6 w-auto text-secondary" />
           <p className="text-label text-secondary mt-1">
             Professional measurement and customer fitting workspace.
           </p>

@@ -1,6 +1,7 @@
 import { footerCopy, navCopy } from '@/lib/marketing/copy'
 import { CITY_BUSINESS } from '@/lib/seo/cityConfig'
 import { buildContentWhatsAppUrl } from '@/lib/content/whatsapp'
+import { Logo } from '@/components/brand/Logo'
 
 // Sprint W8-B — NAP Consistency System. This is the only place the footer
 // reads business identity from — CITY_BUSINESS in src/lib/seo/cityConfig.ts
@@ -16,10 +17,7 @@ export function Footer() {
     <footer className="border-t border-luxury-gold/[0.14] bg-luxury-navy-deep px-6 py-16 md:px-10">
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
-          <p className="font-fraunces text-xl text-luxury-ivory">{navCopy.brand}</p>
-          <p className="mt-1 font-luxury-sans text-[10px] font-light uppercase tracking-[0.2em] text-luxury-taupe">
-            {navCopy.brandSuffix}
-          </p>
+          <Logo variant="horizontalTagline" title={navCopy.brand} className="h-10 w-auto text-luxury-ivory" />
           <p className="mt-3 max-w-xs font-luxury-sans text-sm text-luxury-taupe">{footerCopy.tagline}</p>
           <address className="mt-4 max-w-xs font-luxury-sans text-xs not-italic leading-relaxed text-luxury-taupe">
             {CITY_BUSINESS.streetAddress}

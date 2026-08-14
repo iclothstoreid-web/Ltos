@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { motion, useScroll, useSpring, useTransform, useVelocity, type Variants } from 'framer-motion'
 import { heroCopy } from '@/lib/marketing/copy'
 import { MagneticButton } from '../shell/MagneticButton'
+import { Logo } from '@/components/brand/Logo'
 import { trackEvent } from '@/lib/analytics/tracker'
 import { trackCTA } from '@/lib/analytics/cta'
 import { GA4_EVENTS } from '@/lib/analytics/events'
@@ -153,7 +154,14 @@ export function Hero() {
         className="relative z-10 px-6 md:px-10 lg:px-16"
       >
         <div className="max-w-xl">
-          <motion.p variants={item} className="font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">
+          {/* Sprint LTOS Brand System Rollout — primary brand lockup, per
+              the brief's "Hero branding" requirement. Purely additive: the
+              eyebrow/headline/CTA stack below is unchanged. */}
+          <motion.div variants={item}>
+            <Logo variant="horizontalTagline" title="Local Tailor" className="h-8 w-auto text-luxury-ivory sm:h-9" />
+          </motion.div>
+
+          <motion.p variants={item} className="mt-6 font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">
             {heroCopy.eyebrow}
           </motion.p>
 

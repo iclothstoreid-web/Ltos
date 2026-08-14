@@ -2,6 +2,7 @@
 
 import { memo } from 'react'
 import Link from 'next/link'
+import { Logo } from '@/components/brand/Logo'
 import {
   Boxes,
   ClipboardList,
@@ -79,7 +80,7 @@ function LeftSidebarComponent({ mobileOpen = false, onMobileClose }: LeftSidebar
 
         <div className="relative px-6 py-6 flex flex-col gap-1 border-b border-outline-variant/80">
           <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Owner OS</span>
-          <span className="text-label text-secondary uppercase tracking-widest">Local Tailor Operating System</span>
+          <Logo variant="horizontal" className="h-4 w-auto text-secondary" />
         </div>
 
         <div className="relative flex-1 overflow-auto">
@@ -97,7 +98,7 @@ function LeftSidebarComponent({ mobileOpen = false, onMobileClose }: LeftSidebar
             <div className="px-6 py-6 flex items-center justify-between border-b border-outline-variant/80">
               <div className="flex flex-col gap-1">
                 <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Owner OS</span>
-                <span className="text-label text-secondary uppercase tracking-widest">Local Tailor Operating System</span>
+                <Logo variant="horizontal" className="h-4 w-auto text-secondary" />
               </div>
               <button
                 onClick={onMobileClose}

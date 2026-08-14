@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { navCopy } from '@/lib/marketing/copy'
+import { Logo } from '@/components/brand/Logo'
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false)
@@ -24,11 +25,8 @@ export function Nav() {
       }`}
     >
       <nav aria-label="Primary" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
-        <a href="/" className="flex flex-col">
-          <span className="font-fraunces text-lg tracking-wide text-luxury-ivory">{navCopy.brand}</span>
-          <span className="mt-1 font-luxury-sans text-[10px] font-light uppercase tracking-[0.2em] text-luxury-taupe">
-            {navCopy.brandSuffix}
-          </span>
+        <a href="/" aria-label={navCopy.brand} className="flex items-center">
+          <Logo variant="horizontal" className="h-6 w-auto text-luxury-ivory md:h-[30px]" />
         </a>
 
         <ul className="hidden items-center gap-10 md:flex">

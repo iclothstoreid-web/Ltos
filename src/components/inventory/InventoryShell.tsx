@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bell, Boxes, Calculator, LayoutDashboard, Menu, User, X } from 'lucide-react'
+import { Logo } from '@/components/brand/Logo'
 
 // Same Owner OS shell tokens as OwnerCommandCenter (surface-01, atelier-bg,
 // elev-1/2) — Inventory is an Owner/Admin-only workspace analogous to
@@ -56,7 +57,7 @@ export function InventoryShell({ profileName, children }: { profileName: string;
 
         <div className="relative px-6 py-6 flex flex-col gap-1 border-b border-outline-variant/80">
           <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Inventory Hub</span>
-          <span className="text-label text-secondary uppercase tracking-widest">Local Tailor Operating System</span>
+          <Logo variant="horizontal" className="h-4 w-auto text-secondary" />
         </div>
 
         <div className="relative flex-1 overflow-auto">
@@ -86,7 +87,7 @@ export function InventoryShell({ profileName, children }: { profileName: string;
             <div className="px-6 py-6 flex items-center justify-between border-b border-outline-variant/80">
               <div className="flex flex-col gap-1">
                 <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Inventory Hub</span>
-                <span className="text-label text-secondary uppercase tracking-widest">Local Tailor Operating System</span>
+                <Logo variant="horizontal" className="h-4 w-auto text-secondary" />
               </div>
               <button
                 onClick={() => setMobileNavOpen(false)}

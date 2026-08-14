@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import './globals.css'
@@ -8,6 +8,14 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'LTOS — Local Tailor Operating System',
   description: 'Vertical Business Operating System for premium custom tailoring',
+  manifest: '/manifest.json',
+}
+
+// LTOS Brand System Rollout — themeColor lives on `viewport`, not
+// `metadata`, since Next.js 14 (matches the brand's luxury-navy-deep, the
+// same token every dark surface across the marketing site already uses).
+export const viewport: Viewport = {
+  themeColor: '#151210',
 }
 
 export default function RootLayout({
