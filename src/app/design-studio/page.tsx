@@ -15,6 +15,7 @@ import { BookingCTA } from '@/components/design-studio/BookingCTA'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
 import { FaqSection } from '@/components/seo/FaqSection'
+import { RelatedServicesLinks } from '@/components/services/RelatedServicesLinks'
 import {
   organizationSchema,
   localBusinessSchema,
@@ -213,6 +214,7 @@ export default async function DesignStudioPage({ searchParams }: PageProps) {
             body="Book Free Video Call untuk konsultasi, atau langsung jelajahi kombinasi desain di Design Studio."
             whatsappMessage="Halo Local Tailor, saya ingin booking Free Video Call untuk konsultasi Digital Bespoke Tailoring."
           />
+          <RelatedServicesLinks heading="Cari Layanan Spesifik? Jelajahi Halaman Berikut" />
         </article>
 
         <section id="the-studio" aria-labelledby="the-studio-heading" className="border-t border-luxury-gold/[0.14]">

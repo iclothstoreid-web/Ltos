@@ -7,6 +7,7 @@ import { KNOWLEDGE_CATEGORIES } from '@/lib/knowledge/categories'
 import { ALL_KNOWLEDGE_ARTICLES } from '@/lib/knowledge/articles'
 import { fabricPhotos, garmentPhotos, measurementMannequinSrc } from '@/lib/marketing/assets'
 import { CITY_CONFIGS } from '@/lib/seo/cityConfig'
+import { SERVICE_CONFIGS } from '@/lib/seo/serviceConfig'
 
 // Sprint W6-8 — sitemap split. Previously one src/app/sitemap.ts covered
 // every route; now that /knowledge alone is 34 routes (soon 66), one flat
@@ -62,6 +63,16 @@ export async function buildPagesSitemapEntries(supabase: SupabaseClient): Promis
     })),
     // Sprint W8-B — Local Citation Infrastructure.
     { url: `${FABRIC_SITE_ORIGIN}/contact`, changeFrequency: 'monthly', priority: 0.6 },
+    // Sprint W10 — Organic Acquisition Engine, the 5 commercial-intent
+    // Revenue Landing Pages. Priority 0.85: below the core nav pages
+    // (design-studio/fabric at 0.9) but above the geographic /locations
+    // pages (0.7), reflecting these are the highest-purchase-intent pages
+    // in the site.
+    ...SERVICE_CONFIGS.map((service) => ({
+      url: `${FABRIC_SITE_ORIGIN}/${service.slug}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.85,
+    })),
   ]
 
   const materialEntries: SitemapUrlEntry[] = materials.map((material) => ({

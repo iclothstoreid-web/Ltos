@@ -1,6 +1,7 @@
 import { trackEvent } from './tracker'
 import { GA4_EVENTS } from './events'
 import type { PageType } from './types'
+import { SERVICE_CONFIGS } from '@/lib/seo/serviceConfig'
 
 // Sprint W9-1 §4 — CTA Tracking System. Every CTA on the site gets a
 // stable `id` from this registry, so the CRO dashboard's "CTA leaderboard"
@@ -36,6 +37,19 @@ export const CTA_REGISTRY: CtaDefinition[] = [
   { id: 'contact_chat_whatsapp', label: 'Chat on WhatsApp', page: '/contact' },
   { id: 'contact_get_directions', label: 'Get Directions', page: '/contact' },
   { id: 'review_write_google', label: 'Tulis Ulasan di Google', page: 'GoogleReviewCTA' },
+  // Sprint W10 — Revenue Landing Pages (RevenueLandingPage.tsx). Unlike
+  // /locations/[city]'s CTAs (one shared id across all cities), each
+  // service page's CTA ids embed the slug directly (see ServiceHero.tsx,
+  // ServiceCTA.tsx, ServiceStickyWhatsApp.tsx), so the registry needs one
+  // entry per id per page, not one generic entry per CTA type. Generated
+  // from SERVICE_CONFIGS so a new landing page can never silently ship
+  // CTAs missing from this registry.
+  ...SERVICE_CONFIGS.flatMap((service): CtaDefinition[] => [
+    { id: `service_hero_design_studio_${service.slug}`, label: 'Explore Design Studio', page: `/${service.slug}` },
+    { id: `service_hero_whatsapp_${service.slug}`, label: 'Chat on WhatsApp', page: `/${service.slug}` },
+    { id: `service_cta_whatsapp_${service.slug}`, label: 'Chat on WhatsApp', page: `/${service.slug}` },
+    { id: `service_sticky_whatsapp_${service.slug}`, label: 'Floating WhatsApp', page: `/${service.slug}` },
+  ]),
 ]
 
 export function getCtaDefinition(id: string): CtaDefinition | undefined {

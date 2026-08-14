@@ -11,6 +11,7 @@ import { KnowledgeHero } from '@/components/knowledge/KnowledgeHero'
 import { KnowledgeCategoryGrid } from '@/components/knowledge/KnowledgeCategoryGrid'
 import { RelatedArticles } from '@/components/knowledge/RelatedArticles'
 import { KnowledgeCTAGroup } from '@/components/knowledge/KnowledgeCTAGroup'
+import { RelatedServicesLinks } from '@/components/services/RelatedServicesLinks'
 
 export const metadata: Metadata = buildKnowledgeLandingMetadata()
 
@@ -86,6 +87,8 @@ export default function KnowledgePage() {
           heading="Siap Memulai Thobe Bespoke Anda?"
           body="Mulai dari konsultasi gratis, jelajahi koleksi bahan kami, atau cek Digital Body Profile Anda sebelum memesan."
         />
+
+        <RelatedServicesLinks />
       </div>
     </div>
   )
