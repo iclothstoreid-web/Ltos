@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 }
 
 // LTOS Brand System Rollout — themeColor lives on `viewport`, not
-// `metadata`, since Next.js 14 (matches the brand's luxury-navy-deep, the
-// same token every dark surface across the marketing site already uses).
+// `metadata`, since Next.js 14. Walnut Atelier — Walnut Brown, the
+// system's dominant primary (was Deep Espresso, pre-rebrand).
 export const viewport: Viewport = {
-  themeColor: '#151210',
+  themeColor: '#6A4A34',
 }
 
 export default function RootLayout({

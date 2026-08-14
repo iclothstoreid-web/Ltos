@@ -120,29 +120,31 @@ export function Hero() {
       {/* Fallback for reduced-motion / no-WebGL2 / low-end: the shader's
           own base gradient, reproduced as a static CSS gradient so there's
           still a cinematic backdrop, just without the animated map hint.
-          W1R — Deep Espresso cinematic base (was Midnight Navy). */}
+          Walnut Atelier — warm walnut panel lit from the top-left, settling
+          into Deep Espresso shadow at the bottom-right, per the brief's
+          exact gradient direction. */}
       {!show3D && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(135deg,_#151210_0%,_#1B1714_55%,_#221C18_100%)]"
+          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(135deg,_#8B6245_0%,_#6A4A34_55%,_#221814_100%)]"
         />
       )}
 
-      {/* W1R — navy demoted from dominant tone to a very soft atmospheric
-          glow, "seperti pantulan cahaya pada kain atau kaca" over the
-          espresso base, not a background color in its own right. */}
+      {/* Walnut Atelier — warm brass-toned light glow, "cahaya hangat"
+          landing on the panel, replacing the earlier navy atmospheric
+          glow (this system has no navy accent anymore). */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_30%_18%,_rgba(11,22,40,0.22)_0%,_rgba(11,22,40,0.08)_30%,_transparent_60%)]"
+        className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_30%_18%,_rgba(200,162,74,0.16)_0%,_rgba(200,162,74,0.06)_30%,_transparent_60%)]"
       />
 
-      {/* Slightly darker (espresso-toned) on the left where the headline
+      {/* Slightly darker (Deep Espresso) on the left where the headline
           sits, easing off toward the right — legibility without a flat
-          scrim. W1R — espresso, not navy, keeps this "one material" with
-          the rest of the site. */}
+          scrim. This is exactly the brief's "shadow/overlay/vignette/depth
+          → Deep Espresso" rule. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-[#151210] via-[#151210]/70 to-[#151210]/25"
+        className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-[#221814] via-[#221814]/70 to-[#221814]/25"
       />
 
       {/* Content — moves least (0.1x) of everything in the scene. */}

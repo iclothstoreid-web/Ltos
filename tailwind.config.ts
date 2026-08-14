@@ -34,37 +34,34 @@ const config: Config = {
         // can never collide with the internal app's Material-style tokens
         // above.
         //
-        // W1R — GLOBAL COLOR REBRAND: DEEP ESPRESSO ATELIER. Inverts the
-        // REBALANCE revision's dominance: luxury-navy / luxury-navy-deep
-        // (previously the ~70% dominant section-background workhorses) are
-        // repointed onto luxury-black's existing Deep Espresso value — every
-        // section that referenced them keeps its className untouched but now
-        // renders the same warm espresso "one material" as the rest of the
-        // site, with zero alternating navy/charcoal striping. luxury-black
-        // (Deep Espresso) and luxury-charcoal (Smoked Walnut) keep their own
-        // values unchanged — they were already exactly the brief's Primary/
-        // Secondary Background hex, just previously scoped to cards/panels
-        // only. Genuine Midnight Navy (#0B1628 / #0A1322) is deliberately
-        // NOT a token anymore: it now only appears as literal hex inside the
-        // Hero/FinalCta atmospheric glow gradients and the HeroDepthField
-        // shader uniforms, at deliberately low opacity — "ambient glow /
-        // depth layer," never a solid fill.
-        'luxury-navy': '#151210',
-        'luxury-navy-deep': '#151210',
-        'luxury-black': '#151210',
-        'luxury-charcoal': '#1B1714',
+        // WALNUT ATELIER REBRAND — replaces the W1R "Deep Espresso Atelier"
+        // revision above: that revision made Deep Espresso the ~70%
+        // dominant section-background tone, which read as too dark/flat.
+        // This revision keeps every className untouched (still
+        // luxury-navy/-deep/-black/-charcoal everywhere) but repoints the
+        // token VALUES so Walnut Brown + Warm Walnut (previously identical,
+        // both Deep Espresso) become two distinct warm-wood primaries
+        // carrying the ~60% majority, Smoked Walnut a 20% secondary
+        // panel/card tone, and Deep Espresso demoted to its brief-mandated
+        // 10% shadow/depth/overlay role only — never a section fill by
+        // itself anymore. luxury-gold and luxury-ivory were already exactly
+        // the brief's Brass Gold / Ivory Linen hex and are unchanged.
+        'luxury-navy': '#6A4A34',
+        'luxury-navy-deep': '#8B6245',
+        'luxury-black': '#221814',
+        'luxury-charcoal': '#5A3F30',
         'luxury-ivory': '#F3EDE6',
         'luxury-gold': '#C8A24A',
         'luxury-bronze': '#B9923F',
         'luxury-linen': '#E8E1D3',
-        // New this revision — Soft Taupe for secondary/body text, replacing
-        // the old translucent-ivory-opacity pattern (which read as flat
-        // "digital UI" white-with-opacity rather than a warm material tone).
-        'luxury-taupe': '#B7ACA0',
-        // W1R — Dark Walnut, one tier lighter than luxury-charcoal. Elevated
-        // surface only: hover/modal/dropdown/floating elements — never a
-        // base card or section fill.
-        'luxury-espresso-elevated': '#221C18',
+        // Soft Taupe for secondary/body text — Walnut Atelier's exact Taupe
+        // hex (was #B7ACA0, a close but not identical shade).
+        'luxury-taupe': '#C2B6A8',
+        // Elevated surface only: hover/modal/dropdown/floating elements —
+        // never a base card or section fill. Harmonized to the same Deep
+        // Espresso value as luxury-black (was a slightly different #221C18)
+        // now that Deep Espresso is the system's one canonical shadow tone.
+        'luxury-espresso-elevated': '#221814',
         // W1R — third typography tier (Primary=ivory, Secondary=taupe,
         // Muted=this) for fully de-emphasized captions/labels.
         'luxury-muted': '#8E847A',

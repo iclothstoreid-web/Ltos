@@ -5,6 +5,7 @@ import { LuxuryGradientField } from '@/components/marketing/placeholders/LuxuryG
 import { breadcrumbSchema } from '@/lib/seo/schema'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
+import { WalnutGrainOverlay } from '@/components/marketing/shell/WalnutGrainOverlay'
 
 export const metadata: Metadata = buildSimplePageMetadata({
   title: 'Journal',
@@ -47,6 +48,7 @@ export default function JournalPage() {
           </MagneticButton>
         </div>
       </div>
+      <WalnutGrainOverlay />
     </main>
   )
 }

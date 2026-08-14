@@ -4,8 +4,8 @@
   "description": "Bespoke thobe, handcrafted in Bandung.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#151210",
-  "theme_color": "#151210",
+  "background_color": "#6A4A34",
+  "theme_color": "#6A4A34",
   "icons": [
     {
       "src": "/brand/icon-192.png",

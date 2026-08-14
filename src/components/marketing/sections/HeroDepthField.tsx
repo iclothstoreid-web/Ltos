@@ -67,15 +67,14 @@ const FRAGMENT_SHADER = /* glsl */ `
   }
 
   void main() {
-    // W1R — Deep Espresso Atelier grading: espresso is now the
-    // brand-identity color and must stay dominant. Two-tone espresso,
-    // vertical-biased: top-left #1B1714 (Smoked Walnut) blended across x
-    // into #151210 (Deep Espresso), settling into flat #151210 for the
-    // lower ~60% — which is exactly the color PrivateAppointment (the next
-    // section) now uses, so the hand-off is seamless rather than a color
-    // change. Genuine navy no longer appears in this shader at all — the
-    // atmospheric navy glow lives in Hero.tsx's separate CSS overlay div,
-    // which sits on top of this canvas at very low opacity.
+    // Walnut Atelier grading: two-tone warm wood, vertical-biased: top-left
+    // #8B6245 (Warm Walnut) blended across x into #6A4A34 (Walnut Brown),
+    // settling into flat Walnut Brown for the lower ~60% — matching the
+    // brief's "Walnut Brown + Warm Walnut = 60% dominant" rule and handing
+    // off seamlessly into the next section's own luxury-navy-deep
+    // background. Deep Espresso only appears via Hero.tsx's separate CSS
+    // legibility scrim layered on top of this canvas, never as this
+    // shader's own base fill.
     float b = clamp(1.0 - vUv.y, 0.0, 1.0);
     vec3 topBlend = mix(uColorMidnightNavy, uColorTransitionNavy, clamp(vUv.x, 0.0, 1.0));
     vec3 color = mix(topBlend, uColorTransitionNavy, smoothstep(0.0, 0.4, b));
@@ -140,10 +139,10 @@ function DepthPlane({
 
   const uniforms = useMemo(
     () => ({
-      // Names kept from the pre-W1R navy grading to minimize diff — values
-      // are now Smoked Walnut / Deep Espresso, see comment above.
-      uColorMidnightNavy: { value: new Color('#1B1714') },
-      uColorTransitionNavy: { value: new Color('#151210') },
+      // Names kept from the original navy grading to minimize diff — values
+      // are now Warm Walnut / Walnut Brown, see comment above.
+      uColorMidnightNavy: { value: new Color('#8B6245') },
+      uColorTransitionNavy: { value: new Color('#6A4A34') },
       uColorGold: { value: new Color('#C8A24A') },
       uMapTexture: { value: texture },
       uMapStrength: { value: 0.16 },

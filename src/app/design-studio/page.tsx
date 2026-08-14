@@ -5,6 +5,7 @@ import { getMaterialBySlug, getMaterialColors } from '@/lib/materials/materialRe
 import { DesignStudioClient } from '@/components/configurator/DesignStudioClient'
 import { Nav } from '@/components/marketing/shell/Nav'
 import { Footer } from '@/components/marketing/shell/Footer'
+import { WalnutGrainOverlay } from '@/components/marketing/shell/WalnutGrainOverlay'
 import { DigitalBespokeHero } from '@/components/design-studio/DigitalBespokeHero'
 import { WhatIsDesignStudio } from '@/components/design-studio/WhatIsDesignStudio'
 import { ExperienceCards } from '@/components/design-studio/ExperienceCards'
@@ -222,6 +223,7 @@ export default async function DesignStudioPage({ searchParams }: PageProps) {
         </section>
       </main>
       <Footer />
+      <WalnutGrainOverlay />
     </div>
   )
 }

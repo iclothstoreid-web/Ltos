@@ -11,6 +11,7 @@ import { FaqSection } from '@/components/seo/FaqSection'
 import { TrackedMagneticButton } from '@/components/analytics/TrackedMagneticButton'
 import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
 import { GA4_EVENTS } from '@/lib/analytics/events'
+import { WalnutGrainOverlay } from '@/components/marketing/shell/WalnutGrainOverlay'
 
 export const metadata: Metadata = buildSimplePageMetadata({
   title: 'Book a Private Appointment',
@@ -106,6 +107,7 @@ export default function BookAppointmentPage() {
       <div className="relative mx-auto w-full">
         <FaqSection items={CONSULTATION_FAQ} headingId="appointment-faq-heading" />
       </div>
+      <WalnutGrainOverlay />
     </main>
   )
 }

@@ -10,6 +10,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
 import { EventOnMount } from '@/components/analytics/EventOnMount'
 import { GA4_EVENTS } from '@/lib/analytics/events'
+import { WalnutGrainOverlay } from '@/components/marketing/shell/WalnutGrainOverlay'
 
 export const metadata: Metadata = buildSimplePageMetadata({
   title: 'Gallery',
@@ -99,6 +100,7 @@ export default async function GalleryPage() {
           </>
         )}
       </div>
+      <WalnutGrainOverlay />
     </main>
   )
 }

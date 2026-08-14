@@ -13,6 +13,7 @@ import { ActiveFilterChips } from '@/components/fabric/ActiveFilterChips'
 import { SortLinks } from '@/components/fabric/SortLinks'
 import { CategoryChip } from '@/components/fabric/CategoryChip'
 import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
+import { WalnutGrainOverlay } from '@/components/marketing/shell/WalnutGrainOverlay'
 
 // Metadata is deliberately independent of searchParams — every ?search=/
 // ?category=/etc. variation of this page shares the exact same title,
@@ -104,6 +105,7 @@ export default async function FabricExplorerPage({ searchParams }: PageProps) {
           </div>
         </div>
       </div>
+      <WalnutGrainOverlay />
     </main>
   )
 }

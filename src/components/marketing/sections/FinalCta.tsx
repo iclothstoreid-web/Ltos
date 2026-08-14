@@ -7,10 +7,10 @@ import { LinenTexture } from '../placeholders/LinenTexture'
 // Sprint W4.5 — "Chat with Tailor" used to be a literal href="#" dead link.
 const CHAT_MESSAGE = 'Halo Local Tailor, saya ingin bertanya seputar layanan bespoke tailoring.'
 
-// W1R — bookends the Hero: same espresso section bg (via the luxury-navy-deep
-// token, now repointed to Deep Espresso) plus the same soft navy atmospheric
-// glow treatment as the Hero, so the page's closing moment reads as "back
-// into the same espresso atelier," not a different material.
+// Bookends the Hero: same Warm Walnut section bg (via the luxury-navy-deep
+// token) plus the same soft brass-toned atmospheric glow treatment as the
+// Hero, so the page's closing moment reads as "back into the same walnut
+// atelier," not a different material.
 export function FinalCta() {
   const chatUrl = buildContentWhatsAppUrl(CONTENT_WHATSAPP_NUMBER, CHAT_MESSAGE)
 
@@ -22,7 +22,7 @@ export function FinalCta() {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_rgba(11,22,40,0.22)_0%,_rgba(11,22,40,0.08)_30%,_transparent_60%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,_rgba(200,162,74,0.16)_0%,_rgba(200,162,74,0.06)_30%,_transparent_60%)]"
       />
       <LinenTexture opacity={0.1} idSuffix="final-cta" />
 

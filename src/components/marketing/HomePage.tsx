@@ -5,6 +5,7 @@ import { Nav } from './shell/Nav'
 import { Footer } from './shell/Footer'
 import { ScrollProgress } from './shell/ScrollProgress'
 import { StickyMobileCta } from './shell/StickyMobileCta'
+import { WalnutGrainOverlay } from './shell/WalnutGrainOverlay'
 import { Hero } from './sections/Hero'
 import { TrustBar } from './sections/TrustBar'
 import { ConfiguratorPreview } from './sections/ConfiguratorPreview'
@@ -154,6 +155,7 @@ export function HomePage() {
       </main>
       <Footer />
       <StickyMobileCta />
+      <WalnutGrainOverlay />
     </div>
   )
 }

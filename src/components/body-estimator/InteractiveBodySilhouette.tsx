@@ -58,7 +58,7 @@ export function InteractiveBodySilhouette({
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 animate-luxury-drift bg-[radial-gradient(120%_120%_at_20%_10%,_#2A211B_0%,_#1B1714_45%,_#151210_100%)]"
+        className="absolute inset-0 animate-luxury-drift bg-[radial-gradient(120%_120%_at_20%_10%,_#8B6245_0%,_#5A3F30_45%,_#221814_100%)]"
       />
 
       <svg
