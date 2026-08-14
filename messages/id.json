@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "brand": "Local Tailor",
+    "links": {
+      "designStudio": "Design Studio",
+      "fabrics": "Material",
+      "knowledge": "Panduan",
+      "gallery": "Galeri",
+      "journal": "Jurnal",
+      "locations": "Lokasi"
+    },
+    "cta": "Buat Janji Temu",
+    "languageSwitcher": "Bahasa"
+  },
+  "hero": {
+    "eyebrow": "Thobe Bespoke, Bandung",
+    "headline": "Thobe Custom, Dibuat Khusus untuk Anda",
+    "subheadline": "Dirancang berdasarkan bentuk tubuh, gaya hidup, dan identitas Anda.",
+    "primaryCta": "Desain Thobe Saya",
+    "secondaryCta": "Buat Janji Temu Privat",
+    "trustStrip": ["Material Impor Premium", "Pengukuran Personal", "Dibuat di Bandung", "Pola Custom"]
+  },
+  "cta": {
+    "designMyThobe": "Desain Thobe Saya",
+    "bookConsultation": "Buat Janji Konsultasi",
+    "bookPrivateAppointment": "Buat Janji Temu Privat",
+    "whatsappConsultation": "Konsultasi via WhatsApp",
+    "chatWithTailor": "Chat dengan Tailor",
+    "exploreFabrics": "Jelajahi Material",
+    "viewGallery": "Lihat Galeri Lengkap"
+  },
+  "designStudio": {
+    "eyebrow": "Design Studio",
+    "heading": "Lihat Desain Anda Menjadi Nyata",
+    "body": "Ganti material, ubah warna, dan lihat perkiraan harga serta waktu produksi diperbarui secara langsung — mesin yang sama dengan yang digunakan fitter kami di studio.",
+    "fabricLabel": "Material",
+    "colorLabel": "Warna",
+    "priceLabel": "Estimasi Investasi",
+    "timeLabel": "Waktu Produksi",
+    "cta": "Lanjutkan Mendesain"
+  },
+  "booking": {
+    "eyebrow": "Dengan Janji Temu",
+    "heading": "Buat Janji Temu Privat",
+    "body": "Konsultasi personal, pemilihan material, pengukuran tubuh, dan panduan desain dalam sesi tailoring privat.",
+    "location": "Janji Temu Privat — Bandung",
+    "address": "Workshop & Showroom, Bandung, Jawa Barat",
+    "cta": "Buat Janji Temu Privat"
+  },
+  "contact": {
+    "eyebrow": "Kontak",
+    "heading": "Hubungi Kami",
+    "subheadline": "Hubungi langsung workshop kami di Bandung untuk konsultasi, pertanyaan material, atau pesanan yang sedang berjalan.",
+    "whatsappLabel": "WhatsApp",
+    "addressLabel": "Workshop & Showroom",
+    "hoursLabel": "Jam Operasional",
+    "cta": "Konsultasi via WhatsApp"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "Pertanyaan Umum"
+  },
+  "trust": {
+    "heading": "Dipercaya oleh klien pilihan di seluruh Indonesia"
+  },
+  "footer": {
+    "tagline": "Thobe bespoke, dibuat dengan tangan di Bandung.",
+    "columns": {
+      "explore": "Jelajahi",
+      "studio": "Studio",
+      "sizeGuide": "Panduan Ukuran"
+    },
+    "links": {
+      "designStudio": "Design Studio",
+      "fabrics": "Material",
+      "gallery": "Galeri",
+      "journal": "Jurnal",
+      "knowledge": "Panduan",
+      "locations": "Lokasi",
+      "bookAppointment": "Buat Janji Temu Privat",
+      "faq": "FAQ",
+      "contact": "Kontak",
+      "freeSizeCheck": "Cek Ukuran Gratis",
+      "sizeChartThobe": "Size Chart Thobe",
+      "menThobeSize": "Ukuran Thobe Pria",
+      "howToMeasure": "Cara Mengukur Thobe"
+    },
+    "legal": "© {year} Bespoke Tailor. Hak cipta dilindungi undang-undang."
+  },
+  "languageSwitcher": {
+    "openLabel": "Ganti bahasa",
+    "modalTitle": "Pilih bahasa Anda",
+    "modalSubtitle": "Pilih bahasa yang Anda inginkan untuk menjelajahi Local Tailor.",
+    "close": "Tutup",
+    "currentLanguage": "Bahasa saat ini"
+  }
+}

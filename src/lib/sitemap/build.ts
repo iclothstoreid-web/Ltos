@@ -8,6 +8,8 @@ import { ALL_KNOWLEDGE_ARTICLES } from '@/lib/knowledge/articles'
 import { fabricPhotos, garmentPhotos, measurementMannequinSrc } from '@/lib/marketing/assets'
 import { CITY_CONFIGS } from '@/lib/seo/cityConfig'
 import { SERVICE_CONFIGS } from '@/lib/seo/serviceConfig'
+import { locales, localeToHreflang } from '@/i18n/config'
+import { pathForLocale } from '@/i18n/alternates'
 
 // Sprint W6-8 — sitemap split. Previously one src/app/sitemap.ts covered
 // every route; now that /knowledge alone is 34 routes (soon 66), one flat
@@ -20,6 +22,32 @@ export interface SitemapUrlEntry {
   url: string
   changeFrequency: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never'
   priority: number
+  /** hreflang -> absolute URL, including "x-default". Sprint W11.5 — every
+   * entry below now goes through localizedEntries(), which fills this in. */
+  alternates?: Record<string, string>
+}
+
+// Sprint W11.5 Task 6 — every static/knowledge/material page moved under
+// src/app/[locale]/ now gets one <url> entry per locale (id unprefixed, the
+// other 5 "/{locale}"-prefixed, matching src/i18n/routing.ts's
+// localePrefix: 'as-needed'), each carrying the full xhtml:link alternate
+// set so crawlers get hreflang from the sitemap itself, not only the
+// per-page <head> tags withLocaleAlternates() already emits.
+function localizedEntries(
+  path: string,
+  changeFrequency: SitemapUrlEntry['changeFrequency'],
+  priority: number
+): SitemapUrlEntry[] {
+  const alternates: Record<string, string> = { 'x-default': `${FABRIC_SITE_ORIGIN}${path}` }
+  for (const locale of locales) {
+    alternates[localeToHreflang[locale]] = `${FABRIC_SITE_ORIGIN}${pathForLocale(path, locale)}`
+  }
+  return locales.map((locale) => ({
+    url: `${FABRIC_SITE_ORIGIN}${pathForLocale(path, locale)}`,
+    changeFrequency,
+    priority,
+    alternates,
+  }))
 }
 
 export interface SitemapImageEntry {
@@ -37,49 +65,31 @@ export async function buildPagesSitemapEntries(supabase: SupabaseClient): Promis
   const materials = await getAllMaterials(supabase)
 
   const staticEntries: SitemapUrlEntry[] = [
-    { url: FABRIC_SITE_ORIGIN, changeFrequency: 'weekly', priority: 1 },
-    { url: `${FABRIC_SITE_ORIGIN}/design-studio`, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${FABRIC_SITE_ORIGIN}/fabric`, changeFrequency: 'daily', priority: 0.9 },
-    ...FABRIC_CATEGORIES.map((category) => ({
-      url: `${FABRIC_SITE_ORIGIN}/fabric/${category}`,
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
-    })),
-    { url: `${FABRIC_SITE_ORIGIN}/free-body-profile-estimator`, changeFrequency: 'weekly', priority: 0.9 },
-    ...ALL_ARTICLES.map((article) => ({
-      url: `${FABRIC_SITE_ORIGIN}/${article.slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
-    { url: `${FABRIC_SITE_ORIGIN}/book-appointment`, changeFrequency: 'monthly', priority: 0.8 },
-    { url: `${FABRIC_SITE_ORIGIN}/gallery`, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${FABRIC_SITE_ORIGIN}/journal`, changeFrequency: 'monthly', priority: 0.5 },
+    ...localizedEntries('/', 'weekly', 1),
+    ...localizedEntries('/design-studio', 'weekly', 0.9),
+    ...localizedEntries('/fabric', 'daily', 0.9),
+    ...FABRIC_CATEGORIES.flatMap((category) => localizedEntries(`/fabric/${category}`, 'daily', 0.8)),
+    ...localizedEntries('/free-body-profile-estimator', 'weekly', 0.9),
+    ...ALL_ARTICLES.flatMap((article) => localizedEntries(`/${article.slug}`, 'monthly', 0.7)),
+    ...localizedEntries('/book-appointment', 'monthly', 0.8),
+    ...localizedEntries('/gallery', 'monthly', 0.5),
+    ...localizedEntries('/journal', 'monthly', 0.5),
     // Sprint W8-1 — Location SEO Foundation, migrated to cityConfig.ts in W8-2/3.
-    { url: `${FABRIC_SITE_ORIGIN}/locations`, changeFrequency: 'monthly', priority: 0.8 },
-    ...CITY_CONFIGS.map((city) => ({
-      url: `${FABRIC_SITE_ORIGIN}/locations/${city.slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
+    ...localizedEntries('/locations', 'monthly', 0.8),
+    ...CITY_CONFIGS.flatMap((city) => localizedEntries(`/locations/${city.slug}`, 'monthly', 0.7)),
     // Sprint W8-B — Local Citation Infrastructure.
-    { url: `${FABRIC_SITE_ORIGIN}/contact`, changeFrequency: 'monthly', priority: 0.6 },
+    ...localizedEntries('/contact', 'monthly', 0.6),
     // Sprint W10 — Organic Acquisition Engine, the 5 commercial-intent
     // Revenue Landing Pages. Priority 0.85: below the core nav pages
     // (design-studio/fabric at 0.9) but above the geographic /locations
     // pages (0.7), reflecting these are the highest-purchase-intent pages
     // in the site.
-    ...SERVICE_CONFIGS.map((service) => ({
-      url: `${FABRIC_SITE_ORIGIN}/${service.slug}`,
-      changeFrequency: 'weekly' as const,
-      priority: 0.85,
-    })),
+    ...SERVICE_CONFIGS.flatMap((service) => localizedEntries(`/${service.slug}`, 'weekly', 0.85)),
   ]
 
-  const materialEntries: SitemapUrlEntry[] = materials.map((material) => ({
-    url: `${FABRIC_SITE_ORIGIN}/fabric/${material.category}/${material.slug}`,
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }))
+  const materialEntries: SitemapUrlEntry[] = materials.flatMap((material) =>
+    localizedEntries(`/fabric/${material.category}/${material.slug}`, 'weekly', 0.7)
+  )
 
   return [...staticEntries, ...materialEntries]
 }
@@ -89,17 +99,9 @@ export async function buildPagesSitemapEntries(supabase: SupabaseClient): Promis
 // iterates ALL_KNOWLEDGE_ARTICLES / KNOWLEDGE_CATEGORIES directly.
 export function buildKnowledgeSitemapEntries(): SitemapUrlEntry[] {
   return [
-    { url: `${FABRIC_SITE_ORIGIN}/knowledge`, changeFrequency: 'weekly', priority: 0.9 },
-    ...KNOWLEDGE_CATEGORIES.map((category) => ({
-      url: `${FABRIC_SITE_ORIGIN}/knowledge/${category.slug}`,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    })),
-    ...ALL_KNOWLEDGE_ARTICLES.map((article) => ({
-      url: `${FABRIC_SITE_ORIGIN}/knowledge/${article.category}/${article.slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
+    ...localizedEntries('/knowledge', 'weekly', 0.9),
+    ...KNOWLEDGE_CATEGORIES.flatMap((category) => localizedEntries(`/knowledge/${category.slug}`, 'weekly', 0.8)),
+    ...ALL_KNOWLEDGE_ARTICLES.flatMap((article) => localizedEntries(`/knowledge/${article.category}/${article.slug}`, 'monthly', 0.7)),
   ]
 }
 
@@ -143,12 +145,20 @@ function escapeXml(value: string): string {
 
 export function serializeUrlSitemap(entries: SitemapUrlEntry[]): string {
   const urls = entries
-    .map(
-      (entry) =>
-        `  <url>\n    <loc>${escapeXml(entry.url)}</loc>\n    <changefreq>${entry.changeFrequency}</changefreq>\n    <priority>${entry.priority}</priority>\n  </url>`
-    )
+    .map((entry) => {
+      const alternateLinks = entry.alternates
+        ? Object.entries(entry.alternates)
+            .map(([hreflang, href]) => `    <xhtml:link rel="alternate" hreflang="${escapeXml(hreflang)}" href="${escapeXml(href)}"/>`)
+            .join('\n') + '\n'
+        : ''
+      return `  <url>\n    <loc>${escapeXml(entry.url)}</loc>\n${alternateLinks}    <changefreq>${entry.changeFrequency}</changefreq>\n    <priority>${entry.priority}</priority>\n  </url>`
+    })
     .join('\n')
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`
+  // xmlns:xhtml — Google's multilingual sitemap extension for hreflang
+  // (https://developers.google.com/search/docs/specialty/international/localized-versions#sitemap).
+  // Every entry above now carries `alternates` (see localizedEntries()), so
+  // this covers every localized route the sitemap lists.
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls}\n</urlset>`
 }
 
 // Google's image sitemap extension — one <url> per page, each carrying one

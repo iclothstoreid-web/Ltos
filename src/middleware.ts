@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import createIntlMiddleware from 'next-intl/middleware'
 import { createMiddlewareClient } from '@/lib/supabase/middleware'
 import { normalizeRole } from '@/lib/rbac/roles'
 import type { Role } from '@/types/rbac'
+import { routing } from '@/i18n/routing'
 
 type RouteRule = {
   prefix: string
@@ -50,60 +52,93 @@ const PUBLIC_PATHS = [
   '/inventory/reset-password',
 ]
 
+// Sprint W11.5 — every surface that stays OUTSIDE locale routing: the
+// role-gated auth app (still handled below by ROUTE_RULES), the QR-token
+// Production Flow and customer_token Customer Journey (URL-load-bearing,
+// see the comment above), the customer-facing /login entry, and
+// /access-denied (a middleware rewrite target — routing it back through
+// next-intl would be redundant and risks a rewrite/redirect loop).
+const NO_LOCALE_PREFIXES = ['/owner', '/command-center', '/workspace', '/fitter', '/inventory', '/production', '/journey', '/login', '/access-denied']
+
+function isNoLocalePath(pathname: string): boolean {
+  return NO_LOCALE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+}
+
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))
+  return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
 }
 
 function matchRule(pathname: string): RouteRule | null {
   if (isPublicPath(pathname)) return null
-  return ROUTE_RULES.find(rule => pathname === rule.prefix || pathname.startsWith(`${rule.prefix}/`)) ?? null
+  return ROUTE_RULES.find((rule) => pathname === rule.prefix || pathname.startsWith(`${rule.prefix}/`)) ?? null
 }
+
+const intlMiddleware = createIntlMiddleware(routing)
 
 export async function middleware(request: NextRequest) {
-  const rule = matchRule(request.nextUrl.pathname)
-  if (!rule) return NextResponse.next()
+  const { pathname } = request.nextUrl
 
-  const { supabase, response } = createMiddlewareClient(request)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Auth-gated operational app — unchanged behavior, never touched by
+  // locale detection/redirects.
+  const rule = matchRule(pathname)
+  if (rule) {
+    const { supabase, response } = createMiddlewareClient(request)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  // Carries the refreshed auth cookies (if any) from `response` onto
-  // whichever response actually gets returned below.
-  function withRefreshedCookies(res: NextResponse) {
-    response.cookies.getAll().forEach(cookie => res.cookies.set(cookie))
-    return res
+    // Carries the refreshed auth cookies (if any) from `response` onto
+    // whichever response actually gets returned below. A function
+    // expression, not a declaration — this now sits inside the `if (rule)`
+    // block, and ES5-strict-mode forbids block-scoped function
+    // declarations.
+    const withRefreshedCookies = (res: NextResponse) => {
+      response.cookies.getAll().forEach((cookie) => res.cookies.set(cookie))
+      return res
+    }
+
+    if (!user) {
+      return withRefreshedCookies(NextResponse.redirect(new URL(rule.loginPath, request.url)))
+    }
+
+    // Sprint O.3 (TTFB) — 'name' added alongside the 'role' this query
+    // already selected (same single round trip, no added cost) so identity
+    // can be forwarded to Server Components below instead of them repeating
+    // this exact auth.getUser()+profiles lookup a second time.
+    const { data: profile } = await supabase.from('profiles').select('role, name').eq('id', user.id).single()
+    const role = normalizeRole(profile?.role)
+
+    if (!role || !rule.roles.includes(role)) {
+      return withRefreshedCookies(NextResponse.rewrite(new URL('/access-denied', request.url)))
+    }
+
+    // Forward the identity middleware already verified as request headers, so
+    // a Server Component can read it via next/headers instead of re-querying
+    // Supabase. Route matcher guarantees middleware always runs first for
+    // every path a Server Component would read these from.
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-user-id', user.id)
+    requestHeaders.set('x-user-name', profile?.name ?? '')
+    requestHeaders.set('x-user-role', role)
+    return withRefreshedCookies(NextResponse.next({ request: { headers: requestHeaders } }))
   }
 
-  if (!user) {
-    return withRefreshedCookies(NextResponse.redirect(new URL(rule.loginPath, request.url)))
+  // Any other surface that must stay unprefixed and untouched by locale
+  // detection (public login pages inside a gated prefix, production/
+  // journey token flows, /login, /access-denied).
+  if (isNoLocalePath(pathname) || isPublicPath(pathname)) {
+    return NextResponse.next()
   }
 
-  // Sprint O.3 (TTFB) — 'name' added alongside the 'role' this query
-  // already selected (same single round trip, no added cost) so identity
-  // can be forwarded to Server Components below instead of them repeating
-  // this exact auth.getUser()+profiles lookup a second time.
-  const { data: profile } = await supabase.from('profiles').select('role, name').eq('id', user.id).single()
-  const role = normalizeRole(profile?.role)
-
-  if (!role || !rule.roles.includes(role)) {
-    return withRefreshedCookies(NextResponse.rewrite(new URL('/access-denied', request.url)))
-  }
-
-  // Forward the identity middleware already verified as request headers, so
-  // a Server Component can read it via next/headers instead of re-querying
-  // Supabase. Route matcher guarantees middleware always runs first for
-  // every path a Server Component would read these from.
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-user-id', user.id)
-  requestHeaders.set('x-user-name', profile?.name ?? '')
-  requestHeaders.set('x-user-role', role)
-  return withRefreshedCookies(NextResponse.next({ request: { headers: requestHeaders } }))
+  // Public marketing/SEO surface — Accept-Language detection, NEXT_LOCALE
+  // cookie persistence, and "/", "/en", "/ar", "/fr", "/ja", "/de" routing.
+  return intlMiddleware(request)
 }
 
-// Scopes Middleware to exactly the protected app prefixes — /production,
-// /journey, /login, /, API routes, static assets, and Next.js internals are
-// never matched, so they're never touched by this file.
+// Scopes Middleware to every path except Next.js internals, the API, and
+// requested static files (anything with a dot in its last segment) — the
+// function body above decides per-path whether that's the auth-gated app,
+// an excluded unlocalized surface, or the locale-routed public site.
 export const config = {
-  matcher: ['/owner/:path*', '/command-center/:path*', '/workspace/:path*', '/fitter/:path*', '/inventory/:path*'],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 }

@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "brand": "Local Tailor",
+    "links": {
+      "designStudio": "Design Studio",
+      "fabrics": "Stoffe",
+      "knowledge": "Wissen",
+      "gallery": "Galerie",
+      "journal": "Journal",
+      "locations": "Standorte"
+    },
+    "cta": "Termin Buchen",
+    "languageSwitcher": "Sprache"
+  },
+  "hero": {
+    "eyebrow": "Maßgeschneiderte Thobe, Bandung",
+    "headline": "Individuelle Thobe, Exklusiv für Sie Gefertigt",
+    "subheadline": "Gestaltet nach Ihrer Figur, Ihrem Lebensstil und Ihrer Identität.",
+    "primaryCta": "Meine Thobe Gestalten",
+    "secondaryCta": "Privaten Termin Buchen",
+    "trustStrip": ["Hochwertige Importstoffe", "Persönliches Maßnehmen", "Gefertigt in Bandung", "Individuelles Schnittmuster"]
+  },
+  "cta": {
+    "designMyThobe": "Meine Thobe Gestalten",
+    "bookConsultation": "Beratung Buchen",
+    "bookPrivateAppointment": "Privaten Termin Buchen",
+    "whatsappConsultation": "Beratung Buchen",
+    "chatWithTailor": "Mit dem Schneider Chatten",
+    "exploreFabrics": "Stoffe Entdecken",
+    "viewGallery": "Ganze Galerie Ansehen"
+  },
+  "designStudio": {
+    "eyebrow": "Design Studio",
+    "heading": "Erleben Sie Ihr Design in Echtzeit",
+    "body": "Wechseln Sie den Stoff, passen Sie die Farbe an, und sehen Sie Preis und Fertigungsdauer live aktualisiert — dasselbe System, das unsere Schneider im Atelier verwenden.",
+    "fabricLabel": "Stoff",
+    "colorLabel": "Farbe",
+    "priceLabel": "Geschätzte Investition",
+    "timeLabel": "Fertigungsdauer",
+    "cta": "Design Fortsetzen"
+  },
+  "booking": {
+    "eyebrow": "Nach Vereinbarung",
+    "heading": "Privaten Termin Buchen",
+    "body": "Persönliche Beratung, Stoffauswahl, Maßnehmen und Design-Beratung in einer privaten Anprobe-Sitzung.",
+    "location": "Privater Termin — Bandung",
+    "address": "Atelier & Showroom, Bandung, Westjava",
+    "cta": "Privaten Termin Buchen"
+  },
+  "contact": {
+    "eyebrow": "Kontakt",
+    "heading": "Kontaktieren Sie Uns",
+    "subheadline": "Erreichen Sie unser Atelier in Bandung direkt für Beratung, Fragen zu Stoffen oder eine bestehende Bestellung.",
+    "whatsappLabel": "WhatsApp",
+    "addressLabel": "Atelier & Showroom",
+    "hoursLabel": "Öffnungszeiten",
+    "cta": "Per WhatsApp Kontaktieren"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "Häufige Fragen"
+  },
+  "trust": {
+    "heading": "Das Vertrauen anspruchsvoller Kunden in ganz Indonesien"
+  },
+  "footer": {
+    "tagline": "Maßgeschneiderte Thobe, handgefertigt in Bandung.",
+    "columns": {
+      "explore": "Entdecken",
+      "studio": "Studio",
+      "sizeGuide": "Größenberatung"
+    },
+    "links": {
+      "designStudio": "Design Studio",
+      "fabrics": "Stoffe",
+      "gallery": "Galerie",
+      "journal": "Journal",
+      "knowledge": "Wissen",
+      "locations": "Standorte",
+      "bookAppointment": "Privaten Termin Buchen",
+      "faq": "FAQ",
+      "contact": "Kontakt",
+      "freeSizeCheck": "Kostenlose Größenprüfung",
+      "sizeChartThobe": "Thobe Größentabelle",
+      "menThobeSize": "Thobe Größen für Herren",
+      "howToMeasure": "Thobe Richtig Ausmessen"
+    },
+    "legal": "© {year} Bespoke Tailor. Alle Rechte vorbehalten."
+  },
+  "languageSwitcher": {
+    "openLabel": "Sprache ändern",
+    "modalTitle": "Wählen Sie Ihre Sprache",
+    "modalSubtitle": "Wählen Sie die Sprache, in der Sie Local Tailor durchsuchen möchten.",
+    "close": "Schließen",
+    "currentLanguage": "Aktuelle Sprache"
+  }
+}

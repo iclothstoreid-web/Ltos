@@ -1,4 +1,4 @@
-import type { JsonLdSchema } from '@/lib/seo/schema'
+import { ALL_AVAILABLE_LANGUAGES, type JsonLdSchema } from '@/lib/seo/schema'
 import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_SITE_ORIGIN, type CityConfig } from '@/lib/seo/cityConfig'
 
 // Sprint W8-1, migrated to cityConfig.ts in W8-2/3 — LocalBusiness schema
@@ -58,6 +58,7 @@ export function buildLocationLocalBusinessSchema(city: CityConfig): JsonLdSchema
       '@type': 'City',
       name: city.city,
     },
+    availableLanguage: ALL_AVAILABLE_LANGUAGES,
   }
 }
 
@@ -89,5 +90,6 @@ export function buildLocationsHubLocalBusinessSchema(cities: CityConfig[]): Json
       longitude: CITY_GEO_BANDUNG.longitude,
     },
     areaServed: cities.map((city) => ({ '@type': 'City', name: city.city })),
+    availableLanguage: ALL_AVAILABLE_LANGUAGES,
   }
 }

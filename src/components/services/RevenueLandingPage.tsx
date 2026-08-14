@@ -1,3 +1,4 @@
+import { getLocale } from 'next-intl/server'
 import { Nav } from '@/components/marketing/shell/Nav'
 import { Footer } from '@/components/marketing/shell/Footer'
 import { WalnutGrainOverlay } from '@/components/marketing/shell/WalnutGrainOverlay'
@@ -7,7 +8,8 @@ import { breadcrumbSchema, faqSchema, organizationSchema, websiteSchema, service
 import { buildServiceLocalBusinessSchema, SERVICE_AREA_NAMES } from '@/lib/seo/serviceBusinessSchema'
 import { CITY_SITE_ORIGIN } from '@/lib/seo/cityConfig'
 import { parseUtmParams } from '@/lib/seo/utm'
-import type { ServiceConfig } from '@/lib/seo/serviceConfig'
+import { localizeService, type ServiceConfig } from '@/lib/seo/serviceConfig'
+import { localeToHreflang, type AppLocale, isRtlLocale } from '@/i18n/config'
 import { ServiceHero } from './ServiceHero'
 import { ServiceValueProps } from './ServiceValueProps'
 import { ServiceGallery } from './ServiceGallery'
@@ -38,7 +40,9 @@ interface RevenueLandingPageProps {
 // thin route file instead of one generateStaticParams-driven dynamic
 // route; this component is what keeps that from meaning 5x duplicated
 // page bodies.
-export function RevenueLandingPage({ service, searchParams }: RevenueLandingPageProps) {
+export async function RevenueLandingPage({ service: baseService, searchParams }: RevenueLandingPageProps) {
+  const locale = (await getLocale()) as AppLocale
+  const service = localizeService(baseService, locale)
   const utm = parseUtmParams(searchParams)
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
@@ -47,20 +51,21 @@ export function RevenueLandingPage({ service, searchParams }: RevenueLandingPage
   const pageUrl = `${CITY_SITE_ORIGIN}/${service.slug}`
 
   return (
-    <div className="bg-luxury-navy-deep">
+    <div className="bg-luxury-navy-deep" dir={isRtlLocale(locale) ? 'rtl' : 'ltr'}>
       <JsonLd
         data={[
           buildServiceLocalBusinessSchema(service),
           breadcrumbSchema(breadcrumbItems),
           faqSchema(service.faq),
           organizationSchema(),
-          websiteSchema(),
+          websiteSchema({ inLanguage: localeToHreflang[locale] }),
           serviceSchema({
             name: service.hero.eyebrow,
             description: service.hero.subheadline,
             url: pageUrl,
             serviceType: 'Bespoke Tailoring',
             areaServed: SERVICE_AREA_NAMES.join(', '),
+            inLanguage: localeToHreflang[locale],
           }),
         ]}
       />

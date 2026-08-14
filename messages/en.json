@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "brand": "Local Tailor",
+    "links": {
+      "designStudio": "Design Studio",
+      "fabrics": "Fabrics",
+      "knowledge": "Knowledge",
+      "gallery": "Gallery",
+      "journal": "Journal",
+      "locations": "Locations"
+    },
+    "cta": "Book Appointment",
+    "languageSwitcher": "Language"
+  },
+  "hero": {
+    "eyebrow": "Bespoke Thobe, Bandung",
+    "headline": "Custom Thobe, Crafted Exclusively for You",
+    "subheadline": "Designed around your body, your lifestyle, and your identity.",
+    "primaryCta": "Design My Thobe",
+    "secondaryCta": "Book a Private Appointment",
+    "trustStrip": ["Premium Imported Fabrics", "Personal Measurement", "Crafted in Bandung", "Custom Pattern"]
+  },
+  "cta": {
+    "designMyThobe": "Design My Thobe",
+    "bookConsultation": "Book Consultation",
+    "bookPrivateAppointment": "Book a Private Appointment",
+    "whatsappConsultation": "Book a Consultation",
+    "chatWithTailor": "Chat with Tailor",
+    "exploreFabrics": "Explore Fabrics",
+    "viewGallery": "Explore the Full Gallery"
+  },
+  "designStudio": {
+    "eyebrow": "Design Studio",
+    "heading": "See Your Design Come to Life",
+    "body": "Switch fabric, adjust color, and watch your price and production timeline update in real time — the same engine our fitters use in-studio.",
+    "fabricLabel": "Fabric",
+    "colorLabel": "Color",
+    "priceLabel": "Estimated Investment",
+    "timeLabel": "Production Time",
+    "cta": "Continue Designing"
+  },
+  "booking": {
+    "eyebrow": "By Appointment",
+    "heading": "Book a Private Appointment",
+    "body": "Personal consultation, fabric selection, body measurement, and design guidance in a private tailoring session.",
+    "location": "Private Appointment — Bandung",
+    "address": "Workshop & Showroom, Bandung, West Java",
+    "cta": "Book a Private Appointment"
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "heading": "Get in Touch",
+    "subheadline": "Reach our Bandung workshop directly for consultation, fabric questions, or an existing order.",
+    "whatsappLabel": "WhatsApp",
+    "addressLabel": "Workshop & Showroom",
+    "hoursLabel": "Opening Hours",
+    "cta": "Message Us on WhatsApp"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "Common Questions"
+  },
+  "trust": {
+    "heading": "Trusted by discerning clients across Indonesia"
+  },
+  "footer": {
+    "tagline": "Bespoke thobe, handcrafted in Bandung.",
+    "columns": {
+      "explore": "Explore",
+      "studio": "Studio",
+      "sizeGuide": "Size Guide"
+    },
+    "links": {
+      "designStudio": "Design Studio",
+      "fabrics": "Fabrics",
+      "gallery": "Gallery",
+      "journal": "Journal",
+      "knowledge": "Knowledge",
+      "locations": "Locations",
+      "bookAppointment": "Book a Private Appointment",
+      "faq": "FAQ",
+      "contact": "Contact",
+      "freeSizeCheck": "Free Size Check",
+      "sizeChartThobe": "Thobe Size Chart",
+      "menThobeSize": "Men's Thobe Sizing",
+      "howToMeasure": "How to Measure a Thobe"
+    },
+    "legal": "© {year} Bespoke Tailor. All rights reserved."
+  },
+  "languageSwitcher": {
+    "openLabel": "Change language",
+    "modalTitle": "Choose your language",
+    "modalSubtitle": "Select the language you'd like to browse Local Tailor in.",
+    "close": "Close",
+    "currentLanguage": "Current language"
+  }
+}

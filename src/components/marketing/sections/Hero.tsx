@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, useScroll, useSpring, useTransform, useVelocity, type Variants } from 'framer-motion'
-import { heroCopy } from '@/lib/marketing/copy'
+import { useTranslations } from 'next-intl'
 import { MagneticButton } from '../shell/MagneticButton'
 import { Logo } from '@/components/brand/Logo'
 import { trackEvent } from '@/lib/analytics/tracker'
@@ -34,6 +34,8 @@ const item: Variants = {
 // approximating it. Both MotionValues are read inside the shader's
 // useFrame loop with `.get()`, never through React state.
 export function Hero() {
+  const t = useTranslations('hero')
+  const trustStrip = t.raw('trustStrip') as string[]
   const [canRender3D, setCanRender3D] = useState(false)
   const [inView, setInView] = useState(true)
   const sectionRef = useRef<HTMLElement>(null)
@@ -166,7 +168,7 @@ export function Hero() {
           </motion.div>
 
           <motion.p variants={item} className="mt-6 font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">
-            {heroCopy.eyebrow}
+            {t('eyebrow')}
           </motion.p>
 
           {/* Not part of the stagger — the headline is the LCP candidate
@@ -174,11 +176,11 @@ export function Hero() {
               immediately at full opacity instead of waiting through a
               fade-in delay. Everything else still cascades in around it. */}
           <h1 className="mt-6 font-fraunces text-4xl leading-[1.1] text-luxury-ivory sm:text-5xl lg:text-7xl">
-            {heroCopy.headline}
+            {t('headline')}
           </h1>
 
           <motion.p variants={item} className="mt-6 max-w-md font-luxury-sans text-base text-luxury-taupe md:text-lg">
-            {heroCopy.subheadline}
+            {t('subheadline')}
           </motion.p>
 
           <motion.div variants={item} className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -190,7 +192,7 @@ export function Hero() {
                 trackCTA('hero_design_my_thobe', '/', 'hero_primary', 'landing')
               }}
             >
-              {heroCopy.primaryCta}
+              {t('primaryCta')}
             </MagneticButton>
             <MagneticButton
               href="/book-appointment"
@@ -200,12 +202,12 @@ export function Hero() {
                 trackCTA('hero_book_appointment', '/', 'hero_secondary', 'landing')
               }}
             >
-              {heroCopy.secondaryCta}
+              {t('secondaryCta')}
             </MagneticButton>
           </motion.div>
 
           <motion.ul variants={item} className="mt-14 flex max-w-lg flex-wrap items-center gap-x-8 gap-y-3">
-            {heroCopy.trustStrip.map((label) => (
+            {trustStrip.map((label) => (
               <li key={label} className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-taupe">
                 {label}
               </li>

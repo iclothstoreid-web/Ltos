@@ -2,12 +2,24 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { navCopy } from '@/lib/marketing/copy'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 import { Logo } from '@/components/brand/Logo'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const t = useTranslations('nav')
+
+  const links = [
+    { key: 'designStudio', href: '/design-studio' },
+    { key: 'fabrics', href: '/fabric' },
+    { key: 'knowledge', href: '/knowledge' },
+    { key: 'gallery', href: '/gallery' },
+    { key: 'journal', href: '/journal' },
+    { key: 'locations', href: '/locations' },
+  ] as const
 
   useEffect(() => {
     function onScroll() {
@@ -28,9 +40,9 @@ export function Nav() {
         {/* Brand System Upgrade — was h-6/30px (default-small per the
             brief), now the first, most dominant thing read in the bar,
             left-aligned consistently across breakpoints. */}
-        <a href="/" aria-label={navCopy.brand} className="flex shrink-0 items-center">
+        <Link href="/" aria-label={t('brand')} className="flex shrink-0 items-center">
           <Logo variant="horizontal" className="h-8 w-auto text-luxury-ivory md:h-10 lg:h-11" />
-        </a>
+        </Link>
 
         {/* Brand System Upgrade — bumped md:(768px) -> lg:(1024px): the
             bigger logo (now up to 44px tall / ~175px wide, was 30px/~120px)
@@ -41,42 +53,48 @@ export function Nav() {
             drawer as mobile instead of a cramped inline row, matching the
             brief's own "tablet isn't just a shrunk desktop" instruction. */}
         <ul className="hidden items-center gap-10 lg:flex">
-          {navCopy.links.map((link) => (
+          {links.map((link) => (
             <li key={link.href}>
-              <a
+              <Link
                 href={link.href}
                 className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-taupe transition-colors hover:text-luxury-gold"
               >
-                {link.label}
-              </a>
+                {t(`links.${link.key}`)}
+              </Link>
             </li>
           ))}
         </ul>
 
-        <a
-          href="/book-appointment"
-          className="hidden cursor-pointer rounded-full border border-luxury-gold/50 px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold hover:text-luxury-black hover:shadow-[0_0_16px_rgba(200,162,74,0.25)] lg:inline-flex"
-        >
-          {navCopy.cta}
-        </a>
+        <div className="hidden items-center gap-1 lg:flex">
+          <LanguageSwitcher />
+          <Link
+            href="/book-appointment"
+            className="cursor-pointer rounded-full border border-luxury-gold/50 px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold transition hover:bg-luxury-gold hover:text-luxury-black hover:shadow-[0_0_16px_rgba(200,162,74,0.25)]"
+          >
+            {t('cta')}
+          </Link>
+        </div>
 
-        <button
-          type="button"
-          aria-label="Toggle menu"
-          aria-expanded={drawerOpen}
-          onClick={() => setDrawerOpen((v) => !v)}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center lg:hidden"
-        >
-          <span className="relative block h-4 w-6">
-            <span
-              className={`absolute left-0 top-0 h-px w-6 bg-luxury-ivory transition-transform ${drawerOpen ? 'translate-y-2 rotate-45' : ''}`}
-            />
-            <span className={`absolute left-0 top-2 h-px w-6 bg-luxury-ivory transition-opacity ${drawerOpen ? 'opacity-0' : ''}`} />
-            <span
-              className={`absolute left-0 top-4 h-px w-6 bg-luxury-ivory transition-transform ${drawerOpen ? '-translate-y-2 -rotate-45' : ''}`}
-            />
-          </span>
-        </button>
+        <div className="flex items-center lg:hidden">
+          <LanguageSwitcher />
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen((v) => !v)}
+            className="flex h-11 w-11 cursor-pointer items-center justify-center"
+          >
+            <span className="relative block h-4 w-6">
+              <span
+                className={`absolute left-0 top-0 h-px w-6 bg-luxury-ivory transition-transform ${drawerOpen ? 'translate-y-2 rotate-45' : ''}`}
+              />
+              <span className={`absolute left-0 top-2 h-px w-6 bg-luxury-ivory transition-opacity ${drawerOpen ? 'opacity-0' : ''}`} />
+              <span
+                className={`absolute left-0 top-4 h-px w-6 bg-luxury-ivory transition-transform ${drawerOpen ? '-translate-y-2 -rotate-45' : ''}`}
+              />
+            </span>
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -93,25 +111,25 @@ export function Nav() {
                 comfortable touch target) plus more generous outer padding,
                 per the brief's "drawer harus premium, padding lebih lega". */}
             <ul className="flex flex-col gap-1 px-6 pb-8 pt-2">
-              {navCopy.links.map((link) => (
+              {links.map((link) => (
                 <li key={link.href}>
-                  <a
+                  <Link
                     href={link.href}
                     onClick={() => setDrawerOpen(false)}
                     className="block min-h-[44px] py-4 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-taupe"
                   >
-                    {link.label}
-                  </a>
+                    {t(`links.${link.key}`)}
+                  </Link>
                 </li>
               ))}
               <li>
-                <a
+                <Link
                   href="/book-appointment"
                   onClick={() => setDrawerOpen(false)}
                   className="mt-3 block min-h-[44px] rounded-full border border-luxury-gold/50 px-5 py-4 text-center font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold"
                 >
-                  {navCopy.cta}
-                </a>
+                  {t('cta')}
+                </Link>
               </li>
             </ul>
           </motion.div>

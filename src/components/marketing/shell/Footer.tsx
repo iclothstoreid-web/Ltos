@@ -1,7 +1,8 @@
-import { footerCopy, navCopy } from '@/lib/marketing/copy'
+import { getTranslations } from 'next-intl/server'
 import { CITY_BUSINESS } from '@/lib/seo/cityConfig'
 import { buildContentWhatsAppUrl } from '@/lib/content/whatsapp'
 import { Logo } from '@/components/brand/Logo'
+import { Link } from '@/i18n/routing'
 
 // Sprint W8-B — NAP Consistency System. This is the only place the footer
 // reads business identity from — CITY_BUSINESS in src/lib/seo/cityConfig.ts
@@ -10,8 +11,37 @@ import { Logo } from '@/components/brand/Logo'
 // is ever re-typed here.
 const FOOTER_WHATSAPP_MESSAGE = 'Halo Local Tailor, saya ingin bertanya lebih lanjut.'
 
-export function Footer() {
+const EXPLORE_LINKS = [
+  { key: 'designStudio', href: '/design-studio' },
+  { key: 'fabrics', href: '/fabric' },
+  { key: 'gallery', href: '/gallery' },
+  { key: 'journal', href: '/journal' },
+  { key: 'knowledge', href: '/knowledge' },
+  { key: 'locations', href: '/locations' },
+] as const
+
+const STUDIO_LINKS = [
+  { key: 'bookAppointment', href: '/book-appointment' },
+  { key: 'faq', href: '/#faq' },
+  { key: 'contact', href: '/contact' },
+] as const
+
+const SIZE_GUIDE_LINKS = [
+  { key: 'freeSizeCheck', href: '/free-body-profile-estimator' },
+  { key: 'sizeChartThobe', href: '/cek-ukuran-thobe' },
+  { key: 'menThobeSize', href: '/ukuran-thobe-pria' },
+  { key: 'howToMeasure', href: '/cara-mengukur-thobe' },
+] as const
+
+export async function Footer() {
+  const t = await getTranslations('footer')
+  const tNav = await getTranslations('nav')
   const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, FOOTER_WHATSAPP_MESSAGE)
+  const columns = [
+    { title: t('columns.explore'), links: EXPLORE_LINKS },
+    { title: t('columns.studio'), links: STUDIO_LINKS },
+    { title: t('columns.sizeGuide'), links: SIZE_GUIDE_LINKS },
+  ]
 
   return (
     // Walnut Atelier rebrand — bg-luxury-charcoal (Smoked Walnut), not the
@@ -24,8 +54,8 @@ export function Footer() {
     <footer className="border-t border-luxury-gold/[0.14] bg-luxury-charcoal px-6 py-16 md:px-10">
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
-          <Logo variant="horizontalTagline" title={navCopy.brand} className="h-10 w-auto text-luxury-ivory" />
-          <p className="mt-3 max-w-xs font-luxury-sans text-sm text-luxury-taupe">{footerCopy.tagline}</p>
+          <Logo variant="horizontalTagline" title={tNav('brand')} className="h-10 w-auto text-luxury-ivory" />
+          <p className="mt-3 max-w-xs font-luxury-sans text-sm text-luxury-taupe">{t('tagline')}</p>
           <address className="mt-4 max-w-xs font-luxury-sans text-xs not-italic leading-relaxed text-luxury-taupe">
             {CITY_BUSINESS.streetAddress}
           </address>
@@ -39,7 +69,7 @@ export function Footer() {
           </a>
         </div>
 
-        {footerCopy.columns.map((column) => (
+        {columns.map((column) => (
           <nav key={column.title} aria-label={column.title}>
             {/* text-luxury-ivory, not gold: only 3.98:1 against the footer's
                 Smoked Walnut bg, short of WCAG's 4.5:1 for 12px text — and
@@ -49,9 +79,9 @@ export function Footer() {
             <ul className="mt-4 space-y-3">
               {column.links.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="font-luxury-sans text-sm text-luxury-taupe hover:text-luxury-ivory">
-                    {link.label}
-                  </a>
+                  <Link href={link.href} className="font-luxury-sans text-sm text-luxury-taupe hover:text-luxury-ivory">
+                    {t(`links.${link.key}`)}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -59,7 +89,9 @@ export function Footer() {
         ))}
       </div>
 
-      <p className="mx-auto mt-16 max-w-7xl font-luxury-sans text-xs text-luxury-taupe">{footerCopy.legal}</p>
+      <p className="mx-auto mt-16 max-w-7xl font-luxury-sans text-xs text-luxury-taupe">
+        {t('legal', { year: new Date().getFullYear() })}
+      </p>
     </footer>
   )
 }

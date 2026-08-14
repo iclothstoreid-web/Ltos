@@ -1,5 +1,13 @@
 import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 import { PRIMARY_ENTITY } from './entities'
+import { locales, localeToHreflang } from '@/i18n/config'
+
+// Sprint W11.5 Task 7 — every locale this site now publishes, in BCP-47
+// form, for schema.org's `availableLanguage` (Organization/WebSite: "this
+// entity can be engaged with in these languages") vs `inLanguage` (a
+// specific document's own language) — two different properties, both
+// wired below rather than conflated into one.
+export const ALL_AVAILABLE_LANGUAGES = locales.map((locale) => localeToHreflang[locale])
 
 // Sprint W7-1 — Reusable JSON-LD schema builders. This module is additive:
 // it does NOT replace the existing per-domain builders in
@@ -28,6 +36,8 @@ export interface OrganizationSchemaParams {
   sameAs?: string[]
   /** Absolute URL to a real deployed logo asset. Omit if none exists. */
   logo?: string
+  /** BCP-47 language(s) this entity can be engaged with. Defaults to every locale this site publishes (ALL_AVAILABLE_LANGUAGES). */
+  availableLanguage?: string[]
 }
 
 export function organizationSchema(params: OrganizationSchemaParams = {}): JsonLdSchema {
@@ -39,6 +49,7 @@ export function organizationSchema(params: OrganizationSchemaParams = {}): JsonL
     description: params.description ?? PRIMARY_ENTITY.description,
     ...(params.logo ? { logo: params.logo } : {}),
     ...(params.sameAs && params.sameAs.length > 0 ? { sameAs: params.sameAs } : {}),
+    availableLanguage: params.availableLanguage ?? ALL_AVAILABLE_LANGUAGES,
   }
 }
 
@@ -49,6 +60,8 @@ export interface LocalBusinessSchemaParams {
   addressLocality?: string
   addressCountry?: string
   telephone?: string
+  /** BCP-47 language(s) this business can be engaged with. Defaults to every locale this site publishes. */
+  availableLanguage?: string[]
 }
 
 export function localBusinessSchema(params: LocalBusinessSchemaParams = {}): JsonLdSchema {
@@ -64,6 +77,7 @@ export function localBusinessSchema(params: LocalBusinessSchemaParams = {}): Jso
       addressCountry: params.addressCountry ?? PRIMARY_ENTITY.addressCountry,
     },
     ...(params.telephone ? { telephone: params.telephone } : {}),
+    availableLanguage: params.availableLanguage ?? ALL_AVAILABLE_LANGUAGES,
   }
 }
 
@@ -77,6 +91,10 @@ export interface WebSiteSchemaParams {
    * of Sprint W7, so callers should omit this rather than invent a target.
    */
   searchUrlTemplate?: string
+  /** BCP-47 language(s) the site is published in. Defaults to every locale this site publishes. */
+  availableLanguage?: string[]
+  /** This specific document's language — set from next-intl's getLocale() by callers rendering a localized page. */
+  inLanguage?: string
 }
 
 export function websiteSchema(params: WebSiteSchemaParams = {}): JsonLdSchema {
@@ -98,6 +116,8 @@ export function websiteSchema(params: WebSiteSchemaParams = {}): JsonLdSchema {
     '@type': 'WebSite',
     name: params.name ?? PRIMARY_ENTITY.name,
     url: params.url ?? PRIMARY_ENTITY.url,
+    availableLanguage: params.availableLanguage ?? ALL_AVAILABLE_LANGUAGES,
+    ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
     ...searchAction,
   }
 }
@@ -181,6 +201,8 @@ export interface ServiceSchemaParams {
   url: string
   areaServed?: string
   serviceType?: string
+  /** This specific document's language — set from next-intl's getLocale() by callers rendering a localized page. */
+  inLanguage?: string
 }
 
 export function serviceSchema(params: ServiceSchemaParams): JsonLdSchema {
@@ -191,6 +213,7 @@ export function serviceSchema(params: ServiceSchemaParams): JsonLdSchema {
     description: params.description,
     url: params.url,
     ...(params.serviceType ? { serviceType: params.serviceType } : {}),
+    ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
     areaServed: params.areaServed ?? PRIMARY_ENTITY.addressLocality,
     provider: {
       '@type': 'LocalBusiness',

@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "brand": "Local Tailor",
+    "links": {
+      "designStudio": "استوديو التصميم",
+      "fabrics": "الأقمشة",
+      "knowledge": "المعرفة",
+      "gallery": "المعرض",
+      "journal": "المجلة",
+      "locations": "المواقع"
+    },
+    "cta": "احجز موعدًا",
+    "languageSwitcher": "اللغة"
+  },
+  "hero": {
+    "eyebrow": "ثوب مفصّل حسب الطلب، باندونغ",
+    "headline": "ثوب مخصص، مصنوع خصيصًا لك",
+    "subheadline": "مصمم وفق قياسات جسمك، أسلوب حياتك، وهويتك.",
+    "primaryCta": "صمّم ثوبي",
+    "secondaryCta": "احجز موعدًا خاصًا",
+    "trustStrip": ["أقمشة مستوردة فاخرة", "قياس شخصي", "صناعة في باندونغ", "نمط مخصص"]
+  },
+  "cta": {
+    "designMyThobe": "صمّم ثوبي",
+    "bookConsultation": "احجز استشارة",
+    "bookPrivateAppointment": "احجز موعدًا خاصًا",
+    "whatsappConsultation": "احجز استشارة",
+    "chatWithTailor": "تحدث مع الخياط",
+    "exploreFabrics": "استكشف الأقمشة",
+    "viewGallery": "استكشف المعرض الكامل"
+  },
+  "designStudio": {
+    "eyebrow": "استوديو التصميم",
+    "heading": "شاهد تصميمك وهو يتحقق",
+    "body": "بدّل القماش، عدّل اللون، وشاهد السعر التقديري ومدة الإنتاج يتحدثان مباشرة — نفس النظام الذي يستخدمه خياطونا في الاستوديو.",
+    "fabricLabel": "القماش",
+    "colorLabel": "اللون",
+    "priceLabel": "التكلفة التقديرية",
+    "timeLabel": "مدة الإنتاج",
+    "cta": "تابع التصميم"
+  },
+  "booking": {
+    "eyebrow": "بموعد مسبق",
+    "heading": "احجز موعدًا خاصًا",
+    "body": "استشارة شخصية، اختيار القماش، أخذ القياسات، وإرشاد التصميم في جلسة خياطة خاصة.",
+    "location": "موعد خاص — باندونغ",
+    "address": "الورشة وصالة العرض، باندونغ، جاوة الغربية",
+    "cta": "احجز موعدًا خاصًا"
+  },
+  "contact": {
+    "eyebrow": "تواصل معنا",
+    "heading": "تواصل معنا",
+    "subheadline": "تواصل مباشرة مع ورشتنا في باندونغ للاستشارة، أسئلة حول القماش، أو متابعة طلب قائم.",
+    "whatsappLabel": "واتساب",
+    "addressLabel": "الورشة وصالة العرض",
+    "hoursLabel": "ساعات العمل",
+    "cta": "راسلنا عبر واتساب"
+  },
+  "faq": {
+    "eyebrow": "الأسئلة الشائعة",
+    "heading": "أسئلة شائعة"
+  },
+  "trust": {
+    "heading": "موثوق من قبل عملاء مميزين في جميع أنحاء إندونيسيا"
+  },
+  "footer": {
+    "tagline": "ثوب مفصّل حسب الطلب، مصنوع يدويًا في باندونغ.",
+    "columns": {
+      "explore": "استكشف",
+      "studio": "الاستوديو",
+      "sizeGuide": "دليل المقاسات"
+    },
+    "links": {
+      "designStudio": "استوديو التصميم",
+      "fabrics": "الأقمشة",
+      "gallery": "المعرض",
+      "journal": "المجلة",
+      "knowledge": "المعرفة",
+      "locations": "المواقع",
+      "bookAppointment": "احجز موعدًا خاصًا",
+      "faq": "الأسئلة الشائعة",
+      "contact": "تواصل معنا",
+      "freeSizeCheck": "تحقق من مقاسك مجانًا",
+      "sizeChartThobe": "جدول مقاسات الثوب",
+      "menThobeSize": "مقاسات ثوب الرجال",
+      "howToMeasure": "كيفية قياس الثوب"
+    },
+    "legal": "© {year} Bespoke Tailor. جميع الحقوق محفوظة."
+  },
+  "languageSwitcher": {
+    "openLabel": "تغيير اللغة",
+    "modalTitle": "اختر لغتك",
+    "modalSubtitle": "اختر اللغة التي تريد تصفح Local Tailor بها.",
+    "close": "إغلاق",
+    "currentLanguage": "اللغة الحالية"
+  }
+}

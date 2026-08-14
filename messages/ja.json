@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "brand": "Local Tailor",
+    "links": {
+      "designStudio": "デザインスタジオ",
+      "fabrics": "生地",
+      "knowledge": "ナレッジ",
+      "gallery": "ギャラリー",
+      "journal": "ジャーナル",
+      "locations": "店舗情報"
+    },
+    "cta": "予約する",
+    "languageSwitcher": "言語"
+  },
+  "hero": {
+    "eyebrow": "オーダーメイドトーブ、バンドン",
+    "headline": "あなただけのために仕立てる、カスタムトーブ",
+    "subheadline": "あなたの体型、ライフスタイル、そして個性に合わせてデザインします。",
+    "primaryCta": "トーブをデザインする",
+    "secondaryCta": "個別カウンセリングを予約",
+    "trustStrip": ["プレミアム輸入生地", "個別採寸", "バンドンで仕立て", "オーダーメイドパターン"]
+  },
+  "cta": {
+    "designMyThobe": "トーブをデザインする",
+    "bookConsultation": "カウンセリングを予約",
+    "bookPrivateAppointment": "個別カウンセリングを予約",
+    "whatsappConsultation": "カウンセリングを予約する",
+    "chatWithTailor": "テーラーに相談する",
+    "exploreFabrics": "生地を見る",
+    "viewGallery": "ギャラリーをすべて見る"
+  },
+  "designStudio": {
+    "eyebrow": "デザインスタジオ",
+    "heading": "デザインが形になる瞬間を",
+    "body": "生地を切り替え、色を調整すると、価格の目安と製作期間がリアルタイムで更新されます — 店舗のフィッターが実際に使用しているのと同じシステムです。",
+    "fabricLabel": "生地",
+    "colorLabel": "カラー",
+    "priceLabel": "お見積り",
+    "timeLabel": "製作期間",
+    "cta": "デザインを続ける"
+  },
+  "booking": {
+    "eyebrow": "ご予約制",
+    "heading": "個別カウンセリングを予約",
+    "body": "個別カウンセリング、生地選び、採寸、デザインのご相談をプライベートなセッションで行います。",
+    "location": "個別カウンセリング — バンドン",
+    "address": "ワークショップ&ショールーム、バンドン、西ジャワ",
+    "cta": "個別カウンセリングを予約"
+  },
+  "contact": {
+    "eyebrow": "お問い合わせ",
+    "heading": "お問い合わせ",
+    "subheadline": "カウンセリングのご相談、生地に関するご質問、既存のご注文について、バンドンの工房まで直接ご連絡ください。",
+    "whatsappLabel": "WhatsApp",
+    "addressLabel": "ワークショップ&ショールーム",
+    "hoursLabel": "営業時間",
+    "cta": "WhatsAppでお問い合わせ"
+  },
+  "faq": {
+    "eyebrow": "よくある質問",
+    "heading": "よくある質問"
+  },
+  "trust": {
+    "heading": "インドネシア各地のお客様からご支持いただいています"
+  },
+  "footer": {
+    "tagline": "バンドンで手作業により仕立てるオーダーメイドトーブ。",
+    "columns": {
+      "explore": "サイトメニュー",
+      "studio": "スタジオ",
+      "sizeGuide": "サイズガイド"
+    },
+    "links": {
+      "designStudio": "デザインスタジオ",
+      "fabrics": "生地",
+      "gallery": "ギャラリー",
+      "journal": "ジャーナル",
+      "knowledge": "ナレッジ",
+      "locations": "店舗情報",
+      "bookAppointment": "個別カウンセリングを予約",
+      "faq": "よくある質問",
+      "contact": "お問い合わせ",
+      "freeSizeCheck": "無料サイズチェック",
+      "sizeChartThobe": "トーブサイズチャート",
+      "menThobeSize": "メンズトーブサイズ",
+      "howToMeasure": "トーブの採寸方法"
+    },
+    "legal": "© {year} Bespoke Tailor. All rights reserved."
+  },
+  "languageSwitcher": {
+    "openLabel": "言語を変更",
+    "modalTitle": "言語を選択してください",
+    "modalSubtitle": "Local Tailorを閲覧する言語を選択してください。",
+    "close": "閉じる",
+    "currentLanguage": "現在の言語"
+  }
+}

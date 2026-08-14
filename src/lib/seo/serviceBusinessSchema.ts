@@ -1,4 +1,4 @@
-import type { JsonLdSchema } from '@/lib/seo/schema'
+import { ALL_AVAILABLE_LANGUAGES, type JsonLdSchema } from '@/lib/seo/schema'
 import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_SITE_ORIGIN } from '@/lib/seo/cityConfig'
 import type { ServiceConfig } from '@/lib/seo/serviceConfig'
 
@@ -54,5 +54,6 @@ export function buildServiceLocalBusinessSchema(service: ServiceConfig): JsonLdS
     // areaServed on every /locations page: never a second fabricated
     // address per area.
     areaServed: SERVICE_AREA_NAMES.map((name) => ({ '@type': 'City', name })),
+    availableLanguage: ALL_AVAILABLE_LANGUAGES,
   }
 }
