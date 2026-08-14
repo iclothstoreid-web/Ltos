@@ -41,7 +41,11 @@ export function Footer() {
 
         {footerCopy.columns.map((column) => (
           <nav key={column.title} aria-label={column.title}>
-            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{column.title}</p>
+            {/* text-luxury-ivory, not gold: only 3.98:1 against the footer's
+                Smoked Walnut bg, short of WCAG's 4.5:1 for 12px text — and
+                per the brief's own rules gold is the CTA accent, ivory is
+                primary text, which a column heading label actually is. */}
+            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-ivory">{column.title}</p>
             <ul className="mt-4 space-y-3">
               {column.links.map((link) => (
                 <li key={link.href}>
