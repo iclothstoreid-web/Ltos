@@ -8,6 +8,9 @@ import { breadcrumbSchema, faqSchema, type FaqSchemaItem } from '@/lib/seo/schem
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
 import { FaqSection } from '@/components/seo/FaqSection'
+import { TrackedMagneticButton } from '@/components/analytics/TrackedMagneticButton'
+import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
+import { GA4_EVENTS } from '@/lib/analytics/events'
 
 export const metadata: Metadata = buildSimplePageMetadata({
   title: 'Book a Private Appointment',
@@ -68,6 +71,7 @@ export default function BookAppointmentPage() {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-luxury-navy-deep px-6 py-20 text-center">
       <JsonLd data={[breadcrumb, faq]} />
+      <FunnelStepOnMount step="consultation" />
       <LuxuryGradientField variant="b" />
 
       <div className="relative mx-auto max-w-xl">
@@ -80,9 +84,19 @@ export default function BookAppointmentPage() {
         </p>
 
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <MagneticButton href={whatsappUrl} target="_blank" rel="noopener noreferrer" variant="primary">
+          <TrackedMagneticButton
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="primary"
+            ctaId="book_appointment_whatsapp"
+            ctaPage="/book-appointment"
+            ctaPosition="main"
+            pageType="consultation"
+            extraEvent={GA4_EVENTS.ctaClick}
+          >
             Chat on WhatsApp
-          </MagneticButton>
+          </TrackedMagneticButton>
           <MagneticButton href="/" variant="ghost">
             Back to Home
           </MagneticButton>

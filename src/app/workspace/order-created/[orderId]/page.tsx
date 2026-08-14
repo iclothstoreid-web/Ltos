@@ -4,6 +4,9 @@ import { headers } from 'next/headers'
 import { OrderCreatedWorkspace } from '@/components/workspace/order-created/OrderCreatedWorkspace'
 import { fetchOrderMessages } from '@/lib/communication/messages'
 import type { OrderSnapshot } from '@/lib/order/types'
+import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
+import { EventOnMount } from '@/components/analytics/EventOnMount'
+import { GA4_EVENTS } from '@/lib/analytics/events'
 
 interface Props {
   params: { orderId: string }
@@ -55,15 +58,19 @@ export default async function OrderCreatedPage({ params }: Props) {
   const initialMessages = await fetchOrderMessages(supabase, order.id)
 
   return (
-    <OrderCreatedWorkspace
-      order={order}
-      snapshot={snapshot}
-      orderCreatedAt={createdEvent.created_at}
-      timelineEvents={timelineEvents || []}
-      fitterName={fitterName}
-      profileId={userId}
-      initialMessages={initialMessages}
-      transactionId={order.transaction_id}
-    />
+    <>
+      <FunnelStepOnMount step="order" />
+      <EventOnMount eventName={GA4_EVENTS.orderConfirmed} params={{ order_id: order.id }} pageType="order" />
+      <OrderCreatedWorkspace
+        order={order}
+        snapshot={snapshot}
+        orderCreatedAt={createdEvent.created_at}
+        timelineEvents={timelineEvents || []}
+        fitterName={fitterName}
+        profileId={userId}
+        initialMessages={initialMessages}
+        transactionId={order.transaction_id}
+      />
+    </>
   )
 }

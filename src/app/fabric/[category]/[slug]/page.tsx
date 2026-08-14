@@ -36,6 +36,9 @@ import { ColorFamilySection } from '@/components/fabric/ColorFamilySection'
 import { MaterialAuthoritySection } from '@/components/fabric/MaterialAuthoritySection'
 import { FaqSection } from '@/components/fabric/FaqSection'
 import { InternalLinksSection } from '@/components/fabric/InternalLinksSection'
+import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
+import { EventOnMount } from '@/components/analytics/EventOnMount'
+import { GA4_EVENTS } from '@/lib/analytics/events'
 
 interface PageParams {
   params: { category: string; slug: string }
@@ -121,6 +124,8 @@ export default async function FabricMaterialPage({ params, searchParams }: PageP
 
   return (
     <div className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
+      <FunnelStepOnMount step="fabric" />
+      <EventOnMount eventName={GA4_EVENTS.detailOpen} params={{ material_id: material.id }} pageType="fabric" />
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       {/* eslint-disable-next-line react/no-danger */}
@@ -249,7 +254,7 @@ export default async function FabricMaterialPage({ params, searchParams }: PageP
           <Link href="/fabric" className="font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe hover:text-luxury-gold">
             ← Back to Fabric Explorer
           </Link>
-          <DesignStudioCta slug={material.slug} colorSlug={selectedColor?.slug ?? null} />
+          <DesignStudioCta slug={material.slug} colorSlug={selectedColor?.slug ?? null} position="footer_cta" />
         </footer>
       </div>
     </div>

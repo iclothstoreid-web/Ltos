@@ -12,6 +12,7 @@ import { MobileFilterDrawer } from '@/components/fabric/MobileFilterDrawer'
 import { ActiveFilterChips } from '@/components/fabric/ActiveFilterChips'
 import { SortLinks } from '@/components/fabric/SortLinks'
 import { CategoryChip } from '@/components/fabric/CategoryChip'
+import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
 
 // Metadata is deliberately independent of searchParams — every ?search=/
 // ?category=/etc. variation of this page shares the exact same title,
@@ -44,6 +45,7 @@ export default async function FabricExplorerPage({ searchParams }: PageProps) {
 
   return (
     <main className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
+      <FunnelStepOnMount step="fabric" />
       <div className="mx-auto max-w-6xl">
         <MaterialHero
           title="Fabric Explorer"

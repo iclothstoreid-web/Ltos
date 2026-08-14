@@ -8,6 +8,8 @@ import { MaterialHero } from '@/components/fabric/MaterialHero'
 import { breadcrumbSchema } from '@/lib/seo/schema'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs'
+import { EventOnMount } from '@/components/analytics/EventOnMount'
+import { GA4_EVENTS } from '@/lib/analytics/events'
 
 export const metadata: Metadata = buildSimplePageMetadata({
   title: 'Gallery',
@@ -39,6 +41,9 @@ export default async function GalleryPage() {
   return (
     <main className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
       <JsonLd data={breadcrumbSchema(BREADCRUMB_ITEMS)} />
+      {/* Sprint W9-1 — Lookbook maps to /gallery, this project's real
+          equivalent (no dedicated /lookbook route exists). */}
+      <EventOnMount eventName={GA4_EVENTS.open} pageType="lookbook" />
       <div className="mx-auto max-w-6xl">
         <Breadcrumbs items={BREADCRUMB_ITEMS} />
         <MaterialHero

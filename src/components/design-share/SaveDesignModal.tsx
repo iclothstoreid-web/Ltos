@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { saveDesignConfig } from '@/lib/configurator/client'
 import { trackDesignSaved } from '@/lib/configurator/analytics'
+import { trackConfiguratorComplete } from '@/lib/analytics/designStudioAnalytics'
 import { useConfiguratorStore } from '@/stores/configurator-store'
 import { useServiceLevelStore } from '@/stores/service-level-store'
 import { ShareMenu } from './ShareMenu'
@@ -105,6 +106,12 @@ export function SaveDesignModal({ triggerLabel, triggerClassName, disabled }: Sa
       setResult(saved)
       rememberSavedDesign({ designId: saved.designId, shareUrl: saved.shareUrl, nama: trimmedNama, savedAt: new Date().toISOString() })
       trackDesignSaved(saved.designId, true)
+      // Sprint W9-1 §6 — "total options selected": counts every non-null
+      // DesignConfig field the visitor actually chose (accessories counted
+      // as 1 if any were added, matching how the other fields are each
+      // either set or not — not one point per accessory item).
+      const totalOptionsSelected = [config.modelId, config.collarId, config.cuffId, config.fabricId, config.colorId, config.embroidery].filter(Boolean).length + (config.accessories.length > 0 ? 1 : 0)
+      trackConfiguratorComplete(totalOptionsSelected)
       setStep('success')
     } catch {
       setStep('error')

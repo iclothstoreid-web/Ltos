@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { supabaseImageLoader } from '@/lib/supabase/imageLoader'
+import { trackFabricCardView } from '@/lib/analytics/fabricEngagement'
 import {
   FABRIC_CATEGORY_LABELS,
   FABRIC_TEXTURE_LABELS,
@@ -16,6 +17,12 @@ import {
 interface MaterialCardProps {
   material: FabricMaterial
   priority?: boolean
+  // Sprint W9-1 §5 — this card's index within whatever grid rendered it,
+  // for fabric_card_view's `position` param (CRO dashboard's fabric
+  // ranking groups on this). Optional/defaulted so no existing caller
+  // (Related Materials, Popular rail) has to change its own props just to
+  // keep compiling.
+  position?: number
   // Sprint W3-4 §9 — optional: fetching a material's colors is one more
   // RPC call, so callers only pass this where the cost is bounded (Related
   // Materials, capped at 4) and deliberately don't for the main Explorer
@@ -32,9 +39,18 @@ interface MaterialCardProps {
 // (legacy/oversized photos) — that fallback can't be expressed without
 // client-side state. No data fetching happens here; `material` and
 // `colors` are plain props from an already-server-rendered list.
-export function MaterialCard({ material, priority = false, colors }: MaterialCardProps) {
+export function MaterialCard({ material, priority = false, colors, position = 0 }: MaterialCardProps) {
   const [transformFailed, setTransformFailed] = useState(false)
   const weightClass = weightClassFromGsm(material.weight_gsm)
+
+  useEffect(() => {
+    trackFabricCardView(material.id, position)
+    // Fire once per real mount (a new card in the grid), not on every
+    // re-render — material.id/position are only ever set at mount for a
+    // given card instance in practice (server-rendered list, not reordered
+    // client-side).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [material.id])
 
   return (
     <Link

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { ConfiguratorCatalog } from '@/lib/configurator/mapping'
 import { trackConfiguratorOpened } from '@/lib/configurator/analytics'
+import { trackConfiguratorStart, trackConfiguratorExit } from '@/lib/analytics/designStudioAnalytics'
+import { trackFunnelStep } from '@/lib/analytics/funnel'
 import { fetchWithTimeout, isOnline } from '@/lib/configurator/network'
 import { useConfiguratorStore } from '@/stores/configurator-store'
 import { ConfiguratorPanel } from './ConfiguratorPanel'
@@ -46,6 +48,8 @@ export function DesignStudioClient({ initialFabricId = null, initialColorId = nu
   const openedRef = useRef(false)
   const preselectedRef = useRef(false)
   const updateConfig = useConfiguratorStore((state) => state.updateConfig)
+  const configRef = useRef(useConfiguratorStore.getState().config)
+  useEffect(() => useConfiguratorStore.subscribe((state) => { configRef.current = state.config }), [])
 
   useEffect(() => {
     // Guards against React StrictMode's dev-only double-invoke firing this
@@ -54,6 +58,28 @@ export function DesignStudioClient({ initialFabricId = null, initialColorId = nu
     if (openedRef.current) return
     openedRef.current = true
     trackConfiguratorOpened()
+    // Sprint W9-1 §6 — new taxonomy event, additive to the pre-existing
+    // trackConfiguratorOpened() stub above (not a replacement — see
+    // src/lib/analytics/designStudioAnalytics.ts's own comment).
+    trackConfiguratorStart()
+    // Sprint W9-1 §7 — Website Funnel's 'configurator' step.
+    trackFunnelStep('configurator')
+  }, [])
+
+  // Sprint W9-1 §6 — "track exit step": fires configurator_exit on
+  // unmount (navigating away) with whatever selections existed at that
+  // moment. Known limitation: a session that just completed via
+  // SaveDesignModal will also fire this shortly after — configurator_exit
+  // and configurator_complete aren't mutually exclusive here, since
+  // suppressing that would require passing completion state across two
+  // independent, separately-mounted components. Documented in the sprint
+  // report rather than worked around with a fragile cross-component flag.
+  useEffect(() => {
+    return () => {
+      const config = configRef.current
+      const totalOptionsSelected = [config.modelId, config.collarId, config.cuffId, config.fabricId, config.colorId, config.embroidery].filter(Boolean).length + (config.accessories.length > 0 ? 1 : 0)
+      trackConfiguratorExit('unmount', totalOptionsSelected)
+    }
   }, [])
 
   // Applies the deep-link preselection exactly once, as soon as the

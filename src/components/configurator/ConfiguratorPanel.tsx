@@ -13,6 +13,12 @@ import {
   trackEmbroideryAdded,
   trackAccessoriesAdded,
 } from '@/lib/configurator/analytics'
+import {
+  trackCollarSelected as trackCollarSelectedGa4,
+  trackCuffSelected as trackCuffSelectedGa4,
+  trackFabricSelected as trackFabricSelectedGa4,
+  trackEmbroiderySelected as trackEmbroiderySelectedGa4,
+} from '@/lib/analytics/designStudioAnalytics'
 import { OptionCard } from './OptionCard'
 
 const FIELD_TRACKERS: Record<Exclude<ConfiguratorField, 'embroidery' | 'colorId'>, (id: string, name: string) => void> = {
@@ -20,6 +26,17 @@ const FIELD_TRACKERS: Record<Exclude<ConfiguratorField, 'embroidery' | 'colorId'
   collarId: trackCollarSelected,
   cuffId: trackCuffSelected,
   fabricId: trackFabricSelected,
+}
+
+// Sprint W9-1 §6 — new §2-taxonomy events, additive alongside the
+// pre-existing FIELD_TRACKERS above (not a replacement). No `modelId`
+// entry: model_selected isn't part of this sprint's GA4 event list —
+// only fabric_selected/collar_selected/cuff_selected/embroidery_selected
+// are.
+const GA4_FIELD_TRACKERS: Partial<Record<Exclude<ConfiguratorField, 'embroidery' | 'colorId'>, (id: string, name: string) => void>> = {
+  collarId: trackCollarSelectedGa4,
+  cuffId: trackCuffSelectedGa4,
+  fabricId: trackFabricSelectedGa4,
 }
 
 type OpenSection = ConfiguratorField | 'accessories'
@@ -153,7 +170,10 @@ const RadioSection = memo(function RadioSection({ field, label, isOpen, onOpen, 
     (id: string) => {
       updateConfig({ [field]: id } as Partial<DesignConfig>)
       const option = options.find((o) => o.id === id)
-      if (option) FIELD_TRACKERS[field](option.id, option.name)
+      if (option) {
+        FIELD_TRACKERS[field](option.id, option.name)
+        GA4_FIELD_TRACKERS[field]?.(option.id, option.name)
+      }
     },
     [field, options, updateConfig]
   )
@@ -262,6 +282,7 @@ const EmbroiderySection = memo(function EmbroiderySection({
     } else if (options[0]) {
       updateConfig({ embroidery: options[0].id })
       trackEmbroideryAdded(options[0].id, options[0].name)
+      trackEmbroiderySelectedGa4(options[0].id, options[0].name)
     }
   }
 
@@ -269,7 +290,10 @@ const EmbroiderySection = memo(function EmbroiderySection({
     (id: string) => {
       updateConfig({ embroidery: id })
       const option = options.find((o) => o.id === id)
-      if (option) trackEmbroideryAdded(option.id, option.name)
+      if (option) {
+        trackEmbroideryAdded(option.id, option.name)
+        trackEmbroiderySelectedGa4(option.id, option.name)
+      }
     },
     [options, updateConfig]
   )

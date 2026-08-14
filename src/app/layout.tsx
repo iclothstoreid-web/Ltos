@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -17,7 +18,13 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={`${inter.className} bg-surface text-on-surface antialiased`}>
-        {children}
+        {/* Sprint W9-1 §15 — root-level mount: GA4/Clarity loading,
+            attribution capture, a baseline page_view on every route, and
+            experiment context. Renders no visible UI itself — zero impact
+            on any page's markup. Both loaders no-op until a real
+            NEXT_PUBLIC_GA4_MEASUREMENT_ID / NEXT_PUBLIC_CLARITY_PROJECT_ID
+            is set (see src/lib/analytics/constants.ts). */}
+        <AnalyticsProvider>{children}</AnalyticsProvider>
       </body>
     </html>
   )

@@ -11,6 +11,8 @@ import { ConfiguratorPreview } from './sections/ConfiguratorPreview'
 import { buildLocalBusinessSchema, buildWebSiteSchema } from '@/lib/marketing/seo'
 import { organizationSchema } from '@/lib/seo/schema'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { PageScrollTracker } from '@/components/analytics/PageScrollTracker'
+import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
 
 // Serif role reuses the Fraunces token already established elsewhere in
 // this repo (Check-In/Production workspace rebuilds) rather than
@@ -72,6 +74,8 @@ export function HomePage() {
   return (
     <div className={`${fraunces.variable} ${jost.variable} bg-luxury-navy-deep font-luxury-sans`}>
       <JsonLd data={[localBusinessSchema, webSiteSchema, orgSchema]} />
+      <PageScrollTracker pageType="landing" />
+      <FunnelStepOnMount step="landing" />
       <ScrollProgress />
       <Nav />
       <main>

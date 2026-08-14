@@ -6,12 +6,14 @@ import type { DesignConfig, Estimate, ServiceLevel } from '@/types/configurator'
 // picking these events up with zero code changes; otherwise just logs in
 // dev. Every call site in this sprint goes through pushEvent() /
 // the named trackX() wrappers below — nothing calls dataLayer directly.
-declare global {
-  interface Window {
-    dataLayer?: Record<string, unknown>[]
-  }
-}
-
+//
+// Sprint W9-1 — `window.dataLayer`/`window.gtag` are now declared once,
+// canonically, in src/lib/analytics/ga4.ts (that module's loader shares
+// this exact same array). Removed the duplicate `declare global` block
+// that used to live here — TypeScript rejects two conflicting
+// declarations of the same global interface member, and this file's own
+// behavior (dataLayer.push of a plain `{event, ...payload}` object) is
+// unchanged; it just no longer owns the type declaration.
 function pushEvent(event: string, payload: Record<string, unknown> = {}): void {
   if (typeof window !== 'undefined' && Array.isArray(window.dataLayer)) {
     window.dataLayer.push({ event, ...payload })

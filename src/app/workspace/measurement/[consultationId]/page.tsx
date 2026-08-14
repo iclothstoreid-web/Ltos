@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { MeasurementWorkspace } from '@/components/workspace/MeasurementWorkspace'
 import { OrderCreatedLockNotice } from '@/components/workspace/OrderCreatedLockNotice'
 import { findOrderIdForConsultation } from '@/lib/order/lookup'
+import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
 
 // Route contract (locked): Measurement is consultation-driven, not
 // order-driven. This folder was previously named [orderId], which was a
@@ -69,12 +70,15 @@ export default async function MeasurementPage({ params }: Props) {
   ])
 
   return (
-    <MeasurementWorkspace
-      consultation={consultation}
-      existingMeasurement={measurement}
-      events={events || []}
-      userId={user.id}
-      fitterName={profile?.name || 'Fitter'}
-    />
+    <>
+      <FunnelStepOnMount step="measurement" />
+      <MeasurementWorkspace
+        consultation={consultation}
+        existingMeasurement={measurement}
+        events={events || []}
+        userId={user.id}
+        fitterName={profile?.name || 'Fitter'}
+      />
+    </>
   )
 }

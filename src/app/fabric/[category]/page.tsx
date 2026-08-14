@@ -15,6 +15,7 @@ import { MobileFilterDrawer } from '@/components/fabric/MobileFilterDrawer'
 import { ActiveFilterChips } from '@/components/fabric/ActiveFilterChips'
 import { SortLinks } from '@/components/fabric/SortLinks'
 import { CategoryEditorialSection } from '@/components/fabric/CategoryEditorialSection'
+import { FunnelStepOnMount } from '@/components/analytics/FunnelStepOnMount'
 
 interface PageProps {
   params: { category: string }
@@ -80,6 +81,7 @@ export default async function FabricCategoryPage({ params, searchParams }: PageP
 
   return (
     <div className="min-h-screen bg-luxury-navy-deep px-6 py-10 md:py-16">
+      <FunnelStepOnMount step="fabric" />
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 

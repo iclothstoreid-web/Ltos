@@ -32,6 +32,7 @@ export function MaterialGrid({ materials, emptyMessage = 'No fabrics match your 
           material={material}
           priority={i < PRIORITY_COUNT}
           colors={colorsByMaterialId?.[material.id]}
+          position={i}
         />
       ))}
     </div>

@@ -5,6 +5,9 @@ import dynamic from 'next/dynamic'
 import { motion, useScroll, useSpring, useTransform, useVelocity, type Variants } from 'framer-motion'
 import { heroCopy } from '@/lib/marketing/copy'
 import { MagneticButton } from '../shell/MagneticButton'
+import { trackEvent } from '@/lib/analytics/tracker'
+import { trackCTA } from '@/lib/analytics/cta'
+import { GA4_EVENTS } from '@/lib/analytics/events'
 
 const HeroDepthField = dynamic(() => import('./HeroDepthField').then((m) => m.HeroDepthField), { ssr: false })
 
@@ -74,7 +77,21 @@ export function Hero() {
   useEffect(() => {
     const el = sectionRef.current
     if (!el) return
-    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.1 })
+    // Sprint W9-1 §2 — hero_view piggybacks on this section's own existing
+    // visibility observer (already tracking `inView` for the 3D-render
+    // gate) rather than mounting a second IntersectionObserver for the
+    // same element. Fires once, the first time Hero becomes visible.
+    let viewed = false
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setInView(entry.isIntersecting)
+        if (entry.isIntersecting && !viewed) {
+          viewed = true
+          trackEvent(GA4_EVENTS.heroView, {}, { pageType: 'landing' })
+        }
+      },
+      { threshold: 0.1 }
+    )
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
@@ -153,10 +170,24 @@ export function Hero() {
           </motion.p>
 
           <motion.div variants={item} className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <MagneticButton href="/design-studio" variant="primary">
+            <MagneticButton
+              href="/design-studio"
+              variant="primary"
+              onClick={() => {
+                trackEvent(GA4_EVENTS.heroCtaClick, { cta_id: 'hero_design_my_thobe' }, { pageType: 'landing' })
+                trackCTA('hero_design_my_thobe', '/', 'hero_primary', 'landing')
+              }}
+            >
               {heroCopy.primaryCta}
             </MagneticButton>
-            <MagneticButton href="/book-appointment" variant="ghost">
+            <MagneticButton
+              href="/book-appointment"
+              variant="ghost"
+              onClick={() => {
+                trackEvent(GA4_EVENTS.heroCtaClick, { cta_id: 'hero_book_appointment' }, { pageType: 'landing' })
+                trackCTA('hero_book_appointment', '/', 'hero_secondary', 'landing')
+              }}
+            >
               {heroCopy.secondaryCta}
             </MagneticButton>
           </motion.div>

@@ -14,13 +14,17 @@ type MagneticButtonProps = {
   // caller, so this changes no current behavior.
   target?: string
   rel?: string
+  // Sprint W9-1 §4 — optional CTA-tracking hook, fired alongside the
+  // button's real navigation (never instead of it). Undefined for every
+  // pre-existing caller, so this changes no current behavior either.
+  onClick?: () => void
 }
 
 // Shared CTA primitive for every button on the homepage: magnetic pull
 // toward the cursor, soft gold glow, and a depth-press on click. Motion is
 // skipped entirely under prefers-reduced-motion — the button still works,
 // it just doesn't chase the cursor.
-export function MagneticButton({ href, children, variant = 'primary', className = '', target, rel }: MagneticButtonProps) {
+export function MagneticButton({ href, children, variant = 'primary', className = '', target, rel, onClick }: MagneticButtonProps) {
   const ref = useRef<HTMLAnchorElement>(null)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const reduceMotion = useReducedMotion()
@@ -48,6 +52,7 @@ export function MagneticButton({ href, children, variant = 'primary', className 
       href={href}
       target={target}
       rel={rel}
+      onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       animate={{ x: offset.x, y: offset.y }}
