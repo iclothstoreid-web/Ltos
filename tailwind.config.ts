@@ -30,8 +30,8 @@ const config: Config = {
         // Aliases used by the Owner OS shell (Command Center + Komunikasi) —
         // same values as surface/on-surface above, kept as separate tokens
         // since the shell markup references them by these names.
-        'surface-01': '#FCFAF8',
-        'text-primary': '#1B1B1C',
+        'surface-01': '#F3EDE6',
+        'text-primary': '#0B1628',
         // Sprint W1 — public homepage. W1 ART DIRECTION LOCK revision:
         // Midnight Navy + Deep Espresso + Brass system (Savile Row / Brunello
         // Cucinelli / leather-atelier direction), replacing the earlier
