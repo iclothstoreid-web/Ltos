@@ -37,11 +37,10 @@ export function Nav() {
       }`}
     >
       <nav aria-label="Primary" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
-        {/* Brand System Upgrade — was h-6/30px (default-small per the
-            brief), now the first, most dominant thing read in the bar,
-            left-aligned consistently across breakpoints. */}
+        {/* Restore the prior Local Tailor logo scale; keep the navbar height
+            and spacing unchanged while avoiding the Tarda-only size bump. */}
         <Link href="/" aria-label={t('brand')} className="flex shrink-0 items-center">
-          <Logo variant="horizontal" className="h-8 w-auto text-luxury-ivory md:h-10 lg:h-11" />
+          <Logo variant="horizontal" className="h-6 w-auto text-luxury-ivory md:h-[30px]" />
         </Link>
 
         {/* Brand System Upgrade — bumped md:(768px) -> lg:(1024px): the
