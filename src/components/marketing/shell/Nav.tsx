@@ -40,7 +40,11 @@ export function Nav() {
         {/* Restore the prior Local Tailor logo scale; keep the navbar height
             and spacing unchanged while avoiding the Tarda-only size bump. */}
         <Link href="/" aria-label={t('brand')} className="flex shrink-0 items-center">
-          <Logo variant="horizontal" className="h-6 w-auto text-luxury-ivory md:h-[30px]" />
+          <img
+            src="/brand/tarda-home.svg"
+            alt="Tarda"
+            className="h-auto w-[140px] object-contain md:w-[150px]"
+          />
         </Link>
 
         {/* Brand System Upgrade — bumped md:(768px) -> lg:(1024px): the

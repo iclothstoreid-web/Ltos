@@ -161,7 +161,11 @@ export function Hero() {
           {/* Keep the original Local Tailor logo scale for this hero lockup;
               do not let the Tarda-only enlargement push the masthead taller. */}
           <motion.div variants={item}>
-            <Logo variant="horizontal" title="Tarda" className="h-8 w-auto text-luxury-ivory sm:h-9" />
+            <img
+              src="/brand/tarda-home.svg"
+              alt="Tarda"
+              className="h-auto w-[200px] object-contain sm:w-[220px]"
+            />
           </motion.div>
 
           <motion.p variants={item} className="mt-6 font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">

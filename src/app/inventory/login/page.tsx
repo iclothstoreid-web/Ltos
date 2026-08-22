@@ -54,18 +54,18 @@ export default function InventoryLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(197,160,104,0.18),transparent_30%),linear-gradient(135deg,_#07090d_0%,_#111821_50%,_#07090d_100%)] flex items-center justify-center px-6 py-10 text-luxury-ivory">
       <div className="w-full max-w-sm animate-fade-in">
 
-        <div className="mb-12">
-          <p className="text-label text-secondary uppercase tracking-widest mb-3">
+        <div className="mb-10 text-center">
+          <Logo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
+          <p className="mb-3 text-label uppercase tracking-widest text-luxury-gold">
             Login Inventory Hub
           </p>
-          <h1 className="font-serif text-headline text-on-surface">
+          <h1 className="font-serif text-headline text-luxury-ivory">
             Inventory Hub
           </h1>
-          <Logo variant="horizontalTagline" className="mt-2 h-6 w-auto text-secondary" />
-          <p className="text-label text-secondary/80 mt-3">
+          <p className="mt-3 text-label text-luxury-taupe/80">
             Material, inventory, stock, and estimation management.
           </p>
         </div>
@@ -79,9 +79,9 @@ export default function InventoryLoginPage() {
               onChange={e => setEmail(e.target.value)}
               required
               placeholder="reni@localtailor.id"
-              className="w-full border-b border-outline-variant bg-transparent py-3 text-body
-                         text-on-surface placeholder:text-secondary/50 outline-none
-                         focus:border-primary transition-colors duration-200"
+              className="w-full border-b border-luxury-gold/40 bg-transparent py-3 text-body
+                         text-luxury-ivory placeholder:text-luxury-taupe/60 outline-none
+                         focus:border-luxury-gold transition-colors duration-200"
             />
           </div>
 
@@ -93,9 +93,9 @@ export default function InventoryLoginPage() {
               onChange={e => setPassword(e.target.value)}
               required
               placeholder="••••••••"
-              className="w-full border-b border-outline-variant bg-transparent py-3 text-body
-                         text-on-surface placeholder:text-secondary/50 outline-none
-                         focus:border-primary transition-colors duration-200"
+              className="w-full border-b border-luxury-gold/40 bg-transparent py-3 text-body
+                         text-luxury-ivory placeholder:text-luxury-taupe/60 outline-none
+                         focus:border-luxury-gold transition-colors duration-200"
             />
           </div>
 
