@@ -8,17 +8,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // LTOS Design System
-        primary: '#005645',
-        'primary-light': '#1E6F5C',
-        'primary-fixed': '#A5F2D9',
-        surface: '#FCFAF8',
-        'surface-low': '#F6F3F2',
-        'surface-container': '#F0EDEC',
-        'on-surface': '#1B1B1C',
-        secondary: '#5E5E5E',
-        'outline-variant': '#BEC9C4',
-        'border-subtle': '#BEC9C4',
+        // LTOS Design System (Tarda migration)
+        // Primary brand (Midnight)
+        primary: '#0B1628',
+        'primary-light': '#12253A',
+        // light/fixed tints used for subtle surfaces or accent highlights
+        'primary-fixed': '#EAF3F3',
+        // Bright surfaces (Warm Ivory)
+        surface: '#F3EDE6',
+        'surface-low': '#FBF8F6',
+        'surface-container': '#EDE6DF',
+        // Text color / on-surface uses a readable Midnight tone
+        'on-surface': '#0B1628',
+        // Supporting color (Soft Taupe) for secondary text, borders
+        secondary: '#B7ACA0',
+        'outline-variant': '#B7ACA0',
+        'border-subtle': '#B7ACA0',
         error: '#BA1A1A',
         'warm-gold': '#C89B3C',
         'amber-mid': '#B98900',

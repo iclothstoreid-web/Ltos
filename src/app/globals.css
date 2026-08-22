@@ -4,9 +4,10 @@
 
 @layer base {
   :root {
-    --surface: #FCFAF8;
-    --on-surface: #1B1B1C;
-    --primary: #005645;
+    --surface: #F3EDE6;
+    --on-surface: #0B1628;
+    --primary: #0B1628;
+    --secondary: #B7ACA0;
   }
 
   * {
