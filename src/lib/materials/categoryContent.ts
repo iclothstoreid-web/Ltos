@@ -158,7 +158,7 @@ export const CATEGORY_EDITORIAL_CONTENT: Record<FabricCategory, CategoryEditoria
       paragraphs: [
         'A blend combines two or more fibers — most commonly cotton with polyester, or linen with cotton — spun together into a single yarn to capture the strengths of each while offsetting their individual weaknesses. A well-designed blend is a deliberate engineering choice, not a compromise.',
         'The exact ratio determines the character of the cloth: a cotton-dominant blend leans toward natural breathability with added durability, while a polyester-dominant blend leans toward wrinkle resistance and shape retention with some natural softness folded in.',
-        'Blends are also where tailoring innovation often happens fastest — new fiber ratios and weave techniques regularly aim to close the gap between a blend and its pure-fiber inspiration, giving customers more genuine choice between performance and traditional character than either fiber offers alone. Local Tailor\'s blend fabrics are chosen specifically for that balance, not simply as a lower-cost substitute for a single-fiber cloth.',
+        'Blends are also where tailoring innovation often happens fastest — new fiber ratios and weave techniques regularly aim to close the gap between a blend and its pure-fiber inspiration, giving customers more genuine choice between performance and traditional character than either fiber offers alone. Tarda\'s blend fabrics are chosen specifically for that balance, not simply as a lower-cost substitute for a single-fiber cloth.',
       ],
     },
     whyIdeal: {

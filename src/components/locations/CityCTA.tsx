@@ -14,8 +14,8 @@ interface CityCTAProps {
 export function CityCTA({ city, utm }: CityCTAProps) {
   const message = appendUtmNote(
     city.isPrimary
-      ? 'Halo Local Tailor, saya ingin booking Private Appointment di workshop Bandung.'
-      : `Halo Local Tailor, saya di ${city.city} dan ingin konsultasi untuk custom thobe.`,
+      ? 'Halo Tarda, saya ingin booking Private Appointment di workshop Bogor.'
+      : `Halo Tarda, saya di ${city.city} dan ingin konsultasi untuk custom thobe.`,
     utm ?? {}
   )
   const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, message)
@@ -25,7 +25,7 @@ export function CityCTA({ city, utm }: CityCTAProps) {
       <div className="mx-auto max-w-xl">
         <Reveal>
           <h2 id="city-cta-heading" className="font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {city.isPrimary ? 'Booking Private Appointment di Bandung' : `Mulai Konsultasi dari ${city.city}`}
+            {city.isPrimary ? 'Booking Private Appointment di Bogor' : `Mulai Konsultasi dari ${city.city}`}
           </h2>
           <p className="mx-auto mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">
             {city.isPrimary

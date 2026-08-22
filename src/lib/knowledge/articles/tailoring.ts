@@ -4,7 +4,7 @@ import type { KnowledgeArticle } from '../types'
 // E-E-A-T through real construction/process detail, not marketing
 // language. Claims here are general tailoring craft knowledge (pattern
 // drafting, interlining, construction technique) — not fabricated
-// proprietary Local Tailor statistics.
+// proprietary Tarda statistics.
 export const TAILORING_ARTICLES: KnowledgeArticle[] = [
   {
     slug: 'what-is-bespoke',
@@ -101,7 +101,7 @@ export const TAILORING_ARTICLES: KnowledgeArticle[] = [
           '"Custom-made" adalah istilah umum yang bisa mencakup berbagai tingkat personalisasi, sementara "bespoke" secara teknis spesifik berarti pola dibuat baru dari nol.',
       },
       {
-        question: 'Apakah semua thobe di Local Tailor adalah bespoke sesungguhnya?',
+        question: 'Apakah semua thobe di Tarda adalah bespoke sesungguhnya?',
         answer: 'Ya, setiap thobe dibuat dari pola yang dibentuk khusus berdasarkan pengukuran individu, bukan pola standar yang disesuaikan.',
       },
       {

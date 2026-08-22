@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   )
 }
 
-const BOOKING_MESSAGE = 'Halo Local Tailor, saya ingin booking Private Appointment untuk konsultasi dan pengukuran.'
+const BOOKING_MESSAGE = 'Halo Tarda, saya ingin booking Private Appointment untuk konsultasi dan pengukuran.'
 
 // Sprint W7-4 — consultation-stand-in FAQ (this repo has no dedicated
 // /consultation route; /book-appointment is the real page that leads a
@@ -39,7 +39,7 @@ const CONSULTATION_FAQ: FaqSchemaItem[] = [
   {
     question: 'Apa yang terjadi saat Private Appointment?',
     answer:
-      'Sesi konsultasi personal mencakup pemilihan bahan, pengukuran badan langsung oleh fitter, dan panduan desain — semuanya dalam satu sesi privat di workshop & showroom Local Tailor di Bandung.',
+      'Sesi konsultasi personal mencakup pemilihan bahan, pengukuran badan langsung oleh fitter, dan panduan desain — semuanya dalam satu sesi privat di workshop & showroom Tarda di Bogor.',
   },
   {
     question: 'Apakah Private Appointment berbayar?',

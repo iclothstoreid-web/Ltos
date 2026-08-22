@@ -104,7 +104,7 @@ export function LeadCaptureForm({ onSubmit }: LeadCaptureFormProps) {
     <div className="rounded-2xl border border-luxury-gold/[0.14] bg-luxury-charcoal/20 p-6 md:p-8">
       <p className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-gold">Simpan Hasil Estimasi Anda</p>
       <p className="mt-2 max-w-md font-luxury-sans text-sm text-luxury-taupe">
-        Dapatkan salinan hasil estimasi dan lanjutkan ke pengukuran langsung oleh fitter Local Tailor.
+        Dapatkan salinan hasil estimasi dan lanjutkan ke pengukuran langsung oleh fitter Tarda.
       </p>
 
       {submitted ? (

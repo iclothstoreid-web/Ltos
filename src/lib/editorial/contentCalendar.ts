@@ -104,8 +104,8 @@ export const EDITORIAL_CALENDAR: MonthlyPlan[] = [
     month: 12,
     monthName: 'Desember',
     theme: 'Akhir tahun — evaluasi wardrobe dan local authority',
-    primaryCluster: 'bandung',
-    weeklyFocus: ['Layanan bespoke tailor Bandung', 'Proses konsultasi dan fitting', 'Evaluasi Digital Body Profile tahunan', 'Rencana konten tahun depan'],
+    primaryCluster: 'bogor',
+    weeklyFocus: ['Layanan bespoke tailor Bogor', 'Proses konsultasi dan fitting', 'Evaluasi Digital Body Profile tahunan', 'Rencana konten tahun depan'],
   },
 ]
 

@@ -5,12 +5,12 @@
 import { fabricPhotos, garmentPhotos, measurementMannequinSrc } from './assets'
 
 export const heroCopy = {
-  eyebrow: 'Bespoke Thobe, Bandung',
+  eyebrow: 'Bespoke Thobe, Bogor',
   headline: 'Custom Thobe, Crafted Exclusively for You',
   subheadline: 'Designed around your body, your lifestyle, and your identity.',
   primaryCta: 'Design My Thobe',
   secondaryCta: 'Book a Private Appointment',
-  trustStrip: ['Premium Imported Fabrics', 'Personal Measurement', 'Crafted in Bandung', 'Custom Pattern'],
+  trustStrip: ['Premium Imported Fabrics', 'Personal Measurement', 'Crafted in Bogor', 'Custom Pattern'],
 }
 
 // Sprint W1 revision — Savile Row-style appointment section, positioned
@@ -20,8 +20,8 @@ export const appointmentCopy = {
   eyebrow: 'By Appointment',
   heading: 'Book a Private Appointment',
   body: 'Personal consultation, fabric selection, body measurement, and design guidance in a private tailoring session.',
-  location: 'Private Appointment — Bandung',
-  address: 'Workshop & Showroom, Bandung, West Java',
+  location: 'Private Appointment — Bogor',
+  address: 'Workshop & Showroom, Bogor, West Java',
   cta: 'Book a Private Appointment',
   photoAlt: 'Bespoke black pinstripe thobe presented on a mannequin, editorial studio photography',
 }
@@ -236,8 +236,8 @@ export const workshopCopy = {
   authenticityLabel: 'Authenticity',
   authenticityCallout: 'Every photograph represents our real tailoring environment, tools, materials, and production process.',
   cta: 'Visit Our Workshop Process',
-  photoAlt: 'Bespoke thobe presented on a mannequin inside the Local Tailor workshop, editorial studio photography',
-  fabricAlt: 'Close-up weave detail from the Local Tailor fabric collection',
+  photoAlt: 'Bespoke thobe presented on a mannequin inside the Tarda workshop, editorial studio photography',
+  fabricAlt: 'Close-up weave detail from the Tarda fabric collection',
 }
 
 // Sprint W5-6 — Heritage / Authority. CTA defaults to /#why (WhyLocalTailor,
@@ -358,7 +358,7 @@ export const gallerySectionCopy = {
 // — distinct from the existing storiesCopy / id="stories" (CustomerStories.tsx),
 // which is a separate homepage section further down the page, not replaced or
 // touched here. Content note: this sprint's own testimonial ("Ahmad" / Jakarta
-// / Wedding) is close to but not the same as storiesCopy's "Ahmad R." / Bandung
+// / Wedding) is close to but not the same as storiesCopy's "Ahmad R." / Bogor
 // / Wedding — both are implemented exactly as each sprint specified them, not
 // reconciled into one, since neither brief asked for that.
 //
@@ -387,9 +387,9 @@ export const reviewsCopy = {
       imageCaption: 'Black Pinstripe Thobe',
     },
     {
-      id: 'yusuf-bandung-umrah',
+      id: 'yusuf-bogor-umrah',
       name: 'Yusuf',
-      city: 'Bandung',
+      city: 'Bogor',
       context: 'Umrah',
       rating: 5,
       quote:
@@ -506,7 +506,7 @@ export const craftsmanshipCopy = {
     { title: 'Consultation', description: 'A private session to understand your occasion, silhouette preference, and lifestyle.' },
     { title: 'Measurement', description: 'Full-body measurement captured by a trained fitter, recorded to the millimeter.' },
     { title: 'Pattern Formulation', description: 'Your measurements become a pattern block that exists nowhere else.' },
-    { title: 'Handcrafted Production', description: 'Cut, sewn, and finished by hand in our Bandung workshop.' },
+    { title: 'Handcrafted Production', description: 'Cut, sewn, and finished by hand in our Bogor workshop.' },
   ],
 }
 
@@ -530,7 +530,7 @@ export const storiesCopy = {
   eyebrow: 'Customer Stories',
   heading: 'Worn, Not Just Made',
   stories: [
-    { name: 'Ahmad R.', city: 'Bandung', fabric: 'Wool Blend Twill', purpose: 'Wedding', quote: 'The fit was exact — nothing I have worn compares.' },
+    { name: 'Ahmad R.', city: 'Bogor', fabric: 'Wool Blend Twill', purpose: 'Wedding', quote: 'The fit was exact — nothing I have worn compares.' },
     { name: 'Faisal H.', city: 'Jakarta', fabric: 'Linen Weave', purpose: 'Umrah', quote: 'Lightweight, breathable, and it still looked formal for the occasion.' },
     { name: 'Yusuf M.', city: 'Surabaya', fabric: 'Egyptian Cotton', purpose: 'Daily', quote: 'I ordered one and came back for three more.' },
   ],
@@ -554,7 +554,7 @@ export const faqCopy = {
     },
     {
       question: 'Where is my thobe made?',
-      answer: 'Every garment is cut, sewn, and finished by hand in our workshop in Bandung, Indonesia.',
+      answer: 'Every garment is cut, sewn, and finished by hand in our workshop in Bogor, Indonesia.',
     },
   ],
 }
@@ -575,7 +575,7 @@ export const finalCtaCopy = {
 // PLAN/audit note: every one of these routes already existed and worked
 // when opened directly, nothing here was reachable from the nav before.
 export const navCopy = {
-  brand: 'Local Tailor',
+  brand: 'Tarda',
   brandSuffix: 'by Local Project',
   links: [
     { label: 'Design Studio', href: '/design-studio' },
@@ -595,7 +595,7 @@ export const navCopy = {
 }
 
 export const footerCopy = {
-  tagline: 'Bespoke thobe, handcrafted in Bandung.',
+  tagline: 'Bespoke thobe, handcrafted in Bogor.',
   columns: [
     {
       title: 'Explore',

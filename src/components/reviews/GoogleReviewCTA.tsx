@@ -22,7 +22,7 @@ export function GoogleReviewCTA({ city, className = '' }: GoogleReviewCTAProps) 
             Sudah Pernah Memesan {city ? `dari ${city}` : 'dengan Kami'}?
           </h2>
           <p className="mx-auto mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">
-            Ulasan Anda di Google membantu klien lain menemukan Local Tailor — hanya butuh waktu singkat.
+            Ulasan Anda di Google membantu klien lain menemukan Tarda — hanya butuh waktu singkat.
           </p>
         </Reveal>
 

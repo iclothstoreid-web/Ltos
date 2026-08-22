@@ -33,9 +33,9 @@ interface PageProps {
 }
 
 // Sprint W8-1 foundation, rebuilt as a data-driven engine in W8-2/3 — one
-// dynamic route drives every city page, including Bandung's fuller
+// dynamic route drives every city page, including Bogor's fuller
 // "domination page" treatment (same template, richer cityConfig.ts entry —
-// no Bandung-specific branching in this file). Adding city #6+ requires
+// no Bogor-specific branching in this file). Adding city #6+ requires
 // exactly one CITY_CONFIGS entry; generateStaticParams already derives
 // every route from it, so no new route file and no new component are ever
 // needed to scale this to 100+ cities.
@@ -47,7 +47,7 @@ export const dynamicParams = false
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const city = getCityBySlug(params.city)
-  if (!city) return { title: 'Location Not Found | Local Tailor' }
+  if (!city) return { title: 'Location Not Found | Tarda' }
   return withLocaleAlternates(buildLocationMetadata(city), CITY_SITE_ORIGIN, `/locations/${params.city}`)
 }
 

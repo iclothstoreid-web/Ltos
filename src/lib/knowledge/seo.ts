@@ -12,7 +12,7 @@ export function buildKnowledgeLandingMetadata(): Metadata {
   const url = `${FABRIC_SITE_ORIGIN}/knowledge`
   const title = `Knowledge — Panduan Bahan, Pengukuran, dan Gaya Thobe | ${FABRIC_BRAND_NAME}`
   const description =
-    'Pusat panduan Local Tailor — bahan thobe, cara mengukur badan, dan panduan styling. Referensi lengkap sebelum memesan thobe bespoke Anda.'
+    'Pusat panduan Tarda — bahan thobe, cara mengukur badan, dan panduan styling. Referensi lengkap sebelum memesan thobe bespoke Anda.'
   return {
     title,
     description,

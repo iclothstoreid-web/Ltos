@@ -9,11 +9,11 @@ interface LocalTrustSectionProps {
 }
 
 // Sprint W8-1, migrated to cityConfig.ts in W8-2/3 — "Local trust section"
-// + "Workshop Location" (Bandung only — the one real address). Combines
+// + "Workshop Location" (Bogor only — the one real address). Combines
 // the same real, already-established trust metrics with an honest
 // statement about how this specific city is served, plus a real "Get
 // Directions" link built from the real address (CITY_MAPS_URL, a Google
-// Maps search query — not a fabricated/guessed pin) on the Bandung page.
+// Maps search query — not a fabricated/guessed pin) on the Bogor page.
 // No fabricated per-city claims (order counts, delivery-time guarantees).
 export function LocalTrustSection({ city }: LocalTrustSectionProps) {
   return (
@@ -37,7 +37,7 @@ export function LocalTrustSection({ city }: LocalTrustSectionProps) {
             </>
           ) : (
             <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">
-              Konsultasi via WhatsApp, pengukuran final di workshop kami di Bandung, garmen dikirim ke {city.city}.
+              Konsultasi via WhatsApp, pengukuran final di workshop kami di Bogor, garmen dikirim ke {city.city}.
             </p>
           )}
         </Reveal>

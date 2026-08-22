@@ -17,7 +17,7 @@ export function ServiceValueProps({ service }: ServiceValuePropsProps) {
       <div className="mx-auto max-w-5xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">Mengapa Local Tailor</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">Mengapa Tarda</p>
           <h2 id="service-value-props-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
             Mengapa Memilih Kami untuk {service.garmentLabel}
           </h2>

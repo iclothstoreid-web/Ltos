@@ -66,7 +66,7 @@ function EstimatePrintViewComponent({
     >
       <div className="flex items-center justify-between pb-6 border-b-2 border-on-surface">
         <div>
-          <p className="font-serif text-2xl tracking-tight">LOCAL TAILOR</p>
+          <p className="font-serif text-2xl tracking-tight">TARDA</p>
           <p className="text-[10px] uppercase tracking-[0.3em] text-secondary mt-1">Estimasi Biaya Material — Dokumen Internal</p>
         </div>
         <div className="text-right">

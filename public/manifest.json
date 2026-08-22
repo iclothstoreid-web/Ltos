@@ -1,7 +1,7 @@
 {
-  "name": "Local Tailor — Bespoke Tailor",
-  "short_name": "Local Tailor",
-  "description": "Bespoke thobe, handcrafted in Bandung.",
+  "name": "Tarda — Bespoke Tailor",
+  "short_name": "Tarda",
+  "description": "Bespoke thobe, handcrafted in Bogor.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#6A4A34",

@@ -36,7 +36,7 @@ interface RevenueLandingPageProps {
 // entirely by a ServiceConfig. Same "one template, one config array, zero
 // per-page markup duplication" pattern as src/app/locations/[city]/
 // page.tsx — the difference is these 5 pages need literal top-level URLs
-// (/bespoke-tailor-bandung, not /services/[slug]), so each gets its own
+// (/bespoke-tailor-bogor, not /services/[slug]), so each gets its own
 // thin route file instead of one generateStaticParams-driven dynamic
 // route; this component is what keeps that from meaning 5x duplicated
 // page bodies.
@@ -87,7 +87,7 @@ export async function RevenueLandingPage({ service: baseService, searchParams }:
         <BespokeProcessSection />
         <ServiceGallery service={service} />
         <ServiceReviews service={service} />
-        <GoogleReviewCTA city="Bandung" />
+        <GoogleReviewCTA city="Bogor" />
         <LocationPricing />
         <ServiceCTA service={service} utm={utm} />
         <ServiceFAQ service={service} />

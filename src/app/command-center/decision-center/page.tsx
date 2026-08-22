@@ -7,11 +7,11 @@ import { DecisionCenter } from '@/components/owner/decision-center/DecisionCente
 
 export const metadata: Metadata = {
   title: 'Decision Center | Owner OS',
-  description: 'Owner OS — Local Tailor Operating System',
+  description: 'Owner OS — Tarda Operating System',
   applicationName: 'Owner OS',
   openGraph: {
     title: 'Owner OS',
-    description: 'Local Tailor Operating System',
+    description: 'Tarda Operating System',
   },
 }
 

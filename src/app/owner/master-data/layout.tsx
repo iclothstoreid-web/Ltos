@@ -8,11 +8,11 @@ import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 // as workspace/check-in/layout.tsx etc.
 export const metadata: Metadata = {
   title: 'Master Data | Owner OS',
-  description: 'Owner OS — Local Tailor Operating System',
+  description: 'Owner OS — Tarda Operating System',
   applicationName: 'Owner OS',
   openGraph: {
     title: 'Owner OS',
-    description: 'Local Tailor Operating System',
+    description: 'Tarda Operating System',
   },
 }
 

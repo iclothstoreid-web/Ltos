@@ -3,13 +3,13 @@ import { Fraunces, Hanken_Grotesk, JetBrains_Mono, Libre_Caslon_Text } from 'nex
 import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 
 export const metadata: Metadata = {
-  title: 'Production Flow | Local Tailor',
+  title: 'Production Flow | Tarda',
   description: 'Manage and monitor bespoke garment production workflow.',
   applicationName: 'Production Flow',
   openGraph: {
     title: 'Production Flow',
     description: 'Manage and monitor bespoke garment production workflow.',
-    siteName: 'Local Tailor Operating System',
+    siteName: 'Tarda Operating System',
     type: 'website',
   },
 }

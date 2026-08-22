@@ -4,8 +4,8 @@ import { faqCopy } from './copy'
 // TODO_REAL_DATA — placeholder business details, replace before ship.
 const BUSINESS = {
   name: 'Bespoke Tailor',
-  url: 'https://ltos-local-tailor.vercel.app',
-  addressLocality: 'Bandung',
+  url: 'https://tarda.vercel.app',
+  addressLocality: 'Bogor',
   addressCountry: 'ID',
 }
 
@@ -18,13 +18,13 @@ const OG_IMAGE = {
   url: `${BUSINESS.url}/brand/og-image.png`,
   width: 1200,
   height: 630,
-  alt: `${BUSINESS.name} — Local Tailor`,
+  alt: `${BUSINESS.name} — Tarda`,
 }
 
 export const homepageMetadata: Metadata = {
   title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
   description:
-    'Bespoke thobe, handcrafted in Bandung. A pattern formulated from your measurements alone, made from imported fabrics and finished by hand.',
+    'Bespoke thobe, handcrafted in Bogor. A pattern formulated from your measurements alone, made from imported fabrics and finished by hand.',
   openGraph: {
     title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
     description: 'Designed around your body, your lifestyle, and your identity.',

@@ -9,7 +9,7 @@ import { Link } from '@/i18n/routing'
 // is the single source of truth already used by every location page's
 // schema, metadata, and CTAs (Sprint W8-1/8-2/8-3). No address/phone string
 // is ever re-typed here.
-const FOOTER_WHATSAPP_MESSAGE = 'Halo Local Tailor, saya ingin bertanya lebih lanjut.'
+const FOOTER_WHATSAPP_MESSAGE = 'Halo Tarda, saya ingin bertanya lebih lanjut.'
 
 const EXPLORE_LINKS = [
   { key: 'designStudio', href: '/design-studio' },

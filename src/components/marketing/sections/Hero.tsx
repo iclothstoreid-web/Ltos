@@ -164,7 +164,7 @@ export function Hero() {
               to 44-52px desktop. Purely additive: the eyebrow/headline/CTA
               stack below is unchanged. */}
           <motion.div variants={item}>
-            <Logo variant="horizontal" title="Local Tailor" className="h-8 w-auto text-luxury-ivory sm:h-9 md:h-11 lg:h-[52px]" />
+            <Logo variant="horizontal" title="Tarda" className="h-8 w-auto text-luxury-ivory sm:h-9 md:h-11 lg:h-[52px]" />
           </motion.div>
 
           <motion.p variants={item} className="mt-6 font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">

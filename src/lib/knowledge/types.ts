@@ -1,11 +1,11 @@
-// Sprint W6 — Local Tailor Knowledge Engine. Shared content schema for every
+// Sprint W6 — Tarda Knowledge Engine. Shared content schema for every
 // /knowledge page. 26 articles across 3 live categories (fabrics/measurements/
 // styling) share this one schema and are rendered by one dynamic route
 // (src/app/knowledge/[category]/[slug]/page.tsx) rather than 26 bespoke page
 // files — the "reusable content architecture" the sprint brief asks for is
 // this schema + registry, not a component-per-page.
 
-// Sprint W6-10 — 'questions' (FAQ domination layer) and 'bandung' (local
+// Sprint W6-10 — 'questions' (FAQ domination layer) and 'bogor' (local
 // authority layer) added to the same closed union the [category]/[slug]
 // route already drives off of. Same architecture as the original 7, not a
 // parallel system — this is the "Gunakan Knowledge Engine yang sudah ada"
@@ -14,7 +14,7 @@
 // content cluster (cornerstone + 14 supporting articles, all pointing back
 // at /design-studio), same closed-union architecture as every category
 // before it.
-export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring' | 'questions' | 'bandung' | 'design-studio'
+export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring' | 'questions' | 'bogor' | 'design-studio'
 
 export interface KnowledgeFaqItem {
   question: string
@@ -116,7 +116,7 @@ export interface KnowledgeArticle {
   // criteria a reader weighs) and a direct "when to choose this" verdict.
   // Reuses KeyTakeaways/QuickAnswer's visual components with heading
   // overrides rather than new components — same content shape, different
-  // label. Applied to the W6-10 FAQ/Bandung pages; not retrofitted onto
+  // label. Applied to the W6-10 FAQ/Bogor pages; not retrofitted onto
   // the 58 W6-1..8 articles (that would be a rewrite, not an addition).
   decisionFramework?: string[]
   whenToChoose?: string

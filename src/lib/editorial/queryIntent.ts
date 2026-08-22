@@ -16,7 +16,7 @@ export interface QueryIntentProfile {
 }
 
 // Category-level default — most articles in a cluster share one baseline
-// funnel position. 'questions' and 'bandung' are the two clusters added in
+// funnel position. 'questions' and 'bogor' are the two clusters added in
 // W6-10 (see src/lib/knowledge/categories.ts).
 export const CATEGORY_INTENT_PROFILE: Record<KnowledgeCategorySlug, QueryIntentProfile> = {
   fabrics: { funnelStage: 'TOFU', intent: 'informational' },
@@ -27,10 +27,10 @@ export const CATEGORY_INTENT_PROFILE: Record<KnowledgeCategorySlug, QueryIntentP
   tailoring: { funnelStage: 'TOFU', intent: 'informational' },
   care: { funnelStage: 'TOFU', intent: 'informational' },
   questions: { funnelStage: 'TOFU', intent: 'informational' },
-  bandung: { funnelStage: 'BOFU', intent: 'local' },
+  bogor: { funnelStage: 'BOFU', intent: 'local' },
   // Sprint Y — Digital Bespoke Tailoring cluster. High purchase-intent:
   // every article here directly answers "can I order without visiting
-  // Bandung" and funnels to /design-studio, the same commercial-conversion
+  // Bogor" and funnels to /design-studio, the same commercial-conversion
   // role wedding/umrah play for their own occasions.
   'design-studio': { funnelStage: 'BOFU', intent: 'commercial' },
 }

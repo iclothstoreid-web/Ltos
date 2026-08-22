@@ -12,7 +12,7 @@ interface ContactCardProps {
 // exclusively from CITY_BUSINESS/LOCAL_TAILOR_CITATION — the same NAP
 // source every location page's schema and CTAs already use — so this card
 // can be dropped onto any page without re-typing the address.
-export function ContactCard({ whatsappMessage = 'Halo Local Tailor, saya ingin bertanya lebih lanjut.' }: ContactCardProps) {
+export function ContactCard({ whatsappMessage = 'Halo Tarda, saya ingin bertanya lebih lanjut.' }: ContactCardProps) {
   const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, whatsappMessage)
 
   return (

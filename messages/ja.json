@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "Local Tailor",
+    "brand": "Tarda",
     "links": {
       "designStudio": "デザインスタジオ",
       "fabrics": "生地",
@@ -90,7 +90,7 @@
   "languageSwitcher": {
     "openLabel": "言語を変更",
     "modalTitle": "言語を選択してください",
-    "modalSubtitle": "Local Tailorを閲覧する言語を選択してください。",
+    "modalSubtitle": "Tardaを閲覧する言語を選択してください。",
     "close": "閉じる",
     "currentLanguage": "現在の言語"
   }

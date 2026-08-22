@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { FABRIC_BRAND_NAME } from '@/lib/materials/seo'
-import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_SITE_ORIGIN, type CityConfig } from '@/lib/seo/cityConfig'
+import { CITY_BUSINESS, CITY_SITE_ORIGIN, type CityConfig } from '@/lib/seo/cityConfig'
 
 // Sprint W8-1, migrated to cityConfig.ts + keyword-targeted titles in
 // W8-2/3 — metadata generator for /locations pages. Same
@@ -11,8 +11,8 @@ import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_SITE_ORIGIN, type CityConfig } fr
 // for local SEO).
 //
 // `geo.position`/ICBM (precise lat/long) are only emitted when the config
-// itself carries real coordinates (Bandung only) — this app has no second
-// physical location to plot, and reusing the Bandung coordinates on a
+// itself carries real coordinates (Bogor only) — this app has no second
+// physical location to plot, and reusing the Bogor coordinates on a
 // different city's page would misrepresent where that pin belongs.
 function capitalizeWords(value: string): string {
   return value.replace(/\b\w/g, (char) => char.toUpperCase())
@@ -20,7 +20,7 @@ function capitalizeWords(value: string): string {
 
 export function buildLocationMetadata(city: CityConfig): Metadata {
   const url = `${CITY_SITE_ORIGIN}/locations/${city.slug}`
-  // city.keywordPrimary already IS the target keyword ("tailor bandung",
+  // city.keywordPrimary already IS the target keyword ("tailor bogor",
   // "custom thobe jakarta", ...) — titling it directly keeps the page title
   // aligned with what this page is actually trying to rank for, rather than
   // a generic template that ignores the keyword strategy in cityConfig.ts.
@@ -66,7 +66,7 @@ export function buildLocationMetadata(city: CityConfig): Metadata {
 export function buildLocationsHubMetadata(): Metadata {
   const url = `${CITY_SITE_ORIGIN}/locations`
   const title = `Lokasi Layanan — Custom Thobe di Seluruh Indonesia | ${FABRIC_BRAND_NAME}`
-  const description = `${CITY_BUSINESS.name} — workshop bespoke tailoring di Bandung, melayani konsultasi dan pengiriman custom thobe ke kota-kota besar di Indonesia.`
+  const description = `${CITY_BUSINESS.name} — workshop bespoke tailoring di Bogor, melayani konsultasi dan pengiriman custom thobe ke kota-kota besar di Indonesia.`
 
   return {
     title,
@@ -93,8 +93,6 @@ export function buildLocationsHubMetadata(): Metadata {
     other: {
       'geo.placename': CITY_BUSINESS.addressLocality,
       'geo.region': 'ID-JB',
-      'geo.position': `${CITY_GEO_BANDUNG.latitude};${CITY_GEO_BANDUNG.longitude}`,
-      ICBM: `${CITY_GEO_BANDUNG.latitude}, ${CITY_GEO_BANDUNG.longitude}`,
     },
   }
 }

@@ -736,7 +736,7 @@ export const WEDDING_ARTICLES: KnowledgeArticle[] = [
         block: {
           kind: 'paragraphs',
           items: [
-            'Semua thobe di Local Tailor dibuat melalui proses bespoke, namun tier premium menambahkan tiga lapisan lagi: pemilihan bahan dari grade tertinggi yang tersedia, detail jahitan tangan yang lebih ekstensif pada bagian-bagian seperti kerah dan manset, serta sesi konsultasi dan fitting yang lebih mendalam untuk memastikan setiap detail benar-benar sesuai preferensi personal pengantin.',
+            'Semua thobe di Tarda dibuat melalui proses bespoke, namun tier premium menambahkan tiga lapisan lagi: pemilihan bahan dari grade tertinggi yang tersedia, detail jahitan tangan yang lebih ekstensif pada bagian-bagian seperti kerah dan manset, serta sesi konsultasi dan fitting yang lebih mendalam untuk memastikan setiap detail benar-benar sesuai preferensi personal pengantin.',
           ],
         },
       },

@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "Local Tailor",
+    "brand": "Tarda",
     "links": {
       "designStudio": "Design Studio",
       "fabrics": "Fabrics",
@@ -13,12 +13,12 @@
     "languageSwitcher": "Language"
   },
   "hero": {
-    "eyebrow": "Bespoke Thobe, Bandung",
+    "eyebrow": "Bespoke Thobe, Bogor",
     "headline": "Custom Thobe, Crafted Exclusively for You",
     "subheadline": "Designed around your body, your lifestyle, and your identity.",
     "primaryCta": "Design My Thobe",
     "secondaryCta": "Book a Private Appointment",
-    "trustStrip": ["Premium Imported Fabrics", "Personal Measurement", "Crafted in Bandung", "Custom Pattern"]
+    "trustStrip": ["Premium Imported Fabrics", "Personal Measurement", "Crafted in Bogor", "Custom Pattern"]
   },
   "cta": {
     "designMyThobe": "Design My Thobe",
@@ -43,14 +43,14 @@
     "eyebrow": "By Appointment",
     "heading": "Book a Private Appointment",
     "body": "Personal consultation, fabric selection, body measurement, and design guidance in a private tailoring session.",
-    "location": "Private Appointment — Bandung",
-    "address": "Workshop & Showroom, Bandung, West Java",
+    "location": "Private Appointment — Bogor",
+    "address": "Workshop & Showroom, Bogor, West Java",
     "cta": "Book a Private Appointment"
   },
   "contact": {
     "eyebrow": "Contact",
     "heading": "Get in Touch",
-    "subheadline": "Reach our Bandung workshop directly for consultation, fabric questions, or an existing order.",
+    "subheadline": "Reach our Bogor workshop directly for consultation, fabric questions, or an existing order.",
     "whatsappLabel": "WhatsApp",
     "addressLabel": "Workshop & Showroom",
     "hoursLabel": "Opening Hours",
@@ -64,7 +64,7 @@
     "heading": "Trusted by discerning clients across Indonesia"
   },
   "footer": {
-    "tagline": "Bespoke thobe, handcrafted in Bandung.",
+    "tagline": "Bespoke thobe, handcrafted in Bogor.",
     "columns": {
       "explore": "Explore",
       "studio": "Studio",
@@ -90,7 +90,7 @@
   "languageSwitcher": {
     "openLabel": "Change language",
     "modalTitle": "Choose your language",
-    "modalSubtitle": "Select the language you'd like to browse Local Tailor in.",
+    "modalSubtitle": "Select the language you'd like to browse Tarda in.",
     "close": "Close",
     "currentLanguage": "Current language"
   }

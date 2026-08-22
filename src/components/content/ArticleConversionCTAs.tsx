@@ -36,7 +36,7 @@ export function ArticleConversionCTAs({ articleTitle }: ArticleConversionCTAsPro
         Cek Ukuran Anda, Lalu Booking Pengukuran Gratis
       </h2>
       <p className="mx-auto mt-3 max-w-lg font-luxury-sans text-sm text-luxury-taupe">
-        Mulai dari estimasi online, lalu lanjutkan ke pengukuran langsung oleh fitter Local Tailor untuk Digital Body
+        Mulai dari estimasi online, lalu lanjutkan ke pengukuran langsung oleh fitter Tarda untuk Digital Body
         Profile yang terverifikasi.
       </p>
 

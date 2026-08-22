@@ -7,11 +7,11 @@ import { FABRIC_CATEGORY_LABELS, FABRIC_TEXTURE_LABELS, type FabricCategory } fr
 // sprint's routes need generateStaticParams() (real Static Generation), and
 // calling headers() would opt them out of that entirely. Matches
 // src/lib/marketing/seo.ts's BUSINESS.url convention instead.
-export const FABRIC_SITE_ORIGIN = 'https://ltos-local-tailor.vercel.app'
+export const FABRIC_SITE_ORIGIN = 'https://tarda.vercel.app'
 
 // Mirrors the shape of src/lib/configurator/seo.ts's buildDesignMetadata —
 // same brand constant/OG conventions, scoped to the Fabric Explorer.
-export const FABRIC_BRAND_NAME = 'Local Tailor'
+export const FABRIC_BRAND_NAME = 'Tarda'
 
 // Sprint W3-5 §10 — every gallery/hero photo on this route is a portrait
 // (aspect-[4/5] everywhere in the fabric components), so a fixed 1200x1500
@@ -69,7 +69,7 @@ export function buildFabricMetadata(params: {
 export function buildFabricExplorerMetadata(): Metadata {
   return buildFabricMetadata({
     title: 'Fabric Explorer',
-    description: 'Jelajahi koleksi material bespoke Local Tailor — komposisi, tekstur, dan karakteristik setiap kain.',
+    description: 'Jelajahi koleksi material bespoke Tarda — komposisi, tekstur, dan karakteristik setiap kain.',
     url: `${FABRIC_SITE_ORIGIN}/fabric`,
   })
 }
@@ -84,8 +84,8 @@ export function buildFabricCategoryMetadata(category: FabricCategory): Metadata 
 }
 
 // Sprint W3-3 — matches the brief's own worked example:
-// "Oxford Cotton Fabric | Premium Cotton for Custom Thobe | Local Tailor"
-// (the "| Local Tailor" suffix is appended by buildFabricMetadata itself).
+// "Oxford Cotton Fabric | Premium Cotton for Custom Thobe | Tarda"
+// (the "| Tarda" suffix is appended by buildFabricMetadata itself).
 // `qualifier` comes from price_tier when set (Basic/Premium/Luxury), else
 // falls back to the generic "Quality" — never fabricated from luxury_level,
 // which has no defined vocabulary (see FABRIC_SORT_LABELS.luxury_level's
@@ -97,7 +97,7 @@ const PRICE_TIER_QUALIFIER: Record<string, string> = {
 }
 
 // Sprint W3-4 — `selectedColor` swaps in the brief's own worked example
-// ("Oxford Cotton Fabric in Navy | Local Tailor"). `url` (and therefore the
+// ("Oxford Cotton Fabric in Navy | Tarda"). `url` (and therefore the
 // canonical tag) is always the bare fabric page regardless of the color
 // param — "Jangan menghasilkan duplicate canonical. Canonical tetap
 // halaman fabric utama" — so every ?color= variant of a material's page

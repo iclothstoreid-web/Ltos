@@ -5,7 +5,7 @@ import { MagneticButton } from '../shell/MagneticButton'
 import { LinenTexture } from '../placeholders/LinenTexture'
 
 // Sprint W4.5 — "Chat with Tailor" used to be a literal href="#" dead link.
-const CHAT_MESSAGE = 'Halo Local Tailor, saya ingin bertanya seputar layanan bespoke tailoring.'
+const CHAT_MESSAGE = 'Halo Tarda, saya ingin bertanya seputar layanan bespoke tailoring.'
 
 // Bookends the Hero: same Warm Walnut section bg (via the luxury-navy-deep
 // token) plus the same soft brass-toned atmospheric glow treatment as the

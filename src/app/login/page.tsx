@@ -39,7 +39,7 @@ export default function LoginPage() {
           {/* Brand System Upgrade — 1.83x the previous h-6/24px. */}
           <Logo variant="horizontalTagline" className="mb-3 h-11 w-auto text-secondary" />
           <h1 className="font-serif text-headline text-on-surface">
-            LTOS
+            Tarda
           </h1>
           <p className="text-body text-secondary mt-2">
             Business Operating System
@@ -91,7 +91,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-label text-secondary mt-12 text-center">
-          v1.0 · Local Tailor, Bandung
+          v1.0 · Tarda, Bogor
         </p>
       </div>
     </div>

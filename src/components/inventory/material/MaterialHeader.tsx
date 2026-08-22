@@ -36,7 +36,7 @@ function MaterialHeaderComponent({ search, onSearchChange, filter, onFilterChang
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-serif text-headline text-on-surface tracking-tight">Material Workspace</h1>
-          <p className="text-secondary text-body mt-1">Kelola seluruh material Local Tailor.</p>
+          <p className="text-secondary text-body mt-1">Kelola seluruh material Tarda.</p>
         </div>
         <div className="flex items-center gap-3">
           <button

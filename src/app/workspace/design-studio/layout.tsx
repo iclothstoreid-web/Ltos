@@ -3,7 +3,7 @@ import { Libre_Caslon_Text } from 'next/font/google'
 import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 
 export const metadata: Metadata = {
-  title: 'Fitter App | Local Tailor',
+  title: 'Fitter App | Tarda',
   applicationName: 'Fitter App',
   description: 'Professional measurement and customer fitting workspace.',
 }

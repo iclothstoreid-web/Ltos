@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "Local Tailor",
+    "brand": "Tarda",
     "links": {
       "designStudio": "Design Studio",
       "fabrics": "Stoffe",
@@ -13,12 +13,12 @@
     "languageSwitcher": "Sprache"
   },
   "hero": {
-    "eyebrow": "Maßgeschneiderte Thobe, Bandung",
+    "eyebrow": "Maßgeschneiderte Thobe, Bogor",
     "headline": "Individuelle Thobe, Exklusiv für Sie Gefertigt",
     "subheadline": "Gestaltet nach Ihrer Figur, Ihrem Lebensstil und Ihrer Identität.",
     "primaryCta": "Meine Thobe Gestalten",
     "secondaryCta": "Privaten Termin Buchen",
-    "trustStrip": ["Hochwertige Importstoffe", "Persönliches Maßnehmen", "Gefertigt in Bandung", "Individuelles Schnittmuster"]
+    "trustStrip": ["Hochwertige Importstoffe", "Persönliches Maßnehmen", "Gefertigt in Bogor", "Individuelles Schnittmuster"]
   },
   "cta": {
     "designMyThobe": "Meine Thobe Gestalten",
@@ -43,14 +43,14 @@
     "eyebrow": "Nach Vereinbarung",
     "heading": "Privaten Termin Buchen",
     "body": "Persönliche Beratung, Stoffauswahl, Maßnehmen und Design-Beratung in einer privaten Anprobe-Sitzung.",
-    "location": "Privater Termin — Bandung",
-    "address": "Atelier & Showroom, Bandung, Westjava",
+    "location": "Privater Termin — Bogor",
+    "address": "Atelier & Showroom, Bogor, Westjava",
     "cta": "Privaten Termin Buchen"
   },
   "contact": {
     "eyebrow": "Kontakt",
     "heading": "Kontaktieren Sie Uns",
-    "subheadline": "Erreichen Sie unser Atelier in Bandung direkt für Beratung, Fragen zu Stoffen oder eine bestehende Bestellung.",
+    "subheadline": "Erreichen Sie unser Atelier in Bogor direkt für Beratung, Fragen zu Stoffen oder eine bestehende Bestellung.",
     "whatsappLabel": "WhatsApp",
     "addressLabel": "Atelier & Showroom",
     "hoursLabel": "Öffnungszeiten",
@@ -64,7 +64,7 @@
     "heading": "Das Vertrauen anspruchsvoller Kunden in ganz Indonesien"
   },
   "footer": {
-    "tagline": "Maßgeschneiderte Thobe, handgefertigt in Bandung.",
+    "tagline": "Maßgeschneiderte Thobe, handgefertigt in Bogor.",
     "columns": {
       "explore": "Entdecken",
       "studio": "Studio",
@@ -90,7 +90,7 @@
   "languageSwitcher": {
     "openLabel": "Sprache ändern",
     "modalTitle": "Wählen Sie Ihre Sprache",
-    "modalSubtitle": "Wählen Sie die Sprache, in der Sie Local Tailor durchsuchen möchten.",
+    "modalSubtitle": "Wählen Sie die Sprache, in der Sie Tarda durchsuchen möchten.",
     "close": "Schließen",
     "currentLanguage": "Aktuelle Sprache"
   }

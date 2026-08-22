@@ -70,7 +70,7 @@ export function ResultUnlockSection({ input, result }: ResultUnlockSectionProps)
       {/* Print-only summary — off-screen during normal browsing, pulled
           on-screen by the #body-profile-print-area rule in globals.css. */}
       <div id="body-profile-print-area" className="fixed left-[-9999px] top-0 w-[720px] bg-white p-10 text-black">
-        <p className="text-xs uppercase tracking-[0.14em] text-neutral-500">Local Tailor — Estimated Body Profile</p>
+        <p className="text-xs uppercase tracking-[0.14em] text-neutral-500">Tarda — Estimated Body Profile</p>
         <h2 className="mt-2 text-2xl font-semibold">{draft?.name ?? 'Body Profile Estimator'}</h2>
         <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -108,7 +108,7 @@ export function ResultUnlockSection({ input, result }: ResultUnlockSectionProps)
         </dl>
         <p className="mt-8 max-w-md text-xs leading-relaxed text-neutral-500">
           Estimasi ini dibuat berdasarkan tinggi, berat, dan usia yang dimasukkan. Hasil ini bukan ukuran produksi.
-          Seluruh pesanan dibuat menggunakan pengukuran langsung oleh fitter Local Tailor.
+          Seluruh pesanan dibuat menggunakan pengukuran langsung oleh fitter Tarda.
         </p>
       </div>
 

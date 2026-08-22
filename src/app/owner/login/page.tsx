@@ -73,7 +73,7 @@ export default function OwnerLoginPage() {
           {/* Brand System Upgrade — 1.83x the previous h-6/24px. */}
           <Logo variant="horizontalTagline" className="mt-2 h-11 w-auto text-secondary" />
           <p className="text-label text-secondary/80 mt-3">
-            Secure access for Local Tailor management.
+            Secure access for Tarda management.
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export default function OwnerLoginPage() {
 
         {/* Footer */}
         <p className="text-label text-secondary mt-12 text-center">
-          v1.0 · Local Tailor, Bandung
+          v1.0 · Tarda, Bogor
         </p>
       </div>
 

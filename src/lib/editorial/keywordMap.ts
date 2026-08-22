@@ -3,7 +3,7 @@ import type { QueryIntent } from './queryIntent'
 
 // Sprint W6-9 — Long-tail keyword repository, 152 entries across the 8
 // clusters the brief names (Fabric/Measurement/Styling/Wedding/Umrah/
-// Tailoring/Care/Bandung). Every `targetPage` references a real route that
+// Tailoring/Care/Bogor). Every `targetPage` references a real route that
 // exists in this codebase as of W6-10 — none point at a page that doesn't
 // exist yet. commercialScore/authorityScore are 1-10 editorial judgment
 // calls (how close to a purchase decision / how much topical-authority
@@ -101,7 +101,7 @@ const WEDDING_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'thobe pengantin pria custom', secondaryKeyword: 'bespoke groom outfit', intent: 'transactional', targetPage: '/knowledge/wedding/premium-thobe-wedding', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
   { primaryKeyword: 'bisht untuk akad nikah', secondaryKeyword: 'aksesori pernikahan pria muslim', intent: 'commercial', targetPage: '/knowledge/wedding/akad-pria', cluster: 'wedding', commercialScore: 6, authorityScore: 5 },
   { primaryKeyword: 'thobe pernikahan bahan apa', secondaryKeyword: 'bahan terbaik wedding thobe', intent: 'informational', targetPage: '/knowledge/wedding/premium-thobe-wedding', cluster: 'wedding', commercialScore: 6, authorityScore: 6 },
-  { primaryKeyword: 'tailor pernikahan muslim Bandung', secondaryKeyword: 'jasa jahit wedding Bandung', intent: 'local', targetPage: '/knowledge/bandung/wedding-tailor', cluster: 'wedding', commercialScore: 9, authorityScore: 6 },
+  { primaryKeyword: 'tailor pernikahan muslim Bogor', secondaryKeyword: 'jasa jahit wedding Bogor', intent: 'local', targetPage: '/knowledge/bogor/wedding-tailor', cluster: 'wedding', commercialScore: 9, authorityScore: 6 },
   { primaryKeyword: 'konsultasi thobe pernikahan', secondaryKeyword: 'booking fitting wedding', intent: 'transactional', targetPage: '/book-appointment', cluster: 'wedding', commercialScore: 9, authorityScore: 5 },
   { primaryKeyword: 'berapa thobe dibutuhkan untuk pernikahan', secondaryKeyword: 'jumlah outfit pernikahan', intent: 'informational', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 5, authorityScore: 5 },
   { primaryKeyword: 'thobe pernikahan warna navy atau hitam', secondaryKeyword: 'pilihan warna wedding', intent: 'comparison', targetPage: '/knowledge/wedding/color-guide', cluster: 'wedding', commercialScore: 6, authorityScore: 6 },
@@ -120,7 +120,7 @@ const UMRAH_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'thobe umrah premium', secondaryKeyword: 'outfit umrah mewah', intent: 'transactional', targetPage: '/knowledge/umrah/premium-umrah-outfit', cluster: 'umrah', commercialScore: 7, authorityScore: 6 },
   { primaryKeyword: 'custom thobe khusus umrah', secondaryKeyword: 'thobe umrah bespoke', intent: 'transactional', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 8, authorityScore: 6 },
   { primaryKeyword: 'thobe umrah bahan linen atau katun', secondaryKeyword: 'pilihan bahan umrah', intent: 'comparison', targetPage: '/knowledge/umrah/best-fabric', cluster: 'umrah', commercialScore: 6, authorityScore: 6 },
-  { primaryKeyword: 'tailor thobe umrah Bandung', secondaryKeyword: 'jasa jahit thobe umrah Bandung', intent: 'local', targetPage: '/knowledge/bandung/umrah-thobe', cluster: 'umrah', commercialScore: 9, authorityScore: 6 },
+  { primaryKeyword: 'tailor thobe umrah Bogor', secondaryKeyword: 'jasa jahit thobe umrah Bogor', intent: 'local', targetPage: '/knowledge/bogor/umrah-thobe', cluster: 'umrah', commercialScore: 9, authorityScore: 6 },
   { primaryKeyword: 'konsultasi thobe umrah', secondaryKeyword: 'booking fitting umrah', intent: 'transactional', targetPage: '/book-appointment', cluster: 'umrah', commercialScore: 8, authorityScore: 5 },
   { primaryKeyword: 'thobe umrah manset mudah wudhu', secondaryKeyword: 'desain thobe untuk wudhu', intent: 'informational', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 5, authorityScore: 5 },
   { primaryKeyword: 'kantong mushaf saku thobe umrah', secondaryKeyword: 'thobe umrah kantong dalam', intent: 'informational', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 4, authorityScore: 4 },
@@ -141,7 +141,7 @@ const TAILORING_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'konstruksi lengan thobe', secondaryKeyword: 'kerung lengan nyaman', intent: 'informational', targetPage: '/knowledge/tailoring/sleeve-construction', cluster: 'tailoring', commercialScore: 3, authorityScore: 6 },
   { primaryKeyword: 'jahitan tangan thobe bespoke', secondaryKeyword: 'detail handmade thobe', intent: 'informational', targetPage: '/knowledge/tailoring/handmade-details', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
   { primaryKeyword: 'quality control thobe bespoke', secondaryKeyword: 'proses cek kualitas thobe', intent: 'informational', targetPage: '/knowledge/tailoring/quality-control', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
-  { primaryKeyword: 'tailor bespoke Bandung', secondaryKeyword: 'penjahit custom Bandung', intent: 'local', targetPage: '/knowledge/bandung/bespoke-tailor', cluster: 'tailoring', commercialScore: 9, authorityScore: 6 },
+  { primaryKeyword: 'tailor bespoke Bogor', secondaryKeyword: 'penjahit custom Bogor', intent: 'local', targetPage: '/knowledge/bogor/bespoke-tailor', cluster: 'tailoring', commercialScore: 9, authorityScore: 6 },
   { primaryKeyword: 'berapa lama proses bespoke thobe', secondaryKeyword: 'waktu produksi thobe custom', intent: 'transactional', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 7, authorityScore: 5 },
   { primaryKeyword: 'kelebihan thobe bespoke dibanding ready to wear', secondaryKeyword: 'keunggulan bespoke', intent: 'commercial', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 6, authorityScore: 7 },
   { primaryKeyword: 'apa beda custom made dan bespoke', secondaryKeyword: 'istilah bespoke vs custom', intent: 'comparison', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
@@ -176,26 +176,26 @@ const CARE_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'tips packing thobe agar tidak kusut', secondaryKeyword: 'cara lipat thobe koper', intent: 'commercial', targetPage: '/knowledge/umrah/packing-guide', cluster: 'care', commercialScore: 5, authorityScore: 6 },
 ]
 
-const BANDUNG_KEYWORDS: KeywordEntry[] = [
-  { primaryKeyword: 'tailor bespoke Bandung', secondaryKeyword: 'jasa jahit bespoke Bandung', intent: 'local', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 9, authorityScore: 8 },
-  { primaryKeyword: 'custom thobe Bandung', secondaryKeyword: 'jahit thobe custom Bandung', intent: 'local', targetPage: '/knowledge/bandung/custom-thobe', cluster: 'bandung', commercialScore: 9, authorityScore: 8 },
-  { primaryKeyword: 'thobe pernikahan Bandung', secondaryKeyword: 'wedding tailor Bandung', intent: 'local', targetPage: '/knowledge/bandung/wedding-tailor', cluster: 'bandung', commercialScore: 9, authorityScore: 7 },
-  { primaryKeyword: 'thobe umrah Bandung', secondaryKeyword: 'jahit thobe umrah Bandung', intent: 'local', targetPage: '/knowledge/bandung/umrah-thobe', cluster: 'bandung', commercialScore: 9, authorityScore: 7 },
-  { primaryKeyword: 'konsultasi bespoke tailor Bandung', secondaryKeyword: 'booking konsultasi Bandung', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bandung', commercialScore: 9, authorityScore: 6 },
-  { primaryKeyword: 'workshop tailoring Bandung', secondaryKeyword: 'atelier bespoke Bandung', intent: 'informational', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 6 },
-  { primaryKeyword: 'fitting thobe custom Bandung', secondaryKeyword: 'jasa fitting Bandung', intent: 'local', targetPage: '/knowledge/bandung/bespoke-tailor', cluster: 'bandung', commercialScore: 8, authorityScore: 6 },
-  { primaryKeyword: 'Local Tailor Bandung', secondaryKeyword: 'Local Tailor pengalaman pelanggan', intent: 'commercial', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
-  { primaryKeyword: 'penjahit thobe terbaik Bandung', secondaryKeyword: 'rekomendasi tailor Bandung', intent: 'commercial', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 7 },
-  { primaryKeyword: 'harga thobe custom Bandung', secondaryKeyword: 'biaya bespoke tailor Bandung', intent: 'transactional', targetPage: '/knowledge/bandung/custom-thobe', cluster: 'bandung', commercialScore: 8, authorityScore: 5 },
-  { primaryKeyword: 'digital body profile Bandung', secondaryKeyword: 'pengukuran tersimpan Bandung', intent: 'commercial', targetPage: '/knowledge/bandung/bespoke-tailor', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
-  { primaryKeyword: 'jasa jahit thobe premium Bandung', secondaryKeyword: 'tailor premium Bandung', intent: 'local', targetPage: '/knowledge/bandung/custom-thobe', cluster: 'bandung', commercialScore: 8, authorityScore: 6 },
-  { primaryKeyword: 'thobe akad nikah Bandung', secondaryKeyword: 'jahit outfit akad Bandung', intent: 'local', targetPage: '/knowledge/bandung/wedding-tailor', cluster: 'bandung', commercialScore: 8, authorityScore: 6 },
-  { primaryKeyword: 'proses bespoke di Bandung', secondaryKeyword: 'alur konsultasi hingga produksi', intent: 'informational', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 6 },
-  { primaryKeyword: 'tailor thobe dekat saya Bandung', secondaryKeyword: 'jasa jahit thobe area Bandung', intent: 'local', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 5 },
-  { primaryKeyword: 'delivery thobe custom Bandung', secondaryKeyword: 'pengiriman thobe bespoke', intent: 'informational', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 4, authorityScore: 5 },
-  { primaryKeyword: 'konsultasi gratis tailor Bandung', secondaryKeyword: 'booking fitting gratis', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bandung', commercialScore: 8, authorityScore: 5 },
-  { primaryKeyword: 'bespoke tailor vs konveksi Bandung', secondaryKeyword: 'perbedaan bespoke konveksi', intent: 'comparison', targetPage: '/knowledge/bandung/bespoke-tailor', cluster: 'bandung', commercialScore: 6, authorityScore: 6 },
-  { primaryKeyword: 'thobe custom untuk acara formal Bandung', secondaryKeyword: 'jahit thobe formal Bandung', intent: 'commercial', targetPage: '/knowledge/bandung/custom-thobe', cluster: 'bandung', commercialScore: 7, authorityScore: 6 },
+const BOGOR_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'tailor bespoke Bogor', secondaryKeyword: 'jasa jahit bespoke Bogor', intent: 'local', targetPage: '/knowledge/bogor', cluster: 'bogor', commercialScore: 9, authorityScore: 8 },
+  { primaryKeyword: 'custom thobe Bogor', secondaryKeyword: 'jahit thobe custom Bogor', intent: 'local', targetPage: '/knowledge/bogor/custom-thobe', cluster: 'bogor', commercialScore: 9, authorityScore: 8 },
+  { primaryKeyword: 'thobe pernikahan Bogor', secondaryKeyword: 'wedding tailor Bogor', intent: 'local', targetPage: '/knowledge/bogor/wedding-tailor', cluster: 'bogor', commercialScore: 9, authorityScore: 7 },
+  { primaryKeyword: 'thobe umrah Bogor', secondaryKeyword: 'jahit thobe umrah Bogor', intent: 'local', targetPage: '/knowledge/bogor/umrah-thobe', cluster: 'bogor', commercialScore: 9, authorityScore: 7 },
+  { primaryKeyword: 'konsultasi bespoke tailor Bogor', secondaryKeyword: 'booking konsultasi Bogor', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bogor', commercialScore: 9, authorityScore: 6 },
+  { primaryKeyword: 'workshop tailoring Bogor', secondaryKeyword: 'atelier bespoke Bogor', intent: 'informational', targetPage: '/knowledge/bogor', cluster: 'bogor', commercialScore: 6, authorityScore: 6 },
+  { primaryKeyword: 'fitting thobe custom Bogor', secondaryKeyword: 'jasa fitting Bogor', intent: 'local', targetPage: '/knowledge/bogor/bespoke-tailor', cluster: 'bogor', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'Tarda Bogor', secondaryKeyword: 'Tarda pengalaman pelanggan', intent: 'commercial', targetPage: '/knowledge/bogor', cluster: 'bogor', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'penjahit thobe terbaik Bogor', secondaryKeyword: 'rekomendasi tailor Bogor', intent: 'commercial', targetPage: '/knowledge/bogor', cluster: 'bogor', commercialScore: 8, authorityScore: 7 },
+  { primaryKeyword: 'harga thobe custom Bogor', secondaryKeyword: 'biaya bespoke tailor Bogor', intent: 'transactional', targetPage: '/knowledge/bogor/custom-thobe', cluster: 'bogor', commercialScore: 8, authorityScore: 5 },
+  { primaryKeyword: 'digital body profile Bogor', secondaryKeyword: 'pengukuran tersimpan Bogor', intent: 'commercial', targetPage: '/knowledge/bogor/bespoke-tailor', cluster: 'bogor', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit thobe premium Bogor', secondaryKeyword: 'tailor premium Bogor', intent: 'local', targetPage: '/knowledge/bogor/custom-thobe', cluster: 'bogor', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'thobe akad nikah Bogor', secondaryKeyword: 'jahit outfit akad Bogor', intent: 'local', targetPage: '/knowledge/bogor/wedding-tailor', cluster: 'bogor', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'proses bespoke di Bogor', secondaryKeyword: 'alur konsultasi hingga produksi', intent: 'informational', targetPage: '/knowledge/bogor', cluster: 'bogor', commercialScore: 5, authorityScore: 6 },
+  { primaryKeyword: 'tailor thobe dekat saya Bogor', secondaryKeyword: 'jasa jahit thobe area Bogor', intent: 'local', targetPage: '/knowledge/bogor', cluster: 'bogor', commercialScore: 8, authorityScore: 5 },
+  { primaryKeyword: 'delivery thobe custom Bogor', secondaryKeyword: 'pengiriman thobe bespoke', intent: 'informational', targetPage: '/knowledge/bogor', cluster: 'bogor', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'konsultasi gratis tailor Bogor', secondaryKeyword: 'booking fitting gratis', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bogor', commercialScore: 8, authorityScore: 5 },
+  { primaryKeyword: 'bespoke tailor vs konveksi Bogor', secondaryKeyword: 'perbedaan bespoke konveksi', intent: 'comparison', targetPage: '/knowledge/bogor/bespoke-tailor', cluster: 'bogor', commercialScore: 6, authorityScore: 6 },
+  { primaryKeyword: 'thobe custom untuk acara formal Bogor', secondaryKeyword: 'jahit thobe formal Bogor', intent: 'commercial', targetPage: '/knowledge/bogor/custom-thobe', cluster: 'bogor', commercialScore: 7, authorityScore: 6 },
 ]
 
 export const KEYWORD_REPOSITORY: KeywordEntry[] = [
@@ -206,7 +206,7 @@ export const KEYWORD_REPOSITORY: KeywordEntry[] = [
   ...UMRAH_KEYWORDS,
   ...TAILORING_KEYWORDS,
   ...CARE_KEYWORDS,
-  ...BANDUNG_KEYWORDS,
+  ...BOGOR_KEYWORDS,
 ]
 
 export function getKeywordsByCluster(cluster: KnowledgeCategorySlug): KeywordEntry[] {

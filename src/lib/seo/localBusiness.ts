@@ -1,13 +1,13 @@
 import { ALL_AVAILABLE_LANGUAGES, type JsonLdSchema } from '@/lib/seo/schema'
-import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_SITE_ORIGIN, type CityConfig } from '@/lib/seo/cityConfig'
+import { CITY_BUSINESS, CITY_SITE_ORIGIN, type CityConfig } from '@/lib/seo/cityConfig'
 
 // Sprint W8-1, migrated to cityConfig.ts in W8-2/3 — LocalBusiness schema
 // generator for /locations pages.
 //
-// Local Tailor has exactly one physical location (the Bandung workshop).
+// Tarda has exactly one physical location (the Bogor workshop).
 // The other 4 city routes (Jakarta/Bekasi/Tangerang/Surabaya) are
 // service-area landing pages, not branches — this generator always emits
-// the one real Bandung `address` and signals per-city targeting through
+// the one real Bogor `address` and signals per-city targeting through
 // `areaServed` instead. Emitting a fabricated `address` for a city with no
 // physical presence would be a fake-local-listing signal, exactly the kind
 // of thing Google's Business Profile guidelines and local-SEO best
@@ -17,7 +17,7 @@ import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_SITE_ORIGIN, type CityConfig } fr
 //
 // Every page's schema shares the same `@id` (the canonical business URL) —
 // they all describe the same real-world entity, just from different pages.
-const BUSINESS_ID = `${CITY_SITE_ORIGIN}/#local-tailor-bandung`
+const BUSINESS_ID = `${CITY_SITE_ORIGIN}/#tarda-bogor`
 
 export function buildLocationLocalBusinessSchema(city: CityConfig): JsonLdSchema {
   const pageUrl = `${CITY_SITE_ORIGIN}/locations/${city.slug}`
@@ -34,14 +34,12 @@ export function buildLocationLocalBusinessSchema(city: CityConfig): JsonLdSchema
     telephone: `+${CITY_BUSINESS.whatsappInternational}`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: CITY_BUSINESS.streetAddress,
       addressLocality: CITY_BUSINESS.addressLocality,
       addressRegion: CITY_BUSINESS.addressRegion,
-      postalCode: CITY_BUSINESS.postalCode,
       addressCountry: CITY_BUSINESS.addressCountry,
     },
     // Only present when the config itself carries real coordinates
-    // (Bandung only) — a service-area city page reusing the Bandung geo
+    // (Bogor only) — a service-area city page reusing the Bogor geo
     // point would visually imply a pin in that city on a map card, which
     // is exactly the fabricated-local-presence signal this generator
     // otherwise avoids.
@@ -78,16 +76,9 @@ export function buildLocationsHubLocalBusinessSchema(cities: CityConfig[]): Json
     telephone: `+${CITY_BUSINESS.whatsappInternational}`,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: CITY_BUSINESS.streetAddress,
       addressLocality: CITY_BUSINESS.addressLocality,
       addressRegion: CITY_BUSINESS.addressRegion,
-      postalCode: CITY_BUSINESS.postalCode,
       addressCountry: CITY_BUSINESS.addressCountry,
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: CITY_GEO_BANDUNG.latitude,
-      longitude: CITY_GEO_BANDUNG.longitude,
     },
     areaServed: cities.map((city) => ({ '@type': 'City', name: city.city })),
     availableLanguage: ALL_AVAILABLE_LANGUAGES,

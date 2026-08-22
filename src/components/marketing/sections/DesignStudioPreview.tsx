@@ -21,7 +21,7 @@ export function DesignStudioPreview() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl font-luxury-sans text-sm text-luxury-taupe">
             Rancang thobe Anda dari mana saja melalui video call, Design Studio, dan layanan home visit — pengalaman
-            yang sama seperti berada langsung di showroom Local Tailor.
+            yang sama seperti berada langsung di showroom Tarda.
           </p>
         </Reveal>
       </div>

@@ -90,7 +90,7 @@ export default function BodyProfileResultPage({ searchParams }: ResultPageProps)
         <div className="order-4 mx-auto max-w-2xl rounded-2xl border border-luxury-gold/20 bg-luxury-navy-deep/40 px-6 py-5 text-center lg:text-left">
           <p className="font-luxury-sans text-xs leading-relaxed text-luxury-taupe">
             Estimasi ini dibuat berdasarkan tinggi, berat, dan usia yang Anda masukkan. Hasil ini bukan ukuran
-            produksi. Seluruh pesanan dibuat menggunakan pengukuran langsung oleh fitter Local Tailor.
+            produksi. Seluruh pesanan dibuat menggunakan pengukuran langsung oleh fitter Tarda.
           </p>
         </div>
 

@@ -2,7 +2,7 @@ import type { KnowledgeArticle } from '../types'
 
 // Sprint W6-2 — Fabric Authority. 10 evergreen fabric guides. Every claim
 // here is general, well-established textile knowledge (fiber origin, weave
-// structure, breathability, durability) — not a fabricated Local Tailor
+// structure, breathability, durability) — not a fabricated Tarda
 // statistic. `relatedArticles` pairs each fabric with the one it's most
 // often compared against while shopping, so the "Perbandingan" section and
 // the internal-linking rule (Child -> Related Child) share one source.

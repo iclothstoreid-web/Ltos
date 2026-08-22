@@ -9,8 +9,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'LTOS — Local Tailor Operating System',
-  description: 'Vertical Business Operating System for premium custom tailoring',
+  title: 'Tarda — Bespoke Tailoring',
+  description: 'Premium bespoke tailoring for custom thobes.',
   manifest: '/manifest.json',
 }
 

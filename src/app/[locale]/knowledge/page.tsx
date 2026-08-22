@@ -43,7 +43,7 @@ export default function KnowledgePage() {
   const breadcrumbItems = buildKnowledgeBreadcrumb({})
   const breadcrumbSchema = buildKnowledgeBreadcrumbSchema(breadcrumbItems)
   const collectionPageSchema = buildKnowledgeCollectionPageSchema({
-    name: 'Local Tailor Knowledge',
+    name: 'Tarda Knowledge',
     description: 'Panduan bahan, pengukuran, gaya, pernikahan, umrah, tailoring, dan perawatan thobe bespoke.',
     url: `${FABRIC_SITE_ORIGIN}/knowledge`,
   })
@@ -69,7 +69,7 @@ export default function KnowledgePage() {
 
         <KnowledgeHero
           variant="landing"
-          eyebrow="Local Tailor Knowledge"
+          eyebrow="Tarda Knowledge"
           title="Panduan Bahan, Pengukuran, dan Gaya Thobe"
           dek="Referensi lengkap sebelum memesan thobe bespoke Anda — dari memilih bahan yang tepat, mengukur badan sendiri, hingga menyusun gaya untuk setiap acara."
         />

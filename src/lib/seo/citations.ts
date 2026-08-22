@@ -1,11 +1,11 @@
-import { CITY_BUSINESS, CITY_GEO_BANDUNG, CITY_MAPS_URL } from '@/lib/seo/cityConfig'
+import { CITY_BUSINESS, CITY_MAPS_URL } from '@/lib/seo/cityConfig'
 
 // Sprint W8-B §4 — Local Citation Infrastructure. A structured NAP+profile
 // object shaped for the fields real citation platforms (Google Business
 // Profile, Apple Maps Connect, Bing Places, Yellow Pages, and similar
 // directories) all ask for, so submitting to any of them later is a
 // copy/paste from one place rather than re-typing the address by hand each
-// time. Every field pulls from CITY_BUSINESS/CITY_GEO_BANDUNG in
+// time. Every field pulls from CITY_BUSINESS in
 // cityConfig.ts — the same single source of truth every location page's
 // schema, metadata, and CTAs already use (Sprint W8-1/8-2/8-3) — except
 // `hoursOfOperation`, which is explicitly a placeholder (see comment below)
@@ -33,7 +33,7 @@ export interface CitationData {
   phoneInternational: string
   website: string
   hoursOfOperation: CitationHours[]
-  geo: { latitude: number; longitude: number }
+  geo?: { latitude: number; longitude: number }
   mapsUrl: string
   socialProfiles: string[]
 }
@@ -53,7 +53,7 @@ export const LOCAL_TAILOR_CITATION: CitationData = {
   businessName: CITY_BUSINESS.name,
   legalName: CITY_BUSINESS.name,
   description:
-    'Local Tailor Bandung adalah bespoke tailoring house di Bandung, Indonesia, mengkhususkan diri pada custom thobe dan premium Muslim menswear — setiap garmen dibuat dari pola personal, bukan ukuran standar.',
+    'Tarda Bogor adalah bespoke tailoring house di Bogor, Indonesia, mengkhususkan diri pada custom thobe dan premium Muslim menswear — setiap garmen dibuat dari pola personal, bukan ukuran standar.',
   categories: ['Tailor', 'Custom Clothing Store', 'Bespoke Tailor'],
   address: {
     streetAddress: CITY_BUSINESS.streetAddress,
@@ -65,7 +65,6 @@ export const LOCAL_TAILOR_CITATION: CitationData = {
   phoneInternational: `+${CITY_BUSINESS.whatsappInternational}`,
   website: CITY_BUSINESS.website,
   hoursOfOperation: PLACEHOLDER_HOURS,
-  geo: CITY_GEO_BANDUNG,
   mapsUrl: CITY_MAPS_URL,
   socialProfiles: [],
 }

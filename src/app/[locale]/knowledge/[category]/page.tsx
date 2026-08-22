@@ -37,7 +37,7 @@ export const dynamicParams = false
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const category = getCategoryBySlug(params.category)
-  if (!category) return { title: 'Category Not Found | Local Tailor' }
+  if (!category) return { title: 'Category Not Found | Tarda' }
   return withLocaleAlternates(buildKnowledgeCategoryMetadata(category), FABRIC_SITE_ORIGIN, `/knowledge/${params.category}`)
 }
 

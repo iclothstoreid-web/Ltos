@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return withLocaleAlternates(
     buildSimplePageMetadata({
       title: 'Journal',
-      description: 'Stories on fabric, fit, and the craft behind every bespoke thobe from Local Tailor — coming soon.',
+      description: 'Stories on fabric, fit, and the craft behind every bespoke thobe from Tarda — coming soon.',
       path: '/journal',
     }),
     FABRIC_SITE_ORIGIN,

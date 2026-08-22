@@ -25,7 +25,7 @@ const FEATURED_REFS: { category: KnowledgeCategorySlug; slug: string }[] = [
   { category: 'umrah', slug: 'best-fabric' },
 ]
 
-// Brief's own 6-category list, excluding 'care'/'questions'/'bandung' —
+// Brief's own 6-category list, excluding 'care'/'questions'/'bogor' —
 // those exist and are reachable via /knowledge itself, this quick-access
 // grid deliberately mirrors only the categories the brief named.
 const QUICK_ACCESS_CATEGORY_SLUGS: KnowledgeCategorySlug[] = ['fabrics', 'measurements', 'styling', 'wedding', 'umrah', 'tailoring']
@@ -50,7 +50,7 @@ export function KnowledgePreview() {
             Knowledge & Guides
           </h2>
           <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">
-            Panduan lengkap tentang bahan, ukuran, styling, tailoring, pernikahan, dan umrah dari tim Local Tailor.
+            Panduan lengkap tentang bahan, ukuran, styling, tailoring, pernikahan, dan umrah dari tim Tarda.
           </p>
         </Reveal>
 

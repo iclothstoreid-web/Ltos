@@ -44,7 +44,7 @@ export const dynamicParams = false
 // metadata across filtered variations of the same category page.
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   if (!isFabricCategory(params.category)) {
-    return { title: 'Category Not Found | Local Tailor' }
+    return { title: 'Category Not Found | Tarda' }
   }
   return withLocaleAlternates(buildFabricCategoryMetadata(params.category), FABRIC_SITE_ORIGIN, `/fabric/${params.category}`)
 }

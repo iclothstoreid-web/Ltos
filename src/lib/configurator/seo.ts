@@ -8,7 +8,7 @@ import { formatRupiah } from '@/lib/format/money'
 // header/nav already uses the real current brand, see
 // src/lib/marketing/copy.ts's navCopy.brand). Keep these two in sync if the
 // marketing file gets its own rebrand pass.
-export const DESIGN_BRAND_NAME = 'Local Tailor'
+export const DESIGN_BRAND_NAME = 'Tarda'
 
 // "Belum perlu image rendering dinamis" — static placeholder only. A later
 // sprint can render an actual composited preview via next/og.
@@ -23,7 +23,7 @@ export interface ResolvedDesignSelection {
   embroidery: ConfiguratorOption | null
 }
 
-// "Custom Navy Premium Thobe | Local Tailor" — Color + Fabric lead, Model
+// "Custom Navy Premium Thobe | Tarda" — Color + Fabric lead, Model
 // as fallback when neither is picked yet.
 export function buildDesignTitle(selection: ResolvedDesignSelection): string {
   const descriptors = [selection.color?.name, selection.fabric?.name].filter((v): v is string => !!v)

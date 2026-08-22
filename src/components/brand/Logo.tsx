@@ -12,7 +12,7 @@ interface LogoProps {
   title?: string
 }
 
-// LTOS Brand System Rollout — renders the official Local Tailor artwork
+// LTOS Brand System Rollout — renders the official Tarda artwork
 // (public/brand/*.svg, verbatim via src/lib/brand/logoAssets.ts) inline so
 // its color can follow the surrounding text color instead of being frozen
 // at whatever color the artwork file happens to ship with. This is what
@@ -26,7 +26,7 @@ interface LogoProps {
 // reaches the page; every Logo instance was silently rendering plain black
 // until this was added. Safe to use in both Server and Client Components
 // (no hooks, no 'use client').
-export function Logo({ variant, className, title = 'Local Tailor' }: LogoProps) {
+export function Logo({ variant, className, title = 'Tarda' }: LogoProps) {
   const asset = LOGO_ASSETS[variant]
   return (
     <svg

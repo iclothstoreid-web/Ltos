@@ -123,7 +123,7 @@ export default function InventoryLoginPage() {
         </form>
 
         <p className="text-label text-secondary mt-12 text-center">
-          v1.0 · Local Tailor, Bandung
+          v1.0 · Tarda, Bogor
         </p>
       </div>
 
