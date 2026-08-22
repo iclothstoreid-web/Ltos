@@ -30,10 +30,10 @@ export const LOCAL_TAILOR_CONFIG: BrandConfig = {
   canonicalDomain: 'localtailor.id',
   domains: ['localtailor.id', 'ltos.vercel.app'],
   assets: {
-    // Use existing public/brand logos (historical Local Tailor assets)
-    logoHorizontal: '/brand/logo-horizontal.svg',
-    logoMark: '/brand/logo-mark.svg',
-    ogImage: '/brand/og-image.png',
+    // Historical Local Tailor assets are preserved under public/brand/local-tailor/.
+    // The Tarda OG image remains a separate TARDA asset and must not be reused here.
+    logoHorizontal: '/brand/local-tailor/horizontal.svg',
+    logoMark: '/brand/local-tailor/mark.svg',
     favicon: '/brand/icon-192.png',
     manifest: '/manifest.json'
   },
