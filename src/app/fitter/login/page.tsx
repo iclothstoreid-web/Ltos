@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { canAccessFitterApp, normalizeRole } from '@/lib/rbac/roles'
 import { PasswordUpdatedToast } from '@/components/auth/PasswordUpdatedToast'
 import { APP_BRANDING } from '@/lib/auth/branding'
-import { Logo } from '@/components/brand/Logo'
+import BrandLogo from '@/components/brand/BrandLogo'
 
 const branding = APP_BRANDING.fitter
 
@@ -55,7 +55,7 @@ export default function FitterLoginPage() {
 
         {/* Header */}
         <div className="mb-10 text-center">
-          <Logo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
+          <BrandLogo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
           <p className="mb-3 text-label uppercase tracking-widest text-luxury-gold">
             Login Fitter
           </p>

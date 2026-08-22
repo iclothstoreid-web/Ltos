@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { canAccessInventoryHub, normalizeRole } from '@/lib/rbac/roles'
 import { PasswordUpdatedToast } from '@/components/auth/PasswordUpdatedToast'
 import { APP_BRANDING } from '@/lib/auth/branding'
-import { Logo } from '@/components/brand/Logo'
+import BrandLogo from '@/components/brand/BrandLogo'
 
 const branding = APP_BRANDING.inventory
 
@@ -58,7 +58,7 @@ export default function InventoryLoginPage() {
       <div className="w-full max-w-sm animate-fade-in">
 
         <div className="mb-10 text-center">
-          <Logo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
+          <BrandLogo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
           <p className="mb-3 text-label uppercase tracking-widest text-luxury-gold">
             Login Inventory Hub
           </p>

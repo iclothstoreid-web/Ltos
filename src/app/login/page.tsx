@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Logo } from '@/components/brand/Logo'
+import BrandLogo from '@/components/brand/BrandLogo'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -36,7 +36,7 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className="mb-10 text-center">
-          <Logo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
+          <BrandLogo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
           <h1 className="font-serif text-headline text-luxury-ivory">
             Tarda
           </h1>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
-import { Logo } from '@/components/brand/Logo'
+import BrandLogo from '@/components/brand/BrandLogo'
 import { LanguageSwitcher } from './LanguageSwitcher'
 
 export function Nav() {
@@ -40,11 +40,7 @@ export function Nav() {
         {/* Restore the prior Local Tailor logo scale; keep the navbar height
             and spacing unchanged while avoiding the Tarda-only size bump. */}
         <Link href="/" aria-label={t('brand')} className="flex shrink-0 items-center">
-          <img
-            src="/brand/tarda-home.svg"
-            alt="Tarda"
-            className="h-auto w-[140px] object-contain md:w-[150px]"
-          />
+          <BrandLogo variant="horizontal" className="h-auto w-[140px] object-contain md:w-[150px]" />
         </Link>
 
         {/* Brand System Upgrade — bumped md:(768px) -> lg:(1024px): the

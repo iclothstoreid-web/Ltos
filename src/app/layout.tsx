@@ -8,17 +8,36 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'Tarda — Bespoke Tailoring',
-  description: 'Premium bespoke tailoring for custom thobes.',
-  manifest: '/manifest.json',
+import { headers } from 'next/headers'
+import { getBrandForRequestHost } from '@/lib/brand/resolver'
+import { TARDA_CONFIG, LOCAL_TAILOR_CONFIG } from '@/lib/brand/config'
+
+export async function generateMetadata(): Promise<Metadata> {
+  // Attempt to read host from server headers — Next.js provides headers()
+  // in server components. If unavailable, default to TARDA_CONFIG for dev.
+  const h = headers()
+  const host = h.get('host')
+  const brand = getBrandForRequestHost(host)
+
+  return {
+    metadataBase: new URL('https://' + brand.canonicalDomain),
+    title: brand.metadata?.title ?? 'LTOS',
+    description: brand.metadata?.description ?? '',
+    manifest: brand.assets?.manifest ?? '/manifest.json',
+    openGraph: {
+      title: brand.metadata?.title,
+      description: brand.metadata?.description,
+      images: brand.assets.ogImage ? [brand.assets.ogImage] : undefined,
+    },
+    icons: {
+      icon: brand.assets.favicon ?? '/brand/icon-192.png',
+      apple: brand.assets.favicon ?? '/brand/icon-192.png',
+    },
+  }
 }
 
-// LTOS Brand System Rollout — themeColor lives on `viewport`, not
-// `metadata`, since Next.js 14. Walnut Atelier — Walnut Brown, the
-// system's dominant primary (was Deep Espresso, pre-rebrand).
 export const viewport: Viewport = {
-  themeColor: '#6A4A34',
+  themeColor: TARDA_CONFIG.colors?.themeColor ?? '#6A4A34',
 }
 
 // Sprint W11.5 — the ONLY <html> in the app (App Router allows exactly
@@ -39,9 +58,24 @@ export default async function RootLayout({
   const messages = await getMessages()
   const dir = isRtlLocale(locale) ? 'rtl' : 'ltr'
 
+  // Resolve brand server-side and inject a small runtime signal so client
+  // components can synchronously read the active brand without needing JS
+  // to call any network APIs. This avoids hydration mismatch and keeps the
+  // brand decision server-driven.
+  const h = headers()
+  const host = h.get('host')
+  const { getBrandForRequestHost } = await import('@/lib/brand/resolver')
+  const brand = getBrandForRequestHost(host)
+
   return (
     <html lang={locale} dir={dir}>
       <body className={`${inter.className} bg-surface text-on-surface antialiased`}>
+        {/* server-injected brand id for client components */}
+        <script
+          // small inline payload; intentionally minimal
+          dangerouslySetInnerHTML={{ __html: `window.__LTOS_BRAND = ${JSON.stringify(brand.id)};` }}
+        />
+
         {/* Sprint W9-1 §15 — root-level mount: GA4/Clarity loading,
             attribution capture, a baseline page_view on every route, and
             experiment context. Renders no visible UI itself — zero impact

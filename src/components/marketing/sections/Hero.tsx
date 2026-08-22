@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { motion, useScroll, useSpring, useTransform, useVelocity, type Variants } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { MagneticButton } from '../shell/MagneticButton'
-import { Logo } from '@/components/brand/Logo'
+import BrandLogo from '@/components/brand/BrandLogo'
 import { trackEvent } from '@/lib/analytics/tracker'
 import { trackCTA } from '@/lib/analytics/cta'
 import { GA4_EVENTS } from '@/lib/analytics/events'
@@ -161,11 +161,7 @@ export function Hero() {
           {/* Keep the original Local Tailor logo scale for this hero lockup;
               do not let the Tarda-only enlargement push the masthead taller. */}
           <motion.div variants={item}>
-            <img
-              src="/brand/tarda-home.svg"
-              alt="Tarda"
-              className="h-auto w-[200px] object-contain sm:w-[220px]"
-            />
+            <BrandLogo variant="horizontal" className="h-auto w-[200px] object-contain sm:w-[220px]" />
           </motion.div>
 
           <motion.p variants={item} className="mt-6 font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">
