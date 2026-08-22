@@ -2,7 +2,10 @@
 
 import React from 'react'
 import { readClientBrandId } from '@/lib/brand/client'
-import { LOGO_ASSETS, type LogoVariant } from '@/lib/brand/logoAssets'
+import { getBrandFromHost } from '@/lib/brand/resolver'
+import type { BrandConfig } from '@/lib/brand/types'
+
+export type LogoVariant = 'horizontal' | 'horizontalTagline' | 'vertical' | 'mark'
 
 interface Props {
   variant?: LogoVariant
@@ -10,29 +13,32 @@ interface Props {
   alt?: string
 }
 
-export default function BrandLogo({ variant = 'horizontal', className, alt }: Props) {
-  const brandId = readClientBrandId()
-
-  // Tarda uses a rasterized svg asset at /brand/tarda-home.svg (attached)
-  if (brandId === 'tarda') {
-    // Use <img> to reference the provided Tarda SVG file directly. The
-    // file is intentionally preserved as-is and not inlined.
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src="/brand/tarda-home.svg" alt={alt ?? 'Tarda'} className={className} />
-    )
+function resolveBrandLogoPath(brand: BrandConfig, variant: LogoVariant): string {
+  if (brand.id === 'tarda') {
+    return brand.assets.logoHorizontal ?? '/brand/tarda-home.svg'
   }
 
-  // Local Tailor — render the inline logo so it can inherit currentColor
-  const asset = LOGO_ASSETS[variant]
+  switch (variant) {
+    case 'mark':
+      return brand.assets.logoMark ?? '/brand/local-tailor/mark.svg'
+    case 'vertical':
+      return '/brand/local-tailor/vertical.svg'
+    case 'horizontalTagline':
+      return '/brand/local-tailor/horizontal-tagline.svg'
+    case 'horizontal':
+    default:
+      return brand.assets.logoHorizontal ?? '/brand/local-tailor/horizontal.svg'
+  }
+}
+
+export default function BrandLogo({ variant = 'horizontal', className, alt }: Props) {
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : undefined
+  const fallbackBrandId = readClientBrandId() ?? (hostname ? getBrandFromHost(hostname).id : 'local-tailor')
+  const brand = getBrandFromHost(hostname ?? (fallbackBrandId === 'tarda' ? 'tarda.vercel.app' : 'localtailor.id'))
+  const src = resolveBrandLogoPath(brand, variant)
+
   return (
-    <svg
-      role="img"
-      aria-label={alt ?? 'Local Tailor'}
-      viewBox={asset.viewBox}
-      fill="currentColor"
-      className={className}
-      dangerouslySetInnerHTML={{ __html: asset.inner }}
-    />
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={alt ?? brand.displayName} className={className} />
   )
 }
