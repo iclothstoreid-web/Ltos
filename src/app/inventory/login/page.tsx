@@ -56,7 +56,7 @@ export default function InventoryLoginPage() {
   }
 
   return (
-    <div className={loginBrand.shellClassName}>
+    <div className={loginBrand.shellBaseClassName} style={loginBrand.shellStyle}>
       <div className="w-full max-w-sm animate-fade-in">
 
         <div className="mb-10 text-center">

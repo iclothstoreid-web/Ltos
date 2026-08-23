@@ -37,12 +37,25 @@ export function getLoginBrandMeta() {
   const brand = getCurrentBrand()
   const isLocalTailor = brand.id === 'local-tailor'
 
+  const baseClass = 'min-h-screen flex items-center justify-center px-6 py-10 text-luxury-ivory'
+
+  const tardaBackground = {
+    backgroundImage:
+      "radial-gradient(circle at top, rgba(197,160,104,0.18), transparent 30%), linear-gradient(135deg, #07090d 0%, #111821 50%, #07090d 100%)",
+    backgroundColor: '#07090d',
+  }
+
+  const localTailorBackground = {
+    backgroundImage:
+      "radial-gradient(circle at 15% 20%, rgba(200,162,74,0.13), transparent 18%), radial-gradient(circle at 80% 15%, rgba(91,70,54,0.22), transparent 28%), linear-gradient(135deg, #151210 0%, #2A1F1A 40%, #151210 100%)",
+    backgroundColor: '#151210',
+  }
+
   return {
     brand,
     isLocalTailor,
     footerLabel: `v1.0 · ${brand.footerLabel ?? brand.displayName}`,
-    shellClassName: isLocalTailor
-      ? 'min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_15%_20%,rgba(200,162,74,0.13),transparent_18%),radial-gradient(circle_at_80%_15%,rgba(91,70,54,0.22),transparent_28%),linear-gradient(135deg,_#151210_0%,_#2A1F1A_40%,_#151210_100%)] px-6 py-10 text-luxury-ivory'
-      : 'min-h-screen bg-[radial-gradient(circle_at_top,_rgba(197,160,104,0.18),transparent_30%),linear-gradient(135deg,_#07090d_0%,_#111821_50%,_#07090d_100%)] flex items-center justify-center px-6 py-10 text-luxury-ivory',
+    shellBaseClassName: baseClass,
+    shellStyle: isLocalTailor ? localTailorBackground : tardaBackground,
   }
 }

@@ -33,15 +33,30 @@ const SIZE_GUIDE_LINKS = [
   { key: 'howToMeasure', href: '/cara-mengukur-thobe' },
 ] as const
 
+import { headers } from 'next/headers'
+import { getBrandForRequestHost } from '@/lib/brand/resolver'
+
 export async function Footer() {
   const t = await getTranslations('footer')
   const tNav = await getTranslations('nav')
-  const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, FOOTER_WHATSAPP_MESSAGE)
+
+  // Resolve brand from the current request host and render Tarda's
+  // city-specific business details only when the resolved brand is TARDA.
+  // For other brands (e.g., Local Tailor) do not show Bogor nor the
+  // Tarda-specific tagline; instead use the brand's metadata/displayName.
+  const host = headers().get('host')
+  const brand = getBrandForRequestHost(host ?? undefined)
+
+  const whatsappUrl = brand.id === 'tarda' ? buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, FOOTER_WHATSAPP_MESSAGE) : undefined
   const columns = [
     { title: t('columns.explore'), links: EXPLORE_LINKS },
     { title: t('columns.studio'), links: STUDIO_LINKS },
     { title: t('columns.sizeGuide'), links: SIZE_GUIDE_LINKS },
   ]
+
+  const taglineText = brand.id === 'tarda' ? t('tagline') : brand.metadata?.description ?? brand.displayName
+  const year = new Date().getFullYear()
+  const legalText = brand.id === 'tarda' ? t('legal', { year }) : `© ${year} ${brand.displayName}. All rights reserved.`
 
   return (
     // Walnut Atelier rebrand — bg-luxury-charcoal (Smoked Walnut), not the
@@ -54,19 +69,26 @@ export async function Footer() {
     <footer className="border-t border-luxury-gold/[0.14] bg-luxury-charcoal px-6 py-16 md:px-10">
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
-          <Logo variant="horizontalTagline" title={tNav('brand')} className="h-10 w-auto text-luxury-ivory" />
-          <p className="mt-3 max-w-xs font-luxury-sans text-sm text-luxury-taupe">{t('tagline')}</p>
-          <address className="mt-4 max-w-xs font-luxury-sans text-xs not-italic leading-relaxed text-luxury-taupe">
-            {CITY_BUSINESS.streetAddress}
-          </address>
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block font-luxury-sans text-xs text-luxury-taupe hover:text-luxury-gold"
-          >
-            WhatsApp: +{CITY_BUSINESS.whatsappInternational}
-          </a>
+          <Logo variant="horizontalTagline" title={brand.displayName} className="h-10 w-auto text-luxury-ivory" />
+          <p className="mt-3 max-w-xs font-luxury-sans text-sm text-luxury-taupe">{taglineText}</p>
+
+          {brand.id === 'tarda' && (
+            <>
+              <address className="mt-4 max-w-xs font-luxury-sans text-xs not-italic leading-relaxed text-luxury-taupe">
+                {CITY_BUSINESS.streetAddress}
+              </address>
+              {whatsappUrl && (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block font-luxury-sans text-xs text-luxury-taupe hover:text-luxury-gold"
+                >
+                  WhatsApp: +{CITY_BUSINESS.whatsappInternational}
+                </a>
+              )}
+            </>
+          )}
         </div>
 
         {columns.map((column) => (
@@ -90,7 +112,7 @@ export async function Footer() {
       </div>
 
       <p className="mx-auto mt-16 max-w-7xl font-luxury-sans text-xs text-luxury-taupe">
-        {t('legal', { year: new Date().getFullYear() })}
+        {legalText}
       </p>
     </footer>
   )

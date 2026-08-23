@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={loginBrand.shellClassName}>
+    <div className={loginBrand.shellBaseClassName} style={loginBrand.shellStyle}>
       <div className="w-full max-w-sm animate-fade-in">
 
         {/* Header */}
