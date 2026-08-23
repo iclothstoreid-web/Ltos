@@ -8,6 +8,7 @@ import { canAccessOwnerOS, normalizeRole } from '@/lib/rbac/roles'
 import { PasswordUpdatedToast } from '@/components/auth/PasswordUpdatedToast'
 import { APP_BRANDING } from '@/lib/auth/branding'
 import BrandLogo from '@/components/brand/BrandLogo'
+import { getLoginBrandMeta } from '@/lib/brand/client'
 
 const branding = APP_BRANDING.owner
 
@@ -18,6 +19,7 @@ export default function OwnerLoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const [supabase] = useState(() => createClient())
+  const loginBrand = getLoginBrandMeta()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -59,7 +61,7 @@ export default function OwnerLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(197,160,104,0.18),transparent_30%),linear-gradient(135deg,_#07090d_0%,_#111821_50%,_#07090d_100%)] flex items-center justify-center px-6 py-10 text-luxury-ivory">
+    <div className={loginBrand.shellClassName}>
       <div className="w-full max-w-sm animate-fade-in">
 
         {/* Header */}
@@ -128,7 +130,7 @@ export default function OwnerLoginPage() {
 
         {/* Footer */}
         <p className="text-label text-secondary mt-12 text-center">
-          v1.0 · Tarda, Bogor
+          {loginBrand.footerLabel}
         </p>
       </div>
 

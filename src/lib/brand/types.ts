@@ -5,6 +5,7 @@ export interface BrandConfig {
   name: string
   displayName: string
   tagline?: string
+  footerLabel?: string
   canonicalDomain: string
   domains: string[]
   assets: {

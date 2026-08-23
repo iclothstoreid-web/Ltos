@@ -4,6 +4,7 @@ export const TARDA_CONFIG: BrandConfig = {
   id: 'tarda',
   name: 'Tarda',
   displayName: 'Tarda',
+  footerLabel: 'Tarda, Bogor',
   canonicalDomain: 'tarda.vercel.app',
   domains: ['tarda.vercel.app'],
   assets: {
@@ -27,6 +28,7 @@ export const LOCAL_TAILOR_CONFIG: BrandConfig = {
   id: 'local-tailor',
   name: 'Local Tailor',
   displayName: 'Local Tailor',
+  footerLabel: 'Local Tailor',
   canonicalDomain: 'localtailor.id',
   domains: ['localtailor.id', 'ltos.vercel.app'],
   assets: {
