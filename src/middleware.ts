@@ -77,6 +77,17 @@ const intlMiddleware = createIntlMiddleware(routing)
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const host = request.headers.get('host') ?? ''
+  const normalizedHost = host.split(':')[0].toLowerCase()
+  const isLocalTailorHost = normalizedHost.includes('ltos') || normalizedHost.includes('localtailor')
+
+  // Local Tailor must not fall into the legacy auth flow. Keep public root
+  // routing on the marketing homepage and let the brand resolver/locale setup
+  // serve the correct page for the current host. This is intentionally scoped
+  // to the Local Tailor hostname(s) and does not change TARDA routing.
+  if (isLocalTailorHost && (pathname === '/' || pathname === '/login')) {
+    return NextResponse.redirect(new URL('/en', request.url))
+  }
 
   // Auth-gated operational app — unchanged behavior, never touched by
   // locale detection/redirects.
