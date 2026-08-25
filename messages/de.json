@@ -14,8 +14,15 @@
   },
   "hero": {
     "eyebrow": "Maßgeschneiderte Thobe, Bandung",
-    "headline": "Individuelle Thobe, Exklusiv für Sie Gefertigt",
+    "headline": {
+      "line1": "Individuelle Thobe,",
+      "line2": "Exklusiv für Sie Gefertigt"
+    },
     "subheadline": "Gestaltet nach Ihrer Figur, Ihrem Lebensstil und Ihrer Identität.",
+    "priceCallout": {
+      "eyebrow": "Ab",
+      "price": "Rp 945.000"
+    },
     "primaryCta": "Meine Thobe Gestalten",
     "secondaryCta": "Privaten Termin Buchen",
     "trustStrip": ["Hochwertige Importstoffe", "Persönliches Maßnehmen", "Gefertigt in Bandung", "Individuelles Schnittmuster"]

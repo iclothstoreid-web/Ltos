@@ -1,0 +1,62 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    LTOS Hero — Strict Visual Reference implementation. Procedural walnut
+    wood atelier background, not a downloaded/stock texture and not a CSS
+    line pattern: a warm-walnut gradient (Deep Espresso on the left, easing
+    into Warm Walnut on the right, per the reference's own "lebih gelap di
+    kiri untuk readability, wood grain lebih terlihat ke kanan" principle)
+    with two feTurbulence grain layers composited on top for organic,
+    non-repeating vertical grain.
+
+    Reuses the technique already proven in public/textures/walnut-material.svg
+    (that file's own comment documents why the older walnut-grain.png —
+    a near-white grain map meant for faint whisper effects on light ivory
+    surfaces — never reads as visible wood on a dark background at any
+    opacity). Same feTurbulence approach, recomposed here for a wide 16:9
+    hero canvas with grain running closer to vertical (matching the
+    reference's grain direction) and a left-to-right tonal ramp instead of
+    that file's radial one.
+  -->
+  <defs>
+    <linearGradient id="walnutBase" x1="0%" y1="10%" x2="100%" y2="90%">
+      <stop offset="0%" stop-color="#1C130F"/>
+      <stop offset="16%" stop-color="#221814"/>
+      <stop offset="34%" stop-color="#3A281C"/>
+      <stop offset="52%" stop-color="#5A3F30"/>
+      <stop offset="70%" stop-color="#6A4A34"/>
+      <stop offset="86%" stop-color="#7D5740"/>
+      <stop offset="100%" stop-color="#8B6245"/>
+    </linearGradient>
+
+    <filter id="walnutDarkGrain" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.11 0.004" numOctaves="5" seed="7" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.85 0.85 0.85 0 -0.42"/>
+    </filter>
+
+    <filter id="walnutLightGrain" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.1 0.0035" numOctaves="5" seed="29" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0.6 0  0 0 0 0.42 0  0 0 0 0.24 0  0.85 0.85 0.85 0 -0.58"/>
+    </filter>
+
+    <!-- A few broader, slower grain "figure" bands (real walnut has both fine
+         grain and wider tonal streaks) — third turbulence pass at a much
+         lower frequency, very low opacity, purely to break up any
+         perceived regularity. -->
+    <filter id="walnutFigure" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.0012" numOctaves="3" seed="3" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0.5 0  0 0 0 0.32 0  0 0 0 0.18 0  0.6 0.6 0.6 0 -0.3"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#walnutBase)"/>
+
+  <g transform="rotate(4 960 540)">
+    <rect x="-200" y="-200" width="2320" height="1480" filter="url(#walnutDarkGrain)" opacity="0.34"/>
+  </g>
+  <g transform="rotate(4 960 540)">
+    <rect x="-200" y="-200" width="2320" height="1480" filter="url(#walnutLightGrain)" opacity="0.28"/>
+  </g>
+  <g transform="rotate(4 960 540)">
+    <rect x="-200" y="-200" width="2320" height="1480" filter="url(#walnutFigure)" opacity="0.4"/>
+  </g>
+</svg>

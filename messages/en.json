@@ -14,8 +14,15 @@
   },
   "hero": {
     "eyebrow": "Bespoke Thobe, Bandung",
-    "headline": "Custom Thobe, Crafted Exclusively for You",
+    "headline": {
+      "line1": "Custom Thobe,",
+      "line2": "Crafted Exclusively for You"
+    },
     "subheadline": "Designed around your body, your lifestyle, and your identity.",
+    "priceCallout": {
+      "eyebrow": "Starting from",
+      "price": "Rp 945.000"
+    },
     "primaryCta": "Design My Thobe",
     "secondaryCta": "Book a Private Appointment",
     "trustStrip": ["Premium Imported Fabrics", "Personal Measurement", "Crafted in Bandung", "Custom Pattern"]

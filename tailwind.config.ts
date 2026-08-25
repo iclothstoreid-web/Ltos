@@ -87,6 +87,10 @@ const config: Config = {
         // Sprint W1 — public homepage sans. Fraunces (above) already covers
         // the editorial serif role, reused as-is for the homepage's H1/H2.
         'luxury-sans': ['var(--font-luxury-sans)', 'system-ui', 'sans-serif'],
+        // LTOS Hero — Strict Visual Reference. Expressive, human, editorial
+        // script for the Hero headline + price callout only (see
+        // src/app/layout.tsx's Caveat load) — never a body/UI font.
+        handwritten: ['var(--font-handwritten)', 'cursive'],
       },
       fontSize: {
         'display': ['48px', { lineHeight: '1.1', letterSpacing: '-0.02em' }],

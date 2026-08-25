@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Caveat } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
@@ -7,6 +7,18 @@ import { isRtlLocale } from '@/i18n/config'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+// LTOS Hero — Strict Visual Reference. The public marketing route group's
+// headline (`font-fraunces` in tailwind.config.ts) has never actually had
+// `--font-fraunces` defined anywhere on this route tree — every other
+// place that variable name is set lives in an internal-app layout
+// (journey/production/workspace), not here — so it silently fell back to
+// the browser's generic serif the whole time. This is the one new font
+// this task needs (the expressive, human headline/price-callout script);
+// `--font-handwritten` is intentionally a new variable name rather than
+// reusing `--font-fraunces`, so this fix stays scoped to the Hero's new
+// script treatment and never risks changing any of the many other
+// `font-fraunces` usages sitewide (see tailwind.config.ts's `handwritten` token).
+const caveat = Caveat({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-handwritten' })
 
 import { headers } from 'next/headers'
 import { getBrandForRequestHost } from '@/lib/brand/resolver'
@@ -69,7 +81,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} dir={dir}>
-      <body className={`${inter.className} bg-surface text-on-surface antialiased`}>
+      <body className={`${inter.className} ${caveat.variable} bg-surface text-on-surface antialiased`}>
         {/* server-injected brand id for client components */}
         <script
           // small inline payload; intentionally minimal

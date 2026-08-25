@@ -14,8 +14,15 @@
   },
   "hero": {
     "eyebrow": "Thobe Sur Mesure, Bandung",
-    "headline": "Thobe Sur Mesure, Confectionné Exclusivement pour Vous",
+    "headline": {
+      "line1": "Thobe Sur Mesure,",
+      "line2": "Confectionné Exclusivement pour Vous"
+    },
     "subheadline": "Conçu selon votre silhouette, votre mode de vie et votre identité.",
+    "priceCallout": {
+      "eyebrow": "À partir de",
+      "price": "Rp 945.000"
+    },
     "primaryCta": "Concevoir Mon Thobe",
     "secondaryCta": "Réserver un Rendez-vous Privé",
     "trustStrip": ["Tissus Importés Premium", "Prise de Mesures Personnalisée", "Confectionné à Bandung", "Patron Sur Mesure"]
