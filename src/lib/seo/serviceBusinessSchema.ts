@@ -20,12 +20,15 @@ const BUSINESS_ID = `${CITY_SITE_ORIGIN}/#tarda-bogor`
 export const SERVICE_AREA_NAMES = ['Bogor'] as const
 
 // Opening hours were NOT added here: the only source found for them during
-// this sprint was the separate, unrelated localtailor.id WordPress site
-// (see cityConfig.ts's domain note for why that site is never treated as
-// this app's own data source) — publishing unverified hours as structured
-// data risks a customer showing up when the workshop is actually closed.
-// Add a real `openingHoursSpecification` here once the business confirms
-// its actual hours directly, rather than guessing.
+// this sprint was a separate WordPress site that, at the time, happened to
+// also be hosted at localtailor.id (see cityConfig.ts's domain note —
+// production has since migrated to localtailor.id as this project's own
+// domain, but that doesn't retroactively make an unverified third party's
+// old opening-hours data this business's real hours) — publishing
+// unverified hours as structured data risks a customer showing up when the
+// workshop is actually closed. Add a real `openingHoursSpecification` here
+// once the business confirms its actual hours directly, rather than
+// guessing.
 export function buildServiceLocalBusinessSchema(service: ServiceConfig): JsonLdSchema {
   const pageUrl = `${CITY_SITE_ORIGIN}/${service.slug}`
 

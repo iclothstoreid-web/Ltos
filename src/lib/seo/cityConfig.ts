@@ -9,14 +9,19 @@ import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 // new route file is needed either (better than the "one config + one
 // route" scalability target this sprint asked for — one config is enough).
 //
-// Domain note (carried over from W8-1, still true): the locked business
-// data originally listed "Website: https://localtailor.id" — a real,
-// separately-hosted WordPress site for the same business, not this Vercel
-// project. Every canonical/OG/schema URL in this codebase, including the
-// `website` field on CITY_BUSINESS below, uses FABRIC_SITE_ORIGIN instead,
-// per the explicit decision made with the user in W8-1 and reaffirmed in
-// the W8-B pre-deploy domain audit: this Vercel app is the single
-// canonical domain referenced anywhere in this codebase, full stop.
+// Domain note (carried over from W8-1, updated at the Production Domain
+// Migration audit): at the time of W8-1, the locked business data listed
+// "Website: https://localtailor.id" as a real, separately-hosted WordPress
+// site for the same business, distinct from this Vercel project — hence
+// the original instruction to always use FABRIC_SITE_ORIGIN instead of
+// that literal domain. That has since changed: production has migrated to
+// localtailor.id as this project's own canonical domain (DNS-verified in
+// Search Console), so FABRIC_SITE_ORIGIN itself now points there. The
+// underlying rule is unchanged and still the point of this constant: every
+// canonical/OG/schema URL in this codebase, including the `website` field
+// on CITY_BUSINESS below, goes through FABRIC_SITE_ORIGIN rather than a
+// domain literal of its own — that's what makes a migration like this one
+// a single-line fix instead of a repository-wide find/replace.
 export const CITY_SITE_ORIGIN = FABRIC_SITE_ORIGIN
 
 // Public business location. The previous street address and coordinates

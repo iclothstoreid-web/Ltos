@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
 import { faqCopy } from './copy'
+import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 
 // TODO_REAL_DATA — placeholder business details, replace before ship.
+// Production Domain Migration audit — `url` used to duplicate
+// FABRIC_SITE_ORIGIN's literal instead of importing it, so the two could
+// (and did) drift out of sync. Now imports the one real source of truth.
 const BUSINESS = {
   name: 'Bespoke Tailor',
-  url: 'https://tarda.vercel.app',
+  url: FABRIC_SITE_ORIGIN,
   addressLocality: 'Bogor',
   addressCountry: 'ID',
 }
@@ -15,7 +19,7 @@ const BUSINESS = {
 // the OpenGraph/Twitter `summary_large_image` spec. Single shared constant
 // so every metadata builder below points at the exact same asset.
 const OG_IMAGE = {
-  url: `${BUSINESS.url}/brand/og-image.png`,
+  url: `${BUSINESS.url}/brand/tarda.svg`,
   width: 1200,
   height: 630,
   alt: `${BUSINESS.name} — Tarda`,

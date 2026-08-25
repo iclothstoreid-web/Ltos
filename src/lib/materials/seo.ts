@@ -5,9 +5,21 @@ import { FABRIC_CATEGORY_LABELS, FABRIC_TEXTURE_LABELS, type FabricCategory } fr
 // Static origin, not headers()-derived — src/app/design/[slug]/page.tsx
 // reads headers() for its origin, but that route is fully dynamic. This
 // sprint's routes need generateStaticParams() (real Static Generation), and
-// calling headers() would opt them out of that entirely. Matches
-// src/lib/marketing/seo.ts's BUSINESS.url convention instead.
-export const FABRIC_SITE_ORIGIN = 'https://tarda.vercel.app'
+// calling headers() would opt them out of that entirely.
+//
+// Production Domain Migration audit — this is the one, real source of
+// truth for the public Local Tailor marketing/SEO surface: every
+// canonical, OG URL, hreflang alternate, JSON-LD schema, and the sitemap/
+// robots routes (30 files total) import this constant rather than
+// hardcoding a domain of their own. src/lib/marketing/seo.ts's BUSINESS.url
+// now imports this directly instead of duplicating the literal — previously
+// the two could silently drift, which is exactly how this constant was
+// still pointing at the pre-custom-domain Vercel URL after production
+// moved to localtailor.id (verified live + in Search Console via DNS).
+// Not to be confused with TARDA_CONFIG.canonicalDomain in
+// src/lib/brand/config.ts, which is the separate Tarda brand's own login
+// app domain and is intentionally untouched by this migration.
+export const FABRIC_SITE_ORIGIN = 'https://localtailor.id'
 
 // Mirrors the shape of src/lib/configurator/seo.ts's buildDesignMetadata —
 // same brand constant/OG conventions, scoped to the Fabric Explorer.
