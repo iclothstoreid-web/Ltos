@@ -30,7 +30,7 @@ Sprint W9-1. Source of truth for what's real vs. pending: `src/lib/analytics/das
 
 Every "Pending" row above renders as an explicit "not connected yet" state in the dashboard UI (`KpiCard`/`CroDashboard` components) — never a zero, placeholder number, or invented figure standing in for real data. Populating these requires:
 
-1. A real GA4 property (currently `NEXT_PUBLIC_GA4_MEASUREMENT_ID` is unset)
+1. A real GA4 property — provisioned as of Sprint W10.x (`G-5354BZ93Z6`, `NEXT_PUBLIC_GA4_MEASUREMENT_ID` set in production); the tracking pipeline now sends events, but nothing below yet reads them back
 2. The GA4 Data API enabled on that property, with a Google Cloud service account credentialed to query it
 3. A server-side data-fetching module added to `src/lib/analytics/` that calls that API (out of scope for this sprint — the brief's own §1 only asks for the *tracking* pipeline, not the reporting-API integration)
 

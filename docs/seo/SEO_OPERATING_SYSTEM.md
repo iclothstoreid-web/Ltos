@@ -41,7 +41,7 @@ This is a process document, not a cron job — there is no automated scheduler i
 
 | KPI | Definition | Data source | Status |
 |---|---|---|---|
-| Organic sessions | Sessions where the landing page's traffic source is organic search | GA4 Data API, filtered by `source/medium = google/organic` | **Pending** — same GA4 Data API gap as every other GA4-sourced KPI in `docs/analytics/KPI_DEFINITIONS.md` (no `NEXT_PUBLIC_GA4_MEASUREMENT_ID` configured, no service account wired) |
+| Organic sessions | Sessions where the landing page's traffic source is organic search | GA4 Data API, filtered by `source/medium = google/organic` | **Pending** — same GA4 Data API gap as every other GA4-sourced KPI in `docs/analytics/KPI_DEFINITIONS.md` (`NEXT_PUBLIC_GA4_MEASUREMENT_ID` is now configured in production as of Sprint W10.x, but no GA4 Data API service account is wired yet) |
 | Ranking keywords | Count of distinct queries with impressions in Search Console Performance | Search Console Performance API (not connected — see `SEARCH_CONSOLE_SETUP.md`) | **Pending** |
 | WhatsApp clicks | `cta_click` events where `cta_id` starts with `service_hero_whatsapp_`, `service_cta_whatsapp_`, or `service_sticky_whatsapp_` (20 registered ids across the 5 landing pages, see `CTA_REGISTRY` in `src/lib/analytics/cta.ts`) | GA4 Data API | **Pending** (event *tracking* is live in the client — client-side `trackCTA()` calls fire today; only the *reporting* API pull is pending, same distinction `KPI_DEFINITIONS.md` draws for the CRO dashboard's CTA Leaderboard) |
 | Consultation bookings | Row count in the `consultations` table, filterable by referring landing page if UTM/referrer is captured at booking time | Supabase (`consultations`) | **Live** — this table already exists and is queried elsewhere (see `KPI_DEFINITIONS.md`'s Executive Dashboard); attributing a specific booking back to a specific landing page depends on the UTM-in-WhatsApp-message pattern (`src/lib/seo/utm.ts`'s `appendUtmNote()`), which is a text note in the WhatsApp message, not a structured, queryable field — so per-page attribution today means manually reading WhatsApp conversation text, not a dashboard number |
@@ -54,6 +54,6 @@ This is a process document, not a cron job — there is no automated scheduler i
 
 Not in scope for this sprint — recorded here so the next sprint that picks this up doesn't have to re-derive it:
 
-1. A real GA4 property + `NEXT_PUBLIC_GA4_MEASUREMENT_ID`, then a GA4 Data API server module (mirrors the gap already documented in `docs/analytics/KPI_DEFINITIONS.md`).
+1. A GA4 Data API server module + service account credential (the property and `NEXT_PUBLIC_GA4_MEASUREMENT_ID` are now provisioned as of Sprint W10.x; mirrors the gap already documented in `docs/analytics/KPI_DEFINITIONS.md`).
 2. A verified Search Console property (see `SEARCH_CONSOLE_SETUP.md` §1, including resolving the `localtailor.id` vs. Vercel-URL canonical-domain question first) + Search Console API credentials for programmatic Performance-report pulls, instead of manual UI checks.
 3. Replacing the free-text UTM-in-WhatsApp-message pattern with a structured field (e.g. a `source_landing_page` column captured at consultation-creation time) if per-page conversion attribution needs to become a real dashboard number rather than a manual read of message text.

@@ -4,7 +4,7 @@ Sprint W9-1. Source of truth: `src/lib/analytics/events.ts` (`GA4_EVENTS`). If t
 
 ## Status
 
-No GA4 property has been provisioned for this project yet (`NEXT_PUBLIC_GA4_MEASUREMENT_ID` is unset — see `src/lib/analytics/constants.ts`). Every event below is real, tested, functioning code (`npx tsx` verified — see the implementation report) that fires the moment a real measurement ID is set in the deployment environment. Until then, every call logs to the browser console (`[analytics] event_name {...}`) instead of sending to GA4 — see `tracker.ts`'s `debugLog`.
+Sprint W10.x — GA4 property `G-5354BZ93Z6` (Web Stream for https://localtailor.id) is provisioned and `NEXT_PUBLIC_GA4_MEASUREMENT_ID` is set in the Vercel production environment (see `src/lib/analytics/constants.ts`). Every event below is real, tested, functioning code that now fires to GA4 on production. In any environment where the measurement ID is unset or `NODE_ENV !== 'production'` (without `NEXT_PUBLIC_ANALYTICS_DEBUG=true`), every call still just logs to the browser console (`[analytics] event_name {...}`) instead of sending to GA4 — see `tracker.ts`'s `debugLog`.
 
 ## Standard Parameters
 
