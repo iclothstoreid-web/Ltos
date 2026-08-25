@@ -43,8 +43,8 @@ export const COVERAGE_MATRIX: CoverageEntry[] = [
   { category: 'questions', topic: 'FAQ question-first lintas kategori', status: 'complete', notes: '24 halaman W6-10, menjawab pertanyaan spesifik snippet-friendly' },
   { category: 'questions', topic: 'Voice search / conversational query coverage', status: 'partial', notes: '24 halaman saat ini menjawab format teks singkat, belum dioptimalkan khusus voice search' },
 
-  { category: 'bogor', topic: 'Positioning lokal Bogor (custom, bespoke, wedding, umrah)', status: 'complete', notes: '5 halaman W6-10, tanpa klaim palsu' },
-  { category: 'bogor', topic: 'Kota lain di luar Bogor', status: 'planned', notes: 'Belum ada local authority cluster untuk kota selain Bogor' },
+  { category: 'bandung', topic: 'Positioning lokal Bandung (custom, bespoke, wedding, umrah)', status: 'complete', notes: '5 halaman W6-10, tanpa klaim palsu' },
+  { category: 'bandung', topic: 'Kota lain di luar Bandung', status: 'planned', notes: 'Belum ada local authority cluster untuk kota selain Bandung' },
 ]
 
 export function getCoverageForCategory(category: KnowledgeCategorySlug): CoverageEntry[] {

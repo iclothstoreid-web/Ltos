@@ -17,23 +17,23 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
   // CORNERSTONE
   // ---------------------------------------------------------------------
   {
-    slug: 'bespoke-tanpa-harus-datang-ke-bogor',
+    slug: 'bespoke-tanpa-harus-datang-ke-bandung',
     category: 'design-studio',
     eyebrow: 'Digital Bespoke Tailoring',
-    title: 'Bespoke Tailoring Tanpa Harus Datang ke Bogor',
-    navLabel: 'Bespoke Tanpa Harus ke Bogor',
+    title: 'Bespoke Tailoring Tanpa Harus Datang ke Bandung',
+    navLabel: 'Bespoke Tanpa Harus ke Bandung',
     metaDescription:
-      'Bagaimana Digital Bespoke Tailoring dari Tarda memungkinkan Anda memesan thobe custom tanpa datang langsung ke Bogor — lewat video call fitting, Design Studio, dan home visit.',
+      'Bagaimana Digital Bespoke Tailoring dari Local Tailor memungkinkan Anda memesan thobe custom tanpa datang langsung ke Bandung — lewat video call fitting, Design Studio, dan home visit.',
     dek: 'Jarak bukan lagi alasan untuk melewatkan bespoke tailoring — inilah bagaimana prosesnya bekerja dari mana saja.',
     definition:
-      'Digital Bespoke Tailoring adalah pendekatan Tarda yang memindahkan seluruh proses bespoke tailoring — konsultasi, pemilihan desain, hingga panduan pengukuran — ke video call, Design Studio online, dan layanan home visit, sehingga pelanggan di luar kota, luar pulau, maupun luar negeri tetap bisa memesan thobe custom tanpa datang langsung ke Bogor.',
+      'Digital Bespoke Tailoring adalah pendekatan Local Tailor yang memindahkan seluruh proses bespoke tailoring — konsultasi, pemilihan desain, hingga panduan pengukuran — ke video call, Design Studio online, dan layanan home visit, sehingga pelanggan di luar kota, luar pulau, maupun luar negeri tetap bisa memesan thobe custom tanpa datang langsung ke Bandung.',
     quickAnswer:
       'Bisa. Melalui video call fitting gratis dan Design Studio online, Anda dapat berkonsultasi, memilih desain, dan memulai proses bespoke sepenuhnya dari jarak jauh — pengukuran final dikonfirmasi lewat home visit atau saat Anda berkunjung ke workshop.',
     keyTakeaways: [
       'Konsultasi, pemilihan desain, dan panduan pengukuran bisa dilakukan sepenuhnya via video call',
       'Design Studio menunjukkan kombinasi Model, Kerah, Manset, Material, dan Warna secara real-time',
       'Home visit tersedia untuk keluarga, pasangan, wedding, corporate, dan kebutuhan VIP',
-      'Produksi dan quality control tetap berlangsung di workshop Bogor yang sama seperti pesanan langsung',
+      'Produksi dan quality control tetap berlangsung di workshop Bandung yang sama seperti pesanan langsung',
       'Pengiriman menjangkau seluruh Indonesia maupun luar negeri setelah garmen selesai',
     ],
     sections: [
@@ -43,7 +43,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
           kind: 'paragraphs',
           items: [
             'Bespoke tailoring secara tradisional selalu mengasumsikan satu hal: pelanggan bisa datang langsung ke tailor, lebih dari sekali — untuk konsultasi awal, untuk diukur, dan untuk fitting sebelum garmen selesai. Asumsi ini bekerja baik untuk pelanggan yang tinggal di kota yang sama dengan workshop, tapi menjadi hambatan nyata bagi pelanggan di luar kota, luar pulau, atau luar negeri yang justru sering kali paling membutuhkan hasil bespoke — misalnya untuk acara pernikahan atau umrah yang jadwalnya sudah ditetapkan jauh hari.',
-            'Akibatnya, banyak calon pelanggan yang tidak sempat datang ke Bogor akhirnya memilih thobe ready-to-wear meski sebenarnya menginginkan hasil bespoke, semata karena jarak dianggap sebagai penghalang mutlak.',
+            'Akibatnya, banyak calon pelanggan yang tidak sempat datang ke Bandung akhirnya memilih thobe ready-to-wear meski sebenarnya menginginkan hasil bespoke, semata karena jarak dianggap sebagai penghalang mutlak.',
           ],
         },
       },
@@ -86,7 +86,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
             block: {
               kind: 'paragraphs',
               items: [
-                'Setelah desain disetujui dan ukuran dikonfirmasi, produksi berlangsung di workshop Bogor yang sama — melewati tahap pola, potong, jahit, dan quality control — sebelum dikirim ke alamat Anda di seluruh Indonesia maupun luar negeri.',
+                'Setelah desain disetujui dan ukuran dikonfirmasi, produksi berlangsung di workshop Bandung yang sama — melewati tahap pola, potong, jahit, dan quality control — sebelum dikirim ke alamat Anda di seluruh Indonesia maupun luar negeri.',
               ],
             },
           },
@@ -106,14 +106,14 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     },
     faq: [
       {
-        question: 'Apakah hasil bespoke tanpa datang ke Bogor sama akuratnya?',
+        question: 'Apakah hasil bespoke tanpa datang ke Bandung sama akuratnya?',
         answer:
           'Desain dan estimasi ukuran dari video call fitting sangat mendekati, namun pengukuran final untuk produksi tetap dikonfirmasi langsung oleh fitter — baik lewat home visit maupun kunjungan ke workshop — sehingga Digital Body Profile Anda tetap akurat.',
       },
       {
-        question: 'Apakah Digital Bespoke Tailoring hanya untuk pelanggan luar Bogor?',
+        question: 'Apakah Digital Bespoke Tailoring hanya untuk pelanggan luar Bandung?',
         answer:
-          'Tidak. Layanan ini juga cocok untuk pelanggan di Bogor yang jadwalnya padat — showroom experience tetap tersedia bagi yang ingin datang langsung.',
+          'Tidak. Layanan ini juga cocok untuk pelanggan di Bandung yang jadwalnya padat — showroom experience tetap tersedia bagi yang ingin datang langsung.',
       },
       {
         question: 'Berapa lama proses dari konsultasi hingga thobe selesai?',
@@ -144,8 +144,8 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     relatedArticles: [
       { category: 'design-studio', slug: 'custom-thobe-online-panduan-lengkap' },
       { category: 'design-studio', slug: 'fitting-video-call-apakah-akurat' },
-      { category: 'design-studio', slug: 'layanan-home-visit-bogor' },
-      { category: 'design-studio', slug: 'apa-itu-design-studio-tarda' },
+      { category: 'design-studio', slug: 'layanan-home-visit-bandung' },
+      { category: 'design-studio', slug: 'apa-itu-design-studio-local-tailor' },
     ],
     relatedCategories: ['tailoring', 'measurements'],
     tags: { service: ['bespoke', 'digital-bespoke-tailoring'], audience: ['luar-kota', 'luar-negeri', 'wedding', 'corporate'] },
@@ -161,13 +161,13 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     title: 'Cara Pesan Thobe Custom dari Luar Kota',
     navLabel: 'Pesan dari Luar Kota',
     metaDescription: 'Langkah demi langkah memesan thobe custom dari luar kota — dari booking video call hingga thobe dikirim ke alamat Anda.',
-    dek: 'Panduan langkah demi langkah memesan thobe bespoke tanpa perlu datang ke Bogor.',
+    dek: 'Panduan langkah demi langkah memesan thobe bespoke tanpa perlu datang ke Bandung.',
     definition:
-      'Memesan thobe custom dari luar kota berarti menjalani seluruh proses bespoke — konsultasi, desain, dan panduan ukur — lewat video call dan Design Studio, dengan produksi tetap dikerjakan di workshop Bogor.',
+      'Memesan thobe custom dari luar kota berarti menjalani seluruh proses bespoke — konsultasi, desain, dan panduan ukur — lewat video call dan Design Studio, dengan produksi tetap dikerjakan di workshop Bandung.',
     quickAnswer:
       'Booking Free Video Call via WhatsApp, jelajahi kombinasi desain di Design Studio, ikuti panduan pengukuran, lalu tunggu produksi dan pengiriman ke kota Anda.',
     keyTakeaways: [
-      'Prosesnya sama persis dengan pelanggan Bogor, hanya konsultasinya dilakukan jarak jauh',
+      'Prosesnya sama persis dengan pelanggan Bandung, hanya konsultasinya dilakukan jarak jauh',
       'Design Studio membantu memvisualisasikan kombinasi sebelum diputuskan',
       'Pengukuran dikonfirmasi via panduan video call atau home visit bila tersedia di kota Anda',
       'Thobe selesai dikirim langsung ke alamat Anda',
@@ -183,7 +183,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
             { name: 'Jelajahi Design Studio', text: 'Pilih Model, Kerah, Manset, Material, dan Warna bersama tim kami secara real-time.' },
             { name: 'Panduan Pengukuran', text: 'Ikuti panduan mengukur badan sendiri, dikonfirmasi oleh tim kami.' },
             { name: 'Finalisasi Desain', text: 'Setujui kombinasi desain final sebelum produksi dimulai.' },
-            { name: 'Produksi & Pengiriman', text: 'Thobe diproduksi di Bogor dan dikirim ke alamat Anda setelah quality control.' },
+            { name: 'Produksi & Pengiriman', text: 'Thobe diproduksi di Bandung dan dikirim ke alamat Anda setelah quality control.' },
           ],
         },
       },
@@ -210,7 +210,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       },
     ],
     relatedArticles: [
-      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bogor' },
+      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bandung' },
       { category: 'design-studio', slug: 'custom-thobe-online-panduan-lengkap' },
       { category: 'design-studio', slug: 'cara-ukur-badan-sendiri-untuk-thobe' },
     ],
@@ -223,17 +223,17 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     eyebrow: 'Custom Thobe Online',
     title: 'Apakah Bisa Jahit Thobe Tanpa Datang ke Tailor?',
     navLabel: 'Jahit Tanpa Datang ke Tailor',
-    metaDescription: 'Penjelasan langsung: apakah mungkin menjahit thobe custom tanpa pernah datang langsung ke tailor, dan bagaimana Tarda menjawabnya.',
+    metaDescription: 'Penjelasan langsung: apakah mungkin menjahit thobe custom tanpa pernah datang langsung ke tailor, dan bagaimana Local Tailor menjawabnya.',
     dek: 'Jawaban langsung untuk pertanyaan yang paling sering muncul dari calon pelanggan luar kota.',
     definition:
       'Ya, memesan thobe custom tanpa datang langsung ke tailor dimungkinkan melalui Digital Bespoke Tailoring — konsultasi dan desain dilakukan jarak jauh, sementara pengukuran final dikonfirmasi lewat home visit atau kunjungan singkat ke workshop.',
     quickAnswer:
-      'Bisa. Tarda memungkinkan seluruh proses konsultasi dan desain dilakukan tanpa datang ke tailor, lewat video call fitting dan Design Studio online.',
+      'Bisa. Local Tailor memungkinkan seluruh proses konsultasi dan desain dilakukan tanpa datang ke tailor, lewat video call fitting dan Design Studio online.',
     keyTakeaways: [
       'Konsultasi dan pemilihan desain tidak mengharuskan kehadiran fisik',
       'Pengukuran akhir tetap butuh konfirmasi langsung — lewat home visit atau kunjungan singkat',
       'Prosesnya menghasilkan Digital Body Profile yang sama akuratnya',
-      'Produksi tetap dikerjakan oleh tailor yang sama di workshop Bogor',
+      'Produksi tetap dikerjakan oleh tailor yang sama di workshop Bandung',
     ],
     sections: [
       {
@@ -262,7 +262,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       { question: 'Apa yang terjadi jika saya salah ukur sendiri?', answer: 'Karena ada tahap konfirmasi oleh fitter, kesalahan kecil pada pengukuran mandiri biasanya masih bisa dikoreksi sebelum produksi.' },
     ],
     relatedArticles: [
-      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bogor' },
+      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bandung' },
       { category: 'design-studio', slug: 'fitting-video-call-apakah-akurat' },
       { category: 'design-studio', slug: 'tailor-datang-ke-rumah-ukur-badan' },
     ],
@@ -276,11 +276,11 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     title: 'Custom Thobe Online: Panduan Lengkap',
     navLabel: 'Panduan Lengkap Custom Online',
     metaDescription: 'Panduan lengkap memesan custom thobe online — apa itu Design Studio, video call fitting, home visit, dan bagaimana ketiganya saling melengkapi.',
-    dek: 'Satu panduan menyeluruh untuk memahami seluruh alur custom thobe online dari Tarda.',
+    dek: 'Satu panduan menyeluruh untuk memahami seluruh alur custom thobe online dari Local Tailor.',
     definition:
-      'Custom thobe online adalah proses memesan thobe bespoke yang dimulai dan sebagian besar berlangsung secara digital — via Design Studio dan video call fitting — sebelum produksi fisik dilakukan di workshop Bogor.',
+      'Custom thobe online adalah proses memesan thobe bespoke yang dimulai dan sebagian besar berlangsung secara digital — via Design Studio dan video call fitting — sebelum produksi fisik dilakukan di workshop Bandung.',
     quickAnswer:
-      'Custom thobe online dari Tarda menggabungkan tiga elemen: Design Studio untuk memilih desain, video call fitting untuk konsultasi dan panduan ukur, dan opsi home visit untuk pengalaman yang lebih personal.',
+      'Custom thobe online dari Local Tailor menggabungkan tiga elemen: Design Studio untuk memilih desain, video call fitting untuk konsultasi dan panduan ukur, dan opsi home visit untuk pengalaman yang lebih personal.',
     keyTakeaways: [
       'Design Studio adalah titik awal — memilih Model, Kerah, Manset, Material, dan Warna',
       'Video call fitting menggantikan konsultasi tatap muka pertama',
@@ -310,7 +310,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
             { name: 'Video Call', text: 'Konsultasi kebutuhan dan panduan awal pemilihan desain.' },
             { name: 'Design Studio', text: 'Finalisasi kombinasi Model, Kerah, Manset, Material, dan Warna.' },
             { name: 'Approve Design', text: 'Setujui desain final sebelum produksi dimulai.' },
-            { name: 'Production', text: 'Pola dibentuk, kain dipotong, dan dijahit di workshop Bogor.' },
+            { name: 'Production', text: 'Pola dibentuk, kain dipotong, dan dijahit di workshop Bandung.' },
             { name: 'Delivery', text: 'Thobe dikirim ke alamat Anda setelah quality control selesai.' },
           ],
         },
@@ -321,8 +321,8 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       { question: 'Apa langkah pertama yang harus saya lakukan?', answer: 'Mulai dengan Book Free Video Call, atau langsung jelajahi kombinasi desain di Design Studio jika Anda sudah punya gambaran.' },
     ],
     relatedArticles: [
-      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bogor' },
-      { category: 'design-studio', slug: 'apa-itu-design-studio-tarda' },
+      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bandung' },
+      { category: 'design-studio', slug: 'apa-itu-design-studio-local-tailor' },
       { category: 'design-studio', slug: 'konsultasi-tailor-online-gratis' },
     ],
     relatedCategories: ['tailoring'],
@@ -374,7 +374,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     ],
     relatedArticles: [
       { category: 'design-studio', slug: 'home-visit-wedding-keluarga' },
-      { category: 'design-studio', slug: 'layanan-home-visit-bogor' },
+      { category: 'design-studio', slug: 'layanan-home-visit-bandung' },
       { category: 'design-studio', slug: 'pengalaman-pesan-video-call' },
     ],
     relatedCategories: ['wedding'],
@@ -444,7 +444,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     eyebrow: 'Video Call Fitting',
     title: 'Fitting Thobe Lewat Video Call, Apakah Akurat?',
     navLabel: 'Apakah Video Call Akurat?',
-    metaDescription: 'Seberapa akurat fitting thobe lewat video call, dan bagaimana Tarda memastikan hasil akhirnya tetap presisi.',
+    metaDescription: 'Seberapa akurat fitting thobe lewat video call, dan bagaimana Local Tailor memastikan hasil akhirnya tetap presisi.',
     dek: 'Menjawab keraguan paling umum tentang fitting jarak jauh.',
     definition:
       'Fitting thobe lewat video call adalah sesi konsultasi dan panduan pengukuran jarak jauh yang akurat untuk tahap desain dan estimasi awal, dengan pengukuran final tetap dikonfirmasi langsung oleh fitter sebelum produksi.',
@@ -540,7 +540,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     relatedArticles: [
       { category: 'design-studio', slug: 'fitting-video-call-apakah-akurat' },
       { category: 'design-studio', slug: 'konsultasi-tailor-online-gratis' },
-      { category: 'design-studio', slug: 'apa-itu-design-studio-tarda' },
+      { category: 'design-studio', slug: 'apa-itu-design-studio-local-tailor' },
     ],
     relatedCategories: [],
     tags: { service: ['video-call-fitting'] },
@@ -551,10 +551,10 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     eyebrow: 'Video Call Fitting',
     title: 'Konsultasi Tailor Online Gratis',
     navLabel: 'Konsultasi Online Gratis',
-    metaDescription: 'Detail lengkap layanan konsultasi tailor online gratis dari Tarda — apa yang dibahas dan bagaimana cara booking.',
+    metaDescription: 'Detail lengkap layanan konsultasi tailor online gratis dari Local Tailor — apa yang dibahas dan bagaimana cara booking.',
     dek: 'Tidak ada biaya untuk mulai berkonsultasi — inilah yang tercakup di dalamnya.',
     definition:
-      'Konsultasi tailor online gratis adalah sesi video call tanpa biaya dengan tim Tarda untuk membahas kebutuhan, mengeksplorasi desain, dan mendapat panduan pengukuran sebelum memutuskan untuk memesan.',
+      'Konsultasi tailor online gratis adalah sesi video call tanpa biaya dengan tim Local Tailor untuk membahas kebutuhan, mengeksplorasi desain, dan mendapat panduan pengukuran sebelum memutuskan untuk memesan.',
     quickAnswer:
       'Ya, konsultasi awal via video call sepenuhnya gratis — Anda hanya membayar untuk garmen bespoke yang benar-benar dipesan setelah desain disepakati.',
     keyTakeaways: [
@@ -593,7 +593,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     relatedArticles: [
       { category: 'design-studio', slug: 'pengalaman-pesan-video-call' },
       { category: 'design-studio', slug: 'custom-thobe-online-panduan-lengkap' },
-      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bogor' },
+      { category: 'design-studio', slug: 'bespoke-tanpa-harus-datang-ke-bandung' },
     ],
     relatedCategories: [],
     tags: { service: ['video-call-fitting'] },
@@ -603,17 +603,17 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
   // CLUSTER: Home Visit
   // ---------------------------------------------------------------------
   {
-    slug: 'layanan-home-visit-bogor',
+    slug: 'layanan-home-visit-bandung',
     category: 'design-studio',
     eyebrow: 'Home Visit',
-    title: 'Layanan Tailor Home Visit Bogor',
-    navLabel: 'Home Visit Bogor',
-    metaDescription: 'Detail layanan home visit dari Tarda Bogor — apa yang dibawa tim kami dan siapa yang paling cocok menggunakannya.',
+    title: 'Layanan Tailor Home Visit Bandung',
+    navLabel: 'Home Visit Bandung',
+    metaDescription: 'Detail layanan home visit dari Local Tailor Bandung — apa yang dibawa tim kami dan siapa yang paling cocok menggunakannya.',
     dek: 'Pengalaman Design Studio dan konsultasi, dibawa langsung ke lokasi Anda.',
     definition:
-      'Layanan home visit dari Tarda adalah kunjungan tim kami ke lokasi Anda membawa fabric book, sample komponen, tablet Design Studio, dan alat ukur, untuk sesi konsultasi dan pengukuran tatap muka tanpa Anda perlu datang ke workshop.',
+      'Layanan home visit dari Local Tailor adalah kunjungan tim kami ke lokasi Anda membawa fabric book, sample komponen, tablet Design Studio, dan alat ukur, untuk sesi konsultasi dan pengukuran tatap muka tanpa Anda perlu datang ke workshop.',
     quickAnswer:
-      'Home visit menghadirkan tim Tarda langsung ke lokasi Anda dengan perlengkapan lengkap — fabric book, sample komponen, tablet Design Studio, dan alat ukur — cocok untuk keluarga, pasangan, wedding, corporate, dan VIP.',
+      'Home visit menghadirkan tim Local Tailor langsung ke lokasi Anda dengan perlengkapan lengkap — fabric book, sample komponen, tablet Design Studio, dan alat ukur — cocok untuk keluarga, pasangan, wedding, corporate, dan VIP.',
     keyTakeaways: [
       'Tim membawa fabric book, sample komponen, tablet Design Studio, dan alat ukur',
       'Cocok untuk keluarga, pasangan, wedding, corporate, dan kebutuhan VIP',
@@ -649,7 +649,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       },
     ],
     faq: [
-      { question: 'Apakah home visit tersedia di luar Bogor?', answer: 'Ketersediaan tergantung lokasi Anda — sampaikan kota Anda saat booking untuk konfirmasi jangkauan layanan.' },
+      { question: 'Apakah home visit tersedia di luar Bandung?', answer: 'Ketersediaan tergantung lokasi Anda — sampaikan kota Anda saat booking untuk konfirmasi jangkauan layanan.' },
       { question: 'Berapa orang yang bisa diukur dalam satu sesi home visit?', answer: 'Bisa mencakup beberapa orang sekaligus, cocok untuk kebutuhan keluarga atau kelompok.' },
     ],
     relatedArticles: [
@@ -657,7 +657,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       { category: 'design-studio', slug: 'home-visit-wedding-keluarga' },
       { category: 'design-studio', slug: 'bespoke-thobe-dari-rumah' },
     ],
-    relatedCategories: ['bogor'],
+    relatedCategories: ['bandung'],
     tags: { service: ['home-visit'], audience: ['keluarga', 'wedding', 'corporate'] },
   },
   {
@@ -666,7 +666,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     eyebrow: 'Home Visit',
     title: 'Tailor Datang ke Rumah untuk Ukur Badan',
     navLabel: 'Tailor Datang ke Rumah',
-    metaDescription: 'Bagaimana proses pengukuran badan berlangsung saat tim Tarda datang ke rumah Anda melalui layanan home visit.',
+    metaDescription: 'Bagaimana proses pengukuran badan berlangsung saat tim Local Tailor datang ke rumah Anda melalui layanan home visit.',
     dek: 'Apa yang terjadi saat sesi pengukuran home visit berlangsung.',
     definition:
       'Tailor datang ke rumah untuk ukur badan adalah bagian dari layanan home visit, di mana fitter kami langsung mengambil pengukuran presisi di lokasi Anda menggunakan alat ukur yang sama seperti di workshop.',
@@ -696,7 +696,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
         block: {
           kind: 'paragraphs',
           items: [
-            'Alat ukur dan metode yang digunakan fitter saat home visit identik dengan yang digunakan di workshop Bogor — perbedaannya hanya lokasi, bukan proses maupun standar akurasi.',
+            'Alat ukur dan metode yang digunakan fitter saat home visit identik dengan yang digunakan di workshop Bandung — perbedaannya hanya lokasi, bukan proses maupun standar akurasi.',
           ],
         },
       },
@@ -706,7 +706,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       { question: 'Apakah hasil ukur home visit disimpan untuk pesanan berikutnya?', answer: 'Ya, hasilnya menjadi Digital Body Profile yang tersimpan dan dapat digunakan lagi untuk pesanan selanjutnya.' },
     ],
     relatedArticles: [
-      { category: 'design-studio', slug: 'layanan-home-visit-bogor' },
+      { category: 'design-studio', slug: 'layanan-home-visit-bandung' },
       { category: 'measurements', slug: 'how-to-measure-body' },
       { category: 'design-studio', slug: 'cara-ukur-badan-sendiri-untuk-thobe' },
     ],
@@ -722,7 +722,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     metaDescription: 'Kenapa layanan home visit sangat cocok untuk kebutuhan wedding dan keluarga besar yang memesan thobe custom bersama-sama.',
     dek: 'Satu kunjungan, satu koordinasi warna dan desain untuk seluruh keluarga.',
     definition:
-      'Home visit untuk wedding dan keluarga adalah kunjungan tim Tarda untuk mengonsultasikan dan mengukur beberapa anggota keluarga atau rombongan pernikahan sekaligus dalam satu sesi di satu lokasi.',
+      'Home visit untuk wedding dan keluarga adalah kunjungan tim Local Tailor untuk mengonsultasikan dan mengukur beberapa anggota keluarga atau rombongan pernikahan sekaligus dalam satu sesi di satu lokasi.',
     quickAnswer:
       'Untuk kebutuhan wedding atau keluarga besar, home visit memungkinkan konsultasi warna, koordinasi desain, dan pengukuran beberapa orang sekaligus tanpa masing-masing harus datang terpisah ke workshop.',
     keyTakeaways: [
@@ -758,7 +758,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       { question: 'Berapa banyak orang yang bisa dilayani dalam satu home visit?', answer: 'Tergantung kebutuhan Anda — sampaikan jumlah orang saat booking agar sesi dijadwalkan dengan durasi yang cukup.' },
     ],
     relatedArticles: [
-      { category: 'design-studio', slug: 'layanan-home-visit-bogor' },
+      { category: 'design-studio', slug: 'layanan-home-visit-bandung' },
       { category: 'wedding', slug: 'family-outfit' },
       { category: 'design-studio', slug: 'bespoke-thobe-dari-rumah' },
     ],
@@ -770,15 +770,15 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
   // CLUSTER: Design Studio
   // ---------------------------------------------------------------------
   {
-    slug: 'apa-itu-design-studio-tarda',
+    slug: 'apa-itu-design-studio-local-tailor',
     category: 'design-studio',
     eyebrow: 'Design Studio',
-    title: 'Apa Itu Design Studio Tarda?',
+    title: 'Apa Itu Design Studio Local Tailor?',
     navLabel: 'Apa Itu Design Studio?',
-    metaDescription: 'Penjelasan lengkap apa itu Design Studio dari Tarda — fungsinya, cara kerjanya, dan kenapa ini titik awal setiap pesanan bespoke.',
+    metaDescription: 'Penjelasan lengkap apa itu Design Studio dari Local Tailor — fungsinya, cara kerjanya, dan kenapa ini titik awal setiap pesanan bespoke.',
     dek: 'Mengenal fitur inti di balik setiap pesanan Digital Bespoke Tailoring kami.',
     definition:
-      'Design Studio adalah fitur konfigurator online dari Tarda tempat pelanggan memilih Model, Kerah, Manset, Material, dan Warna, melihat kombinasi desain, dan mendapat estimasi harga secara real-time sebelum pola personal dibentuk.',
+      'Design Studio adalah fitur konfigurator online dari Local Tailor tempat pelanggan memilih Model, Kerah, Manset, Material, dan Warna, melihat kombinasi desain, dan mendapat estimasi harga secara real-time sebelum pola personal dibentuk.',
     quickAnswer:
       'Design Studio adalah titik awal setiap pesanan bespoke kami — tempat Anda mengonfigurasi desain thobe dan melihat estimasi harga langsung, baik sendiri maupun didampingi tim kami lewat video call atau home visit.',
     keyTakeaways: [
@@ -873,7 +873,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       { question: 'Apakah saya perlu akun untuk menggunakan Design Studio?', answer: 'Tidak — Anda bisa langsung menjelajahi kombinasi desain tanpa proses pendaftaran.' },
     ],
     relatedArticles: [
-      { category: 'design-studio', slug: 'apa-itu-design-studio-tarda' },
+      { category: 'design-studio', slug: 'apa-itu-design-studio-local-tailor' },
       { category: 'design-studio', slug: 'kenapa-mulai-dari-desain-bukan-jahitan' },
       { category: 'fabrics', slug: 'premium-cotton' },
     ],
@@ -886,10 +886,10 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
     eyebrow: 'Design Studio',
     title: 'Kenapa Kami Memulai dari Desain, Bukan Jahitan',
     navLabel: 'Kenapa Mulai dari Desain',
-    metaDescription: 'Alasan Tarda merancang proses bespoke dimulai dari Design Studio, bukan langsung dari proses jahit seperti tailor pada umumnya.',
+    metaDescription: 'Alasan Local Tailor merancang proses bespoke dimulai dari Design Studio, bukan langsung dari proses jahit seperti tailor pada umumnya.',
     dek: 'Filosofi di balik urutan proses Design Studio sebelum produksi.',
     definition:
-      'Tarda memulai setiap pesanan dari Design Studio — tahap menentukan dan menyetujui desain lengkap — sebelum proses jahit dimulai, karena keputusan desain yang matang di awal mengurangi revisi dan kesalahan di tahap produksi.',
+      'Local Tailor memulai setiap pesanan dari Design Studio — tahap menentukan dan menyetujui desain lengkap — sebelum proses jahit dimulai, karena keputusan desain yang matang di awal mengurangi revisi dan kesalahan di tahap produksi.',
     quickAnswer:
       'Kami memulai dari desain agar setiap keputusan — model, kerah, manset, material, warna — sudah disepakati sebelum kain dipotong, sehingga produksi berjalan sesuai rencana tanpa revisi besar di tengah jalan.',
     keyTakeaways: [
@@ -926,7 +926,7 @@ export const DESIGN_STUDIO_ARTICLES: KnowledgeArticle[] = [
       { question: 'Apakah pendekatan ini memperlambat proses keseluruhan?', answer: 'Justru sebaliknya — waktu yang digunakan untuk memastikan desain di awal biasanya mempercepat keseluruhan proses karena mengurangi revisi di tengah produksi.' },
     ],
     relatedArticles: [
-      { category: 'design-studio', slug: 'apa-itu-design-studio-tarda' },
+      { category: 'design-studio', slug: 'apa-itu-design-studio-local-tailor' },
       { category: 'design-studio', slug: 'cara-mendesain-thobe-sebelum-dijahit' },
       { category: 'tailoring', slug: 'what-is-bespoke' },
     ],

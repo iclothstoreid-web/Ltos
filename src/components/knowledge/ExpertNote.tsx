@@ -4,7 +4,7 @@ interface ExpertNoteProps {
 }
 
 // Sprint W6-8 — "Tailor's recommendation" callout. Attributed to the
-// brand's tailoring team (Tarda), not a fabricated named individual
+// brand's tailoring team (Local Tailor), not a fabricated named individual
 // — see seo.ts's buildKnowledgePersonSchema comment for the reasoning.
 export function ExpertNote({ note, headingId }: ExpertNoteProps) {
   return (
@@ -13,7 +13,7 @@ export function ExpertNote({ note, headingId }: ExpertNoteProps) {
         Rekomendasi Tailor
       </p>
       <p className="mt-3 font-fraunces text-lg italic leading-snug text-luxury-ivory md:text-xl">&ldquo;{note}&rdquo;</p>
-      <p className="mt-3 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe">— Tim Tailor Tarda</p>
+      <p className="mt-3 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe">— Tim Tailor Kami, Local Tailor</p>
     </section>
   )
 }

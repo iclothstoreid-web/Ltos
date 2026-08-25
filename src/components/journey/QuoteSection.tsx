@@ -2,7 +2,7 @@ import { SectionShell } from './SectionShell'
 import { SectionEyebrow } from './SectionEyebrow'
 
 const DEFAULT_MESSAGE =
-  'Terima kasih telah mempercayakan pembuatan pakaian Anda kepada Tarda. Seluruh ' +
+  'Terima kasih telah mempercayakan pembuatan pakaian Anda kepada Local Tailor. Seluruh ' +
   'detail pesanan Anda telah kami konfirmasi dan siap memasuki proses pembuatan.'
 
 interface QuoteSectionProps {
@@ -13,7 +13,7 @@ interface QuoteSectionProps {
 
 // Merges what used to be two near-identical components — EditorialMessageSection
 // (eyebrow label + italic quote, e.g. "Tentang Proses Kami" / "Komitmen Kami" /
-// "Pesan Artisan") and ClosingMessageSection (italic quote + "Tarda"
+// "Pesan Artisan") and ClosingMessageSection (italic quote + "Local Tailor"
 // signature, e.g. Milestone 1's default close and every milestone's own
 // closing note) — both were the same "centered italic quote in a bordered
 // section" shape, differing only in the chrome around the quote. `variant`
@@ -28,7 +28,7 @@ export function QuoteSection({ message = DEFAULT_MESSAGE, label, variant = 'clos
         &ldquo;{message}&rdquo;
       </p>
       {isClosing && (
-        <p className="font-sans text-[10px] uppercase tracking-widest text-secondary/60">Tarda</p>
+        <p className="font-sans text-[10px] uppercase tracking-widest text-secondary/60">Local Tailor</p>
       )}
     </SectionShell>
   )

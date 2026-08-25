@@ -63,7 +63,7 @@ export const MILESTONE_3_CONTENT = {
   closing: {
     message:
       'Sebelum pakaian melanjutkan ke tahap berikutnya, setiap detail diperiksa dengan teliti ' +
-      'agar memenuhi standar kualitas Tarda.',
+      'agar memenuhi standar kualitas Local Tailor.',
   },
 }
 
@@ -152,7 +152,7 @@ export const MILESTONE_5_CONTENT = {
       imageAlt: 'Pakaian yang telah sampai di tangan pelanggan',
       title: 'Pesanan Anda Telah Tiba',
       subtitle:
-        'Terima kasih telah mempercayakan Tarda. Semoga pakaian yang kami buat menjadi ' +
+        'Terima kasih telah mempercayakan Local Tailor. Semoga pakaian yang kami buat menjadi ' +
         'bagian dari banyak momen terbaik Anda.',
     },
     closing: {
@@ -163,7 +163,7 @@ export const MILESTONE_5_CONTENT = {
     share: {
       heading: 'Bagikan Journey Anda',
       message:
-        'Apabila Anda menikmati pengalaman bersama Tarda, kami akan sangat senang apabila ' +
+        'Apabila Anda menikmati pengalaman bersama Local Tailor, kami akan sangat senang apabila ' +
         'Anda membagikan perjalanan ini kepada keluarga atau teman.',
     },
     journeyComplete: {

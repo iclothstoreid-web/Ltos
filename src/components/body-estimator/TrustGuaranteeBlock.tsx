@@ -15,7 +15,7 @@ export function TrustGuaranteeBlock({ className = '' }: TrustGuaranteeBlockProps
       </span>
       <h2 className="mt-4 font-fraunces text-2xl text-luxury-ivory">Tailor-Verified Measurement</h2>
       <p className="mt-3 max-w-2xl font-luxury-sans text-sm leading-relaxed text-luxury-taupe">
-        Estimasi ini hanya langkah pertama. Setelah Anda melakukan booking, fitter Tarda akan melakukan
+        Estimasi ini hanya langkah pertama. Setelah Anda melakukan booking, fitter Local Tailor akan melakukan
         pengukuran langsung untuk membuat{' '}
         <strong className="text-luxury-ivory">Digital Body Profile yang terverifikasi</strong>.
       </p>

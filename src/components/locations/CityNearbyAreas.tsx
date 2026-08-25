@@ -11,7 +11,7 @@ interface CityNearbyAreasProps {
 // Sprint W8-2/3 — renamed + extended from NearbyAreas.tsx (W8-1). Now
 // covers two distinct things in one section:
 //   1. city.localContext — real neighborhood/area names (e.g. Dago,
-//      Setiabudi for Bogor), rendered as plain text chips, never as
+//      Setiabudi for Bandung), rendered as plain text chips, never as
 //      links (no dedicated page exists for a neighborhood) and never
 //      framed as a branch — "kami melayani klien dari X", not "cabang X".
 //   2. Sibling city pages — cross-links between the 5 /locations/[city]

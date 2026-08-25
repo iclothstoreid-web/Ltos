@@ -84,10 +84,10 @@ export function ServiceRelatedLinks({ service }: ServiceRelatedLinksProps) {
                 </Link>
               ))}
               <Link
-                href="/locations/bogor"
+                href="/locations/bandung"
                 className="rounded-full border border-luxury-gold/[0.14] px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe transition hover:border-luxury-gold/60 hover:text-luxury-gold"
               >
-                Lokasi Workshop Bogor
+                Lokasi Workshop Bandung
               </Link>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { UMRAH_ARTICLES } from './umrah'
 import { TAILORING_ARTICLES } from './tailoring'
 import { CARE_ARTICLES } from './care'
 import { QUESTION_ARTICLES } from './questions'
-import { BOGOR_ARTICLES } from './bogor'
+import { BANDUNG_ARTICLES } from './bandung'
 import { DESIGN_STUDIO_ARTICLES } from './designStudio'
 
 export const ALL_KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
@@ -19,7 +19,7 @@ export const ALL_KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
   ...TAILORING_ARTICLES,
   ...CARE_ARTICLES,
   ...QUESTION_ARTICLES,
-  ...BOGOR_ARTICLES,
+  ...BANDUNG_ARTICLES,
   ...DESIGN_STUDIO_ARTICLES,
 ]
 
@@ -40,6 +40,6 @@ export {
   TAILORING_ARTICLES,
   CARE_ARTICLES,
   QUESTION_ARTICLES,
-  BOGOR_ARTICLES,
+  BANDUNG_ARTICLES,
   DESIGN_STUDIO_ARTICLES,
 }

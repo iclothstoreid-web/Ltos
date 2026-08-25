@@ -83,9 +83,9 @@ export const TOPIC_CLUSTERS: TopicCluster[] = [
   },
   {
     // W6-10 — local authority cluster, same hub-and-spoke shape as the
-    // other 7, pillar is the /knowledge/bogor hub-equivalent overview page.
-    category: 'bogor',
-    clusterName: 'Tarda Bogor',
+    // other 7, pillar is the /knowledge/bandung hub-equivalent overview page.
+    category: 'bandung',
+    clusterName: 'Local Tailor Bandung',
     pillarSlug: 'custom-thobe',
     supportingSlugs: ['bespoke-tailor', 'wedding-tailor', 'umrah-thobe'],
   },

@@ -53,7 +53,7 @@ export const LOCAL_TAILOR_CITATION: CitationData = {
   businessName: CITY_BUSINESS.name,
   legalName: CITY_BUSINESS.name,
   description:
-    'Tarda Bogor adalah bespoke tailoring house di Bogor, Indonesia, mengkhususkan diri pada custom thobe dan premium Muslim menswear — setiap garmen dibuat dari pola personal, bukan ukuran standar.',
+    'Local Tailor Bandung adalah bespoke tailoring house di Bandung, Indonesia, mengkhususkan diri pada custom thobe dan premium Muslim menswear — setiap garmen dibuat dari pola personal, bukan ukuran standar.',
   categories: ['Tailor', 'Custom Clothing Store', 'Bespoke Tailor'],
   address: {
     streetAddress: CITY_BUSINESS.streetAddress,

@@ -7,11 +7,11 @@ import { buildServiceMetadata } from '@/lib/seo/serviceMetadata'
 import { CITY_SITE_ORIGIN } from '@/lib/seo/cityConfig'
 import { withLocaleAlternates } from '@/i18n/alternates'
 
-const SLUG = 'tailor-premium-bogor'
+const SLUG = 'bespoke-tailor-bandung'
 
 export async function generateMetadata(): Promise<Metadata> {
   const service = getServiceBySlug(SLUG)
-  if (!service) return { title: 'Not Found | Tarda' }
+  if (!service) return { title: 'Not Found | Local Tailor' }
   const locale = await getLocale()
   return withLocaleAlternates(buildServiceMetadata(localizeService(service, locale)), CITY_SITE_ORIGIN, `/${SLUG}`)
 }

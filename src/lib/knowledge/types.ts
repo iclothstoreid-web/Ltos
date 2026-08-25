@@ -5,16 +5,18 @@
 // files — the "reusable content architecture" the sprint brief asks for is
 // this schema + registry, not a component-per-page.
 
-// Sprint W6-10 — 'questions' (FAQ domination layer) and 'bogor' (local
-// authority layer) added to the same closed union the [category]/[slug]
-// route already drives off of. Same architecture as the original 7, not a
-// parallel system — this is the "Gunakan Knowledge Engine yang sudah ada"
-// instruction taken literally.
+// Sprint W6-10 — 'questions' (FAQ domination layer) and 'bandung' (local
+// authority layer, originally 'bogor' — renamed at the Brand & Location
+// Correction to match Local Tailor's real Bandung workshop) added to the
+// same closed union the [category]/[slug] route already drives off of.
+// Same architecture as the original 7, not a parallel system — this is
+// the "Gunakan Knowledge Engine yang sudah ada" instruction taken
+// literally.
 // Sprint Y — 'design-studio' added for the Digital Bespoke Tailoring
 // content cluster (cornerstone + 14 supporting articles, all pointing back
 // at /design-studio), same closed-union architecture as every category
 // before it.
-export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring' | 'questions' | 'bogor' | 'design-studio'
+export type KnowledgeCategorySlug = 'fabrics' | 'measurements' | 'styling' | 'wedding' | 'umrah' | 'care' | 'tailoring' | 'questions' | 'bandung' | 'design-studio'
 
 export interface KnowledgeFaqItem {
   question: string

@@ -33,11 +33,11 @@ import { DIGITAL_BESPOKE_EXPERIENCES } from '@/lib/design-studio/experienceCopy'
 
 // Sprint Y §Y-4 — metadata copy verbatim from the brief. Hand-built rather
 // than buildSimplePageMetadata (which appends "| Bespoke Tailor", not the
-// brief's exact "| Tarda" suffix) so the title matches the brief
+// brief's exact "| Local Tailor" suffix) so the title matches the brief
 // literally.
-const PAGE_TITLE = 'Design Studio — Bespoke Tailoring Tanpa Batas Jarak | Tarda'
+const PAGE_TITLE = 'Design Studio — Bespoke Tailoring Tanpa Batas Jarak | Local Tailor'
 const PAGE_DESCRIPTION =
-  'Rancang thobe Anda dari mana saja melalui video call fitting, Design Studio online, dan layanan home visit. Pengalaman bespoke tanpa harus datang ke Bogor.'
+  'Rancang thobe Anda dari mana saja melalui video call fitting, Design Studio online, dan layanan home visit. Pengalaman bespoke tanpa harus datang ke Bandung.'
 const PAGE_URL = `${FABRIC_SITE_ORIGIN}/design-studio`
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -51,7 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title: PAGE_TITLE,
         description: PAGE_DESCRIPTION,
         url: PAGE_URL,
-        siteName: 'Tarda',
+        siteName: 'Local Tailor',
         type: 'website',
         images: [{ url: garmentPhotos.navy, width: 1200, height: 1500, alt: 'Bespoke thobe navy, presented on a mannequin, editorial studio photography' }],
       },
@@ -108,23 +108,23 @@ const JOURNEY_STEPS: ProcessTimelineStep[] = [
   { title: 'Video Call', description: 'Konsultasi kebutuhan dan panduan awal desain.' },
   { title: 'Design Studio', description: 'Tentukan kombinasi Model, Kerah, Manset, Material, dan Warna.' },
   { title: 'Approve Design', description: 'Setujui desain final sebelum produksi dimulai.' },
-  { title: 'Production', description: 'Pola dibentuk dan diproduksi di workshop Bogor.' },
+  { title: 'Production', description: 'Pola dibentuk dan diproduksi di workshop Bandung.' },
   { title: 'Delivery', description: 'Thobe dikirim ke alamat Anda di mana pun berada.' },
 ]
 
 const COMPARISON_ROWS: ProblemSolutionRow[] = [
-  { problem: 'Jauh dari Bogor', solution: 'Konsultasi dan desain via video call, produksi tetap presisi di workshop kami' },
+  { problem: 'Jauh dari Bandung', solution: 'Konsultasi dan desain via video call, produksi tetap presisi di workshop kami' },
   { problem: 'Tidak sempat datang', solution: 'Book Free Video Call kapan saja sesuai jadwal Anda' },
   { problem: 'Ingin konsultasi langsung', solution: 'Home visit membawa fabric book, sample, dan alat ukur ke lokasi Anda' },
   { problem: 'Ingin pengalaman premium', solution: 'Home visit personal untuk wedding, keluarga, corporate, dan VIP' },
-  { problem: 'Beda kota / negara', solution: 'Produksi tetap di Bogor, dikirim ke seluruh Indonesia dan luar negeri' },
+  { problem: 'Beda kota / negara', solution: 'Produksi tetap di Bandung, dikirim ke seluruh Indonesia dan luar negeri' },
 ]
 
 // Sprint Y §Y-1 — landing page FAQ (distinct from, but consistent with, the
 // Digital Bespoke Tailoring Knowledge cluster's own per-article FAQs).
 const PAGE_FAQ: FaqSchemaItem[] = [
   {
-    question: 'Apakah saya bisa memesan thobe custom tanpa datang ke Bogor?',
+    question: 'Apakah saya bisa memesan thobe custom tanpa datang ke Bandung?',
     answer:
       'Ya. Konsultasi, pemilihan desain, dan panduan pengukuran bisa dilakukan sepenuhnya lewat video call fitting gratis dan Design Studio — pengukuran final dikonfirmasi lewat home visit atau kunjungan ke workshop.',
   },
@@ -138,7 +138,7 @@ const PAGE_FAQ: FaqSchemaItem[] = [
   },
   {
     question: 'Apakah saya tetap bisa datang langsung ke showroom?',
-    answer: 'Tentu. Showroom Experience tetap terbuka bagi Anda yang ingin konsultasi dan pengukuran tatap muka di workshop kami di Bogor.',
+    answer: 'Tentu. Showroom Experience tetap terbuka bagi Anda yang ingin konsultasi dan pengukuran tatap muka di workshop kami di Bandung.',
   },
   {
     question: 'Apakah hasil pengukuran jarak jauh akurat?',
@@ -219,7 +219,7 @@ export default async function DesignStudioPage({ searchParams }: PageProps) {
           <BookingCTA
             heading="Siap Memulai Digital Bespoke Tailoring Anda?"
             body="Book Free Video Call untuk konsultasi, atau langsung jelajahi kombinasi desain di Design Studio."
-            whatsappMessage="Halo Tarda, saya ingin booking Free Video Call untuk konsultasi Digital Bespoke Tailoring."
+            whatsappMessage="Halo Local Tailor, saya ingin booking Free Video Call untuk konsultasi Digital Bespoke Tailoring."
           />
           <RelatedServicesLinks heading="Cari Layanan Spesifik? Jelajahi Halaman Berikut" />
         </article>

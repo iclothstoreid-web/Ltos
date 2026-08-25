@@ -25,7 +25,7 @@ export const DIGITAL_BESPOKE_EXPERIENCES: ExperienceCardItem[] = [
   },
   {
     title: 'Showroom Experience',
-    description: 'Opsi datang langsung ke showroom kami di Bogor, untuk konsultasi dan pengukuran tatap muka.',
+    description: 'Opsi datang langsung ke showroom kami di Bandung, untuk konsultasi dan pengukuran tatap muka.',
     details: ['Konsultasi langsung di workshop', 'Melihat dan menyentuh koleksi bahan secara langsung', 'Pengukuran langsung oleh fitter'],
   },
 ]

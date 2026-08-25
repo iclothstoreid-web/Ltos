@@ -57,10 +57,10 @@ const CATEGORY_CTA_CONFIG: Partial<Record<KnowledgeCategorySlug, KnowledgeCTACon
     showEstimatePrice: false,
     showBodyProfile: true,
   },
-  bogor: {
-    heading: 'Siap Memulai Thobe Bespoke di Bogor?',
-    body: 'Booking konsultasi gratis untuk memulai proses bespoke Anda bersama tailor kami di Bogor.',
-    consultationLabel: 'Booking Konsultasi Bogor',
+  bandung: {
+    heading: 'Siap Memulai Thobe Bespoke di Bandung?',
+    body: 'Booking konsultasi gratis untuk memulai proses bespoke Anda bersama tailor kami di Bandung.',
+    consultationLabel: 'Booking Konsultasi Bandung',
     showFabricExplorer: true,
     showEstimatePrice: true,
     showBodyProfile: true,

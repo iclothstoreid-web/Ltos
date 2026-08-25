@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return withLocaleAlternates(
     buildSimplePageMetadata({
       title: 'Contact',
-      description: 'Alamat, WhatsApp, dan jam operasional Tarda Bogor — hubungi kami untuk konsultasi bespoke tailoring.',
+      description: 'Alamat, WhatsApp, dan jam operasional Local Tailor Bandung — hubungi kami untuk konsultasi bespoke tailoring.',
       path: '/contact',
     }),
     FABRIC_SITE_ORIGIN,
@@ -33,17 +33,17 @@ const BREADCRUMB_ITEMS = [
 ]
 
 // Sprint W8-B §4 — Local Citation Infrastructure landing page. Reuses the
-// Bogor CityConfig entry's LocalBusiness schema (buildLocationLocalBusinessSchema
+// Bandung CityConfig entry's LocalBusiness schema (buildLocationLocalBusinessSchema
 // already carries the one real address + geo) rather than a new one-off
 // schema shape for this page.
-const bogor = CITY_CONFIGS.find((city) => city.isPrimary)!
+const bandung = CITY_CONFIGS.find((city) => city.isPrimary)!
 
 export default function ContactPage() {
   return (
     <div className="bg-luxury-navy-deep">
       <JsonLd
         data={[
-          buildLocationLocalBusinessSchema(bogor),
+          buildLocationLocalBusinessSchema(bandung),
           breadcrumbSchema(BREADCRUMB_ITEMS),
           organizationSchema(),
           websiteSchema(),
@@ -57,9 +57,9 @@ export default function ContactPage() {
             <Reveal>
               <GoldAccentLine className="mx-auto mb-4" />
               <p className="font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">Contact</p>
-              <h1 className="mt-6 font-fraunces text-4xl leading-[1.1] text-luxury-ivory sm:text-5xl">Hubungi Tarda</h1>
+              <h1 className="mt-6 font-fraunces text-4xl leading-[1.1] text-luxury-ivory sm:text-5xl">Hubungi Local Tailor</h1>
               <p className="mx-auto mt-6 max-w-xl font-luxury-sans text-base text-luxury-taupe md:text-lg">
-                Konsultasi, pengukuran, dan produksi berlangsung di workshop kami di Bogor — hubungi kami via WhatsApp untuk memulai.
+                Konsultasi, pengukuran, dan produksi berlangsung di workshop kami di Bandung — hubungi kami via WhatsApp untuk memulai.
               </p>
             </Reveal>
             <Breadcrumbs items={BREADCRUMB_ITEMS} />

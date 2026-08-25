@@ -1,28 +1,32 @@
 import type { KnowledgeArticle } from '../types'
 
-// Sprint W6-10 — Local Authority Layer. 4 articles under the 'bogor'
-// category (the hub itself, /knowledge/bogor, is auto-rendered by the
+// Sprint W6-10 — Local Authority Layer. 4 articles under the 'bandung'
+// category (the hub itself, /knowledge/bandung, is auto-rendered by the
 // existing [category]/page.tsx). Every claim here is either already
-// established elsewhere in this codebase (Bogor location, the real
+// established elsewhere in this codebase (Bandung location, the real
 // consultation -> measurement -> pattern -> production -> fitting ->
 // delivery process documented across the other 8 clusters) or phrased as
 // a general service description — no fabricated address, founding year,
 // customer count, review quote, or award. "JANGAN membuat klaim palsu"
 // taken literally: if it can't be traced to something real in this
 // codebase, it isn't in here.
-export const BOGOR_ARTICLES: KnowledgeArticle[] = [
+//
+// Brand & Location Correction — file renamed from bogor.ts; Local
+// Tailor's production launch is centered on Bandung, the real workshop
+// location (see src/lib/seo/cityConfig.ts's BANDUNG entry).
+export const BANDUNG_ARTICLES: KnowledgeArticle[] = [
   {
     slug: 'custom-thobe',
-    category: 'bogor',
-    eyebrow: 'Tarda Bogor',
-    title: 'Custom Thobe di Bogor — Layanan Bespoke Tarda',
-    navLabel: 'Custom Thobe Bogor',
-    metaDescription: 'Layanan custom thobe bespoke di Bogor — konsultasi, pengukuran presisi, dan produksi thobe yang dijahit khusus sesuai kebutuhan Anda.',
-    dek: 'Thobe custom yang dijahit khusus untuk Anda, dari konsultasi hingga produksi, berbasis di Bogor.',
+    category: 'bandung',
+    eyebrow: 'Local Tailor Bandung',
+    title: 'Custom Thobe di Bandung — Layanan Bespoke Local Tailor',
+    navLabel: 'Custom Thobe Bandung',
+    metaDescription: 'Layanan custom thobe bespoke di Bandung — konsultasi, pengukuran presisi, dan produksi thobe yang dijahit khusus sesuai kebutuhan Anda.',
+    dek: 'Thobe custom yang dijahit khusus untuk Anda, dari konsultasi hingga produksi, berbasis di Bandung.',
     definition:
-      'Custom thobe di Bogor dari Tarda adalah layanan bespoke — thobe dijahit berdasarkan pola yang dibentuk khusus dari pengukuran badan Anda sendiri, bukan pola standar generik.',
+      'Custom thobe di Bandung dari Local Tailor adalah layanan bespoke — thobe dijahit berdasarkan pola yang dibentuk khusus dari pengukuran badan Anda sendiri, bukan pola standar generik.',
     quickAnswer:
-      'Tarda menyediakan layanan custom thobe di Bogor melalui proses bespoke penuh: konsultasi, pengukuran langsung oleh fitter, pembentukan pola personal, hingga produksi dan fitting akhir.',
+      'Local Tailor menyediakan layanan custom thobe di Bandung melalui proses bespoke penuh: konsultasi, pengukuran langsung oleh fitter, pembentukan pola personal, hingga produksi dan fitting akhir.',
     keyTakeaways: [
       'Layanan berbasis proses bespoke — pola dibentuk khusus dari pengukuran Anda',
       'Konsultasi awal membahas kebutuhan, gaya, dan pilihan bahan',
@@ -31,7 +35,7 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
     ],
     sections: [
       {
-        heading: 'Proses Custom Thobe di Tarda',
+        heading: 'Proses Custom Thobe di Local Tailor',
         block: { kind: 'paragraphs', items: [] },
         subsections: [
           {
@@ -72,7 +76,7 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
       { question: 'Berapa lama proses custom thobe selesai?', answer: 'Umumnya 2-3 minggu dari konsultasi hingga thobe selesai, tergantung kompleksitas desain dan bahan yang dipilih — lihat panduan lengkap kami untuk detail timeline.' },
     ],
     relatedArticles: [
-      { category: 'bogor', slug: 'bespoke-tailor' },
+      { category: 'bandung', slug: 'bespoke-tailor' },
       { category: 'tailoring', slug: 'what-is-bespoke' },
       { category: 'questions', slug: 'how-much-does-bespoke-thobe-cost' },
     ],
@@ -81,16 +85,16 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
   },
   {
     slug: 'bespoke-tailor',
-    category: 'bogor',
-    eyebrow: 'Tarda Bogor',
-    title: 'Bespoke Tailor di Bogor — Proses Tarda',
-    navLabel: 'Bespoke Tailor Bogor',
-    metaDescription: 'Tarda adalah bespoke tailor di Bogor — pola dibentuk baru dari pengukuran individu, bukan disesuaikan dari pola standar.',
+    category: 'bandung',
+    eyebrow: 'Local Tailor Bandung',
+    title: 'Bespoke Tailor di Bandung — Proses Local Tailor',
+    navLabel: 'Bespoke Tailor Bandung',
+    metaDescription: 'Local Tailor adalah bespoke tailor di Bandung — pola dibentuk baru dari pengukuran individu, bukan disesuaikan dari pola standar.',
     dek: 'Memahami apa yang membedakan bespoke tailor sesungguhnya dari layanan jahit pada umumnya.',
     definition:
-      'Tarda adalah bespoke tailor yang berbasis di Bogor — setiap thobe dijahit dari pola yang dibentuk baru dari nol berdasarkan pengukuran individu klien, bukan pola standar yang disesuaikan.',
+      'Local Tailor adalah bespoke tailor yang berbasis di Bandung — setiap thobe dijahit dari pola yang dibentuk baru dari nol berdasarkan pengukuran individu klien, bukan pola standar yang disesuaikan.',
     quickAnswer:
-      'Sebagai bespoke tailor, Tarda membentuk pola baru dari pengukuran setiap klien, melibatkan sesi fitting untuk penyempurnaan, dan memproduksi thobe yang secara prinsip unik untuk satu individu.',
+      'Sebagai bespoke tailor, Local Tailor membentuk pola baru dari pengukuran setiap klien, melibatkan sesi fitting untuk penyempurnaan, dan memproduksi thobe yang secara prinsip unik untuk satu individu.',
     keyTakeaways: [
       'Pola dibentuk baru dari nol untuk setiap klien, bukan disesuaikan dari template',
       'Proses melibatkan sesi fitting untuk penyempurnaan sebelum produksi akhir',
@@ -99,7 +103,7 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
     ],
     sections: [
       {
-        heading: 'Apa yang Membuat Tarda Bespoke Tailor Sesungguhnya',
+        heading: 'Apa yang Membuat Local Tailor Bespoke Tailor Sesungguhnya',
         block: { kind: 'paragraphs', items: [] },
         subsections: [
           {
@@ -129,11 +133,11 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
       'Apakah Anda memiliki waktu untuk proses konsultasi dan fitting yang lebih menyeluruh?',
     ],
     faq: [
-      { question: 'Apa bedanya Tarda dengan penjahit konveksi biasa?', answer: 'Konveksi umumnya memproduksi pakaian dalam ukuran standar massal, sementara Tarda membentuk pola baru khusus untuk setiap klien secara individual.' },
+      { question: 'Apa bedanya Local Tailor dengan penjahit konveksi biasa?', answer: 'Konveksi umumnya memproduksi pakaian dalam ukuran standar massal, sementara Local Tailor membentuk pola baru khusus untuk setiap klien secara individual.' },
       { question: 'Berapa kali sesi fitting yang disertakan?', answer: 'Jumlah sesi fitting disesuaikan dengan kompleksitas pesanan — diskusikan detail ini saat konsultasi.' },
     ],
     relatedArticles: [
-      { category: 'bogor', slug: 'custom-thobe' },
+      { category: 'bandung', slug: 'custom-thobe' },
       { category: 'tailoring', slug: 'pattern-drafting' },
       { category: 'tailoring', slug: 'quality-control' },
     ],
@@ -142,16 +146,16 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
   },
   {
     slug: 'wedding-tailor',
-    category: 'bogor',
-    eyebrow: 'Tarda Bogor',
-    title: 'Wedding Tailor di Bogor — Thobe Pernikahan Tarda',
-    navLabel: 'Wedding Tailor Bogor',
-    metaDescription: 'Layanan wedding tailor di Bogor dari Tarda — thobe akad, resepsi, dan family outfit untuk kebutuhan pernikahan Anda.',
+    category: 'bandung',
+    eyebrow: 'Local Tailor Bandung',
+    title: 'Wedding Tailor di Bandung — Thobe Pernikahan Local Tailor',
+    navLabel: 'Wedding Tailor Bandung',
+    metaDescription: 'Layanan wedding tailor di Bandung dari Local Tailor — thobe akad, resepsi, dan family outfit untuk kebutuhan pernikahan Anda.',
     dek: 'Kebutuhan thobe pernikahan Anda, dari akad hingga resepsi, ditangani sebagai satu proses bespoke.',
     definition:
-      'Tarda menyediakan layanan wedding tailor di Bogor, mencakup thobe akad, resepsi, dan family outfit yang dikonsultasikan dan diproduksi melalui proses bespoke yang sama dengan pesanan thobe lainnya.',
+      'Local Tailor menyediakan layanan wedding tailor di Bandung, mencakup thobe akad, resepsi, dan family outfit yang dikonsultasikan dan diproduksi melalui proses bespoke yang sama dengan pesanan thobe lainnya.',
     quickAnswer:
-      'Sebagai wedding tailor di Bogor, Tarda melayani konsultasi warna dan bahan pernikahan, pengukuran, hingga produksi thobe akad, resepsi, dan family outfit dalam satu alur bespoke.',
+      'Sebagai wedding tailor di Bandung, Local Tailor melayani konsultasi warna dan bahan pernikahan, pengukuran, hingga produksi thobe akad, resepsi, dan family outfit dalam satu alur bespoke.',
     keyTakeaways: [
       'Melayani thobe akad, resepsi, dan family outfit sebagai kebutuhan terkoordinasi',
       'Konsultasi mencakup diskusi tema dan warna pernikahan',
@@ -183,28 +187,28 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
     ],
     faq: [
       { question: 'Apakah thobe akad dan resepsi dikonsultasikan bersamaan?', answer: 'Bisa, kami menyarankan mendiskusikan keduanya dalam satu sesi konsultasi awal untuk perencanaan yang lebih menyeluruh.' },
-      { question: 'Apakah Tarda melayani family outfit untuk pernikahan?', answer: 'Ya, kami melayani koordinasi outfit untuk keluarga inti pengantin — lihat panduan Family Outfit kami untuk detail.' },
+      { question: 'Apakah Local Tailor melayani family outfit untuk pernikahan?', answer: 'Ya, kami melayani koordinasi outfit untuk keluarga inti pengantin — lihat panduan Family Outfit kami untuk detail.' },
     ],
     relatedArticles: [
       { category: 'wedding', slug: 'bespoke-wedding-guide' },
       { category: 'wedding', slug: 'timeline-custom-wedding' },
-      { category: 'bogor', slug: 'custom-thobe' },
+      { category: 'bandung', slug: 'custom-thobe' },
     ],
     relatedCategories: ['wedding'],
     tags: { occasion: ['pernikahan'], service: ['bespoke'] },
   },
   {
     slug: 'umrah-thobe',
-    category: 'bogor',
-    eyebrow: 'Tarda Bogor',
-    title: 'Thobe Umrah di Bogor — Layanan Tarda',
-    navLabel: 'Thobe Umrah Bogor',
-    metaDescription: 'Layanan thobe umrah custom di Bogor dari Tarda — bahan breathable, penyesuaian fungsional, untuk kenyamanan ibadah Anda.',
-    dek: 'Thobe umrah yang disesuaikan dengan kebutuhan ibadah Anda, dijahit di Bogor.',
+    category: 'bandung',
+    eyebrow: 'Local Tailor Bandung',
+    title: 'Thobe Umrah di Bandung — Layanan Local Tailor',
+    navLabel: 'Thobe Umrah Bandung',
+    metaDescription: 'Layanan thobe umrah custom di Bandung dari Local Tailor — bahan breathable, penyesuaian fungsional, untuk kenyamanan ibadah Anda.',
+    dek: 'Thobe umrah yang disesuaikan dengan kebutuhan ibadah Anda, dijahit di Bandung.',
     definition:
-      'Tarda menyediakan layanan thobe umrah custom di Bogor, mencakup konsultasi pemilihan bahan breathable dan penyesuaian fungsional seperti manset mudah wudhu, untuk kenyamanan selama ibadah.',
+      'Local Tailor menyediakan layanan thobe umrah custom di Bandung, mencakup konsultasi pemilihan bahan breathable dan penyesuaian fungsional seperti manset mudah wudhu, untuk kenyamanan selama ibadah.',
     quickAnswer:
-      'Sebagai layanan thobe umrah di Bogor, Tarda membantu Anda memilih bahan breathable yang tepat dan menyesuaikan detail fungsional seperti manset dan kantong dalam untuk kebutuhan ibadah.',
+      'Sebagai layanan thobe umrah di Bandung, Local Tailor membantu Anda memilih bahan breathable yang tepat dan menyesuaikan detail fungsional seperti manset dan kantong dalam untuk kebutuhan ibadah.',
     keyTakeaways: [
       'Konsultasi pemilihan bahan breathable sesuai musim keberangkatan',
       'Penyesuaian fungsional seperti manset mudah dilipat untuk wudhu',
@@ -233,7 +237,7 @@ export const BOGOR_ARTICLES: KnowledgeArticle[] = [
     relatedArticles: [
       { category: 'umrah', slug: 'custom-umrah-thobe' },
       { category: 'umrah', slug: 'best-fabric' },
-      { category: 'bogor', slug: 'custom-thobe' },
+      { category: 'bandung', slug: 'custom-thobe' },
     ],
     relatedCategories: ['umrah'],
     tags: { occasion: ['umrah'], service: ['bespoke'] },

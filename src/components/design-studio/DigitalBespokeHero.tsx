@@ -5,7 +5,7 @@ import { LuxuryGradientField } from '@/components/marketing/placeholders/LuxuryG
 import { garmentPhotos } from '@/lib/marketing/assets'
 import { buildContentWhatsAppUrl, CONTENT_WHATSAPP_NUMBER } from '@/lib/content/whatsapp'
 
-const VIDEO_CALL_MESSAGE = 'Halo Tarda, saya ingin booking Free Video Call untuk konsultasi Digital Bespoke Tailoring.'
+const VIDEO_CALL_MESSAGE = 'Halo Local Tailor, saya ingin booking Free Video Call untuk konsultasi Digital Bespoke Tailoring.'
 
 // Sprint Y §Y-1 — Hero for the Digital Bespoke Tailoring pillar page.
 // Headline/subheadline/CTA copy verbatim from the brief. Hero visual reuses
@@ -26,7 +26,7 @@ export function DigitalBespokeHero() {
           </h1>
           <p className="mx-auto mt-6 max-w-xl font-luxury-sans text-base text-luxury-taupe md:text-lg lg:mx-0">
             Rancang thobe Anda dari mana saja melalui video call, Design Studio, dan layanan home visit. Pengalaman yang
-            sama seperti berada langsung di showroom Tarda.
+            sama seperti berada langsung di showroom Local Tailor.
           </p>
 
           <div className="mt-10 flex flex-col items-start gap-4 sm:flex-row">

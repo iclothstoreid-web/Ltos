@@ -6,7 +6,7 @@ interface CityWhyChooseProps {
   city: CityConfig
 }
 
-// Sprint W8-2/3 — "Mengapa Memilih Tarda {City}". New component (not
+// Sprint W8-2/3 — "Mengapa Memilih Local Tailor {City}". New component (not
 // a W8-1 rename): distinct from LocalTrustSection's numeric trust bar —
 // this is a reasons-to-choose-us list. Reasons are the same real,
 // already-established facts used sitewide (personal pattern per customer,
@@ -28,7 +28,7 @@ export function CityWhyChoose({ city }: CityWhyChooseProps) {
           <GoldAccentLine className="mx-auto mb-4" />
           <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">Mengapa Memilih Kami</p>
           <h2 id="city-why-choose-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            Mengapa Memilih Tarda {city.city}
+            Mengapa Memilih Local Tailor {city.city}
           </h2>
         </Reveal>
 

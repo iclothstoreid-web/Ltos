@@ -126,6 +126,6 @@ export function buildOrganizationSchema() {
     '@type': 'Organization',
     name: FABRIC_BRAND_NAME,
     url: FABRIC_SITE_ORIGIN,
-    description: 'Bespoke thobe tailoring — pattern formulation, measurement, and handcrafted production in Bogor.',
+    description: 'Bespoke thobe tailoring — pattern formulation, measurement, and handcrafted production in Bandung.',
   }
 }

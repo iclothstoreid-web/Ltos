@@ -84,7 +84,7 @@ export const cekUkuranThobeContent: ArticleContent = {
     {
       heading: 'Dua Cara Mengecek Ukuran: Estimasi Online vs Pengukuran Fitter',
       paragraphs: [
-        'Ada dua pendekatan yang saling melengkapi, bukan saling menggantikan. Estimasi online — seperti Body Profile Estimator dari Tarda — memberi gambaran awal ukuran, rekomendasi fit, dan body profile Anda hanya dari tiga angka: tinggi badan, berat badan, dan usia. Prosesnya kurang dari 30 detik dan bisa dilakukan kapan saja, tanpa perlu janji temu.',
+        'Ada dua pendekatan yang saling melengkapi, bukan saling menggantikan. Estimasi online — seperti Body Profile Estimator dari Local Tailor — memberi gambaran awal ukuran, rekomendasi fit, dan body profile Anda hanya dari tiga angka: tinggi badan, berat badan, dan usia. Prosesnya kurang dari 30 detik dan bisa dilakukan kapan saja, tanpa perlu janji temu.',
         'Pengukuran langsung oleh fitter tetap menjadi satu-satunya sumber ukuran yang dipakai untuk produksi. Fitter mengukur belasan titik tubuh secara fisik — termasuk lingkar leher, lebar bahu presisi, panjang lengan dari bahu ke pergelangan, dan panjang badan dari bahu ke mata kaki — sesuatu yang tidak bisa digantikan oleh estimasi berbasis tinggi dan berat badan saja. Estimasi online adalah langkah awal yang mempercepat konsultasi; pengukuran fitter adalah langkah yang menentukan hasil akhir jahitan.',
       ],
     },
@@ -104,7 +104,7 @@ export const cekUkuranThobeContent: ArticleContent = {
     {
       heading: 'Kapan Anda Tetap Perlu Pengukuran Langsung',
       paragraphs: [
-        'Estimasi online sangat membantu untuk perencanaan awal — misalnya menentukan ukuran mana yang paling mendekati sebelum konsultasi, atau sekadar mengetahui apakah Anda cenderung slim fit atau relaxed fit. Namun untuk thobe yang benar-benar dipesan dan dijahit, Tarda selalu menggunakan Digital Body Profile yang dibuat dari pengukuran langsung oleh fitter. Ini bukan langkah tambahan yang merepotkan — justru inilah yang membedakan thobe custom dari thobe ready-to-wear: setiap jahitan dipotong sesuai tubuh Anda yang sebenarnya, bukan estimasi.',
+        'Estimasi online sangat membantu untuk perencanaan awal — misalnya menentukan ukuran mana yang paling mendekati sebelum konsultasi, atau sekadar mengetahui apakah Anda cenderung slim fit atau relaxed fit. Namun untuk thobe yang benar-benar dipesan dan dijahit, Local Tailor selalu menggunakan Digital Body Profile yang dibuat dari pengukuran langsung oleh fitter. Ini bukan langkah tambahan yang merepotkan — justru inilah yang membedakan thobe custom dari thobe ready-to-wear: setiap jahitan dipotong sesuai tubuh Anda yang sebenarnya, bukan estimasi.',
       ],
     },
   ],
@@ -117,7 +117,7 @@ export const cekUkuranThobeContent: ArticleContent = {
     {
       question: 'Apakah hasil cek ukuran online bisa langsung dipakai untuk memesan thobe?',
       answer:
-        'Hasil estimasi online adalah perkiraan awal, bukan ukuran produksi. Untuk thobe yang dijahit, Tarda tetap menggunakan pengukuran langsung oleh fitter untuk membuat Digital Body Profile yang terverifikasi.',
+        'Hasil estimasi online adalah perkiraan awal, bukan ukuran produksi. Untuk thobe yang dijahit, Local Tailor tetap menggunakan pengukuran langsung oleh fitter untuk membuat Digital Body Profile yang terverifikasi.',
     },
     {
       question: 'Berapa lama waktu yang dibutuhkan untuk mengecek ukuran thobe secara online?',
@@ -293,7 +293,7 @@ export const caraMengukurThobeContent: ArticleContent = {
     {
       question: 'Apakah pengukuran sendiri di rumah cukup akurat untuk memesan thobe?',
       answer:
-        'Pengukuran mandiri adalah referensi awal yang baik, terutama untuk mengetahui perkiraan ukuran sebelum konsultasi. Namun untuk thobe yang benar-benar dijahit, Tarda tetap melakukan pengukuran ulang langsung oleh fitter untuk memastikan akurasi penuh.',
+        'Pengukuran mandiri adalah referensi awal yang baik, terutama untuk mengetahui perkiraan ukuran sebelum konsultasi. Namun untuk thobe yang benar-benar dijahit, Local Tailor tetap melakukan pengukuran ulang langsung oleh fitter untuk memastikan akurasi penuh.',
     },
     {
       question: 'Meteran apa yang sebaiknya digunakan untuk mengukur badan?',
@@ -368,7 +368,7 @@ export const sizeChartThobeContent: ArticleContent = {
     {
       heading: 'Toleransi Ukuran dan Kapan Perlu Konsultasi Langsung',
       paragraphs: [
-        'Setiap ukuran pada tabel di atas punya toleransi sekitar 2–3cm di setiap titik ukur untuk mengakomodasi variasi bentuk tubuh dalam rentang berat badan yang sama. Namun jika hasil pengukuran mandiri Anda berada di batas dua ukuran, atau Anda memiliki riwayat kesulitan menemukan ukuran pas di brand ready-to-wear manapun, konsultasi langsung dengan fitter Tarda akan menghasilkan Digital Body Profile yang jauh lebih akurat dibanding mengandalkan tabel saja.',
+        'Setiap ukuran pada tabel di atas punya toleransi sekitar 2–3cm di setiap titik ukur untuk mengakomodasi variasi bentuk tubuh dalam rentang berat badan yang sama. Namun jika hasil pengukuran mandiri Anda berada di batas dua ukuran, atau Anda memiliki riwayat kesulitan menemukan ukuran pas di brand ready-to-wear manapun, konsultasi langsung dengan fitter Local Tailor akan menghasilkan Digital Body Profile yang jauh lebih akurat dibanding mengandalkan tabel saja.',
         'Toleransi ini bukan berarti hasil akhirnya "kira-kira" — justru sebaliknya, toleransi 2–3cm inilah yang memberi ruang bagi fitter untuk menyesuaikan kelonggaran sesuai preferensi Anda tanpa perlu mengganti ukuran dasar. Seseorang yang lebih menyukai thobe yang sedikit lebih longgar di dada tetap bisa memakai ukuran yang sama dengan seseorang yang menyukai potongan lebih rapi, selama perbedaan preferensi itu masih berada dalam rentang toleransi tersebut.',
       ],
     },
@@ -398,12 +398,12 @@ export const sizeChartThobeContent: ArticleContent = {
     {
       question: 'Apa langkah setelah menemukan ukuran saya di size chart?',
       answer:
-        'Gunakan Body Profile Estimator untuk mendapat rekomendasi fit yang lebih personal, atau langsung booking Free Measurement agar fitter Tarda mengonfirmasi ukuran final sebelum thobe dijahit.',
+        'Gunakan Body Profile Estimator untuk mendapat rekomendasi fit yang lebih personal, atau langsung booking Free Measurement agar fitter Local Tailor mengonfirmasi ukuran final sebelum thobe dijahit.',
     },
     {
       question: 'Apakah ada ukuran di bawah XS atau di atas XXL?',
       answer:
-        'Untuk kebutuhan di luar rentang XS–XXL, Tarda tetap bisa mengakomodasi melalui pengukuran custom penuh oleh fitter — size chart standar adalah acuan untuk rentang ukuran paling umum, bukan batasan layanan kami.',
+        'Untuk kebutuhan di luar rentang XS–XXL, Local Tailor tetap bisa mengakomodasi melalui pengukuran custom penuh oleh fitter — size chart standar adalah acuan untuk rentang ukuran paling umum, bukan batasan layanan kami.',
     },
   ],
   relatedSlugs: ['ukuran-thobe-pria', 'cara-mengukur-thobe', 'cek-ukuran-thobe'],

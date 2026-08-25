@@ -6,7 +6,7 @@ import type { ServiceConfig } from '@/lib/seo/serviceConfig'
 // Sprint W10 — metadata generator for the 5 Revenue Landing Pages, same
 // shape as src/lib/seo/locationMetadata.ts (title/description/canonical/
 // OG/Twitter/robots/geo meta), reused rather than re-invented. Every page
-// has a real, always-present Bogor geo point (unlike city pages, which
+// has a real, always-present Bandung geo point (unlike city pages, which
 // only carry `geo` for the one primary city) since all 5 of these pages
 // describe the same one real workshop.
 function capitalizeWords(value: string): string {
@@ -42,7 +42,7 @@ export function buildServiceMetadata(service: ServiceConfig): Metadata {
       description,
     },
     other: {
-      'geo.placename': 'Bogor',
+      'geo.placename': 'Bandung',
       'geo.region': 'ID-JB',
     },
   }

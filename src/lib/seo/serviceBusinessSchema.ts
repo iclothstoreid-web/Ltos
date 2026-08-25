@@ -12,12 +12,12 @@ import type { ServiceConfig } from '@/lib/seo/serviceConfig'
 // this business (locations/* and these 5 new pages) shares one entity id,
 // so search engines consolidate signals onto one real-world Tailor rather
 // than reading them as separate businesses.
-const BUSINESS_ID = `${CITY_SITE_ORIGIN}/#tarda-bogor`
+const BUSINESS_ID = `${CITY_SITE_ORIGIN}/#local-tailor-bandung`
 
-// Real neighborhoods this Bogor workshop already serves, per the brief's
-// Task 3 list — identical to cityConfig.ts's BOGOR.localContext, framed
+// Real neighborhoods this Bandung workshop already serves, per the brief's
+// Task 3 list — identical to cityConfig.ts's BANDUNG.localContext, framed
 // the same honest way ("we serve clients from X", never a branch claim).
-export const SERVICE_AREA_NAMES = ['Bogor'] as const
+export const SERVICE_AREA_NAMES = ['Bandung'] as const
 
 // Opening hours were NOT added here: the only source found for them during
 // this sprint was a separate WordPress site that, at the time, happened to
@@ -47,7 +47,7 @@ export function buildServiceLocalBusinessSchema(service: ServiceConfig): JsonLdS
       postalCode: CITY_BUSINESS.postalCode,
       addressCountry: CITY_BUSINESS.addressCountry,
     },
-    // ServiceArea — the real neighborhoods this one Bogor workshop already
+    // ServiceArea — the real neighborhoods this one Bandung workshop already
     // serves (Task 3), signaled the same schema.org-recommended way as
     // areaServed on every /locations page: never a second fabricated
     // address per area.

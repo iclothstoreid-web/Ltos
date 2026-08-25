@@ -12,7 +12,7 @@ interface ProblemSolutionTableProps {
   rows: ProblemSolutionRow[]
 }
 
-// Sprint Y §Y-9 — reusable "Masalah -> Solusi Tarda" comparison
+// Sprint Y §Y-9 — reusable "Masalah -> Solusi Local Tailor" comparison
 // table for the pillar page's "Keunggulan" section.
 export function ProblemSolutionTable({ heading, subheadline, rows }: ProblemSolutionTableProps) {
   return (
@@ -34,7 +34,7 @@ export function ProblemSolutionTable({ heading, subheadline, rows }: ProblemSolu
                   Masalah
                 </th>
                 <th scope="col" className="px-5 py-4 font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-gold">
-                  Solusi Tarda
+                  Solusi Local Tailor
                 </th>
               </tr>
             </thead>

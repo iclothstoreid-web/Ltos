@@ -52,7 +52,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
       {
         question: 'Apakah saya bisa mengukur badan sendiri untuk thobe bespoke?',
         answer:
-          'Bisa, sebagai referensi awal sebelum konsultasi. Namun untuk thobe yang benar-benar dijahit, Tarda selalu melakukan pengukuran ulang langsung oleh fitter untuk memastikan akurasi penuh melalui Digital Body Profile.',
+          'Bisa, sebagai referensi awal sebelum konsultasi. Namun untuk thobe yang benar-benar dijahit, Local Tailor selalu melakukan pengukuran ulang langsung oleh fitter untuk memastikan akurasi penuh melalui Digital Body Profile.',
       },
       {
         question: 'Titik ukur mana yang paling penting untuk thobe?',
@@ -117,12 +117,12 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
           'Idealnya 4–6 minggu sebelum hari-H, untuk memberi ruang waktu bagi konsultasi, pengukuran, produksi, dan fitting akhir tanpa terburu-buru.',
       },
       {
-        question: 'Apakah Tarda menyediakan thobe khusus pengantin?',
+        question: 'Apakah Local Tailor menyediakan thobe khusus pengantin?',
         answer:
           'Ya, melalui proses bespoke penuh — konsultasi, pengukuran oleh fitter, dan pemilihan bahan premium disesuaikan dengan tema dan warna acara pernikahan Anda.',
       },
       {
-        question: 'Apakah Tarda bisa membuat outfit seragam untuk keluarga pengantin?',
+        question: 'Apakah Local Tailor bisa membuat outfit seragam untuk keluarga pengantin?',
         answer:
           'Bisa. Kami menerima pesanan family outfit dengan warna dan gaya senada untuk ayah, saudara, atau keluarga inti pengantin — lihat panduan Family Outfit kami untuk detail koordinasi warnanya.',
       },
@@ -153,7 +153,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
           'Sebagai panduan umum, 3–4 thobe biasanya cukup untuk perjalanan umrah standar, dengan mempertimbangkan rotasi cuci dan cadangan jika ada kendala di perjalanan.',
       },
       {
-        question: 'Apakah Tarda menyediakan thobe custom khusus umrah?',
+        question: 'Apakah Local Tailor menyediakan thobe custom khusus umrah?',
         answer:
           'Ya, dengan penyesuaian khusus untuk kebutuhan perjalanan ibadah — bahan breathable, potongan praktis untuk sholat, dan opsi kantong tambahan untuk kebutuhan seperti mushaf saku.',
       },
@@ -259,27 +259,33 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     // Sprint W6-10 — Local Authority Layer. Honest positioning only — no
     // fabricated address, founding year, customer count, or awards. Every
     // claim here is either already stated elsewhere in this codebase
-    // (homepage: "Bespoke Thobe, Bogor") or a general description of the
+    // (homepage: "Bespoke Thobe, Bandung") or a general description of the
     // real process (consultation, measurement, pattern, production,
     // fitting, delivery) already documented across the other 8 clusters.
-    slug: 'bogor',
-    label: 'Bogor',
-    eyebrow: 'Tarda Bogor',
-    title: 'Tarda di Bogor — Layanan Bespoke Thobe',
+    //
+    // Brand & Location Correction — this category was previously "bogor"
+    // (Tarda Bogor); Local Tailor's production launch is centered on
+    // Bandung, the real workshop location (see src/lib/seo/cityConfig.ts's
+    // BANDUNG entry), so the category itself is renamed rather than kept
+    // under a stale slug.
+    slug: 'bandung',
+    label: 'Bandung',
+    eyebrow: 'Local Tailor Bandung',
+    title: 'Local Tailor di Bandung — Layanan Bespoke Thobe',
     metaDescription:
-      'Tarda adalah layanan bespoke thobe berbasis di Bogor — konsultasi, pengukuran, dan produksi custom untuk kebutuhan harian, pernikahan, dan umrah.',
+      'Local Tailor adalah layanan bespoke thobe berbasis di Bandung — konsultasi, pengukuran, dan produksi custom untuk kebutuhan harian, pernikahan, dan umrah.',
     intro: [
-      'Tarda adalah layanan bespoke thobe yang berbasis di Bogor, melayani konsultasi, pengukuran presisi oleh fitter, hingga produksi thobe custom yang dijahit khusus berdasarkan ukuran dan preferensi setiap klien.',
+      'Local Tailor adalah layanan bespoke thobe yang berbasis di Bandung, melayani konsultasi, pengukuran presisi oleh fitter, hingga produksi thobe custom yang dijahit khusus berdasarkan ukuran dan preferensi setiap klien.',
       'Halaman ini dan tiga halaman turunannya menjelaskan layanan kami secara spesifik untuk kebutuhan custom thobe harian, proses bespoke tailoring, thobe pernikahan, dan thobe umrah — semuanya berbasis proses yang sama: konsultasi, pengukuran, pembentukan pola, produksi, fitting, dan pengiriman.',
     ],
     faq: [
       {
-        question: 'Di mana saya bisa berkonsultasi dengan Tarda?',
+        question: 'Di mana saya bisa berkonsultasi dengan Local Tailor?',
         answer:
           'Konsultasi dapat dijadwalkan melalui halaman Booking Konsultasi kami. Tim kami akan mengonfirmasi detail lokasi dan waktu sesuai jadwal yang tersedia.',
       },
       {
-        question: 'Apakah Tarda melayani pengukuran langsung?',
+        question: 'Apakah Local Tailor melayani pengukuran langsung?',
         answer:
           'Ya, pengukuran dilakukan langsung oleh fitter kami untuk membentuk Digital Body Profile yang akurat, digunakan sebagai acuan produksi thobe bespoke Anda.',
       },
@@ -293,7 +299,7 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
   },
   {
     // Sprint Y — Digital Bespoke Tailoring cluster. The whole point of this
-    // category is answering "can I order without visiting Bogor?" —
+    // category is answering "can I order without visiting Bandung?" —
     // every article here (cornerstone + 14 supporting pages) resolves that
     // question and points back at /design-studio, the merged pillar +
     // configurator page.
@@ -302,21 +308,21 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     eyebrow: 'Digital Bespoke Tailoring',
     title: 'Digital Bespoke Tailoring — Design Studio, Video Call Fitting, dan Home Visit',
     metaDescription:
-      'Panduan lengkap Digital Bespoke Tailoring Tarda — cara memesan custom thobe dari luar kota, luar pulau, atau luar negeri lewat video call fitting, Design Studio online, dan layanan home visit.',
+      'Panduan lengkap Digital Bespoke Tailoring Local Tailor — cara memesan custom thobe dari luar kota, luar pulau, atau luar negeri lewat video call fitting, Design Studio online, dan layanan home visit.',
     intro: [
-      'Bespoke tailoring secara tradisional selalu mengharuskan pelanggan datang langsung ke tailor — untuk konsultasi, pengukuran, dan pemilihan bahan. Digital Bespoke Tailoring dari Tarda menghilangkan batasan itu: seluruh proses, dari konsultasi hingga finalisasi desain, kini bisa dilakukan dari mana saja lewat video call fitting, Design Studio online, dan layanan home visit untuk yang ingin pengalaman lebih personal.',
+      'Bespoke tailoring secara tradisional selalu mengharuskan pelanggan datang langsung ke tailor — untuk konsultasi, pengukuran, dan pemilihan bahan. Digital Bespoke Tailoring dari Local Tailor menghilangkan batasan itu: seluruh proses, dari konsultasi hingga finalisasi desain, kini bisa dilakukan dari mana saja lewat video call fitting, Design Studio online, dan layanan home visit untuk yang ingin pengalaman lebih personal.',
       'Halaman ini dan seluruh artikel turunannya menjelaskan bagaimana Digital Bespoke Tailoring bekerja secara spesifik — cara memesan custom thobe online dari luar kota, seberapa akurat fitting lewat video call, bagaimana layanan home visit bekerja untuk keluarga dan acara pernikahan, dan bagaimana Design Studio menjadi titik awal setiap pesanan sebelum kain dipotong.',
     ],
     faq: [
       {
-        question: 'Apakah Digital Bespoke Tailoring sama akuratnya dengan datang langsung ke Bogor?',
+        question: 'Apakah Digital Bespoke Tailoring sama akuratnya dengan datang langsung ke Bandung?',
         answer:
           'Video call fitting dan Design Studio memberi hasil desain dan estimasi ukuran yang sangat mendekati, namun pengukuran final untuk produksi tetap dilakukan langsung oleh fitter kami — baik saat home visit maupun saat Anda berkunjung ke workshop — untuk memastikan Digital Body Profile Anda akurat.',
       },
       {
-        question: 'Apakah layanan ini hanya untuk pelanggan di luar Bogor?',
+        question: 'Apakah layanan ini hanya untuk pelanggan di luar Bandung?',
         answer:
-          'Tidak. Digital Bespoke Tailoring dirancang untuk siapa pun yang tidak sempat datang langsung — termasuk pelanggan sibuk di dalam Bogor sendiri — sekaligus tetap membuka opsi showroom experience bagi yang ingin datang langsung.',
+          'Tidak. Digital Bespoke Tailoring dirancang untuk siapa pun yang tidak sempat datang langsung — termasuk pelanggan sibuk di dalam Bandung sendiri — sekaligus tetap membuka opsi showroom experience bagi yang ingin datang langsung.',
       },
       {
         question: 'Apa yang membedakan Design Studio dari sekadar katalog online?',

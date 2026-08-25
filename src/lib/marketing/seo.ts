@@ -6,29 +6,34 @@ import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 // Production Domain Migration audit — `url` used to duplicate
 // FABRIC_SITE_ORIGIN's literal instead of importing it, so the two could
 // (and did) drift out of sync. Now imports the one real source of truth.
+// Brand & Location Correction — name/addressLocality now match the public
+// Local Tailor identity (brand = Local Tailor, primary location = Bandung)
+// instead of the pre-rebrand generic "Bespoke Tailor" / Bogor placeholder.
 const BUSINESS = {
-  name: 'Bespoke Tailor',
+  name: 'Local Tailor',
   url: FABRIC_SITE_ORIGIN,
-  addressLocality: 'Bogor',
+  addressLocality: 'Bandung',
   addressCountry: 'ID',
 }
 
 // LTOS Brand System Rollout — official horizontal-with-tagline lockup on
-// the site's own dark brand background (public/brand/og-image.png,
-// generated from public/brand/logo-horizontal-tagline.svg), 1200x630 per
-// the OpenGraph/Twitter `summary_large_image` spec. Single shared constant
-// so every metadata builder below points at the exact same asset.
+// the site's own dark brand background, 1200x630 per the OpenGraph/Twitter
+// `summary_large_image` spec. Single shared constant so every metadata
+// builder below points at the exact same asset. Brand & Location
+// Correction — was pointing at the Tarda-brand SVG; now uses the real
+// Local Tailor lockup asset that already exists under public/brand/
+// local-tailor/ (no new asset fabricated).
 const OG_IMAGE = {
-  url: `${BUSINESS.url}/brand/tarda.svg`,
+  url: `${BUSINESS.url}/brand/local-tailor/horizontal-tagline.svg`,
   width: 1200,
   height: 630,
-  alt: `${BUSINESS.name} — Tarda`,
+  alt: BUSINESS.name,
 }
 
 export const homepageMetadata: Metadata = {
   title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
   description:
-    'Bespoke thobe, handcrafted in Bogor. A pattern formulated from your measurements alone, made from imported fabrics and finished by hand.',
+    'Bespoke thobe, handcrafted in Bandung. A pattern formulated from your measurements alone, made from imported fabrics and finished by hand.',
   openGraph: {
     title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
     description: 'Designed around your body, your lifestyle, and your identity.',

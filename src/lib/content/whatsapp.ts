@@ -15,14 +15,14 @@ export const CONTENT_WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER |
 // "Chat WhatsApp Tailor" — a general question prompted by reading the
 // article, not a booking request.
 export function buildArticleInquiryMessage(articleTitle: string): string {
-  return `Halo Tarda, saya baru membaca artikel "${articleTitle}" dan ingin bertanya lebih lanjut soal ukuran thobe saya.`
+  return `Halo Local Tailor, saya baru membaca artikel "${articleTitle}" dan ingin bertanya lebih lanjut soal ukuran thobe saya.`
 }
 
 // "Book Free Measurement" — clear booking intent, still no profile data
 // attached (that only exists after the estimator, see W0.4's
 // WhatsAppCTAButton).
 export function buildArticleBookingMessage(articleTitle: string): string {
-  return `Halo Tarda, saya baru membaca artikel "${articleTitle}" dan ingin booking Free Measurement dengan fitter Tarda.`
+  return `Halo Local Tailor, saya baru membaca artikel "${articleTitle}" dan ingin booking Free Measurement dengan fitter Local Tailor.`
 }
 
 // Same encode-correctly requirement as the booking flow's URL builder —

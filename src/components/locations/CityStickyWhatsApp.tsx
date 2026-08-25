@@ -17,7 +17,7 @@ interface CityStickyWhatsAppProps {
 // always-available pattern on local-business sites, not just a mobile
 // affordance.
 export function CityStickyWhatsApp({ city, utm }: CityStickyWhatsAppProps) {
-  const message = appendUtmNote(`Halo Tarda, saya di ${city.city} dan ingin konsultasi custom thobe.`, utm ?? {})
+  const message = appendUtmNote(`Halo Local Tailor, saya di ${city.city} dan ingin konsultasi custom thobe.`, utm ?? {})
   const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, message)
 
   return (

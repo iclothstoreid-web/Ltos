@@ -3,12 +3,11 @@ import type { ConfiguratorOption, Estimate } from '@/types/configurator'
 import { formatRupiah } from '@/lib/format/money'
 
 // Local brand constant scoped to the configurator share page — deliberately
-// not importing from src/lib/marketing/seo.ts (that file's BUSINESS.name is
-// still the pre-rebrand "Bespoke Tailor" TODO_REAL_DATA placeholder; the
-// header/nav already uses the real current brand, see
-// src/lib/marketing/copy.ts's navCopy.brand). Keep these two in sync if the
-// marketing file gets its own rebrand pass.
-export const DESIGN_BRAND_NAME = 'Tarda'
+// not importing from src/lib/marketing/seo.ts (the header/nav already uses
+// the real current brand, see src/lib/marketing/copy.ts's navCopy.brand).
+// Keep these two in sync if either file's brand constant changes again.
+// Brand & Location Correction — public Local Tailor identity, not Tarda.
+export const DESIGN_BRAND_NAME = 'Local Tailor'
 
 // "Belum perlu image rendering dinamis" — static placeholder only. A later
 // sprint can render an actual composited preview via next/og.
@@ -23,7 +22,7 @@ export interface ResolvedDesignSelection {
   embroidery: ConfiguratorOption | null
 }
 
-// "Custom Navy Premium Thobe | Tarda" — Color + Fabric lead, Model
+// "Custom Navy Premium Thobe | Local Tailor" — Color + Fabric lead, Model
 // as fallback when neither is picked yet.
 export function buildDesignTitle(selection: ResolvedDesignSelection): string {
   const descriptors = [selection.color?.name, selection.fabric?.name].filter((v): v is string => !!v)

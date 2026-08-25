@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "Tarda",
+    "brand": "Local Tailor",
     "links": {
       "designStudio": "Studio de Design",
       "fabrics": "Tissus",
@@ -13,12 +13,12 @@
     "languageSwitcher": "Langue"
   },
   "hero": {
-    "eyebrow": "Thobe Sur Mesure, Bogor",
+    "eyebrow": "Thobe Sur Mesure, Bandung",
     "headline": "Thobe Sur Mesure, Confectionné Exclusivement pour Vous",
     "subheadline": "Conçu selon votre silhouette, votre mode de vie et votre identité.",
     "primaryCta": "Concevoir Mon Thobe",
     "secondaryCta": "Réserver un Rendez-vous Privé",
-    "trustStrip": ["Tissus Importés Premium", "Prise de Mesures Personnalisée", "Confectionné à Bogor", "Patron Sur Mesure"]
+    "trustStrip": ["Tissus Importés Premium", "Prise de Mesures Personnalisée", "Confectionné à Bandung", "Patron Sur Mesure"]
   },
   "cta": {
     "designMyThobe": "Concevoir Mon Thobe",
@@ -43,14 +43,14 @@
     "eyebrow": "Sur Rendez-vous",
     "heading": "Réserver un Rendez-vous Privé",
     "body": "Consultation personnalisée, choix du tissu, prise de mesures et conseils de style lors d'une séance de tailoring privée.",
-    "location": "Rendez-vous Privé — Bogor",
-    "address": "Atelier & Showroom, Bogor, Java Ouest",
+    "location": "Rendez-vous Privé — Bandung",
+    "address": "Atelier & Showroom, Bandung, Java Ouest",
     "cta": "Réserver un Rendez-vous Privé"
   },
   "contact": {
     "eyebrow": "Contact",
     "heading": "Nous Contacter",
-    "subheadline": "Contactez directement notre atelier de Bogor pour une consultation, une question sur les tissus, ou une commande en cours.",
+    "subheadline": "Contactez directement notre atelier de Bandung pour une consultation, une question sur les tissus, ou une commande en cours.",
     "whatsappLabel": "WhatsApp",
     "addressLabel": "Atelier & Showroom",
     "hoursLabel": "Horaires d'Ouverture",
@@ -64,7 +64,7 @@
     "heading": "La confiance de clients exigeants à travers toute l'Indonésie"
   },
   "footer": {
-    "tagline": "Thobe sur mesure, confectionné à la main à Bogor.",
+    "tagline": "Thobe sur mesure, confectionné à la main à Bandung.",
     "columns": {
       "explore": "Découvrir",
       "studio": "Studio",
@@ -90,7 +90,7 @@
   "languageSwitcher": {
     "openLabel": "Changer de langue",
     "modalTitle": "Choisissez votre langue",
-    "modalSubtitle": "Sélectionnez la langue dans laquelle vous souhaitez parcourir Tarda.",
+    "modalSubtitle": "Sélectionnez la langue dans laquelle vous souhaitez parcourir Local Tailor.",
     "close": "Fermer",
     "currentLanguage": "Langue actuelle"
   }

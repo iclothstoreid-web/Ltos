@@ -89,7 +89,7 @@ export const MEASUREMENT_ARTICLES: KnowledgeArticle[] = [
       {
         question: 'Apakah pengukuran mandiri ini bisa langsung dipakai untuk produksi?',
         answer:
-          'Pengukuran mandiri adalah referensi awal yang baik sebelum konsultasi. Untuk thobe yang benar-benar dijahit, Tarda tetap melakukan pengukuran ulang langsung oleh fitter.',
+          'Pengukuran mandiri adalah referensi awal yang baik sebelum konsultasi. Untuk thobe yang benar-benar dijahit, Local Tailor tetap melakukan pengukuran ulang langsung oleh fitter.',
       },
     ],
     relatedArticles: [

@@ -15,13 +15,13 @@ import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 // data (see src/lib/marketing/seo.ts, src/lib/knowledge/seo.ts comments).
 
 export const PRIMARY_ENTITY = {
-  name: 'Tarda',
+  name: 'Local Tailor',
   alternateName: 'Bespoke Tailor',
   type: 'LocalBusiness' as const,
   url: FABRIC_SITE_ORIGIN,
   description:
-    'Tarda adalah bespoke tailoring house di Bogor, Indonesia, yang mengkhususkan diri pada custom thobe dan premium Muslim menswear — setiap garmen dibuat dari pola yang diformulasikan dari pengukuran tubuh pelanggan, bukan ukuran standar.',
-  addressLocality: 'Bogor',
+    'Local Tailor adalah bespoke tailoring house di Bandung, Indonesia, yang mengkhususkan diri pada custom thobe dan premium Muslim menswear — setiap garmen dibuat dari pola yang diformulasikan dari pengukuran tubuh pelanggan, bukan ukuran standar.',
+  addressLocality: 'Bandung',
   addressCountry: 'ID',
 }
 
@@ -37,7 +37,7 @@ export interface KnowledgeGraphEntity {
 }
 
 // Secondary entities — the vocabulary this site wants search/AI engines to
-// associate with Tarda. Each maps to real, live content (not
+// associate with Local Tailor. Each maps to real, live content (not
 // aspirational pages); `primaryPath`/`relatedPaths` are checked against
 // actual routes as of Sprint W7, not invented.
 export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
@@ -98,10 +98,10 @@ export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
     relatedPaths: ['/design-studio', '/book-appointment'],
   },
   {
-    slug: 'bogor-tailor',
-    name: 'Bogor Tailor',
+    slug: 'bandung-tailor',
+    name: 'Bandung Tailor',
     type: 'Place',
-    description: 'Tarda beroperasi sebagai bespoke tailoring house yang berbasis di Bogor, Indonesia.',
+    description: 'Local Tailor beroperasi sebagai bespoke tailoring house yang berbasis di Bandung, Indonesia.',
     primaryPath: '/',
     relatedPaths: ['/book-appointment'],
   },
@@ -117,14 +117,14 @@ export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
     slug: 'islamic-menswear',
     name: 'Islamic Menswear',
     type: 'Thing',
-    description: 'Kategori busana pria Muslim premium yang menjadi fokus Tarda, termasuk thobe untuk umrah dan acara formal.',
+    description: 'Kategori busana pria Muslim premium yang menjadi fokus Local Tailor, termasuk thobe untuk umrah dan acara formal.',
     primaryPath: '/',
     relatedPaths: ['/knowledge', '/knowledge/umrah', '/knowledge/wedding'],
   },
   // Sprint Y — Digital Bespoke Tailoring entity cluster. This is the
   // sprint's own "primary entity" for the /design-studio positioning, but
   // it's added here as a secondary entity rather than replacing the
-  // sitewide PRIMARY_ENTITY above (Tarda) — redefining the whole
+  // sitewide PRIMARY_ENTITY above (Local Tailor) — redefining the whole
   // site's primary entity for one feature would overreach this sprint's
   // scope. `primaryPath` for each points at the real cornerstone or
   // /design-studio itself; `relatedPaths` link into the real 15-article
@@ -135,21 +135,21 @@ export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
     type: 'Service',
     description: 'Proses bespoke tailoring yang dijalankan jarak jauh — konsultasi, desain, dan panduan ukur via video call dan Design Studio, dengan opsi home visit untuk sesi tatap muka.',
     primaryPath: '/design-studio',
-    relatedPaths: ['/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bogor', '/knowledge/design-studio'],
+    relatedPaths: ['/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bandung', '/knowledge/design-studio'],
   },
   {
     slug: 'design-studio',
     name: 'Design Studio',
     type: 'Service',
-    description: 'Konfigurator online Tarda untuk memilih Model, Kerah, Manset, Material, dan Warna serta melihat estimasi harga secara real-time.',
+    description: 'Konfigurator online Local Tailor untuk memilih Model, Kerah, Manset, Material, dan Warna serta melihat estimasi harga secara real-time.',
     primaryPath: '/design-studio',
-    relatedPaths: ['/knowledge/design-studio/apa-itu-design-studio-tarda', '/knowledge/design-studio/cara-mendesain-thobe-sebelum-dijahit'],
+    relatedPaths: ['/knowledge/design-studio/apa-itu-design-studio-local-tailor', '/knowledge/design-studio/cara-mendesain-thobe-sebelum-dijahit'],
   },
   {
     slug: 'video-call-fitting',
     name: 'Video Call Fitting',
     type: 'Service',
-    description: 'Sesi konsultasi dan panduan pengukuran gratis via video call, untuk pelanggan yang tidak sempat datang ke Bogor.',
+    description: 'Sesi konsultasi dan panduan pengukuran gratis via video call, untuk pelanggan yang tidak sempat datang ke Bandung.',
     primaryPath: '/design-studio',
     relatedPaths: ['/knowledge/design-studio/fitting-video-call-apakah-akurat', '/knowledge/design-studio/konsultasi-tailor-online-gratis'],
   },
@@ -157,15 +157,15 @@ export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
     slug: 'home-visit-tailor',
     name: 'Home Visit Tailor',
     type: 'Service',
-    description: 'Layanan kunjungan tim Tarda ke lokasi pelanggan, membawa fabric book, sample komponen, tablet Design Studio, dan alat ukur.',
+    description: 'Layanan kunjungan tim Local Tailor ke lokasi pelanggan, membawa fabric book, sample komponen, tablet Design Studio, dan alat ukur.',
     primaryPath: '/design-studio',
-    relatedPaths: ['/knowledge/design-studio/layanan-home-visit-bogor', '/knowledge/design-studio/home-visit-wedding-keluarga'],
+    relatedPaths: ['/knowledge/design-studio/layanan-home-visit-bandung', '/knowledge/design-studio/home-visit-wedding-keluarga'],
   },
   {
     slug: 'custom-thobe-online',
     name: 'Custom Thobe Online',
     type: 'Product',
-    description: 'Thobe custom yang dipesan sepenuhnya secara online — desain di Design Studio, konsultasi via video call, produksi tetap di workshop Bogor.',
+    description: 'Thobe custom yang dipesan sepenuhnya secara online — desain di Design Studio, konsultasi via video call, produksi tetap di workshop Bandung.',
     primaryPath: '/design-studio',
     relatedPaths: ['/knowledge/design-studio/custom-thobe-online-panduan-lengkap', '/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota'],
   },

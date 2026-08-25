@@ -6,15 +6,15 @@ import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 // pattern (one config array, thin per-page components, zero copy-paste
 // between entries) rather than inventing a new architecture.
 //
-// Keyword-cannibalization note: /locations/bogor already targets "tailor
-// bogor" as its own primary keyword, with "bespoke tailor bogor" /
-// "jahit thobe bogor" / "custom baju koko bogor" appearing among its
-// *secondary* keywordPhrases (see cityConfig.ts's BOGOR entry). Each
+// Keyword-cannibalization note: /locations/bandung already targets "tailor
+// bandung" as its own primary keyword, with "bespoke tailor bandung" /
+// "jahit thobe bandung" / "custom baju koko bandung" appearing among its
+// *secondary* keywordPhrases (see cityConfig.ts's BANDUNG entry). Each
 // config below is deliberately NOT a re-skin of that page: /locations/
-// bogor is the geographic/location-hub page (address, parking,
+// bandung is the geographic/location-hub page (address, parking,
 // neighborhoods, opening hours); these pages are commercial-intent pages
 // (why bespoke vs MTM, why premium, why this specific garment type),
-// cross-linking to /locations/bogor for location detail rather than
+// cross-linking to /locations/bandung for location detail rather than
 // duplicating it. Each page's `keywordPrimary` below is unique sitewide —
 // no other page (existing or new) targets the exact same primary phrase.
 export const SERVICE_SITE_ORIGIN = FABRIC_SITE_ORIGIN
@@ -90,56 +90,56 @@ export function localizeService(service: ServiceConfig, locale: string): Service
 const REVIEW_FAQ_ITEM: ServiceFaqItem = {
   question: 'Bagaimana cara memberi ulasan setelah pesanan selesai?',
   answer:
-    'Setelah garmen Anda selesai, kami akan mengirimkan tautan Google Review via WhatsApp — ulasan Anda membantu klien lain menemukan Tarda dan hanya membutuhkan waktu singkat untuk ditulis.',
+    'Setelah garmen Anda selesai, kami akan mengirimkan tautan Google Review via WhatsApp — ulasan Anda membantu klien lain menemukan Local Tailor dan hanya membutuhkan waktu singkat untuk ditulis.',
 }
 
 const LOCATION_FAQ_ITEM: ServiceFaqItem = {
   question: 'Di mana lokasi workshop untuk konsultasi tatap muka?',
   answer:
-    'Workshop dan showroom kami berada di Bogor, Jawa Barat — satu-satunya lokasi fisik Tarda, tempat konsultasi, pengukuran, dan produksi berlangsung. Detail lengkap lokasi dan area yang kami layani ada di halaman lokasi Bogor.',
+    'Workshop dan showroom kami berada di Bandung, Jawa Barat — satu-satunya lokasi fisik Local Tailor, tempat konsultasi, pengukuran, dan produksi berlangsung. Detail lengkap lokasi dan area yang kami layani ada di halaman lokasi Bandung.',
 }
 
 const REVIEW_FAQ_ITEM_EN: ServiceFaqItem = {
   question: 'How can I leave a review after my order is finished?',
   answer:
-    "Once your garment is complete, we'll send you a Google Review link via WhatsApp — your review helps other clients find Tarda and only takes a moment to write.",
+    "Once your garment is complete, we'll send you a Google Review link via WhatsApp — your review helps other clients find Local Tailor and only takes a moment to write.",
 }
 
 const LOCATION_FAQ_ITEM_EN: ServiceFaqItem = {
   question: 'Where is the workshop for an in-person consultation?',
   answer:
-    "Our workshop and showroom are at Bogor, Jawa Barat — Tarda's only physical location, where consultation, measurement, and production all take place. Full location details and the areas we serve are on the Bogor location page.",
+    "Our workshop and showroom are in Bandung, West Java — Local Tailor's only physical location, where consultation, measurement, and production all take place. Full location details and the areas we serve are on the Bandung location page.",
 }
 
 const REVIEW_FAQ_ITEM_AR: ServiceFaqItem = {
   question: 'كيف يمكنني كتابة تقييم بعد اكتمال طلبي؟',
-  answer: 'بمجرد اكتمال قطعتك، سنرسل لك رابط تقييم Google عبر واتساب — تقييمك يساعد عملاء آخرين على إيجاد Tarda ولا يستغرق سوى لحظات لكتابته.',
+  answer: 'بمجرد اكتمال قطعتك، سنرسل لك رابط تقييم Google عبر واتساب — تقييمك يساعد عملاء آخرين على إيجاد Local Tailor ولا يستغرق سوى لحظات لكتابته.',
 }
 
 const LOCATION_FAQ_ITEM_AR: ServiceFaqItem = {
   question: 'أين تقع الورشة لإجراء استشارة حضورية؟',
   answer:
-    'تقع ورشتنا وصالة العرض في Bogor, بوغور — وهي الموقع الفعلي الوحيد لـ Tarda، حيث تجري الاستشارة والقياس والإنتاج. التفاصيل الكاملة للموقع والمناطق التي نخدمها متوفرة في صفحة موقع بوغور.',
+    'تقع ورشتنا وصالة العرض في باندونغ، جاوة الغربية — وهي الموقع الفعلي الوحيد لـ Local Tailor، حيث تجري الاستشارة والقياس والإنتاج. التفاصيل الكاملة للموقع والمناطق التي نخدمها متوفرة في صفحة موقع باندونغ.',
 }
 
 export const SERVICE_CONFIGS: ServiceConfig[] = [
   // -----------------------------------------------------------------------
-  // bespoke-tailor-bogor — the category-definition page: what makes a
+  // bespoke-tailor-bandung — the category-definition page: what makes a
   // tailor genuinely "bespoke" (pattern from zero, not template-adjusted),
   // as distinct from the location-hub page's broader "here's our workshop"
   // framing.
   // -----------------------------------------------------------------------
   {
-    slug: 'bespoke-tailor-bogor',
+    slug: 'bespoke-tailor-bandung',
     garmentLabel: 'thobe dan baju koko',
-    keywordPrimary: 'bespoke tailor bogor',
-    keywordSecondary: ['bespoke tailoring bogor', 'tailor bespoke bogor', 'jasa bespoke tailor bogor'],
+    keywordPrimary: 'bespoke tailor bandung',
+    keywordSecondary: ['bespoke tailoring bandung', 'tailor bespoke bandung', 'jasa bespoke tailor bandung'],
     hero: {
-      eyebrow: 'Bespoke Tailor Bogor',
-      headline: 'Bespoke Tailor Bogor — Pola Personal dari Nol, Bukan Ukuran Template',
+      eyebrow: 'Bespoke Tailor Bandung',
+      headline: 'Bespoke Tailor Bandung — Pola Personal dari Nol, Bukan Ukuran Template',
       subheadline:
-        'Sebagai bespoke tailor Bogor, kami tidak menyesuaikan pola template ke ukuran Anda — setiap pola diformulasikan dari nol berdasarkan pengukuran tubuh Anda sendiri, sebelum kain dipotong.',
-      keywordPhrases: ['bespoke tailor bogor', 'bespoke tailoring bogor', 'tailor bespoke bogor', 'penjahit bespoke bogor'],
+        'Sebagai bespoke tailor Bandung, kami tidak menyesuaikan pola template ke ukuran Anda — setiap pola diformulasikan dari nol berdasarkan pengukuran tubuh Anda sendiri, sebelum kain dipotong.',
+      keywordPhrases: ['bespoke tailor bandung', 'bespoke tailoring bandung', 'tailor bespoke bandung', 'penjahit bespoke bandung'],
     },
     valueProps: [
       {
@@ -167,14 +167,14 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           'Made-to-measure menyesuaikan pola template yang sudah ada ke ukuran Anda. Bespoke berarti pola dibuat dari nol, khusus untuk proporsi tubuh Anda — tanpa template dasar sama sekali.',
       },
       {
-        question: 'Berapa lama proses bespoke tailoring di Bogor ini?',
+        question: 'Berapa lama proses bespoke tailoring di Bandung ini?',
         answer:
           'Tergantung material dan kompleksitas desain yang dipilih — estimasi waktu produksi ditampilkan langsung saat Anda menjelajahi kombinasi desain di Design Studio.',
       },
       {
         question: 'Apakah saya wajib datang langsung untuk pengukuran bespoke?',
         answer:
-          'Pengukuran final tetap dilakukan langsung oleh fitter di workshop Bogor untuk memastikan Digital Body Profile Anda akurat. Konsultasi awal dan pemilihan desain bisa dimulai online lebih dulu.',
+          'Pengukuran final tetap dilakukan langsung oleh fitter di workshop Bandung untuk memastikan Digital Body Profile Anda akurat. Konsultasi awal dan pemilihan desain bisa dimulai online lebih dulu.',
       },
       {
         question: 'Apakah harga bespoke tailor lebih mahal dari penjahit biasa?',
@@ -184,25 +184,25 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
       LOCATION_FAQ_ITEM,
       REVIEW_FAQ_ITEM,
     ],
-    reviewHighlightIds: ['yusuf-bogor-umrah'],
+    reviewHighlightIds: ['yusuf-bandung-umrah'],
     relatedGuides: [
-      { category: 'bogor', slug: 'bespoke-tailor' },
+      { category: 'bandung', slug: 'bespoke-tailor' },
       { category: 'tailoring', slug: 'what-is-bespoke' },
       { category: 'tailoring', slug: 'quality-control' },
     ],
-    whatsappMessage: 'Halo Tarda, saya ingin booking konsultasi bespoke tailoring di workshop Bogor.',
+    whatsappMessage: 'Halo Local Tailor, saya ingin booking konsultasi bespoke tailoring di workshop Bandung.',
     ctaLabel: 'Booking Konsultasi Bespoke',
     translations: {
       en: {
         garmentLabel: 'thobe and baju koko',
-        keywordPrimary: 'bespoke tailor bogor',
-        keywordSecondary: ['bespoke tailoring bogor', 'bespoke tailor near me bogor', 'custom thobe tailor bogor'],
+        keywordPrimary: 'bespoke tailor bandung',
+        keywordSecondary: ['bespoke tailoring bandung', 'bespoke tailor near me bandung', 'custom thobe tailor bandung'],
         hero: {
-          eyebrow: 'Bespoke Tailor Bogor',
-          headline: 'Bespoke Tailor Bogor — A Personal Pattern from Scratch, Not a Template Size',
+          eyebrow: 'Bespoke Tailor Bandung',
+          headline: 'Bespoke Tailor Bandung — A Personal Pattern from Scratch, Not a Template Size',
           subheadline:
-            'As a bespoke tailor in Bogor, we never adjust a template pattern to your size — every pattern is formulated from scratch based on your own body measurements, before a single piece of fabric is cut.',
-          keywordPhrases: ['bespoke tailor bogor', 'bespoke tailoring bogor', 'custom thobe tailor bogor', 'bespoke tailor near me'],
+            'As a bespoke tailor in Bandung, we never adjust a template pattern to your size — every pattern is formulated from scratch based on your own body measurements, before a single piece of fabric is cut.',
+          keywordPhrases: ['bespoke tailor bandung', 'bespoke tailoring bandung', 'custom thobe tailor bandung', 'bespoke tailor near me'],
         },
         valueProps: [
           {
@@ -230,14 +230,14 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
               'Made-to-measure adjusts an existing template pattern to your size. Bespoke means the pattern is built from scratch, specifically for your body proportions — with no template underneath at all.',
           },
           {
-            question: 'How long does bespoke tailoring take in Bogor?',
+            question: 'How long does bespoke tailoring take in Bandung?',
             answer:
               'It depends on the material and design complexity you choose — a production time estimate is shown live as you explore design combinations in the Design Studio.',
           },
           {
             question: 'Do I have to visit in person for a bespoke measurement?',
             answer:
-              'The final measurement is still done in person by our fitter at the Bogor workshop to make sure your Digital Body Profile is accurate. Initial consultation and design selection can start online first.',
+              'The final measurement is still done in person by our fitter at the Bandung workshop to make sure your Digital Body Profile is accurate. Initial consultation and design selection can start online first.',
           },
           {
             question: 'Is bespoke tailoring more expensive than a regular tailor?',
@@ -247,19 +247,19 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_EN,
           REVIEW_FAQ_ITEM_EN,
         ],
-        whatsappMessage: 'Hello Tarda, I would like to book a bespoke tailoring consultation at your Bogor workshop.',
+        whatsappMessage: 'Hello Local Tailor, I would like to book a bespoke tailoring consultation at your Bandung workshop.',
         ctaLabel: 'Book a Bespoke Consultation',
       },
       ar: {
         garmentLabel: 'الثوب والقميص الإسلامي',
-        keywordPrimary: 'خياط بيسبوك في بوغور',
-        keywordSecondary: ['خياطة بيسبوك بوغور', 'خياط ثوب مخصص بوغور', 'خياط بيسبوك بالقرب مني'],
+        keywordPrimary: 'خياط بيسبوك في باندونغ',
+        keywordSecondary: ['خياطة بيسبوك باندونغ', 'خياط ثوب مخصص باندونغ', 'خياط بيسبوك بالقرب مني'],
         hero: {
-          eyebrow: 'خياط بيسبوك بوغور',
-          headline: 'خياط بيسبوك في بوغور — نمط شخصي من الصفر، وليس مقاسًا جاهزًا',
+          eyebrow: 'خياط بيسبوك باندونغ',
+          headline: 'خياط بيسبوك في باندونغ — نمط شخصي من الصفر، وليس مقاسًا جاهزًا',
           subheadline:
-            'بصفتنا خياطًا متخصصًا في التفصيل حسب الطلب (بيسبوك) في بوغور، لا نقوم بتعديل نمط جاهز حسب مقاسك — بل يُصاغ كل نمط من الصفر بناءً على قياسات جسمك الخاصة، قبل قص أي قطعة قماش.',
-          keywordPhrases: ['خياط بيسبوك بوغور', 'خياطة بيسبوك بوغور', 'خياط ثوب مخصص بوغور'],
+            'بصفتنا خياطًا متخصصًا في التفصيل حسب الطلب (بيسبوك) في باندونغ، لا نقوم بتعديل نمط جاهز حسب مقاسك — بل يُصاغ كل نمط من الصفر بناءً على قياسات جسمك الخاصة، قبل قص أي قطعة قماش.',
+          keywordPhrases: ['خياط بيسبوك باندونغ', 'خياطة بيسبوك باندونغ', 'خياط ثوب مخصص باندونغ'],
         },
         valueProps: [
           {
@@ -287,14 +287,14 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
               'التفصيل حسب الطلب العادي يُعدّل نمطًا جاهزًا حسب مقاسك. أما البيسبوك فيعني تصميم النمط من الصفر خصيصًا لنسب جسمك — دون أي قالب أساسي على الإطلاق.',
           },
           {
-            question: 'كم تستغرق عملية خياطة البيسبوك في بوغور؟',
+            question: 'كم تستغرق عملية خياطة البيسبوك في باندونغ؟',
             answer:
               'يعتمد ذلك على القماش وتعقيد التصميم الذي تختاره — يظهر تقدير مدة الإنتاج مباشرة أثناء استكشافك لتركيبات التصميم في استوديو التصميم.',
           },
           {
             question: 'هل يجب أن أحضر شخصيًا لأخذ القياسات؟',
             answer:
-              'يتم القياس النهائي دائمًا حضوريًا من قبل خبير القياس لدينا في ورشة بوغور لضمان دقة ملفك الشخصي الرقمي. يمكن بدء الاستشارة الأولية واختيار التصميم عبر الإنترنت أولاً.',
+              'يتم القياس النهائي دائمًا حضوريًا من قبل خبير القياس لدينا في ورشة باندونغ لضمان دقة ملفك الشخصي الرقمي. يمكن بدء الاستشارة الأولية واختيار التصميم عبر الإنترنت أولاً.',
           },
           {
             question: 'هل خياطة البيسبوك أغلى من الخياطة العادية؟',
@@ -303,27 +303,27 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_AR,
           REVIEW_FAQ_ITEM_AR,
         ],
-        whatsappMessage: 'مرحبًا Tarda، أرغب في حجز استشارة خياطة بيسبوك في ورشتكم في بوغور.',
+        whatsappMessage: 'مرحبًا Local Tailor، أرغب في حجز استشارة خياطة بيسبوك في ورشتكم في باندونغ.',
         ctaLabel: 'احجز استشارة بيسبوك',
       },
     },
   },
 
   // -----------------------------------------------------------------------
-  // tailor-premium-bogor — premium-tier positioning: material sourcing,
+  // tailor-premium-bandung — premium-tier positioning: material sourcing,
   // hand-finishing, quality control depth. Price-insensitive audience.
   // -----------------------------------------------------------------------
   {
-    slug: 'tailor-premium-bogor',
+    slug: 'tailor-premium-bandung',
     garmentLabel: 'thobe premium',
-    keywordPrimary: 'tailor premium bogor',
-    keywordSecondary: ['penjahit premium bogor', 'tailor high end bogor', 'jasa jahit premium bogor'],
+    keywordPrimary: 'tailor premium bandung',
+    keywordSecondary: ['penjahit premium bandung', 'tailor high end bandung', 'jasa jahit premium bandung'],
     hero: {
-      eyebrow: 'Tailor Premium Bogor',
-      headline: 'Tailor Premium Bogor — Material Impor, Finishing Tangan, Quality Control Penuh',
+      eyebrow: 'Tailor Premium Bandung',
+      headline: 'Tailor Premium Bandung — Material Impor, Finishing Tangan, Quality Control Penuh',
       subheadline:
-        'Sebagai tailor premium Bogor, kami memilih material impor, menyelesaikan detail penting dengan tangan, dan memeriksa setiap garmen sebelum dikirim — bukan sekadar label "premium" tanpa proses di baliknya.',
-      keywordPhrases: ['tailor premium bogor', 'penjahit premium bogor', 'tailor high end bogor'],
+        'Sebagai tailor premium Bandung, kami memilih material impor, menyelesaikan detail penting dengan tangan, dan memeriksa setiap garmen sebelum dikirim — bukan sekadar label "premium" tanpa proses di baliknya.',
+      keywordPhrases: ['tailor premium bandung', 'penjahit premium bandung', 'tailor high end bandung'],
     },
     valueProps: [
       {
@@ -350,7 +350,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           'Kombinasi material impor terkurasi, sebagian finishing dikerjakan tangan, dan inspeksi kualitas 7 titik sebelum garmen dikirim — bukan hanya harga yang lebih tinggi tanpa proses tambahan.',
       },
       {
-        question: 'Apakah tailor premium ini lebih mahal dari tailor standar di Bogor?',
+        question: 'Apakah tailor premium ini lebih mahal dari tailor standar di Bandung?',
         answer:
           'Harga mengikuti material dan kompleksitas desain yang dipilih, dikonfirmasi saat konsultasi — tidak ada daftar harga tetap karena setiap garmen dibuat sesuai pesanan.',
       },
@@ -367,23 +367,23 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     ],
     reviewHighlightIds: ['rizky-surabaya-daily-wear'],
     relatedGuides: [
-      { category: 'bogor', slug: 'bespoke-tailor' },
+      { category: 'bandung', slug: 'bespoke-tailor' },
       { category: 'tailoring', slug: 'bespoke-vs-made-to-measure' },
       { category: 'questions', slug: 'how-much-does-bespoke-thobe-cost' },
     ],
-    whatsappMessage: 'Halo Tarda, saya ingin konsultasi untuk tailoring premium di workshop Bogor.',
+    whatsappMessage: 'Halo Local Tailor, saya ingin konsultasi untuk tailoring premium di workshop Bandung.',
     ctaLabel: 'Konsultasi Premium Tailoring',
     translations: {
       en: {
         garmentLabel: 'premium thobe',
-        keywordPrimary: 'premium tailor bogor',
-        keywordSecondary: ['premium tailoring bogor', 'high end tailor bogor', 'luxury tailor bogor'],
+        keywordPrimary: 'premium tailor bandung',
+        keywordSecondary: ['premium tailoring bandung', 'high end tailor bandung', 'luxury tailor bandung'],
         hero: {
-          eyebrow: 'Premium Tailor Bogor',
-          headline: 'Premium Tailor in Bogor — Imported Fabric, Hand Finishing, Full Quality Control',
+          eyebrow: 'Premium Tailor Bandung',
+          headline: 'Premium Tailor in Bandung — Imported Fabric, Hand Finishing, Full Quality Control',
           subheadline:
-            'As a premium tailor in Bogor, we choose imported fabrics, hand-finish the details that matter, and inspect every garment before it ships — not just a "premium" label with no real process behind it.',
-          keywordPhrases: ['premium tailor bogor', 'premium tailoring bogor', 'high end tailor bogor'],
+            'As a premium tailor in Bandung, we choose imported fabrics, hand-finish the details that matter, and inspect every garment before it ships — not just a "premium" label with no real process behind it.',
+          keywordPhrases: ['premium tailor bandung', 'premium tailoring bandung', 'high end tailor bandung'],
         },
         valueProps: [
           {
@@ -410,7 +410,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
               'The combination of curated imported fabric, hand-finished detailing, and a 7-point quality inspection before shipping — not just a higher price with no added process.',
           },
           {
-            question: 'Is this premium tailor more expensive than a standard tailor in Bogor?',
+            question: 'Is this premium tailor more expensive than a standard tailor in Bandung?',
             answer:
               "Price follows the material and design complexity you choose, confirmed at consultation — there's no fixed price list since every garment is made-to-order.",
           },
@@ -426,19 +426,19 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_EN,
           REVIEW_FAQ_ITEM_EN,
         ],
-        whatsappMessage: 'Hello Tarda, I would like a consultation for premium tailoring at your Bogor workshop.',
+        whatsappMessage: 'Hello Local Tailor, I would like a consultation for premium tailoring at your Bandung workshop.',
         ctaLabel: 'Book a Premium Tailoring Consultation',
       },
       ar: {
         garmentLabel: 'الثوب الفاخر',
-        keywordPrimary: 'خياط فاخر في بوغور',
-        keywordSecondary: ['تفصيل فاخر بوغور', 'خياط راقٍ بوغور', 'خياط ملابس فاخرة بوغور'],
+        keywordPrimary: 'خياط فاخر في باندونغ',
+        keywordSecondary: ['تفصيل فاخر باندونغ', 'خياط راقٍ باندونغ', 'خياط ملابس فاخرة باندونغ'],
         hero: {
-          eyebrow: 'خياط فاخر بوغور',
-          headline: 'خياط فاخر في بوغور — قماش مستورد، تشطيب يدوي، ومراقبة جودة كاملة',
+          eyebrow: 'خياط فاخر باندونغ',
+          headline: 'خياط فاخر في باندونغ — قماش مستورد، تشطيب يدوي، ومراقبة جودة كاملة',
           subheadline:
-            'بصفتنا خياطًا فاخرًا في بوغور، نختار الأقمشة المستوردة، وننجز التفاصيل المهمة يدويًا، ونفحص كل قطعة قبل شحنها — وليس مجرد وصف "فاخر" بلا عملية حقيقية خلفه.',
-          keywordPhrases: ['خياط فاخر بوغور', 'تفصيل فاخر بوغور', 'خياط راقٍ بوغور'],
+            'بصفتنا خياطًا فاخرًا في باندونغ، نختار الأقمشة المستوردة، وننجز التفاصيل المهمة يدويًا، ونفحص كل قطعة قبل شحنها — وليس مجرد وصف "فاخر" بلا عملية حقيقية خلفه.',
+          keywordPhrases: ['خياط فاخر باندونغ', 'تفصيل فاخر باندونغ', 'خياط راقٍ باندونغ'],
         },
         valueProps: [
           {
@@ -465,7 +465,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
               'مزيج من الأقمشة المستوردة المنتقاة، والتشطيب اليدوي الجزئي، وفحص الجودة من 7 نقاط قبل الشحن — وليس مجرد سعر أعلى بلا عملية إضافية.',
           },
           {
-            question: 'هل هذا الخياط الفاخر أغلى من خياط عادي في بوغور؟',
+            question: 'هل هذا الخياط الفاخر أغلى من خياط عادي في باندونغ؟',
             answer: 'يعتمد السعر على القماش وتعقيد التصميم الذي تختاره، ويتم تأكيده أثناء الاستشارة — لا توجد قائمة أسعار ثابتة لأن كل قطعة تُصنع حسب الطلب.',
           },
           {
@@ -480,27 +480,27 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_AR,
           REVIEW_FAQ_ITEM_AR,
         ],
-        whatsappMessage: 'مرحبًا Tarda، أرغب في استشارة للتفصيل الفاخر في ورشتكم في بوغور.',
+        whatsappMessage: 'مرحبًا Local Tailor، أرغب في استشارة للتفصيل الفاخر في ورشتكم في باندونغ.',
         ctaLabel: 'احجز استشارة تفصيل فاخر',
       },
     },
   },
 
   // -----------------------------------------------------------------------
-  // jahit-thobe-bogor — functional/service-based query: "where can I get
-  // a thobe made in Bogor". Practical, process-focused angle.
+  // jahit-thobe-bandung — functional/service-based query: "where can I get
+  // a thobe made in Bandung". Practical, process-focused angle.
   // -----------------------------------------------------------------------
   {
-    slug: 'jahit-thobe-bogor',
+    slug: 'jahit-thobe-bandung',
     garmentLabel: 'thobe',
-    keywordPrimary: 'jahit thobe bogor',
-    keywordSecondary: ['tempat jahit thobe bogor', 'jasa jahit thobe bogor', 'penjahit thobe bogor'],
+    keywordPrimary: 'jahit thobe bandung',
+    keywordSecondary: ['tempat jahit thobe bandung', 'jasa jahit thobe bandung', 'penjahit thobe bandung'],
     hero: {
-      eyebrow: 'Jahit Thobe Bogor',
-      headline: 'Jahit Thobe Bogor — Dari Konsultasi Sampai Thobe Selesai di Satu Workshop',
+      eyebrow: 'Jahit Thobe Bandung',
+      headline: 'Jahit Thobe Bandung — Dari Konsultasi Sampai Thobe Selesai di Satu Workshop',
       subheadline:
-        'Butuh tempat jahit thobe di Bogor yang mengerjakan dari pola personal, bukan ukuran standar? Tarda menangani konsultasi, pengukuran, pola, dan produksi thobe Anda dalam satu proses.',
-      keywordPhrases: ['jahit thobe bogor', 'tempat jahit thobe bogor', 'jasa jahit thobe bogor', 'penjahit thobe bogor'],
+        'Butuh tempat jahit thobe di Bandung yang mengerjakan dari pola personal, bukan ukuran standar? Local Tailor menangani konsultasi, pengukuran, pola, dan produksi thobe Anda dalam satu proses.',
+      keywordPhrases: ['jahit thobe bandung', 'tempat jahit thobe bandung', 'jasa jahit thobe bandung', 'penjahit thobe bandung'],
     },
     valueProps: [
       {
@@ -522,7 +522,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     ],
     faq: [
       {
-        question: 'Berapa lama proses jahit thobe custom di Bogor ini?',
+        question: 'Berapa lama proses jahit thobe custom di Bandung ini?',
         answer:
           'Tergantung material dan kompleksitas desain — estimasi waktu produksi ditampilkan langsung saat Anda menjelajahi kombinasi desain di Design Studio, sebelum Anda memesan.',
       },
@@ -532,34 +532,34 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
       },
       {
         question: 'Apakah pengukuran dilakukan sendiri atau oleh fitter?',
-        answer: 'Pengukuran final dilakukan langsung oleh fitter kami di workshop Bogor untuk memastikan hasil jahit thobe akurat.',
+        answer: 'Pengukuran final dilakukan langsung oleh fitter kami di workshop Bandung untuk memastikan hasil jahit thobe akurat.',
       },
       {
         question: 'Apakah bisa jahit baju koko juga, bukan hanya thobe?',
-        answer: 'Bisa. Proses pola personal yang sama juga berlaku untuk custom baju koko — lihat halaman custom baju koko Bogor untuk detailnya.',
+        answer: 'Bisa. Proses pola personal yang sama juga berlaku untuk custom baju koko — lihat halaman custom baju koko Bandung untuk detailnya.',
       },
       LOCATION_FAQ_ITEM,
       REVIEW_FAQ_ITEM,
     ],
-    reviewHighlightIds: ['yusuf-bogor-umrah'],
+    reviewHighlightIds: ['yusuf-bandung-umrah'],
     relatedGuides: [
-      { category: 'bogor', slug: 'custom-thobe' },
+      { category: 'bandung', slug: 'custom-thobe' },
       { category: 'tailoring', slug: 'pattern-drafting' },
       { category: 'measurements', slug: 'how-to-measure-body' },
     ],
-    whatsappMessage: 'Halo Tarda, saya ingin booking jahit thobe custom di workshop Bogor.',
+    whatsappMessage: 'Halo Local Tailor, saya ingin booking jahit thobe custom di workshop Bandung.',
     ctaLabel: 'Booking Jahit Thobe Custom',
     translations: {
       en: {
         garmentLabel: 'thobe',
-        keywordPrimary: 'thobe tailoring bogor',
-        keywordSecondary: ['thobe tailor bogor', 'custom thobe bogor', 'thobe maker bogor'],
+        keywordPrimary: 'thobe tailoring bandung',
+        keywordSecondary: ['thobe tailor bandung', 'custom thobe bandung', 'thobe maker bandung'],
         hero: {
-          eyebrow: 'Thobe Tailoring Bogor',
-          headline: 'Thobe Tailoring in Bogor — From Consultation to a Finished Thobe, One Workshop',
+          eyebrow: 'Thobe Tailoring Bandung',
+          headline: 'Thobe Tailoring in Bandung — From Consultation to a Finished Thobe, One Workshop',
           subheadline:
-            'Looking for a thobe tailor in Bogor who works from a personal pattern, not a standard size? Tarda handles your consultation, measurement, pattern, and production in one process.',
-          keywordPhrases: ['thobe tailoring bogor', 'thobe tailor bogor', 'custom thobe bogor', 'thobe maker bogor'],
+            'Looking for a thobe tailor in Bandung who works from a personal pattern, not a standard size? Local Tailor handles your consultation, measurement, pattern, and production in one process.',
+          keywordPhrases: ['thobe tailoring bandung', 'thobe tailor bandung', 'custom thobe bandung', 'thobe maker bandung'],
         },
         valueProps: [
           {
@@ -582,7 +582,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
         ],
         faq: [
           {
-            question: 'How long does custom thobe tailoring take in Bogor?',
+            question: 'How long does custom thobe tailoring take in Bandung?',
             answer:
               'It depends on the material and design complexity — a production time estimate is shown live as you explore design combinations in the Design Studio, before you order.',
           },
@@ -592,28 +592,28 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           },
           {
             question: 'Is the measurement done by myself or by a fitter?',
-            answer: 'The final measurement is always done in person by our fitter at the Bogor workshop, to make sure the thobe fits accurately.',
+            answer: 'The final measurement is always done in person by our fitter at the Bandung workshop, to make sure the thobe fits accurately.',
           },
           {
             question: 'Can you tailor baju koko too, not just thobe?',
-            answer: 'Yes. The same personal pattern process also applies to custom baju koko — see the custom baju koko Bogor page for details.',
+            answer: 'Yes. The same personal pattern process also applies to custom baju koko — see the custom baju koko Bandung page for details.',
           },
           LOCATION_FAQ_ITEM_EN,
           REVIEW_FAQ_ITEM_EN,
         ],
-        whatsappMessage: 'Hello Tarda, I would like to book custom thobe tailoring at your Bogor workshop.',
+        whatsappMessage: 'Hello Local Tailor, I would like to book custom thobe tailoring at your Bandung workshop.',
         ctaLabel: 'Book Custom Thobe Tailoring',
       },
       ar: {
         garmentLabel: 'الثوب',
-        keywordPrimary: 'خياطة ثوب في بوغور',
-        keywordSecondary: ['خياط ثوب بوغور', 'ثوب مخصص بوغور', 'صانع ثوب بوغور'],
+        keywordPrimary: 'خياطة ثوب في باندونغ',
+        keywordSecondary: ['خياط ثوب باندونغ', 'ثوب مخصص باندونغ', 'صانع ثوب باندونغ'],
         hero: {
-          eyebrow: 'خياطة ثوب بوغور',
-          headline: 'خياطة ثوب في بوغور — من الاستشارة إلى الثوب الجاهز في ورشة واحدة',
+          eyebrow: 'خياطة ثوب باندونغ',
+          headline: 'خياطة ثوب في باندونغ — من الاستشارة إلى الثوب الجاهز في ورشة واحدة',
           subheadline:
-            'تبحث عن خياط ثوب في بوغور يعمل بنمط شخصي، لا بمقاس جاهز؟ يتولى Tarda استشارتك وقياسك ونمطك وإنتاج ثوبك في عملية واحدة متكاملة.',
-          keywordPhrases: ['خياطة ثوب بوغور', 'خياط ثوب بوغور', 'ثوب مخصص بوغور'],
+            'تبحث عن خياط ثوب في باندونغ يعمل بنمط شخصي، لا بمقاس جاهز؟ يتولى Local Tailor استشارتك وقياسك ونمطك وإنتاج ثوبك في عملية واحدة متكاملة.',
+          keywordPhrases: ['خياطة ثوب باندونغ', 'خياط ثوب باندونغ', 'ثوب مخصص باندونغ'],
         },
         valueProps: [
           {
@@ -635,7 +635,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
         ],
         faq: [
           {
-            question: 'كم تستغرق خياطة ثوب مخصص في بوغور؟',
+            question: 'كم تستغرق خياطة ثوب مخصص في باندونغ؟',
             answer:
               'يعتمد ذلك على القماش وتعقيد التصميم — يظهر تقدير مدة الإنتاج مباشرة أثناء استكشاف تركيبات التصميم في استوديو التصميم، قبل الطلب.',
           },
@@ -645,37 +645,37 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           },
           {
             question: 'هل يتم القياس ذاتيًا أم من قبل خبير قياس؟',
-            answer: 'يتم القياس النهائي دائمًا حضوريًا من قبل خبير القياس لدينا في ورشة بوغور لضمان دقة مقاس الثوب.',
+            answer: 'يتم القياس النهائي دائمًا حضوريًا من قبل خبير القياس لدينا في ورشة باندونغ لضمان دقة مقاس الثوب.',
           },
           {
             question: 'هل يمكنكم خياطة القميص الإسلامي أيضًا وليس الثوب فقط؟',
-            answer: 'نعم. تُطبَّق نفس عملية النمط الشخصي على القميص الإسلامي المخصص أيضًا — راجع صفحة القميص الإسلامي المخصص في بوغور للتفاصيل.',
+            answer: 'نعم. تُطبَّق نفس عملية النمط الشخصي على القميص الإسلامي المخصص أيضًا — راجع صفحة القميص الإسلامي المخصص في باندونغ للتفاصيل.',
           },
           LOCATION_FAQ_ITEM_AR,
           REVIEW_FAQ_ITEM_AR,
         ],
-        whatsappMessage: 'مرحبًا Tarda، أرغب في حجز خياطة ثوب مخصص في ورشتكم في بوغور.',
+        whatsappMessage: 'مرحبًا Local Tailor، أرغب في حجز خياطة ثوب مخصص في ورشتكم في باندونغ.',
         ctaLabel: 'احجز خياطة ثوب مخصص',
       },
     },
   },
 
   // -----------------------------------------------------------------------
-  // custom-baju-koko-bogor — distinct garment identity from "thobe" in
+  // custom-baju-koko-bandung — distinct garment identity from "thobe" in
   // Indonesian search behavior, even though the underlying construction
   // process is the same bespoke pipeline.
   // -----------------------------------------------------------------------
   {
-    slug: 'custom-baju-koko-bogor',
+    slug: 'custom-baju-koko-bandung',
     garmentLabel: 'baju koko',
-    keywordPrimary: 'custom baju koko bogor',
-    keywordSecondary: ['jahit baju koko bogor', 'tailor baju koko bogor', 'jasa jahit koko custom bogor'],
+    keywordPrimary: 'custom baju koko bandung',
+    keywordSecondary: ['jahit baju koko bandung', 'tailor baju koko bandung', 'jasa jahit koko custom bandung'],
     hero: {
-      eyebrow: 'Custom Baju Koko Bogor',
-      headline: 'Custom Baju Koko Bogor — Pola Personal untuk Setiap Detail Kerah dan Kancing',
+      eyebrow: 'Custom Baju Koko Bandung',
+      headline: 'Custom Baju Koko Bandung — Pola Personal untuk Setiap Detail Kerah dan Kancing',
       subheadline:
-        'Tarda mengerjakan custom baju koko di Bogor dengan proses pola personal yang sama seperti bespoke thobe — bukan konveksi ukuran standar yang diproduksi massal.',
-      keywordPhrases: ['custom baju koko bogor', 'jahit baju koko bogor', 'tailor baju koko bogor'],
+        'Local Tailor mengerjakan custom baju koko di Bandung dengan proses pola personal yang sama seperti bespoke thobe — bukan konveksi ukuran standar yang diproduksi massal.',
+      keywordPhrases: ['custom baju koko bandung', 'jahit baju koko bandung', 'tailor baju koko bandung'],
     },
     valueProps: [
       {
@@ -718,23 +718,23 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     ],
     reviewHighlightIds: ['ahmad-jakarta-wedding'],
     relatedGuides: [
-      { category: 'bogor', slug: 'custom-thobe' },
+      { category: 'bandung', slug: 'custom-thobe' },
       { category: 'tailoring', slug: 'what-is-bespoke' },
       { category: 'styling', slug: 'formal-thobe' },
     ],
-    whatsappMessage: 'Halo Tarda, saya ingin konsultasi untuk custom baju koko di workshop Bogor.',
+    whatsappMessage: 'Halo Local Tailor, saya ingin konsultasi untuk custom baju koko di workshop Bandung.',
     ctaLabel: 'Konsultasi Baju Koko Custom',
     translations: {
       en: {
         garmentLabel: 'baju koko',
-        keywordPrimary: 'custom baju koko bogor',
-        keywordSecondary: ['baju koko tailor bogor', 'tailored baju koko bogor', 'custom koko shirt bogor'],
+        keywordPrimary: 'custom baju koko bandung',
+        keywordSecondary: ['baju koko tailor bandung', 'tailored baju koko bandung', 'custom koko shirt bandung'],
         hero: {
-          eyebrow: 'Custom Baju Koko Bogor',
-          headline: 'Custom Baju Koko in Bogor — A Personal Pattern for Every Collar and Button Detail',
+          eyebrow: 'Custom Baju Koko Bandung',
+          headline: 'Custom Baju Koko in Bandung — A Personal Pattern for Every Collar and Button Detail',
           subheadline:
-            'Tarda makes custom baju koko in Bogor with the same personal-pattern process as bespoke thobe — not mass-produced standard sizing.',
-          keywordPhrases: ['custom baju koko bogor', 'baju koko tailor bogor', 'tailored baju koko bogor'],
+            'Local Tailor makes custom baju koko in Bandung with the same personal-pattern process as bespoke thobe — not mass-produced standard sizing.',
+          keywordPhrases: ['custom baju koko bandung', 'baju koko tailor bandung', 'tailored baju koko bandung'],
         },
         valueProps: [
           {
@@ -775,19 +775,19 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_EN,
           REVIEW_FAQ_ITEM_EN,
         ],
-        whatsappMessage: 'Hello Tarda, I would like a consultation for custom baju koko at your Bogor workshop.',
+        whatsappMessage: 'Hello Local Tailor, I would like a consultation for custom baju koko at your Bandung workshop.',
         ctaLabel: 'Book a Custom Baju Koko Consultation',
       },
       ar: {
         garmentLabel: 'القميص الإسلامي (باجو كوكو)',
-        keywordPrimary: 'باجو كوكو مخصص في بوغور',
-        keywordSecondary: ['خياط باجو كوكو بوغور', 'باجو كوكو حسب الطلب بوغور', 'قميص كوكو مخصص بوغور'],
+        keywordPrimary: 'باجو كوكو مخصص في باندونغ',
+        keywordSecondary: ['خياط باجو كوكو باندونغ', 'باجو كوكو حسب الطلب باندونغ', 'قميص كوكو مخصص باندونغ'],
         hero: {
-          eyebrow: 'باجو كوكو مخصص بوغور',
-          headline: 'باجو كوكو مخصص في بوغور — نمط شخصي لكل تفصيلة ياقة وزر',
+          eyebrow: 'باجو كوكو مخصص باندونغ',
+          headline: 'باجو كوكو مخصص في باندونغ — نمط شخصي لكل تفصيلة ياقة وزر',
           subheadline:
-            'يصنع Tarda باجو كوكو مخصصًا في بوغور بنفس عملية النمط الشخصي المستخدمة للثوب البيسبوك — وليس إنتاجًا جماعيًا بمقاسات موحدة.',
-          keywordPhrases: ['باجو كوكو مخصص بوغور', 'خياط باجو كوكو بوغور', 'باجو كوكو حسب الطلب بوغور'],
+            'يصنع Local Tailor باجو كوكو مخصصًا في باندونغ بنفس عملية النمط الشخصي المستخدمة للثوب البيسبوك — وليس إنتاجًا جماعيًا بمقاسات موحدة.',
+          keywordPhrases: ['باجو كوكو مخصص باندونغ', 'خياط باجو كوكو باندونغ', 'باجو كوكو حسب الطلب باندونغ'],
         },
         valueProps: [
           {
@@ -827,27 +827,27 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_AR,
           REVIEW_FAQ_ITEM_AR,
         ],
-        whatsappMessage: 'مرحبًا Tarda، أرغب في استشارة لباجو كوكو مخصص في ورشتكم في بوغور.',
+        whatsappMessage: 'مرحبًا Local Tailor، أرغب في استشارة لباجو كوكو مخصص في ورشتكم في باندونغ.',
         ctaLabel: 'احجز استشارة باجو كوكو مخصص',
       },
     },
   },
 
   // -----------------------------------------------------------------------
-  // tailor-baju-umroh-bogor — travel/climate/quantity-specific angle,
+  // tailor-baju-umroh-bandung — travel/climate/quantity-specific angle,
   // reusing the real, already-shipped W6-5 umrah Knowledge cluster.
   // -----------------------------------------------------------------------
   {
-    slug: 'tailor-baju-umroh-bogor',
+    slug: 'tailor-baju-umroh-bandung',
     garmentLabel: 'thobe umroh',
-    keywordPrimary: 'tailor baju umroh bogor',
-    keywordSecondary: ['jahit baju umroh bogor', 'custom thobe umroh bogor', 'tailor umroh bogor'],
+    keywordPrimary: 'tailor baju umroh bandung',
+    keywordSecondary: ['jahit baju umroh bandung', 'custom thobe umroh bandung', 'tailor umroh bandung'],
     hero: {
-      eyebrow: 'Tailor Baju Umroh Bogor',
-      headline: 'Tailor Baju Umroh Bogor — Material dan Jumlah Disesuaikan untuk Perjalanan Ibadah',
+      eyebrow: 'Tailor Baju Umroh Bandung',
+      headline: 'Tailor Baju Umroh Bandung — Material dan Jumlah Disesuaikan untuk Perjalanan Ibadah',
       subheadline:
-        'Tarda membantu Anda memilih material yang tepat untuk iklim Mekkah dan Madinah, serta menentukan jumlah thobe umroh yang ideal — bukan sekadar menjahit tanpa mempertimbangkan kebutuhan perjalanan.',
-      keywordPhrases: ['tailor baju umroh bogor', 'jahit baju umroh bogor', 'custom thobe umroh bogor'],
+        'Local Tailor membantu Anda memilih material yang tepat untuk iklim Mekkah dan Madinah, serta menentukan jumlah thobe umroh yang ideal — bukan sekadar menjahit tanpa mempertimbangkan kebutuhan perjalanan.',
+      keywordPhrases: ['tailor baju umroh bandung', 'jahit baju umroh bandung', 'custom thobe umroh bandung'],
     },
     valueProps: [
       {
@@ -888,25 +888,25 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
       LOCATION_FAQ_ITEM,
       REVIEW_FAQ_ITEM,
     ],
-    reviewHighlightIds: ['yusuf-bogor-umrah'],
+    reviewHighlightIds: ['yusuf-bandung-umrah'],
     relatedGuides: [
       { category: 'umrah', slug: 'best-fabric' },
       { category: 'umrah', slug: 'how-many-thobes' },
-      { category: 'bogor', slug: 'custom-thobe' },
+      { category: 'bandung', slug: 'custom-thobe' },
     ],
-    whatsappMessage: 'Halo Tarda, saya ingin booking konsultasi thobe umroh di workshop Bogor.',
+    whatsappMessage: 'Halo Local Tailor, saya ingin booking konsultasi thobe umroh di workshop Bandung.',
     ctaLabel: 'Booking Thobe Umroh',
     translations: {
       en: {
         garmentLabel: 'umrah thobe',
-        keywordPrimary: 'umrah tailor bogor',
-        keywordSecondary: ['umrah thobe tailor bogor', 'custom umrah thobe bogor', 'umrah clothing tailor bogor'],
+        keywordPrimary: 'umrah tailor bandung',
+        keywordSecondary: ['umrah thobe tailor bandung', 'custom umrah thobe bandung', 'umrah clothing tailor bandung'],
         hero: {
-          eyebrow: 'Umrah Tailor Bogor',
-          headline: 'Umrah Tailor in Bogor — Material and Quantity Matched to Your Journey',
+          eyebrow: 'Umrah Tailor Bandung',
+          headline: 'Umrah Tailor in Bandung — Material and Quantity Matched to Your Journey',
           subheadline:
-            "Tarda helps you choose the right material for the Mecca and Madinah climate, and decide the ideal number of umrah thobes to bring — not just sewing without considering your journey's needs.",
-          keywordPhrases: ['umrah tailor bogor', 'umrah thobe tailor bogor', 'custom umrah thobe bogor'],
+            "Local Tailor helps you choose the right material for the Mecca and Madinah climate, and decide the ideal number of umrah thobes to bring — not just sewing without considering your journey's needs.",
+          keywordPhrases: ['umrah tailor bandung', 'umrah thobe tailor bandung', 'custom umrah thobe bandung'],
         },
         valueProps: [
           {
@@ -949,19 +949,19 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_EN,
           REVIEW_FAQ_ITEM_EN,
         ],
-        whatsappMessage: 'Hello Tarda, I would like to book an umrah thobe consultation at your Bogor workshop.',
+        whatsappMessage: 'Hello Local Tailor, I would like to book an umrah thobe consultation at your Bandung workshop.',
         ctaLabel: 'Book Umrah Thobe Tailoring',
       },
       ar: {
         garmentLabel: 'ثوب العمرة',
-        keywordPrimary: 'خياط ملابس عمرة في بوغور',
-        keywordSecondary: ['خياط ثوب عمرة بوغور', 'ثوب عمرة مخصص بوغور', 'تفصيل ملابس عمرة بوغور'],
+        keywordPrimary: 'خياط ملابس عمرة في باندونغ',
+        keywordSecondary: ['خياط ثوب عمرة باندونغ', 'ثوب عمرة مخصص باندونغ', 'تفصيل ملابس عمرة باندونغ'],
         hero: {
-          eyebrow: 'خياط ملابس عمرة بوغور',
-          headline: 'خياط ملابس عمرة في بوغور — القماش والكمية بما يناسب رحلتك',
+          eyebrow: 'خياط ملابس عمرة باندونغ',
+          headline: 'خياط ملابس عمرة في باندونغ — القماش والكمية بما يناسب رحلتك',
           subheadline:
-            'يساعدك Tarda في اختيار القماش المناسب لمناخ مكة والمدينة، وتحديد العدد المثالي من أثواب العمرة التي تحتاجها — وليس مجرد الخياطة دون مراعاة احتياجات رحلتك.',
-          keywordPhrases: ['خياط ملابس عمرة بوغور', 'خياط ثوب عمرة بوغور', 'ثوب عمرة مخصص بوغور'],
+            'يساعدك Local Tailor في اختيار القماش المناسب لمناخ مكة والمدينة، وتحديد العدد المثالي من أثواب العمرة التي تحتاجها — وليس مجرد الخياطة دون مراعاة احتياجات رحلتك.',
+          keywordPhrases: ['خياط ملابس عمرة باندونغ', 'خياط ثوب عمرة باندونغ', 'ثوب عمرة مخصص باندونغ'],
         },
         valueProps: [
           {
@@ -1001,7 +1001,7 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
           LOCATION_FAQ_ITEM_AR,
           REVIEW_FAQ_ITEM_AR,
         ],
-        whatsappMessage: 'مرحبًا Tarda، أرغب في حجز استشارة لثوب العمرة في ورشتكم في بوغور.',
+        whatsappMessage: 'مرحبًا Local Tailor، أرغب في حجز استشارة لثوب العمرة في ورشتكم في باندونغ.',
         ctaLabel: 'احجز خياطة ثوب عمرة',
       },
     },

@@ -606,7 +606,7 @@ export function getMaterialFaq(material: FabricMaterial): FabricFaqItem[] {
 
   faq.push({
     question: `Is ${material.name} suitable for custom thobe?`,
-    answer: `Yes — ${material.name}${material.composition ? ` (${material.composition})` : ''} is part of Tarda's Fabric Explorer catalog and can be customized directly in Design Studio for a bespoke thobe.`,
+    answer: `Yes — ${material.name}${material.composition ? ` (${material.composition})` : ''} is part of Local Tailor's Fabric Explorer catalog and can be customized directly in Design Studio for a bespoke thobe.`,
   })
 
   if (material.care_instruction) {

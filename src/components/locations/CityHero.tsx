@@ -19,7 +19,7 @@ interface CityHeroProps {
 // attribution is appended to the WhatsApp message so it survives the
 // handoff to WhatsApp.
 export function CityHero({ city, utm }: CityHeroProps) {
-  const whatsappMessage = appendUtmNote(`Halo Tarda, saya di ${city.city} dan ingin konsultasi custom thobe.`, utm ?? {})
+  const whatsappMessage = appendUtmNote(`Halo Local Tailor, saya di ${city.city} dan ingin konsultasi custom thobe.`, utm ?? {})
   const whatsappUrl = buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, whatsappMessage)
 
   return (

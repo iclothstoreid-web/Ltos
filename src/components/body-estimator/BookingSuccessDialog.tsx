@@ -56,7 +56,7 @@ export function BookingSuccessDialog({ open, onClose, draft, input, result }: Bo
         </h2>
 
         <p className="mt-3 font-luxury-sans text-sm leading-relaxed text-luxury-taupe">
-          Body profile Anda sudah tersimpan. Lanjutkan untuk booking Free Measurement dengan fitter Tarda
+          Body profile Anda sudah tersimpan. Lanjutkan untuk booking Free Measurement dengan fitter Local Tailor
           melalui WhatsApp.
         </p>
 

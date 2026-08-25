@@ -65,7 +65,7 @@ export async function generateStaticParams() {
 // statically-generated base page.
 export async function generateMetadata({ params, searchParams }: PageParams): Promise<Metadata> {
   const material = await resolveMaterial(params)
-  if (!material) return { title: 'Material Not Found | Tarda' }
+  if (!material) return { title: 'Material Not Found | Local Tailor' }
 
   const selectedColor = searchParams.color ? await resolveSelectedColor(material.id, searchParams.color) : null
   return withLocaleAlternates(

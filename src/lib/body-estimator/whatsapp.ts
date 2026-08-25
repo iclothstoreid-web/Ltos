@@ -24,7 +24,7 @@ function formatLabel(value: string): string {
 // filled in).
 export function buildWhatsAppBookingMessage({ name, height, weight, age, bodyProfile, fit, size, confidence }: WhatsAppMessageInput): string {
   const lines = [
-    'Halo Tarda,',
+    'Halo Local Tailor,',
     'Saya baru menggunakan Body Profile Estimator.',
     '',
     `Nama: ${name && name.trim() ? name.trim() : '-'}`,
@@ -36,7 +36,7 @@ export function buildWhatsAppBookingMessage({ name, height, weight, age, bodyPro
     `Estimated Size: ${size}`,
     `Confidence: ${confidence}%`,
     '',
-    'Saya ingin booking Free Measurement dengan fitter Tarda.',
+    'Saya ingin booking Free Measurement dengan fitter Local Tailor.',
   ]
   return lines.join('\n')
 }
@@ -45,7 +45,7 @@ export function buildWhatsAppBookingMessage({ name, height, weight, age, bodyPro
 // a deliberately lighter ask than buildWhatsAppBookingMessage: no profile
 // data attached, just opens the conversation.
 export function buildWhatsAppInquiryMessage(): string {
-  return 'Halo Tarda, saya ingin bertanya seputar layanan bespoke tailoring.'
+  return 'Halo Local Tailor, saya ingin bertanya seputar layanan bespoke tailoring.'
 }
 
 // Pastikan URL WhatsApp di-encode dengan benar — encodeURIComponent handles

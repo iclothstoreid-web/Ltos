@@ -48,7 +48,7 @@ export function PremiumCTASection() {
         <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-luxury-gold/20 bg-luxury-charcoal/20 px-6 py-5 text-left">
           <p className="font-luxury-sans text-xs leading-relaxed text-luxury-taupe">
             Estimasi ini hanya berdasarkan data yang Anda masukkan dan bukan ukuran produksi. Untuk hasil yang
-            akurat, lakukan pengukuran langsung oleh fitter Tarda.
+            akurat, lakukan pengukuran langsung oleh fitter Local Tailor.
           </p>
         </div>
       </div>

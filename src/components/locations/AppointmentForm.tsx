@@ -35,7 +35,7 @@ export function AppointmentForm({ city, utm }: AppointmentFormProps) {
     e.preventDefault()
 
     const lines = [
-      'Halo Tarda, saya ingin membuat appointment:',
+      'Halo Local Tailor, saya ingin membuat appointment:',
       `Nama: ${name || '-'}`,
       `Kota: ${customerCity || '-'}`,
       `Jenis Pakaian: ${garmentType}`,

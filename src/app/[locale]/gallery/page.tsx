@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return withLocaleAlternates(
     buildSimplePageMetadata({
       title: 'Gallery',
-      description: 'A curated collection of finished bespoke thobe from Tarda.',
+      description: 'A curated collection of finished bespoke thobe from Local Tailor.',
       path: '/gallery',
     }),
     FABRIC_SITE_ORIGIN,
@@ -58,7 +58,7 @@ export default async function GalleryPage() {
         <MaterialHero
           eyebrow="Gallery"
           title="A Record of Craft"
-          description="A collection of finished bespoke pieces, from Tarda's own model and cutting catalog."
+          description="A collection of finished bespoke pieces, from Local Tailor's own model and cutting catalog."
         />
 
         {pieces.length === 0 ? (
