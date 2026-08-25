@@ -80,11 +80,14 @@ function LeftSidebarComponent({ mobileOpen = false, onMobileClose }: LeftSidebar
             grid), matching .atelier-bg's own texture swap. */}
         <div className="absolute inset-0 pointer-events-none bg-[url('/textures/walnut-grain.png')] bg-repeat [background-size:512px_512px]" />
 
-        <div className="relative px-6 py-6 flex flex-col gap-1 border-b border-outline-variant/80">
+        <Link
+          href="/owner"
+          className="relative px-6 py-6 flex flex-col gap-1 border-b border-outline-variant/80 transition-opacity duration-200 hover:opacity-80"
+        >
           <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Owner OS</span>
           {/* Brand System Upgrade — 2x the previous h-4/16px. */}
           <Logo variant="horizontal" className="h-8 w-auto text-secondary" />
-        </div>
+        </Link>
 
         <div className="relative flex-1 overflow-auto">
           <NavItemList />
@@ -99,11 +102,11 @@ function LeftSidebarComponent({ mobileOpen = false, onMobileClose }: LeftSidebar
           />
           <nav className="fixed inset-y-0 left-0 w-[280px] max-w-[80vw] bg-surface shadow-2xl z-50 flex flex-col lg:hidden">
             <div className="px-6 py-6 flex items-center justify-between border-b border-outline-variant/80">
-              <div className="flex flex-col gap-1">
+              <Link href="/owner" onClick={onMobileClose} className="flex flex-col gap-1">
                 <span className="font-serif text-primary text-title font-normal tracking-[-0.02em]">Owner OS</span>
                 {/* Brand System Upgrade — 2x the previous h-4/16px. */}
           <Logo variant="horizontal" className="h-8 w-auto text-secondary" />
-              </div>
+              </Link>
               <button
                 onClick={onMobileClose}
                 className="p-2 -mr-2 rounded-full hover:bg-on-surface/5 text-secondary"

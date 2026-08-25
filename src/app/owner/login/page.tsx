@@ -56,7 +56,7 @@ export default function OwnerLoginPage() {
       return
     }
 
-    router.push('/command-center')
+    router.push('/owner')
     router.refresh()
   }
 

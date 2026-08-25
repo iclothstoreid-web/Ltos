@@ -1,0 +1,78 @@
+<svg width="1400" height="1400" viewBox="0 0 1400 1400" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    LTOS App Launcher background material (Walnut Wood Texture fix sprint,
+    tonal-exposure follow-up #2). Procedural, not a photo/downloaded asset:
+    two feTurbulence grain layers (one darkening, one warm-lightening,
+    different seeds so they don't cancel out) composited over a Dark
+    Walnut to Warm Walnut to Dark Walnut gradient.
+    The previous public/textures/walnut-grain.png (reused elsewhere in the
+    app, e.g. LeftSidebar.tsx) was inspected directly and found to be a
+    near-white grain map meant for a faint whisper effect on light ivory
+    surfaces; its own internal contrast was too low to ever read as
+    visible wood grain on a dark background at any opacity/blend-mode, so
+    it isn't reused here. This file is the replacement, scoped to this one
+    background use.
+
+    Tonal-exposure follow-up #1: the first version's gradient floor sat too
+    close to near-black at every stop, so most of the page read as "dark
+    brown gradient" with the grain barely legible. Every stop was lifted
+    roughly one exposure step.
+
+    Tonal-exposure follow-up #2 (this pass): #1's fix was under-visible in
+    practice because of geometry, not just color; this file was
+    1600x900 (wide landscape), and the component displays it via
+    object-cover on a container that's actually much taller than wide
+    (header plus 2 rows of tiles plus footnote). Cover crops whichever
+    axis is larger than needed, and on a tall container that meant
+    cropping most of the width, which is exactly where nearly all of that
+    gradient's tonal variation lived (its corner-to-corner axis is very
+    shallow on a wide box), leaving mostly one dark band visible
+    regardless of the color values. Fixed two ways: the canvas is now
+    square (1400x1400, so cover crops evenly instead of overwhelmingly on
+    one axis) and the warm plateau is now a wide band (30 to 72 percent of
+    the gradient) instead of a narrow peak, so a meaningfully large
+    fraction of any crop window lands in or near it regardless of viewport
+    proportions. Warmest stop is #78503A, checked against WCAG's
+    relative-luminance formula: ivory text needs 85% opacity (not 75%) to
+    hold just over 5:1 there. The two grain filters below are
+    byte-for-byte unchanged from the very first version.
+
+    (XML note: an earlier revision of this comment used a doubled hyphen
+    as a prose dash, which is invalid inside an XML comment and made
+    Chrome hard-fail parsing the whole document when loaded by direct
+    navigation. Confirmed by rendering this file standalone and seeing the
+    XML parse-error page instead of the image. Every dash in this comment
+    is now a single hyphen or spelled out.)
+  -->
+  <defs>
+    <linearGradient id="base" x1="5%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#2A1C16"/>
+      <stop offset="14%" stop-color="#33251A"/>
+      <stop offset="30%" stop-color="#5C4028"/>
+      <stop offset="44%" stop-color="#6E4A2E"/>
+      <stop offset="58%" stop-color="#78503A"/>
+      <stop offset="72%" stop-color="#5E4128"/>
+      <stop offset="88%" stop-color="#3A2A1C"/>
+      <stop offset="100%" stop-color="#2A1C16"/>
+    </linearGradient>
+
+    <filter id="darkGrain" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9 0.012" numOctaves="5" seed="11" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.9 0.9 0.9 0 -0.4"/>
+    </filter>
+
+    <filter id="lightGrain" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85 0.014" numOctaves="5" seed="47" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0.55 0  0 0 0 0.4 0  0 0 0 0.22 0  0.9 0.9 0.9 0 -0.6"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="1400" fill="url(#base)"/>
+
+  <g transform="rotate(-7 700 700)">
+    <rect x="-300" y="-300" width="2000" height="2000" filter="url(#darkGrain)" opacity="0.42"/>
+  </g>
+  <g transform="rotate(-7 700 700)">
+    <rect x="-300" y="-300" width="2000" height="2000" filter="url(#lightGrain)" opacity="0.32"/>
+  </g>
+</svg>
