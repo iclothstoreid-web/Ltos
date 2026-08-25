@@ -81,12 +81,23 @@ export async function middleware(request: NextRequest) {
   const normalizedHost = host.split(':')[0].toLowerCase()
   const isLocalTailorHost = normalizedHost.includes('ltos') || normalizedHost.includes('localtailor')
 
-  // Local Tailor must not fall into the legacy auth flow. Keep public root
-  // routing on the marketing homepage and let the brand resolver/locale setup
-  // serve the correct page for the current host. This is intentionally scoped
-  // to the Local Tailor hostname(s) and does not change TARDA routing.
-  if (isLocalTailorHost && (pathname === '/' || pathname === '/login')) {
+  // Local Tailor's apex root must not fall into the legacy auth flow. Keep
+  // public root routing on the marketing homepage and let the brand
+  // resolver/locale setup serve the correct page for the current host.
+  // This is intentionally scoped to the Local Tailor hostname(s) and does
+  // not change TARDA routing.
+  if (isLocalTailorHost && pathname === '/') {
     return NextResponse.redirect(new URL('/en', request.url))
+  }
+
+  // /login used to redirect here too, bouncing straight to the marketing
+  // homepage — that was correct back when /login was only the old
+  // Tarda-branded generic login page (src/app/login/page.tsx) with nowhere
+  // useful to send Local Tailor traffic. Now that /owner/login is LTOS's
+  // real entry point (Owner OS -> App Launcher), /login should open that
+  // instead of being swallowed by the homepage redirect above.
+  if (isLocalTailorHost && pathname === '/login') {
+    return NextResponse.redirect(new URL('/owner/login', request.url))
   }
 
   // Auth-gated operational app — unchanged behavior, never touched by
