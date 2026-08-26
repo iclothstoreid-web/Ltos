@@ -25,6 +25,13 @@ export function isAnalyticsEnabled(): boolean {
   return IS_PRODUCTION || ANALYTICS_DEBUG
 }
 
+/** Same gate as isAnalyticsEnabled(), minus the window check — for the
+ * server-rendered gtag.js bootstrap in the root layout (src/app/layout.tsx),
+ * which must decide this before any client JS runs. */
+export function isGA4BootstrapEnabled(): boolean {
+  return Boolean(GA4_MEASUREMENT_ID) && (IS_PRODUCTION || ANALYTICS_DEBUG)
+}
+
 export function isHeatmapEnabled(): boolean {
   if (typeof window === 'undefined') return false
   if (!CLARITY_PROJECT_ID) return false

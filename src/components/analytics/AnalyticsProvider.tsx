@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { loadGA4 } from '@/lib/analytics/ga4'
 import { loadClarity } from '@/lib/analytics/heatmap'
 import { captureAttribution } from '@/lib/analytics/attribution'
 import { trackPageView } from '@/lib/analytics/tracker'
@@ -33,7 +32,10 @@ export function AnalyticsProvider({ children, pageType = 'other' }: AnalyticsPro
     // statically-generated Knowledge/Fabric/Location pages) at the root
     // layout. A one-time read inside this client-only effect needs none of
     // that — it never affects the server-rendered/static output.
-    loadGA4()
+    // GA4's own dataLayer/gtag/gtag.js bootstrap now runs server-side
+    // (src/app/layout.tsx's next/script beforeInteractive block) so it's
+    // present in the initial HTML response, not injected only after this
+    // effect runs — this provider no longer calls ga4.ts's loadGA4().
     loadClarity()
     captureAttribution(new URLSearchParams(window.location.search))
     trackPageView(pageType)

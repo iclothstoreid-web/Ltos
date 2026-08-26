@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { Inter, Caveat } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
+import { GA4_MEASUREMENT_ID, isGA4BootstrapEnabled } from '@/lib/analytics/constants'
 import { isRtlLocale } from '@/i18n/config'
 import './globals.css'
 
@@ -99,12 +101,37 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: `window.__LTOS_BRAND = ${JSON.stringify(brand.id)};` }}
         />
 
-        {/* Sprint W9-1 §15 — root-level mount: GA4/Clarity loading,
-            attribution capture, a baseline page_view on every route, and
-            experiment context. Renders no visible UI itself — zero impact
-            on any page's markup. Both loaders no-op until a real
-            NEXT_PUBLIC_GA4_MEASUREMENT_ID / NEXT_PUBLIC_CLARITY_PROJECT_ID
-            is set (see src/lib/analytics/constants.ts). */}
+        {/* GA4 bootstrap — moved server-side (next/script, beforeInteractive)
+            so the Google tag is present in the actual HTML response Google's
+            own installation checker/Tag Assistant crawl, not only injected
+            after client hydration (the previous client-only useEffect
+            injection in AnalyticsProvider/ga4.ts's loadGA4() was invisible
+            to that crawl). next/script dedupes by id/src itself, so this
+            can't double-inject across re-renders. Measurement ID still comes
+            from env (constants.ts), never hardcoded. send_page_view stays
+            false — AnalyticsProvider's trackPageView() below still fires the
+            one manual page_view per navigation, unchanged from Sprint W9-1. */}
+        {isGA4BootstrapEnabled() && (
+          <>
+            <Script strategy="beforeInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`} />
+            <Script id="ga4-init" strategy="beforeInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+window.gtag = gtag;
+gtag('js', new Date());
+gtag('config', '${GA4_MEASUREMENT_ID}', { send_page_view: false });`}
+            </Script>
+          </>
+        )}
+
+        {/* Sprint W9-1 §15 — root-level mount: Clarity loading, attribution
+            capture, a baseline page_view on every route, and experiment
+            context. GA4 script/dataLayer bootstrap now lives above (SSR);
+            this still owns the manual page_view + custom event taxonomy.
+            Renders no visible UI itself — zero impact on any page's markup.
+            Both loaders no-op until a real NEXT_PUBLIC_GA4_MEASUREMENT_ID /
+            NEXT_PUBLIC_CLARITY_PROJECT_ID is set (see
+            src/lib/analytics/constants.ts). */}
         <AnalyticsProvider>{children}</AnalyticsProvider>
       </body>
     </html>
