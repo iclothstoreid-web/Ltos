@@ -1,8 +1,14 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { whyCopy } from '@/lib/marketing/copy'
 import { Reveal } from '../shell/Reveal'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 
 export function WhyLocalTailor() {
+  const t = useTranslations('home.why')
+  const columns = t.raw('columns') as { title: string; description: string }[]
+
   return (
     <section
       id="why"
@@ -12,13 +18,11 @@ export function WhyLocalTailor() {
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{whyCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="why-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {whyCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">
-            Bespoke Tailor builds a garment pattern unique to your body, unlike mass tailoring which adjusts a fixed template.
-          </p>
+          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{t('intro')}</p>
         </Reveal>
 
         <ul className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -34,9 +38,9 @@ export function WhyLocalTailor() {
               }`}
             >
               <h3 className={`font-fraunces text-xl ${column.elevated ? 'text-luxury-gold' : 'text-luxury-ivory'}`}>
-                {column.title}
+                {columns[i]?.title ?? column.title}
               </h3>
-              <p className="mt-3 font-luxury-sans text-sm text-luxury-taupe">{column.description}</p>
+              <p className="mt-3 font-luxury-sans text-sm text-luxury-taupe">{columns[i]?.description ?? column.description}</p>
             </Reveal>
           ))}
         </ul>

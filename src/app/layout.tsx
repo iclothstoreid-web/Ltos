@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Caveat } from 'next/font/google'
-import { NextIntlClientProvider } from 'next-intl'
-import { getLocale, getMessages } from 'next-intl/server'
+import { getLocale } from 'next-intl/server'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { isRtlLocale } from '@/i18n/config'
 import './globals.css'
@@ -61,13 +60,25 @@ export const viewport: Viewport = {
 // routes middleware never routes through next-intl (the auth-gated app),
 // getLocale() falls back to the default locale (id), identical to this
 // file's previous hardcoded lang="id".
+//
+// LTOS i18n fix — this only sets `lang`/`dir` correctly for the *initial*
+// request. Root layout is shared by every route in the app (locale and
+// non-locale alike), so Next.js's App Router preserves/never re-renders it
+// across a client-side navigation between two locale routes — meaning
+// these two values would otherwise silently go stale the moment a visitor
+// used the language switcher, even though the rest of the page now updates
+// correctly (see src/app/[locale]/layout.tsx and HtmlLangSync.tsx, which
+// together own reactively keeping both the translated content and these
+// two attributes in sync after this first paint). NextIntlClientProvider
+// itself used to live here too — moved to [locale]/layout.tsx, the one
+// layout that actually has `params.locale` as part of its own segment and
+// therefore does get freshly re-rendered per locale.
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const locale = await getLocale()
-  const messages = await getMessages()
   const dir = isRtlLocale(locale) ? 'rtl' : 'ltr'
 
   // Resolve brand server-side and inject a small runtime signal so client
@@ -94,9 +105,7 @@ export default async function RootLayout({
             on any page's markup. Both loaders no-op until a real
             NEXT_PUBLIC_GA4_MEASUREMENT_ID / NEXT_PUBLIC_CLARITY_PROJECT_ID
             is set (see src/lib/analytics/constants.ts). */}
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <AnalyticsProvider>{children}</AnalyticsProvider>
-        </NextIntlClientProvider>
+        <AnalyticsProvider>{children}</AnalyticsProvider>
       </body>
     </html>
   )

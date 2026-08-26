@@ -1,3 +1,6 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { patternFormulationCopy } from '@/lib/marketing/copy'
 import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
@@ -21,6 +24,9 @@ type PatternFormulationSectionProps = {
 // PatternDraftMotif (illustrated, since no real drafting photography exists)
 // instead of a photo.
 export function PatternFormulationSection({ ctaHref = '/#why' }: PatternFormulationSectionProps = {}) {
+  const t = useTranslations('home.patternFormulation')
+  const determines = t.raw('determines') as string[]
+
   return (
     <section id="pattern-formulation" aria-labelledby="pattern-formulation-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
@@ -35,16 +41,16 @@ export function PatternFormulationSection({ ctaHref = '/#why' }: PatternFormulat
 
         <Reveal delay={0.1}>
           <GoldAccentLine className="mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{patternFormulationCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="pattern-formulation-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {patternFormulationCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{patternFormulationCopy.subheadline}</p>
+          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{t('subheadline')}</p>
 
-          <article aria-label={patternFormulationCopy.determinesLabel} className="mt-8 rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-6">
-            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{patternFormulationCopy.determinesLabel}</p>
+          <article aria-label={t('determinesLabel')} className="mt-8 rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-6">
+            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{t('determinesLabel')}</p>
             <ul className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-              {patternFormulationCopy.determines.map((point) => (
+              {determines.map((point) => (
                 <li key={point} className="flex items-start gap-3">
                   <span aria-hidden="true" className="mt-[10px] h-px w-4 flex-shrink-0 bg-luxury-gold" />
                   <span className="font-luxury-sans text-sm text-luxury-ivory">{point}</span>
@@ -54,11 +60,11 @@ export function PatternFormulationSection({ ctaHref = '/#why' }: PatternFormulat
           </article>
 
           <blockquote className="mt-8 border-l-2 border-luxury-gold/40 pl-5">
-            <p className="font-fraunces text-xl italic leading-snug text-luxury-ivory md:text-2xl">&ldquo;{patternFormulationCopy.statement}&rdquo;</p>
+            <p className="font-fraunces text-xl italic leading-snug text-luxury-ivory md:text-2xl">&ldquo;{t('statement')}&rdquo;</p>
           </blockquote>
 
           <MagneticButton href={ctaHref} variant="primary" className="mt-8">
-            {patternFormulationCopy.cta}
+            {t('cta')}
           </MagneticButton>
         </Reveal>
       </div>

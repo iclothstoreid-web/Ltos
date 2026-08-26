@@ -1,4 +1,6 @@
-import { bespokeProcessCopy } from '@/lib/marketing/copy'
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
@@ -21,6 +23,10 @@ type BespokeProcessSectionProps = {
 // MagneticButton / GoldAccentLine primitives rather than a new animation
 // or CTA treatment.
 export function BespokeProcessSection({ secondaryHref = '/#craftsmanship' }: BespokeProcessSectionProps = {}) {
+  const t = useTranslations('home.bespokeProcess')
+  const tCta = useTranslations('cta')
+  const steps = t.raw('steps') as { title: string; description: string }[]
+
   return (
     <section
       id="bespoke-process"
@@ -30,11 +36,11 @@ export function BespokeProcessSection({ secondaryHref = '/#craftsmanship' }: Bes
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{bespokeProcessCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="bespoke-process-heading" className="mt-3 font-fraunces text-3xl leading-tight text-luxury-ivory md:text-4xl">
-            {bespokeProcessCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{bespokeProcessCopy.subheadline}</p>
+          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{t('subheadline')}</p>
         </Reveal>
 
         <ol className="relative mt-16 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-x-6 md:gap-y-14 lg:grid-cols-6 lg:gap-y-0">
@@ -46,7 +52,7 @@ export function BespokeProcessSection({ secondaryHref = '/#craftsmanship' }: Bes
             className="absolute left-1/2 top-[22px] hidden h-px w-[calc(100%-10rem)] -translate-x-1/2 bg-luxury-gold/20 lg:block"
           />
 
-          {bespokeProcessCopy.steps.map((step, i) => (
+          {steps.map((step, i) => (
             <Reveal as="li" key={step.title} delay={i * 0.08} className="relative flex gap-5 md:block md:gap-0">
               <span
                 aria-hidden="true"
@@ -62,15 +68,12 @@ export function BespokeProcessSection({ secondaryHref = '/#craftsmanship' }: Bes
           ))}
         </ol>
 
-        <Reveal
-          delay={bespokeProcessCopy.steps.length * 0.08 + 0.1}
-          className="mt-16 flex flex-col items-center justify-center gap-4 sm:flex-row"
-        >
+        <Reveal delay={steps.length * 0.08 + 0.1} className="mt-16 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <MagneticButton href="/book-appointment" variant="primary">
-            {bespokeProcessCopy.primaryCta}
+            {tCta('bookConsultation')}
           </MagneticButton>
           <MagneticButton href={secondaryHref} variant="ghost">
-            {bespokeProcessCopy.secondaryCta}
+            {t('secondaryCta')}
           </MagneticButton>
         </Reveal>
       </div>

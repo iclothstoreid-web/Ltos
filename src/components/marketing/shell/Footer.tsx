@@ -54,9 +54,16 @@ export async function Footer() {
     { title: t('columns.sizeGuide'), links: SIZE_GUIDE_LINKS },
   ]
 
-  const taglineText = brand.id === 'tarda' ? t('tagline') : brand.metadata?.description ?? brand.displayName
+  // LTOS i18n — the non-tarda branch used to bypass next-intl entirely
+  // (brand.metadata?.description / a hardcoded "All rights reserved."
+  // template), which is why the footer stayed in English on every locale
+  // for the Local Tailor brand. Both branches now read through `t()`;
+  // taglineFallback carries the same text brand.metadata.description
+  // already had (English source), and legalWithBrand parameterizes the
+  // brand name into the same "All rights reserved." wording `legal` uses.
+  const taglineText = brand.id === 'tarda' ? t('tagline') : t('taglineFallback')
   const year = new Date().getFullYear()
-  const legalText = brand.id === 'tarda' ? t('legal', { year }) : `© ${year} ${brand.displayName}. All rights reserved.`
+  const legalText = brand.id === 'tarda' ? t('legal', { year }) : t('legalWithBrand', { year, brand: brand.displayName })
 
   return (
     // Walnut Atelier rebrand — bg-luxury-charcoal (Smoked Walnut), not the

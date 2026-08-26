@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { workshopCopy } from '@/lib/marketing/copy'
 import { garmentPhotos, fabricPhotos } from '@/lib/marketing/assets'
 import { Reveal } from '../shell/Reveal'
@@ -22,6 +25,9 @@ type WorkshopSectionProps = {
 // what's real and on-brand. Card-left / content-right, same convention as
 // the section before it.
 export function WorkshopSection({ ctaHref = '/gallery' }: WorkshopSectionProps = {}) {
+  const t = useTranslations('home.workshop')
+  const pillars = t.raw('pillars') as string[]
+
   return (
     <section id="workshop" aria-labelledby="workshop-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
@@ -44,16 +50,16 @@ export function WorkshopSection({ ctaHref = '/gallery' }: WorkshopSectionProps =
 
         <Reveal delay={0.1} className="lg:pl-6">
           <GoldAccentLine className="mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{workshopCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="workshop-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {workshopCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{workshopCopy.subheadline}</p>
+          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{t('subheadline')}</p>
 
-          <article aria-label={workshopCopy.pillarsLabel} className="mt-8 rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-6">
-            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{workshopCopy.pillarsLabel}</p>
+          <article aria-label={t('pillarsLabel')} className="mt-8 rounded-sm border border-luxury-gold/[0.10] bg-luxury-charcoal/40 p-6">
+            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{t('pillarsLabel')}</p>
             <ul className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-              {workshopCopy.pillars.map((pillar) => (
+              {pillars.map((pillar) => (
                 <li key={pillar} className="flex items-start gap-3">
                   <span aria-hidden="true" className="mt-[10px] h-px w-4 flex-shrink-0 bg-luxury-gold" />
                   <span className="font-luxury-sans text-sm text-luxury-ivory">{pillar}</span>
@@ -63,12 +69,12 @@ export function WorkshopSection({ ctaHref = '/gallery' }: WorkshopSectionProps =
           </article>
 
           <blockquote className="mt-8 border-l-2 border-luxury-gold/40 pl-5">
-            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{workshopCopy.authenticityLabel}</p>
-            <p className="mt-2 font-fraunces text-lg italic leading-snug text-luxury-ivory md:text-xl">&ldquo;{workshopCopy.authenticityCallout}&rdquo;</p>
+            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{t('authenticityLabel')}</p>
+            <p className="mt-2 font-fraunces text-lg italic leading-snug text-luxury-ivory md:text-xl">&ldquo;{t('authenticityCallout')}&rdquo;</p>
           </blockquote>
 
           <MagneticButton href={ctaHref} variant="primary" className="mt-8">
-            {workshopCopy.cta}
+            {t('cta')}
           </MagneticButton>
         </Reveal>
       </div>

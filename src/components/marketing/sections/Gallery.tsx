@@ -3,12 +3,15 @@
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { useTranslations } from 'next-intl'
 import { galleryCopy } from '@/lib/marketing/copy'
 import { Reveal } from '../shell/Reveal'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 import { GalleryImagePlaceholder } from '../placeholders/GalleryImagePlaceholder'
 
 export function Gallery() {
+  const t = useTranslations('home.gallery')
+  const filterLabels = t.raw('filterLabels') as Record<string, string>
   const [activeFilter, setActiveFilter] = useState<(typeof galleryCopy.filters)[number]>('All')
 
   const filtered = useMemo(
@@ -21,9 +24,9 @@ export function Gallery() {
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-xl">
           <GoldAccentLine className="mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{galleryCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="gallery-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {galleryCopy.heading}
+            {t('heading')}
           </h2>
         </Reveal>
 
@@ -46,7 +49,7 @@ export function Gallery() {
                   : 'border-luxury-gold/[0.14] text-luxury-taupe hover:border-luxury-gold/30'
               }`}
             >
-              {filter}
+              {filterLabels[filter.toLowerCase()] ?? filter}
             </button>
           ))}
         </div>
@@ -75,7 +78,9 @@ export function Gallery() {
               {/* text-luxury-ivory, not the usual -taupe caption tier: this
                   sits directly on the section's own luxury-navy-deep (Warm
                   Walnut), where taupe only reaches 2.7:1 contrast. */}
-              <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-ivory">{item.category}</p>
+              <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-ivory">
+                {filterLabels[item.category.toLowerCase()] ?? item.category}
+              </p>
             </motion.li>
           ))}
         </motion.ul>

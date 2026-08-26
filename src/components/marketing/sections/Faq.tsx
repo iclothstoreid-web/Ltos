@@ -1,4 +1,6 @@
-import { faqCopy } from '@/lib/marketing/copy'
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { Reveal } from '../shell/Reveal'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 import { buildFaqSchema } from '@/lib/marketing/seo'
@@ -6,9 +8,13 @@ import { JsonLd } from '@/components/seo/JsonLd'
 
 // Built on native <details>/<summary> — crawlable and keyboard-accessible
 // without JS, per PLAN_SPRINT_W1_HOMEPAGE_LUXURY_BLUEPRINT.md §8. The
-// FAQPage JSON-LD below is generated from the same faqCopy.items array
-// rendered here, so structured data can't drift from the visible copy.
+// FAQPage JSON-LD below is intentionally still generated from the static,
+// English faqCopy.items in buildFaqSchema() (search engines index one
+// canonical structured-data language) — only the *visible* FAQ list below
+// reads from the active locale's `faq.items`.
 export function Faq() {
+  const t = useTranslations('faq')
+  const items = t.raw('items') as { question: string; answer: string }[]
   const schema = buildFaqSchema()
 
   return (
@@ -22,14 +28,14 @@ export function Faq() {
       <div className="mx-auto max-w-3xl">
         <Reveal className="text-center">
           <GoldAccentLine className="mx-auto mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{faqCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="faq-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {faqCopy.heading}
+            {t('heading')}
           </h2>
         </Reveal>
 
         <div className="mt-12 divide-y divide-luxury-gold/[0.14]">
-          {faqCopy.items.map((item, i) => (
+          {items.map((item, i) => (
             <Reveal key={item.question} delay={i * 0.05}>
               <details className="group py-6">
                 <summary className="flex cursor-pointer list-none items-center justify-between font-luxury-sans text-sm text-luxury-ivory">

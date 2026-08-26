@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { measurementCopy } from '@/lib/marketing/copy'
 import { measurementMannequinSrc } from '@/lib/marketing/assets'
 import { Reveal } from '../shell/Reveal'
@@ -13,6 +16,9 @@ import { LuxuryGradientField } from '../placeholders/LuxuryGradientField'
 // requirement. Content column (right) carries the premium trust statement
 // as a blockquote. Reusable standalone, same as ConsultationSection.
 export function MeasurementSection() {
+  const t = useTranslations('home.measurement')
+  const cardItems = t.raw('cardItems') as string[]
+
   return (
     <section id="measurement" aria-labelledby="measurement-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
@@ -29,9 +35,9 @@ export function MeasurementSection() {
               />
             </div>
             <div className="border-t border-luxury-gold/[0.14] p-6">
-              <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{measurementCopy.cardLabel}</p>
+              <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('cardLabel')}</p>
               <ul className="mt-5 flex flex-col gap-3">
-                {measurementCopy.cardItems.map((item) => (
+                {cardItems.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <span aria-hidden="true" className="mt-[10px] h-px w-4 flex-shrink-0 bg-luxury-gold" />
                     <span className="font-luxury-sans text-sm text-luxury-ivory">{item}</span>
@@ -44,18 +50,18 @@ export function MeasurementSection() {
 
         <Reveal delay={0.1}>
           <GoldAccentLine className="mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{measurementCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="measurement-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {measurementCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{measurementCopy.subheadline}</p>
+          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{t('subheadline')}</p>
 
           <blockquote className="mt-8 border-l-2 border-luxury-gold/40 pl-5">
-            <p className="font-fraunces text-xl italic leading-snug text-luxury-ivory md:text-2xl">&ldquo;{measurementCopy.statement}&rdquo;</p>
+            <p className="font-fraunces text-xl italic leading-snug text-luxury-ivory md:text-2xl">&ldquo;{t('statement')}&rdquo;</p>
           </blockquote>
 
           <MagneticButton href="/book-appointment" variant="primary" className="mt-8">
-            {measurementCopy.cta}
+            {t('cta')}
           </MagneticButton>
         </Reveal>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { configuratorCopy, fabricCopy } from '@/lib/marketing/copy'
 import { measurementMannequinSrc } from '@/lib/marketing/assets'
 import { Reveal } from '../shell/Reveal'
@@ -21,9 +22,13 @@ const COLORS = [
 // (fabric + color selection, live price/time readout), not wired to the
 // live pricing engine. "Continue Designing" hands off to the real flow.
 export function ConfiguratorPreview() {
+  const t = useTranslations('designStudio')
+  const tFabric = useTranslations('home.fabric')
+  const fabricTraits = tFabric.raw('cards') as { origin: string; trait: string }[]
   const [fabricIndex, setFabricIndex] = useState(0)
   const [colorIndex, setColorIndex] = useState(0)
   const fabric = fabricCopy.cards[fabricIndex]
+  const fabricTrait = fabricTraits[fabricIndex]
 
   return (
     <section id="configurator" aria-labelledby="configurator-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
@@ -53,14 +58,14 @@ export function ConfiguratorPreview() {
 
         <Reveal delay={0.1}>
           <GoldAccentLine className="mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{configuratorCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="configurator-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {configuratorCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{configuratorCopy.body}</p>
+          <p className="mt-4 max-w-md font-luxury-sans text-sm text-luxury-taupe">{t('body')}</p>
 
           <div className="mt-8">
-            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{configuratorCopy.fabricLabel}</p>
+            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{t('fabricLabel')}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {fabricCopy.cards.map((card, i) => (
                 <button
@@ -84,7 +89,7 @@ export function ConfiguratorPreview() {
           </div>
 
           <div className="mt-6">
-            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{configuratorCopy.colorLabel}</p>
+            <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{t('colorLabel')}</p>
             <div className="mt-3 flex gap-3">
               {COLORS.map((color, i) => (
                 <button
@@ -103,19 +108,19 @@ export function ConfiguratorPreview() {
 
           <div className="mt-8 grid grid-cols-2 gap-6 border-t border-luxury-gold/[0.14] pt-6">
             <div>
-              <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{configuratorCopy.priceLabel}</p>
+              <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{t('priceLabel')}</p>
               <p className="mt-1 font-fraunces text-xl text-luxury-ivory">{fabric.name}</p>
-              <p className="font-luxury-sans text-xs text-luxury-taupe">{fabric.origin}</p>
+              <p className="font-luxury-sans text-xs text-luxury-taupe">{fabricTrait?.origin ?? fabric.origin}</p>
             </div>
             <div>
-              <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{configuratorCopy.timeLabel}</p>
-              <p className="mt-1 font-fraunces text-xl text-luxury-ivory">2–3 weeks</p>
-              <p className="font-luxury-sans text-xs text-luxury-taupe">{fabric.trait}</p>
+              <p className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-gold">{t('timeLabel')}</p>
+              <p className="mt-1 font-fraunces text-xl text-luxury-ivory">{t('productionTimeEstimate')}</p>
+              <p className="font-luxury-sans text-xs text-luxury-taupe">{fabricTrait?.trait ?? fabric.trait}</p>
             </div>
           </div>
 
           <MagneticButton href="/design-studio" variant="primary" className="mt-8">
-            {configuratorCopy.cta}
+            {t('cta')}
           </MagneticButton>
         </Reveal>
       </div>

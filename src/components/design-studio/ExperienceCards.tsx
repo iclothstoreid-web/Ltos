@@ -13,13 +13,17 @@ interface ExperienceCardsProps {
   heading: string
   subheadline?: string
   items: ExperienceCardItem[]
+  // LTOS i18n — optional so the /design-studio page (still Indonesian-only,
+  // out of this pass's scope) keeps its existing default; the homepage
+  // preview section passes its own locale-aware label.
+  audienceLabel?: string
 }
 
 // Sprint Y §Y-9 — reusable "N ways to use X" card grid. Generic props (no
 // Design Studio-specific naming inside the component itself) so it can be
 // reused for a future pillar page without modification — this sprint's
 // only caller is "Tiga Cara Menggunakan Design Studio" on /design-studio.
-export function ExperienceCards({ heading, subheadline, items }: ExperienceCardsProps) {
+export function ExperienceCards({ heading, subheadline, items, audienceLabel = 'Cocok Untuk' }: ExperienceCardsProps) {
   return (
     <section aria-labelledby="experience-cards-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
@@ -52,7 +56,7 @@ export function ExperienceCards({ heading, subheadline, items }: ExperienceCards
 
                 {item.audience && item.audience.length > 0 && (
                   <div className="mt-6 border-t border-luxury-gold/[0.10] pt-5">
-                    <p className="font-luxury-sans text-[10px] uppercase tracking-[0.1em] text-luxury-gold">Cocok Untuk</p>
+                    <p className="font-luxury-sans text-[10px] uppercase tracking-[0.1em] text-luxury-gold">{audienceLabel}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {item.audience.map((tag) => (
                         <span key={tag} className="rounded-full border border-luxury-gold/[0.14] px-3 py-1 font-luxury-sans text-[11px] text-luxury-taupe">

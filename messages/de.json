@@ -44,7 +44,8 @@
     "colorLabel": "Farbe",
     "priceLabel": "Geschätzte Investition",
     "timeLabel": "Fertigungsdauer",
-    "cta": "Design Fortsetzen"
+    "cta": "Design Fortsetzen",
+    "productionTimeEstimate": "2–3 Wochen"
   },
   "booking": {
     "eyebrow": "Nach Vereinbarung",
@@ -65,13 +66,37 @@
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Häufige Fragen"
+    "heading": "Häufige Fragen",
+    "items": [
+      {
+        "question": "Was unterscheidet eine maßgeschneiderte (bespoke) Thobe von einer nach Maß gefertigten (made-to-measure)?",
+        "answer": "Made-to-measure passt eine vorhandene Schnittvorlage an Ihre Maße an. Bespoke bedeutet, dass ein Schnittmuster ausschließlich aus Ihren Maßen entwickelt wird, ohne zugrunde liegende Vorlage — genau so fertigt Bespoke Tailor jedes Kleidungsstück."
+      },
+      {
+        "question": "Wie lange dauert die Fertigung?",
+        "answer": "Die Fertigungsdauer hängt vom Stoff und der aktuellen Auslastung des Ateliers ab und wird während des Designprozesses als Live-Schätzung für Ihre spezifische Bestellung angezeigt."
+      },
+      {
+        "question": "Kann ich den Designprozess beginnen, ohne das Studio zu besuchen?",
+        "answer": "Ja — mit „Meine Thobe Gestalten“ können Sie zunächst online Stoff- und Passformoptionen erkunden; ein privater Termin und eine Maßnahme-Sitzung folgen, bevor die Fertigung beginnt."
+      },
+      {
+        "question": "Wo wird meine Thobe gefertigt?",
+        "answer": "Jedes Kleidungsstück wird von Hand in unserem Atelier in Bandung, Indonesien, zugeschnitten, genäht und fertiggestellt."
+      }
+    ]
   },
   "trust": {
-    "heading": "Das Vertrauen anspruchsvoller Kunden in ganz Indonesien"
+    "heading": "Das Vertrauen anspruchsvoller Kunden in ganz Indonesien",
+    "counters": [
+      { "label": "Gelieferte Maßanfertigungen" },
+      { "label": "Passform auf Anhieb" },
+      { "label": "Jahre Schneiderhandwerk" }
+    ]
   },
   "footer": {
     "tagline": "Maßgeschneiderte Thobe, handgefertigt in Bandung.",
+    "taglineFallback": "Local Tailor — hochwertiges Maßschneidern.",
     "columns": {
       "explore": "Entdecken",
       "studio": "Studio",
@@ -92,7 +117,259 @@
       "menThobeSize": "Thobe Größen für Herren",
       "howToMeasure": "Thobe Richtig Ausmessen"
     },
-    "legal": "© {year} Bespoke Tailor. Alle Rechte vorbehalten."
+    "legal": "© {year} Bespoke Tailor. Alle Rechte vorbehalten.",
+    "legalWithBrand": "© {year} {brand}. Alle Rechte vorbehalten."
+  },
+  "home": {
+    "why": {
+      "eyebrow": "Der Unterschied",
+      "heading": "Warum Bespoke Tailor",
+      "intro": "Bespoke Tailor erstellt ein Schnittmuster, das einzigartig für Ihren Körper ist — anders als Massenschneiderei, die lediglich eine feste Vorlage anpasst.",
+      "columns": [
+        { "title": "Konfektionsware", "description": "Feste Größen für einen durchschnittlichen Körper. Die Passform ist ungefähr; Anpassungen bleiben bestenfalls kosmetisch." },
+        { "title": "Massenschneiderei", "description": "Ihre Maße werden an einen vorlagenbasierten Schnittblock angepasst. Näher dran, aber das Schnittmuster wurde nie für Sie gezeichnet." },
+        { "title": "Bespoke Tailor", "description": "Ein Schnittmuster, das ausschließlich aus Ihren Maßen entwickelt und dann von einem Handwerker gefertigt wird, der es für niemand anderen angefertigt hat." }
+      ]
+    },
+    "bespokeProcess": {
+      "eyebrow": "Der Entstehungsprozess",
+      "heading": "Von der Beratung bis zur Lieferung — Jedes Kleidungsstück wird eigens für Sie gefertigt",
+      "subheadline": "Ein maßgeschneidertes Kleidungsstück wird nicht aus einem Lager ausgewählt. Es wird für eine einzelne Person entworfen, vermessen, zugeschnitten, gefertigt, geprüft und fertiggestellt.",
+      "steps": [
+        { "title": "Beratung", "description": "Besprechung von Anlass, Stil, Stoff und Passform-Präferenzen." },
+        { "title": "Maßnahme", "description": "Detaillierte Körpermaße und Haltungsbeurteilung." },
+        { "title": "Schnittmuster-Erstellung", "description": "Ein persönliches Schnittmuster wird eigens für Ihr Körperprofil erstellt." },
+        { "title": "Fertigung", "description": "Zuschnitt, Konstruktion und handgefertigte Verarbeitung." },
+        { "title": "Qualitätskontrolle", "description": "Jedes Kleidungsstück wird geprüft, bevor es das Atelier verlässt." },
+        { "title": "Lieferung", "description": "Letzte Anprobe und Lieferung mit dauerhafter Aufbewahrung Ihres Kundenprofils." }
+      ],
+      "secondaryCta": "Den Gesamten Maßschneider-Prozess Ansehen"
+    },
+    "consultation": {
+      "eyebrow": "Beratung",
+      "heading": "Jede Maßschneider-Reise Beginnt mit einem Gespräch",
+      "subheadline": "Wir beginnen damit, Ihren Zweck, Lebensstil und Ihre Präferenzen zu verstehen, bevor wir Stoffe, Verarbeitung und Passform empfehlen.",
+      "bullets": ["Persönliche Einzelberatung", "Stilempfehlung", "Stoffberatung", "Transparenter Fertigungszeitplan", "Preisbesprechung vor Fertigungsbeginn"],
+      "cta": "Buchen Sie Ihre Beratung"
+    },
+    "measurement": {
+      "eyebrow": "Maßnahme",
+      "heading": "Präzision Beginnt mit dem Maßnehmen",
+      "subheadline": "Ihre Maße werden zur Grundlage für jedes zukünftige Kleidungsstück, das wir für Sie anfertigen.",
+      "cardLabel": "Digitales Körperprofil",
+      "cardItems": ["Sicher gespeicherte Maße", "Wiederverwendbar für zukünftige Bestellungen", "Aktualisiert, sobald sich Ihr Körper verändert", "Schnellere Nachbestellungen", "Konstante Passform über die Zeit"],
+      "statement": "Ihre Maße werden nicht als bloße Zahlen behandelt. Sie werden als langfristiges persönliches Profil geführt.",
+      "cta": "Speichern Sie Ihre Maße für Zukünftige Bestellungen"
+    },
+    "patternFormulation": {
+      "eyebrow": "Schnittmuster-Erstellung",
+      "heading": "Ihr Persönliches Schnittmuster Entsteht, Bevor Stoff Zugeschnitten Wird",
+      "subheadline": "Ein maßgeschneidertes Kleidungsstück beginnt mit einem Schnittmuster, das eigens für Ihr Körperprofil, Ihre Haltung und Ihre Bewegung entworfen wird.",
+      "determinesLabel": "Ihr Schnittmuster bestimmt",
+      "determines": ["Schulterbalance", "Ärmelrotation", "Brustweite", "Körperform", "Bewegungskomfort", "Fall des Kleidungsstücks"],
+      "statement": "Stoff lässt sich ersetzen. Ein persönliches Schnittmuster nicht.",
+      "cta": "Sehen Sie, Wie Ihr Schnittmuster Entsteht"
+    },
+    "production": {
+      "eyebrow": "Fertigung",
+      "heading": "Gefertigt von Erfahrenen Schneidern, Nicht am Fließband",
+      "subheadline": "Jedes Kleidungsstück durchläuft einen strukturierten Schneiderprozess, geleitet von erfahrenen Handwerkern.",
+      "stages": ["Zuschnitt", "Zusammenbau", "Kragenkonstruktion", "Ärmelmontage", "Handfinish", "Bügeln & Letzte Details"],
+      "metrics": [
+        { "label": "Eigenes Schnittmuster", "detail": "Eines pro Kunde" },
+        { "label": "Spezialisierte Fertigungsschritte" },
+        { "label": "Menschliches Handwerk" },
+        { "label": "Finale Qualitätsprüfung" }
+      ],
+      "statement": "Handwerkskunst bemisst sich an dem, was unsichtbar bleibt.",
+      "cta": "Entdecken Sie Unseren Fertigungsprozess"
+    },
+    "qualityControl": {
+      "eyebrow": "Qualitätskontrolle",
+      "heading": "Jedes Kleidungsstück Wird Geprüft, Bevor Es Unser Atelier Verlässt",
+      "subheadline": "Vor der Lieferung durchläuft jedes Kleidungsstück einen eigenen Prüfprozess, um Konsistenz, Genauigkeit und Verarbeitungsqualität sicherzustellen.",
+      "checklist": ["Gleichmäßigkeit der Naht", "Maßgenauigkeit", "Kragenausrichtung", "Manschettensymmetrie", "Stoffprüfung", "Bügelqualität", "Abschließende Prüfung der Verarbeitung"],
+      "statement": "Erfüllt ein Kleidungsstück nicht unseren internen Standard, erreicht es den Kunden nicht.",
+      "trustCallout": "Eigene Qualitätskontrollprüfung",
+      "cta": "Sehen Sie Unsere Qualitätsstandards",
+      "pointInspection": "{count}-Punkte-Prüfung"
+    },
+    "delivery": {
+      "eyebrow": "Lieferung",
+      "heading": "Der Letzte Schritt Ist der Erste Schritt Ihrer Nächsten Bestellung",
+      "subheadline": "Die Lieferung umfasst eine abschließende Passformkontrolle und die dauerhafte Aufbewahrung Ihrer Maße für zukünftige Maßanfertigungen.",
+      "experienceLabel": "Was die Lieferung Umfasst",
+      "experience": ["Abschließende Passformkontrolle", "Pflegehinweise für das Kleidungsstück", "Aufbewahrung der Maße", "Schnellere zukünftige Bestellungen", "Konstante Passform über die Zeit"],
+      "statement": "Ihre erste Bestellung erstellt das Profil. Jede weitere Bestellung wird einfacher.",
+      "cta": "Buchen Sie Ihre Erste Maßschneider-Beratung"
+    },
+    "craftsmanshipDetails": {
+      "eyebrow": "Handwerkskunst",
+      "heading": "Der Unterschied Liegt im Detail",
+      "subheadline": "Echte Maßschneider-Qualität entsteht durch kleine Entscheidungen, sorgfältige Verarbeitung und diszipliniertes Finish.",
+      "cards": [
+        { "title": "Handfinish", "description": "Ausgewählte Finisharbeiten werden für höhere Präzision und Langlebigkeit von Hand ausgeführt." },
+        { "title": "Stoffpräzision", "description": "Muster werden sorgfältig ausgerichtet, um die visuelle Konsistenz über das gesamte Kleidungsstück zu bewahren." },
+        { "title": "Strukturelle Verarbeitung", "description": "Balance und Fall des Kleidungsstücks entstehen durch die Schneiderstruktur, nicht durch Abkürzungen." },
+        { "title": "Abschließendes Bügeln", "description": "Jedes Kleidungsstück wird vor der finalen Prüfung und Lieferung professionell gebügelt." }
+      ],
+      "statement": "Was Sie nie sehen, ist genau das, was am längsten gedauert hat, um perfekt zu werden.",
+      "cta": "Entdecken Sie Unsere Handwerkskunst"
+    },
+    "workshop": {
+      "eyebrow": "Das Atelier",
+      "heading": "Ein Echtes Atelier. Echte Schneider. Echte Handwerkskunst.",
+      "subheadline": "Unsere Kleidungsstücke entstehen in einem eigenen Schneideratelier, in dem Beratung, Schnittmuster-Erstellung, Zuschnitt, Konstruktion und Finish in einem einzigen Prozess stattfinden.",
+      "pillarsLabel": "Im Atelier",
+      "pillars": ["Beratung & Design", "Schnittmuster-Erstellung", "Schneiderei & Konstruktion", "Qualitätsprüfung"],
+      "authenticityLabel": "Authentizität",
+      "authenticityCallout": "Jedes Foto zeigt unsere echte Schneiderumgebung, unsere Werkzeuge, Materialien und unseren Fertigungsprozess.",
+      "cta": "Entdecken Sie Unseren Atelier-Prozess"
+    },
+    "authority": {
+      "eyebrow": "Tradition & Expertise",
+      "heading": "Gebaut auf Schneiderwissen, Nicht auf Trends",
+      "subheadline": "Unser Atelier widmet sich ausschließlich maßgeschneiderten Kleidungsstücken. Jede Bestellung trägt zu einem stetig verfeinerten Schneiderwissen, verbesserter Passform, tieferem Stoffverständnis und weiterentwickelten Schnittmustern bei.",
+      "trustParagraph": "Jedes Maß wird gespeichert, jedes Schnittmuster verfeinert, und jede Anprobe erweitert unsere praktische Schneidererfahrung. Das ist die Grundlage unseres Systems — der Grund, warum die Qualität mit der Zeit konstanter wird, nicht geringer.",
+      "statement": "Jedes Kleidungsstück, das wir fertigen, verbessert das nächste.",
+      "metrics": [
+        { "value": "100%", "label": "Maßgefertigte Kleidungsstücke" },
+        { "value": "1 Schnittmuster", "label": "Persönliches Schnittmuster pro Kunde" },
+        { "value": "Mehrstufig", "label": "Fertigungsablauf" },
+        { "value": "Dauerhaft", "label": "Aufbewahrung der Maße" }
+      ],
+      "cta": "Erfahren Sie Mehr über Unseren Maßschneider-Standard"
+    },
+    "gallerySection": {
+      "eyebrow": "Galerie",
+      "heading": "Echte Kunden. Echte Handwerkskunst. Echte Ergebnisse.",
+      "subheadline": "Jedes Galeriebild zeigt die Kleidungsstücke, Materialien und Detailarbeit hinter jeder von uns fertiggestellten Bestellung.",
+      "categories": [
+        { "title": "Fertige Kleidungsstücke", "description": "Fertiggestellte Maßanfertigungen, fotografiert nach dem abschließenden Bügeln und der Prüfung.", "viewMoreLabel": "Mehr Kleidungsstücke Ansehen" },
+        { "title": "Stoff & Detail", "description": "Nahaufnahmen von Materialien, die Webart, Textur und Verarbeitungsdetails zeigen.", "viewMoreLabel": "Mehr Stoffe Ansehen" },
+        { "title": "Atelier-Prozess", "description": "Material- und Finish-Details von Kleidungsstücken auf ihrem Weg durch unser Schneideratelier.", "viewMoreLabel": "Den Gesamten Prozess Ansehen" },
+        { "title": "Kundenpassform", "description": "Die Fitting-Referenz, mit der Maße und Passform für jeden Kunden überprüft werden.", "viewMoreLabel": "Mehr über Anproben Erfahren" }
+      ],
+      "authenticityStatement": "Jedes hier gezeigte Bild zeigt unsere echten Kleidungsstücke, Stoffe oder unseren Schneiderprozess.",
+      "cta": "Entdecken Sie die Gesamte Galerie"
+    },
+    "reviews": {
+      "eyebrow": "Bewertungen",
+      "heading": "Das Vertrauen von Kunden, die Passform, Handwerkskunst und Persönlichen Service Schätzen",
+      "subheadline": "Unsere Kunden kommen zurück, weil der Prozess persönlich ist, die Passform konstant bleibt und sich das Erlebnis mit jeder Bestellung verbessert.",
+      "reviews": [
+        { "context": "Hochzeit", "quote": "Die Passform war spürbar anders als bei allem, was von der Stange kommt. Die Beratung und das Maßnehmen ließen das Ergebnis wirklich persönlich wirken." },
+        { "context": "Umrah", "quote": "Am meisten beeindruckt hat mich, wie viel einfacher die zweite Bestellung war, weil meine Maße und mein Schnittmuster bereits gespeichert waren." },
+        { "context": "Alltagskleidung", "quote": "Die Verarbeitungsqualität und der gesamte Fall ließen das Kleidungsstück deutlich hochwertiger wirken als Standard-Schneiderei." }
+      ],
+      "metrics": [
+        { "value": "4,9/5", "label": "Durchschnittliche Bewertung" },
+        { "value": "Verifiziert", "label": "Kundenbewertungen" },
+        { "value": "Echt", "label": "Atelier-Prozess" },
+        { "value": "Persönlich", "label": "Gespeicherte Maße" }
+      ],
+      "authenticityStatement": "Jedes hier gezeigte Testimonial spiegelt eine echte Maßschneider-Erfahrung wider und dient als Beispiel für die Art von Kundenfeedback, das unser Atelier erhält.",
+      "cta": "Weitere Kundengeschichten Lesen"
+    },
+    "trustBadges": {
+      "eyebrow": "Vertrauen & Zuversicht",
+      "heading": "Warum Kunden Vertrauensvoll Bei Uns Maßanfertigen Lassen",
+      "subheadline": "Unser Prozess ist darauf ausgelegt, Unsicherheit zu reduzieren, Konsistenz zu bewahren und ein Kleidungsstück zu liefern, das eigens für Sie gefertigt wurde.",
+      "primaryCards": [
+        { "title": "Ein Schnittmuster Für Sie Gemacht", "description": "Eigens für Ihren Körper erstellt." },
+        { "title": "Gespeichertes Passform-Profil", "description": "Zukünftige Bestellungen werden deutlich schneller." },
+        { "title": "Qualitätskontrolle", "description": "Jedes Kleidungsstück wird vor der Lieferung geprüft." }
+      ],
+      "secondaryBadges": ["Premium-Stoffauswahl", "Transparenter Fertigungszeitplan", "Eigene Schneiderberatung", "Sicheres Kundenprofil"],
+      "summary": {
+        "heading": "Maßschneiderei Bedeutet Nicht, Kleidung zu Kaufen",
+        "body": "Es geht darum, ein Kleidungsstück zu schaffen, das existiert, weil Sie existieren. Von Beratung und Maßnahme über Schnittmuster-Erstellung, Fertigung und Qualitätskontrolle bis zur Lieferung ist jeder Schritt darauf ausgelegt, ein Kleidungsstück zu schaffen, das natürlicher sitzt, länger hält und mit der Zeit leichter nachzubestellen ist."
+      },
+      "finalCta": {
+        "heading": "Bereit, Maßschneiderei zu Erleben?",
+        "subheadline": "Buchen Sie eine Beratung und beginnen Sie den Prozess der Erstellung eines Kleidungsstücks, das eigens für Sie gefertigt wird.",
+        "primaryCta": "Beratung Buchen",
+        "secondaryCta": "Stoffe Entdecken"
+      }
+    },
+    "fabric": {
+      "eyebrow": "Material",
+      "heading": "Beim Stoff Beginnt das Handwerk",
+      "body": "Jede Stoffbahn wird beschafft, geprüft und darauf abgestimmt, wie sich das Kleidungsstück bewegt, atmet und seine Form hält.",
+      "cta": "Alle Stoffe Entdecken",
+      "cards": [
+        { "origin": "Importiert — Italien", "trait": "Strukturierter Fall, Gewicht für die kühlere Saison" },
+        { "origin": "Importiert — Ägypten", "trait": "Atmungsaktiv, klares Finish" },
+        { "origin": "Importiert — Belgien", "trait": "Leicht, bereit für warmes Klima" },
+        { "origin": "Importiert — Japan", "trait": "Dezenter Glanz, bereit für besondere Anlässe" }
+      ]
+    },
+    "craftsmanship": {
+      "eyebrow": "Prozess",
+      "heading": "Handwerkskunst, Schritt für Schritt",
+      "steps": [
+        { "title": "Beratung", "description": "Eine private Sitzung, um Ihren Anlass, Ihre Silhouettenvorliebe und Ihren Lebensstil zu verstehen." },
+        { "title": "Maßnahme", "description": "Ganzkörper-Maßnahme durch einen geschulten Anpasser, millimetergenau erfasst." },
+        { "title": "Schnittmuster-Erstellung", "description": "Ihre Maße werden zu einem Schnittblock, den es sonst nirgends gibt." },
+        { "title": "Handgefertigte Produktion", "description": "In unserem Atelier in Bandung von Hand zugeschnitten, genäht und fertiggestellt." }
+      ]
+    },
+    "gallery": {
+      "eyebrow": "Portfolio",
+      "heading": "Ein Zeugnis des Handwerks",
+      "filterLabels": { "all": "Alle", "wedding": "Hochzeit", "umrah": "Umrah", "formal": "Formell", "daily": "Alltag", "premium": "Premium" }
+    },
+    "stories": {
+      "eyebrow": "Kundengeschichten",
+      "heading": "Getragen, Nicht Nur Gefertigt",
+      "stories": [
+        { "purpose": "Hochzeit", "quote": "Die Passform saß exakt — nichts, was ich je getragen habe, kommt dem gleich." },
+        { "purpose": "Umrah", "quote": "Leicht, atmungsaktiv, und dabei trotzdem formell genug für den Anlass." },
+        { "purpose": "Alltag", "quote": "Ich habe eines bestellt und bin für drei weitere zurückgekommen." }
+      ]
+    },
+    "finalCta": {
+      "heading": "Beginnen Sie Ihre Erste Individuelle Thobe",
+      "body": "Jedes maßgeschneiderte Kleidungsstück beginnt mit einem einzigen Gespräch.",
+      "urgency": "Aktuell werden private Termine für diesen Monat gebucht."
+    },
+    "digitalBespoke": {
+      "eyebrow": "Design Studio — Maßschneiderei von Überall",
+      "heading": "Maßschneiderei ohne Entfernungsgrenzen",
+      "body": "Gestalten Sie Ihre Thobe von überall aus — per Videoanruf, im Design Studio oder über unseren Hausbesuch-Service — dasselbe Erlebnis, als wären Sie persönlich im Local Tailor Showroom.",
+      "experiencesHeading": "Drei Wege, das Design Studio zu Nutzen",
+      "cta": "Design Studio Entdecken",
+      "audienceLabel": "Geeignet Für",
+      "experiences": [
+        {
+          "eyebrow": "Kostenlos",
+          "title": "Videoanruf-Anprobe",
+          "description": "Beratung, Design und Maßnahme-Anleitung — vollständig aus der Ferne.",
+          "details": ["Bedarfsberatung", "Designauswahl im Design Studio", "Maßnahme-Anleitung", "Größenprüfung", "Design-Finalisierung"],
+          "audience": ["Außerhalb der Stadt", "Andere Inseln", "Im Ausland", "Vielbeschäftigte Kunden"]
+        },
+        {
+          "title": "Hausbesuch",
+          "description": "Unser Team kommt mit vollständiger Ausrüstung zu Ihnen für eine persönliche Sitzung von Angesicht zu Angesicht.",
+          "details": ["Stoffmusterbuch", "Komponentenmuster", "Design Studio Tablet", "Messwerkzeuge"],
+          "audience": ["Familien", "Paare", "Hochzeiten", "Unternehmen", "VIP"]
+        },
+        {
+          "title": "Showroom-Erlebnis",
+          "description": "Option, direkt in unseren Showroom in Bandung zu kommen, für eine persönliche Beratung und Maßnahme.",
+          "details": ["Persönliche Beratung im Atelier", "Unsere Stoffkollektion direkt sehen und anfassen", "Maßnahme direkt durch einen Anpasser"]
+        }
+      ]
+    },
+    "knowledge": {
+      "eyebrow": "Wissen",
+      "heading": "Wissen & Ratgeber",
+      "body": "Ein vollständiger Ratgeber zu Stoffen, Größen, Styling, Schneiderei, Hochzeiten und Umrah vom Local Tailor Team.",
+      "categoriesHeading": "Kategorien Durchsuchen",
+      "readGuideLabel": "Ratgeber Lesen",
+      "viewAllCta": "Alle Ratgeber Ansehen",
+      "freeConsultationCta": "Kostenlose Beratung"
+    }
   },
   "languageSwitcher": {
     "openLabel": "Sprache ändern",

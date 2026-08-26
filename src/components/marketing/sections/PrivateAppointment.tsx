@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { appointmentCopy } from '@/lib/marketing/copy'
 import { garmentPhotos } from '@/lib/marketing/assets'
 import { Reveal } from '../shell/Reveal'
@@ -12,6 +15,8 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 // Hero so the appointment CTA is the most prominent thing on the page
 // after the headline itself, per the revision brief's CTA-review note.
 export function PrivateAppointment() {
+  const t = useTranslations('booking')
+
   return (
     <section
       id="appointment"
@@ -32,18 +37,18 @@ export function PrivateAppointment() {
       <div className="flex items-center px-6 py-20 md:px-16 lg:px-20">
         <Reveal className="max-w-md">
           <GoldAccentLine className="mb-6" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">{appointmentCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="appointment-heading" className="mt-5 font-fraunces text-4xl leading-[1.1] text-luxury-ivory md:text-5xl">
-            {appointmentCopy.heading}
+            {t('heading')}
           </h2>
 
-          <p className="mt-8 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-gold">{appointmentCopy.location}</p>
-          <p className="mt-2 font-luxury-sans text-sm text-luxury-taupe">{appointmentCopy.address}</p>
+          <p className="mt-8 font-luxury-sans text-sm uppercase tracking-[0.14em] text-luxury-gold">{t('location')}</p>
+          <p className="mt-2 font-luxury-sans text-sm text-luxury-taupe">{t('address')}</p>
 
-          <p className="mt-8 font-luxury-sans text-base leading-relaxed text-luxury-taupe">{appointmentCopy.body}</p>
+          <p className="mt-8 font-luxury-sans text-base leading-relaxed text-luxury-taupe">{t('body')}</p>
 
           <MagneticButton href="/book-appointment" variant="primary" className="mt-10">
-            {appointmentCopy.cta}
+            {t('cta')}
           </MagneticButton>
         </Reveal>
       </div>

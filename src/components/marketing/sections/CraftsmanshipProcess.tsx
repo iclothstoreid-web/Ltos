@@ -1,4 +1,6 @@
-import { craftsmanshipCopy } from '@/lib/marketing/copy'
+'use client'
+
+import { useTranslations } from 'next-intl'
 import { Reveal } from '../shell/Reveal'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 import { WorkshopPhotoPlaceholder } from '../placeholders/WorkshopPhotoPlaceholder'
@@ -6,6 +8,9 @@ import { WorkshopPhotoPlaceholder } from '../placeholders/WorkshopPhotoPlacehold
 const VARIANTS = ['a', 'b', 'c', 'a'] as const
 
 export function CraftsmanshipProcess() {
+  const t = useTranslations('home.craftsmanship')
+  const steps = t.raw('steps') as { title: string; description: string }[]
+
   return (
     <section
       id="craftsmanship"
@@ -15,15 +20,15 @@ export function CraftsmanshipProcess() {
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{craftsmanshipCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="craftsmanship-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {craftsmanshipCopy.heading}
+            {t('heading')}
           </h2>
         </Reveal>
 
         <ol className="relative mt-16 grid grid-cols-1 gap-12 md:grid-cols-4 md:gap-6">
           <div aria-hidden="true" className="absolute left-1/2 top-10 hidden h-px w-[calc(100%-8rem)] -translate-x-1/2 bg-luxury-gold/20 md:block" />
-          {craftsmanshipCopy.steps.map((step, i) => (
+          {steps.map((step, i) => (
             <Reveal as="li" key={step.title} delay={i * 0.12} className="relative text-center">
               <div className="mx-auto w-24">
                 <WorkshopPhotoPlaceholder alt={`${step.title} step illustration`} variant={VARIANTS[i]} idSuffix={`workshop-photo-${i}`} />

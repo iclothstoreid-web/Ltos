@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { gallerySectionCopy } from '@/lib/marketing/copy'
 import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
@@ -15,28 +18,32 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 // /gallery rebuild could lift directly, per the brief's "easy to extend"
 // requirement, without building that page now.
 export function GallerySection() {
+  const t = useTranslations('home.gallerySection')
+  const categories = t.raw('categories') as { title: string; description: string; viewMoreLabel: string }[]
+
   return (
     <section id="gallery-showcase" aria-labelledby="gallery-showcase-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{gallerySectionCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="gallery-showcase-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {gallerySectionCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{gallerySectionCopy.subheadline}</p>
+          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{t('subheadline')}</p>
         </Reveal>
 
         <div className="mt-16 flex flex-col gap-16">
           {gallerySectionCopy.categories.map((category, ci) => {
             const headingId = `gallery-category-${ci}-heading`
+            const label = categories[ci] ?? category
             return (
               <Reveal key={category.title} delay={ci * 0.06}>
                 <article aria-labelledby={headingId}>
                   <h3 id={headingId} className="font-fraunces text-xl text-luxury-ivory md:text-2xl">
-                    {category.title}
+                    {label.title}
                   </h3>
-                  <p className="mt-2 max-w-xl font-luxury-sans text-sm text-luxury-taupe">{category.description}</p>
+                  <p className="mt-2 max-w-xl font-luxury-sans text-sm text-luxury-taupe">{label.description}</p>
 
                   <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
                     {category.images.map((image) => (
@@ -64,7 +71,7 @@ export function GallerySection() {
                     href="/gallery"
                     className="mt-5 inline-flex items-center gap-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-gold transition hover:text-luxury-ivory"
                   >
-                    {category.viewMoreLabel}
+                    {label.viewMoreLabel}
                     <span aria-hidden="true">→</span>
                   </a>
                 </article>
@@ -75,13 +82,11 @@ export function GallerySection() {
 
         <Reveal delay={0.2} className="mt-16 text-center">
           <blockquote className="mx-auto max-w-xl border-l-2 border-luxury-gold/40 pl-5 text-left">
-            <p className="font-fraunces text-lg italic leading-snug text-luxury-ivory md:text-xl">
-              &ldquo;{gallerySectionCopy.authenticityStatement}&rdquo;
-            </p>
+            <p className="font-fraunces text-lg italic leading-snug text-luxury-ivory md:text-xl">&ldquo;{t('authenticityStatement')}&rdquo;</p>
           </blockquote>
 
           <MagneticButton href="/gallery" variant="primary" className="mt-10">
-            {gallerySectionCopy.cta}
+            {t('cta')}
           </MagneticButton>
         </Reveal>
       </div>

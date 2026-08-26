@@ -44,7 +44,8 @@
     "colorLabel": "Warna",
     "priceLabel": "Estimasi Investasi",
     "timeLabel": "Waktu Produksi",
-    "cta": "Lanjutkan Mendesain"
+    "cta": "Lanjutkan Mendesain",
+    "productionTimeEstimate": "2–3 minggu"
   },
   "booking": {
     "eyebrow": "Dengan Janji Temu",
@@ -65,13 +66,37 @@
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Pertanyaan Umum"
+    "heading": "Pertanyaan Umum",
+    "items": [
+      {
+        "question": "Apa bedanya thobe bespoke dengan made-to-measure?",
+        "answer": "Made-to-measure menyesuaikan pola template yang sudah ada dengan ukuran Anda. Bespoke berarti pola dibuat murni dari ukuran Anda sendiri, tanpa template dasar — begitulah cara Bespoke Tailor membuat setiap busana."
+      },
+      {
+        "question": "Berapa lama waktu produksinya?",
+        "answer": "Waktu produksi tergantung pada material dan kapasitas workshop saat ini, dan ditampilkan sebagai estimasi langsung selama proses desain berdasarkan pesanan spesifik Anda."
+      },
+      {
+        "question": "Bisakah saya memulai proses desain tanpa datang ke studio?",
+        "answer": "Bisa — Desain Thobe Saya memungkinkan Anda menjelajahi pilihan material dan model secara online terlebih dahulu; janji temu privat dan sesi pengukuran menyusul sebelum produksi dimulai."
+      },
+      {
+        "question": "Di mana thobe saya dibuat?",
+        "answer": "Setiap busana dipotong, dijahit, dan diselesaikan dengan tangan di workshop kami di Bandung, Indonesia."
+      }
+    ]
   },
   "trust": {
-    "heading": "Dipercaya oleh klien pilihan di seluruh Indonesia"
+    "heading": "Dipercaya oleh klien pilihan di seluruh Indonesia",
+    "counters": [
+      { "label": "Busana Bespoke Terkirim" },
+      { "label": "Pas di Percobaan Pertama" },
+      { "label": "Tahun Pengalaman Tailoring" }
+    ]
   },
   "footer": {
     "tagline": "Thobe bespoke, dibuat dengan tangan di Bandung.",
+    "taglineFallback": "Local Tailor — bespoke tailoring premium.",
     "columns": {
       "explore": "Jelajahi",
       "studio": "Studio",
@@ -92,7 +117,259 @@
       "menThobeSize": "Ukuran Thobe Pria",
       "howToMeasure": "Cara Mengukur Thobe"
     },
-    "legal": "© {year} Bespoke Tailor. Hak cipta dilindungi undang-undang."
+    "legal": "© {year} Bespoke Tailor. Hak cipta dilindungi undang-undang.",
+    "legalWithBrand": "© {year} {brand}. Hak cipta dilindungi undang-undang."
+  },
+  "home": {
+    "why": {
+      "eyebrow": "Perbedaannya",
+      "heading": "Mengapa Bespoke Tailor",
+      "intro": "Bespoke Tailor membuat pola busana yang unik untuk tubuh Anda, berbeda dari mass tailoring yang hanya menyesuaikan template tetap.",
+      "columns": [
+        { "title": "Ready-Made", "description": "Ukuran tetap yang dibuat untuk tubuh rata-rata. Kepasan hanya perkiraan; penyesuaian sebatas kosmetik." },
+        { "title": "Mass Tailoring", "description": "Ukuran Anda diselaraskan dengan blok pola template. Lebih dekat, tapi pola tersebut tidak pernah dibuat khusus untuk Anda." },
+        { "title": "Bespoke Tailor", "description": "Pola yang diformulasikan murni dari ukuran Anda, lalu dibuat dengan tangan oleh perajin yang membuatnya khusus untuk Anda seorang." }
+      ]
+    },
+    "bespokeProcess": {
+      "eyebrow": "Alur Proses",
+      "heading": "Dari Konsultasi hingga Pengiriman — Setiap Busana Dibuat Khusus untuk Anda",
+      "subheadline": "Busana bespoke tidak dipilih dari stok. Ia didesain, diukur, dipolakan, dibuat, diperiksa, dan diselesaikan untuk satu individu.",
+      "steps": [
+        { "title": "Konsultasi", "description": "Membahas tujuan, gaya, material, dan preferensi kepasan." },
+        { "title": "Pengukuran", "description": "Pengukuran tubuh detail dan penilaian postur." },
+        { "title": "Pembuatan Pola", "description": "Pola personal dibuat khusus untuk profil tubuh Anda." },
+        { "title": "Produksi", "description": "Pemotongan, konstruksi, dan penyelesaian tailoring dengan tangan." },
+        { "title": "Quality Control", "description": "Setiap busana diperiksa sebelum meninggalkan workshop." },
+        { "title": "Pengiriman", "description": "Fitting akhir dan pengiriman dengan penyimpanan profil pelanggan jangka panjang." }
+      ],
+      "secondaryCta": "Lihat Alur Bespoke Lengkap"
+    },
+    "consultation": {
+      "eyebrow": "Konsultasi",
+      "heading": "Setiap Perjalanan Bespoke Dimulai dengan Percakapan",
+      "subheadline": "Kami mulai dengan memahami tujuan, gaya hidup, dan preferensi Anda sebelum merekomendasikan material, konstruksi, dan kepasan.",
+      "bullets": ["Konsultasi satu lawan satu", "Rekomendasi gaya", "Panduan material", "Linimasa produksi transparan", "Harga dibahas sebelum produksi dimulai"],
+      "cta": "Buat Janji Konsultasi Anda"
+    },
+    "measurement": {
+      "eyebrow": "Pengukuran",
+      "heading": "Presisi Dimulai dari Pengukuran",
+      "subheadline": "Ukuran Anda menjadi fondasi untuk setiap busana yang kami buat di masa depan.",
+      "cardLabel": "Digital Body Profile",
+      "cardItems": ["Ukuran tersimpan dengan aman", "Dapat digunakan kembali untuk pesanan berikutnya", "Diperbarui setiap tubuh Anda berubah", "Pemesanan ulang lebih cepat", "Kepasan yang konsisten sepanjang waktu"],
+      "statement": "Ukuran Anda tidak diperlakukan sekadar sebagai angka. Ia diperlakukan sebagai profil personal jangka panjang.",
+      "cta": "Simpan Ukuran Anda untuk Pesanan Berikutnya"
+    },
+    "patternFormulation": {
+      "eyebrow": "Pembuatan Pola",
+      "heading": "Pola Personal Anda Dibuat Sebelum Material Dipotong",
+      "subheadline": "Busana bespoke dimulai dari pola yang dibuat khusus untuk profil tubuh, postur, dan gerak Anda.",
+      "determinesLabel": "Pola Anda menentukan",
+      "determines": ["Keseimbangan bahu", "Rotasi lengan", "Kelonggaran dada", "Bentuk tubuh", "Kenyamanan gerak", "Jatuhnya busana"],
+      "statement": "Material bisa diganti. Pola personal tidak bisa.",
+      "cta": "Lihat Bagaimana Pola Anda Dibuat"
+    },
+    "production": {
+      "eyebrow": "Produksi",
+      "heading": "Dibuat oleh Tailor Berpengalaman, Bukan Produksi Massal",
+      "subheadline": "Setiap busana melewati alur kerja tailoring terstruktur yang ditangani oleh perajin berpengalaman.",
+      "stages": ["Pemotongan", "Perakitan", "Konstruksi Kerah", "Pemasangan Lengan", "Penyelesaian Tangan", "Penyetrikaan & Detail Akhir"],
+      "metrics": [
+        { "label": "Pola Khusus", "detail": "Satu per pelanggan" },
+        { "label": "Tahapan Produksi Khusus" },
+        { "label": "Keahlian Tangan Manusia" },
+        { "label": "Inspeksi Kualitas Akhir" }
+      ],
+      "statement": "Craftsmanship diukur dari apa yang tetap tidak terlihat.",
+      "cta": "Jelajahi Proses Produksi Kami"
+    },
+    "qualityControl": {
+      "eyebrow": "Quality Control",
+      "heading": "Setiap Busana Diperiksa Sebelum Meninggalkan Workshop Kami",
+      "subheadline": "Sebelum pengiriman, setiap busana melewati proses inspeksi khusus untuk memastikan konsistensi, akurasi, dan kualitas penyelesaian.",
+      "checklist": ["Konsistensi jahitan", "Akurasi ukuran", "Kesejajaran kerah", "Simetri manset", "Inspeksi material", "Kualitas setrika", "Tinjauan penyelesaian akhir"],
+      "statement": "Jika sebuah busana tidak memenuhi standar internal kami, ia tidak akan sampai ke pelanggan.",
+      "trustCallout": "Inspeksi Quality Control Khusus",
+      "cta": "Lihat Standar Kualitas Kami",
+      "pointInspection": "Inspeksi {count} Titik"
+    },
+    "delivery": {
+      "eyebrow": "Pengiriman",
+      "heading": "Langkah Terakhir Adalah Langkah Pertama Pesanan Berikutnya",
+      "subheadline": "Pengiriman mencakup verifikasi kepasan akhir dan penyimpanan ukuran permanen untuk pesanan bespoke berikutnya.",
+      "experienceLabel": "Yang Termasuk dalam Pengiriman",
+      "experience": ["Verifikasi kepasan akhir", "Panduan perawatan busana", "Penyimpanan ukuran", "Pemesanan berikutnya lebih cepat", "Kepasan konsisten sepanjang waktu"],
+      "statement": "Pesanan pertama Anda membuat profil. Setiap pesanan setelahnya menjadi lebih mudah.",
+      "cta": "Buat Janji Konsultasi Bespoke Pertama Anda"
+    },
+    "craftsmanshipDetails": {
+      "eyebrow": "Craftsmanship",
+      "heading": "Perbedaannya Ada di Detail",
+      "subheadline": "Kualitas bespoke sejati dibangun melalui keputusan kecil, konstruksi yang cermat, dan penyelesaian yang disiplin.",
+      "cards": [
+        { "title": "Penyelesaian Tangan", "description": "Pekerjaan penyelesaian terpilih dilakukan dengan tangan untuk presisi dan ketahanan yang lebih baik." },
+        { "title": "Presisi Material", "description": "Pola diselaraskan dengan cermat untuk menjaga konsistensi visual di seluruh busana." },
+        { "title": "Konstruksi Struktural", "description": "Keseimbangan dan jatuhnya busana dibangun melalui struktur tailoring, bukan jalan pintas." },
+        { "title": "Penyetrikaan Akhir", "description": "Setiap busana disetrika secara profesional sebelum inspeksi dan pengiriman akhir." }
+      ],
+      "statement": "Yang tidak pernah Anda lihat adalah justru yang paling lama dikerjakan untuk disempurnakan.",
+      "cta": "Jelajahi Craftsmanship Kami"
+    },
+    "workshop": {
+      "eyebrow": "Workshop",
+      "heading": "Workshop Nyata. Tailor Sungguhan. Craftsmanship Sejati.",
+      "subheadline": "Busana kami diproduksi di dalam workshop tailoring khusus tempat konsultasi, pembuatan pola, pemotongan, konstruksi, dan penyelesaian berlangsung dalam satu proses.",
+      "pillarsLabel": "Di Dalam Workshop",
+      "pillars": ["Konsultasi & Desain", "Pembuatan Pola", "Tailoring & Konstruksi", "Inspeksi Kualitas"],
+      "authenticityLabel": "Keaslian",
+      "authenticityCallout": "Setiap foto merepresentasikan lingkungan tailoring, alat, material, dan proses produksi kami yang sesungguhnya.",
+      "cta": "Kunjungi Proses Workshop Kami"
+    },
+    "authority": {
+      "eyebrow": "Warisan & Otoritas",
+      "heading": "Dibangun di Atas Pengetahuan Tailoring, Bukan Tren",
+      "subheadline": "Workshop kami didedikasikan khusus untuk busana custom. Setiap pesanan berkontribusi pada pengetahuan tailoring, penyempurnaan kepasan, pemahaman material, dan pengembangan pola yang terus disempurnakan.",
+      "trustParagraph": "Setiap ukuran disimpan, setiap pola disempurnakan, dan setiap fitting menambah pengalaman tailoring praktis kami. Inilah fondasi sistem kami — alasan kualitas menjadi semakin konsisten seiring waktu, bukan sebaliknya.",
+      "statement": "Setiap busana yang kami buat menyempurnakan busana berikutnya.",
+      "metrics": [
+        { "value": "100%", "label": "Busana custom-made" },
+        { "value": "1 Pola", "label": "Pola personal per pelanggan" },
+        { "value": "Multi-tahap", "label": "Alur kerja produksi" },
+        { "value": "Permanen", "label": "Penyimpanan ukuran" }
+      ],
+      "cta": "Pelajari Standar Bespoke Kami"
+    },
+    "gallerySection": {
+      "eyebrow": "Galeri",
+      "heading": "Pelanggan Nyata. Craftsmanship Nyata. Hasil Nyata.",
+      "subheadline": "Setiap gambar galeri mencerminkan busana, material, dan detail pengerjaan di balik setiap pesanan yang kami selesaikan.",
+      "categories": [
+        { "title": "Busana Selesai", "description": "Busana bespoke yang telah selesai, difoto setelah penyetrikaan dan inspeksi akhir.", "viewMoreLabel": "Lihat Lebih Banyak Busana" },
+        { "title": "Material & Detail", "description": "Foto close-up material yang menunjukkan tenunan, tekstur, dan detail konstruksi.", "viewMoreLabel": "Lihat Lebih Banyak Material" },
+        { "title": "Proses Workshop", "description": "Detail material dan penyelesaian dari busana yang melewati workshop tailoring kami.", "viewMoreLabel": "Lihat Proses Lengkap" },
+        { "title": "Kepasan Pelanggan", "description": "Referensi fitting yang digunakan untuk memverifikasi ukuran dan kepasan busana setiap pelanggan.", "viewMoreLabel": "Pelajari Tentang Fitting" }
+      ],
+      "authenticityStatement": "Setiap gambar yang ditampilkan di sini merepresentasikan busana, material, atau proses tailoring kami yang sesungguhnya.",
+      "cta": "Jelajahi Galeri Lengkap"
+    },
+    "reviews": {
+      "eyebrow": "Ulasan",
+      "heading": "Dipercaya oleh Klien yang Menghargai Kepasan, Craftsmanship, dan Layanan Personal",
+      "subheadline": "Pelanggan kami kembali karena prosesnya personal, kepasannya konsisten, dan pengalamannya semakin baik di setiap pesanan.",
+      "reviews": [
+        { "context": "Pernikahan", "quote": "Kepasannya terasa jauh berbeda dibanding busana ready-made mana pun. Proses konsultasi dan pengukuran membuat hasilnya terasa benar-benar personal." },
+        { "context": "Umrah", "quote": "Yang paling mengesankan adalah bagaimana pesanan kedua menjadi lebih mudah karena ukuran dan pola saya sudah tersimpan." },
+        { "context": "Pemakaian Harian", "quote": "Kualitas penyelesaian dan jatuhnya busana secara keseluruhan membuatnya terasa jauh lebih rapi dibanding tailoring standar." }
+      ],
+      "metrics": [
+        { "value": "4.9/5", "label": "Rating Rata-rata" },
+        { "value": "Terverifikasi", "label": "Ulasan Pelanggan" },
+        { "value": "Nyata", "label": "Proses Workshop" },
+        { "value": "Personal", "label": "Ukuran Tersimpan" }
+      ],
+      "authenticityStatement": "Setiap testimoni yang ditampilkan di sini mencerminkan pengalaman tailoring bespoke yang sesungguhnya dan disajikan sebagai representasi jenis masukan pelanggan yang diterima workshop kami.",
+      "cta": "Baca Lebih Banyak Cerita Pelanggan"
+    },
+    "trustBadges": {
+      "eyebrow": "Kepercayaan & Keyakinan",
+      "heading": "Mengapa Pelanggan Yakin Memesan Bespoke dari Kami",
+      "subheadline": "Proses kami dirancang untuk mengurangi ketidakpastian, menjaga konsistensi, dan menghadirkan busana yang dibuat khusus untuk Anda.",
+      "primaryCards": [
+        { "title": "Pola Dibuat untuk Anda", "description": "Dibuat khusus untuk tubuh Anda." },
+        { "title": "Profil Kepasan Tersimpan", "description": "Pesanan berikutnya menjadi jauh lebih cepat." },
+        { "title": "Quality Control", "description": "Setiap busana diperiksa sebelum pengiriman." }
+      ],
+      "secondaryBadges": ["Pemilihan Material Premium", "Linimasa Produksi Transparan", "Konsultasi Tailor Khusus", "Profil Pelanggan Aman"],
+      "summary": {
+        "heading": "Bespoke Tailoring Bukan Sekadar Membeli Pakaian",
+        "body": "Ini tentang menciptakan busana yang ada karena Anda ada. Dari konsultasi dan pengukuran hingga pembuatan pola, produksi, quality control, dan pengiriman, setiap tahap dirancang untuk menghasilkan busana yang lebih pas secara alami, lebih tahan lama, dan lebih mudah dipesan ulang seiring waktu."
+      },
+      "finalCta": {
+        "heading": "Siap Merasakan Bespoke Tailoring?",
+        "subheadline": "Buat janji konsultasi dan mulai proses menciptakan busana yang dibuat khusus untuk Anda.",
+        "primaryCta": "Buat Janji Konsultasi",
+        "secondaryCta": "Jelajahi Material"
+      }
+    },
+    "fabric": {
+      "eyebrow": "Material",
+      "heading": "Material Adalah Awal dari Craft",
+      "body": "Setiap gulungan disortir, diperiksa, dan disesuaikan dengan bagaimana busana akan bergerak, bernapas, dan mempertahankan bentuknya.",
+      "cta": "Jelajahi Semua Material",
+      "cards": [
+        { "origin": "Impor — Italia", "trait": "Jatuh terstruktur, bobot untuk musim sejuk" },
+        { "origin": "Impor — Mesir", "trait": "Menyerap udara, hasil akhir rapi" },
+        { "origin": "Impor — Belgia", "trait": "Ringan, siap untuk iklim hangat" },
+        { "origin": "Impor — Jepang", "trait": "Kilau halus, siap untuk acara khusus" }
+      ]
+    },
+    "craftsmanship": {
+      "eyebrow": "Proses",
+      "heading": "Craftsmanship, Langkah demi Langkah",
+      "steps": [
+        { "title": "Konsultasi", "description": "Sesi privat untuk memahami acara, preferensi siluet, dan gaya hidup Anda." },
+        { "title": "Pengukuran", "description": "Pengukuran tubuh menyeluruh yang diambil oleh fitter terlatih, dicatat hingga milimeter." },
+        { "title": "Pembuatan Pola", "description": "Ukuran Anda menjadi blok pola yang tidak ada duanya di tempat lain." },
+        { "title": "Produksi Handcrafted", "description": "Dipotong, dijahit, dan diselesaikan dengan tangan di workshop kami di Bandung." }
+      ]
+    },
+    "gallery": {
+      "eyebrow": "Portofolio",
+      "heading": "Rekam Jejak Craft",
+      "filterLabels": { "all": "Semua", "wedding": "Pernikahan", "umrah": "Umrah", "formal": "Formal", "daily": "Harian", "premium": "Premium" }
+    },
+    "stories": {
+      "eyebrow": "Cerita Pelanggan",
+      "heading": "Dikenakan, Bukan Sekadar Dibuat",
+      "stories": [
+        { "purpose": "Pernikahan", "quote": "Kepasannya pas persis — tidak ada yang pernah saya kenakan sebanding." },
+        { "purpose": "Umrah", "quote": "Ringan, menyerap udara, dan tetap terlihat formal untuk acaranya." },
+        { "purpose": "Harian", "quote": "Saya pesan satu dan kembali lagi untuk tiga lainnya." }
+      ]
+    },
+    "finalCta": {
+      "heading": "Mulai Thobe Custom Pertama Anda",
+      "body": "Setiap busana bespoke dimulai dari satu percakapan.",
+      "urgency": "Saat ini sedang membuka jadwal janji temu privat untuk bulan ini."
+    },
+    "digitalBespoke": {
+      "eyebrow": "Design Studio — Bespoke dari Mana Saja",
+      "heading": "Bespoke Tailoring Tanpa Batas Jarak",
+      "body": "Rancang thobe Anda dari mana saja melalui video call, Design Studio, dan layanan home visit — pengalaman yang sama seperti berada langsung di showroom Local Tailor.",
+      "experiencesHeading": "Tiga Cara Menggunakan Design Studio",
+      "cta": "Explore Design Studio",
+      "audienceLabel": "Cocok Untuk",
+      "experiences": [
+        {
+          "eyebrow": "Gratis",
+          "title": "Video Call Fitting",
+          "description": "Konsultasi, desain, dan panduan pengukuran — sepenuhnya dari jarak jauh.",
+          "details": ["Konsultasi kebutuhan", "Pemilihan desain di Design Studio", "Panduan pengukuran", "Pengecekan ukuran", "Finalisasi desain"],
+          "audience": ["Luar kota", "Luar pulau", "Luar negeri", "Pelanggan sibuk"]
+        },
+        {
+          "title": "Home Visit",
+          "description": "Tim kami datang ke lokasi Anda dengan perlengkapan lengkap untuk sesi tatap muka yang personal.",
+          "details": ["Fabric book", "Sample komponen", "Tablet Design Studio", "Alat ukur"],
+          "audience": ["Keluarga", "Pasangan", "Wedding", "Corporate", "VIP"]
+        },
+        {
+          "title": "Showroom Experience",
+          "description": "Opsi datang langsung ke showroom kami di Bandung, untuk konsultasi dan pengukuran tatap muka.",
+          "details": ["Konsultasi langsung di workshop", "Melihat dan menyentuh koleksi bahan secara langsung", "Pengukuran langsung oleh fitter"]
+        }
+      ]
+    },
+    "knowledge": {
+      "eyebrow": "Knowledge",
+      "heading": "Knowledge & Guides",
+      "body": "Panduan lengkap tentang bahan, ukuran, styling, tailoring, pernikahan, dan umrah dari tim Local Tailor.",
+      "categoriesHeading": "Jelajahi Kategori",
+      "readGuideLabel": "Baca Panduan",
+      "viewAllCta": "Lihat Semua Panduan",
+      "freeConsultationCta": "Konsultasi Gratis"
+    }
   },
   "languageSwitcher": {
     "openLabel": "Ganti bahasa",

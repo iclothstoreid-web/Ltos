@@ -44,7 +44,8 @@
     "colorLabel": "Couleur",
     "priceLabel": "Investissement Estimé",
     "timeLabel": "Délai de Production",
-    "cta": "Continuer la Conception"
+    "cta": "Continuer la Conception",
+    "productionTimeEstimate": "2 à 3 semaines"
   },
   "booking": {
     "eyebrow": "Sur Rendez-vous",
@@ -65,13 +66,37 @@
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Questions Fréquentes"
+    "heading": "Questions Fréquentes",
+    "items": [
+      {
+        "question": "En quoi un thobe sur mesure diffère-t-il d'un thobe fait à vos mesures ?",
+        "answer": "Le \"made-to-measure\" ajuste un patron existant à vos mesures. Le sur-mesure (bespoke) signifie qu'un patron est conçu uniquement à partir de vos mesures, sans base préexistante — c'est ainsi que Bespoke Tailor confectionne chaque pièce."
+      },
+      {
+        "question": "Combien de temps prend la production ?",
+        "answer": "Le délai de production dépend du tissu et de la capacité actuelle de l'atelier ; il est affiché sous forme d'estimation en direct pendant le processus de conception, selon votre commande spécifique."
+      },
+      {
+        "question": "Puis-je commencer le processus de conception sans me rendre au studio ?",
+        "answer": "Oui — \"Concevoir Mon Thobe\" vous permet d'explorer d'abord les options de tissu et de coupe en ligne ; un rendez-vous privé et une séance de mesures suivent avant le début de la production."
+      },
+      {
+        "question": "Où mon thobe est-il fabriqué ?",
+        "answer": "Chaque pièce est coupée, cousue et finie à la main dans notre atelier à Bandung, en Indonésie."
+      }
+    ]
   },
   "trust": {
-    "heading": "La confiance de clients exigeants à travers toute l'Indonésie"
+    "heading": "La confiance de clients exigeants à travers toute l'Indonésie",
+    "counters": [
+      { "label": "Pièces Sur Mesure Livrées" },
+      { "label": "Ajustement Parfait dès le Premier Essai" },
+      { "label": "Années de Savoir-Faire en Tailoring" }
+    ]
   },
   "footer": {
     "tagline": "Thobe sur mesure, confectionné à la main à Bandung.",
+    "taglineFallback": "Local Tailor — tailoring sur mesure haut de gamme.",
     "columns": {
       "explore": "Découvrir",
       "studio": "Studio",
@@ -92,7 +117,259 @@
       "menThobeSize": "Tailles Thobe Homme",
       "howToMeasure": "Comment Mesurer un Thobe"
     },
-    "legal": "© {year} Bespoke Tailor. Tous droits réservés."
+    "legal": "© {year} Bespoke Tailor. Tous droits réservés.",
+    "legalWithBrand": "© {year} {brand}. Tous droits réservés."
+  },
+  "home": {
+    "why": {
+      "eyebrow": "La Différence",
+      "heading": "Pourquoi Bespoke Tailor",
+      "intro": "Bespoke Tailor conçoit un patron unique pour votre corps, contrairement au tailoring de masse qui se contente d'ajuster un modèle fixe.",
+      "columns": [
+        { "title": "Prêt-à-Porter", "description": "Tailles fixes conçues pour un corps moyen. L'ajustement est approximatif ; les retouches restent cosmétiques au mieux." },
+        { "title": "Tailoring de Masse", "description": "Vos mesures appliquées à un patron type. Plus proche, mais le patron n'a jamais été dessiné pour vous." },
+        { "title": "Bespoke Tailor", "description": "Un patron conçu uniquement à partir de vos mesures, puis confectionné à la main par un artisan qui ne l'a créé pour personne d'autre." }
+      ]
+    },
+    "bespokeProcess": {
+      "eyebrow": "Le Récit du Processus",
+      "heading": "De la Consultation à la Livraison — Chaque Pièce Est Conçue Spécialement pour Vous",
+      "subheadline": "Une pièce sur mesure n'est pas choisie en stock. Elle est conçue, mesurée, patronnée, confectionnée, inspectée et finie pour une seule personne.",
+      "steps": [
+        { "title": "Consultation", "description": "Échange sur l'usage, le style, le tissu et les préférences d'ajustement." },
+        { "title": "Mesures", "description": "Prise de mesures corporelles détaillée et évaluation de la posture." },
+        { "title": "Formulation du Patron", "description": "Un patron personnel est conçu spécifiquement pour votre morphologie." },
+        { "title": "Production", "description": "Coupe, construction et finitions tailoring faites à la main." },
+        { "title": "Contrôle Qualité", "description": "Chaque pièce est inspectée avant de quitter l'atelier." },
+        { "title": "Livraison", "description": "Essayage final et livraison, avec conservation durable de votre profil client." }
+      ],
+      "secondaryCta": "Voir le Processus Sur Mesure Complet"
+    },
+    "consultation": {
+      "eyebrow": "Consultation",
+      "heading": "Chaque Parcours Sur Mesure Commence par une Conversation",
+      "subheadline": "Nous commençons par comprendre votre usage, votre mode de vie et vos préférences avant de recommander tissus, construction et coupe.",
+      "bullets": ["Consultation individuelle", "Recommandation de style", "Conseil sur les tissus", "Délai de production transparent", "Prix discuté avant le début de la production"],
+      "cta": "Réservez Votre Consultation"
+    },
+    "measurement": {
+      "eyebrow": "Mesures",
+      "heading": "La Précision Commence par la Prise de Mesures",
+      "subheadline": "Vos mesures deviennent le fondement de chaque future pièce que nous créons.",
+      "cardLabel": "Profil Corporel Numérique",
+      "cardItems": ["Mesures conservées en toute sécurité", "Réutilisables pour vos futures commandes", "Mises à jour à chaque changement de votre corps", "Commandes répétées plus rapides", "Ajustement constant dans le temps"],
+      "statement": "Vos mesures ne sont pas traitées comme de simples chiffres. Elles constituent un profil personnel à long terme.",
+      "cta": "Enregistrez Vos Mesures pour vos Futures Commandes"
+    },
+    "patternFormulation": {
+      "eyebrow": "Formulation du Patron",
+      "heading": "Votre Patron Personnel Est Créé Avant Toute Découpe de Tissu",
+      "subheadline": "Une pièce sur mesure commence par un patron conçu spécifiquement pour votre morphologie, votre posture et vos mouvements.",
+      "determinesLabel": "Votre patron détermine",
+      "determines": ["L'équilibre des épaules", "La rotation de la manche", "L'aisance à la poitrine", "La silhouette", "Le confort de mouvement", "La tombée de la pièce"],
+      "statement": "Un tissu peut être remplacé. Un patron personnel, jamais.",
+      "cta": "Découvrez Comment Votre Patron Est Créé"
+    },
+    "production": {
+      "eyebrow": "Production",
+      "heading": "Confectionné par des Tailleurs Expérimentés, Pas en Chaîne de Montage",
+      "subheadline": "Chaque pièce suit un processus de tailoring structuré, mené par des artisans expérimentés.",
+      "stages": ["Coupe", "Assemblage", "Construction du Col", "Pose des Manches", "Finitions à la Main", "Repassage & Détails Finaux"],
+      "metrics": [
+        { "label": "Patron Dédié", "detail": "Un par client" },
+        { "label": "Étapes de Production Spécialisées" },
+        { "label": "Savoir-Faire Humain" },
+        { "label": "Inspection Qualité Finale" }
+      ],
+      "statement": "Le savoir-faire se mesure à ce qui reste invisible.",
+      "cta": "Découvrez Notre Processus de Production"
+    },
+    "qualityControl": {
+      "eyebrow": "Contrôle Qualité",
+      "heading": "Chaque Pièce Est Inspectée Avant de Quitter Notre Atelier",
+      "subheadline": "Avant la livraison, chaque pièce passe par un processus d'inspection dédié pour garantir constance, précision et qualité de finition.",
+      "checklist": ["Régularité des coutures", "Précision des mesures", "Alignement du col", "Symétrie des poignets", "Inspection du tissu", "Qualité du repassage", "Contrôle final des finitions"],
+      "statement": "Si une pièce ne répond pas à notre norme interne, elle ne parvient pas au client.",
+      "trustCallout": "Inspection Qualité Dédiée",
+      "cta": "Découvrez Nos Normes de Qualité",
+      "pointInspection": "Inspection en {count} Points"
+    },
+    "delivery": {
+      "eyebrow": "Livraison",
+      "heading": "La Dernière Étape Est la Première de Votre Prochaine Commande",
+      "subheadline": "La livraison inclut une vérification finale de l'ajustement et la conservation permanente de vos mesures pour vos futures commandes sur mesure.",
+      "experienceLabel": "Ce que Comprend la Livraison",
+      "experience": ["Vérification finale de l'ajustement", "Conseils d'entretien de la pièce", "Conservation des mesures", "Commandes futures plus rapides", "Ajustement constant dans le temps"],
+      "statement": "Votre première commande crée le profil. Chaque commande suivante devient plus simple.",
+      "cta": "Réservez Votre Première Consultation Sur Mesure"
+    },
+    "craftsmanshipDetails": {
+      "eyebrow": "Savoir-Faire",
+      "heading": "La Différence Se Joue dans les Détails",
+      "subheadline": "La véritable qualité sur mesure se construit par de petites décisions, une construction soignée et une finition disciplinée.",
+      "cards": [
+        { "title": "Finitions à la Main", "description": "Certaines finitions sont réalisées à la main pour plus de précision et de longévité." },
+        { "title": "Précision du Tissu", "description": "Les motifs sont alignés avec soin pour préserver la cohérence visuelle sur toute la pièce." },
+        { "title": "Construction Structurelle", "description": "L'équilibre et la tombée de la pièce sont bâtis par la structure du tailoring, jamais par des raccourcis." },
+        { "title": "Repassage Final", "description": "Chaque pièce est repassée professionnellement avant l'inspection et la livraison finales." }
+      ],
+      "statement": "Ce que vous ne voyez jamais est précisément ce qui a demandé le plus de temps à perfectionner.",
+      "cta": "Découvrez Notre Savoir-Faire"
+    },
+    "workshop": {
+      "eyebrow": "L'Atelier",
+      "heading": "Un Vrai Atelier. De Vrais Tailleurs. Un Vrai Savoir-Faire.",
+      "subheadline": "Nos pièces sont produites dans un atelier de tailoring dédié, où consultation, création de patron, coupe, construction et finitions se déroulent au sein d'un même processus.",
+      "pillarsLabel": "Dans l'Atelier",
+      "pillars": ["Consultation & Design", "Création de Patron", "Tailoring & Construction", "Inspection Qualité"],
+      "authenticityLabel": "Authenticité",
+      "authenticityCallout": "Chaque photographie représente notre véritable environnement de tailoring, nos outils, nos matériaux et notre processus de production.",
+      "cta": "Découvrez le Processus de Notre Atelier"
+    },
+    "authority": {
+      "eyebrow": "Héritage & Expertise",
+      "heading": "Bâti sur le Savoir du Tailoring, Pas sur les Tendances",
+      "subheadline": "Notre atelier est exclusivement dédié aux pièces sur mesure. Chaque commande enrichit un savoir-faire en tailoring, un perfectionnement de la coupe, une meilleure compréhension des tissus et un développement continu des patrons.",
+      "trustParagraph": "Chaque mesure est conservée, chaque patron est affiné, et chaque essayage enrichit notre expérience pratique du tailoring. C'est le fondement de notre système — la raison pour laquelle la qualité devient plus constante avec le temps, jamais moins.",
+      "statement": "Chaque pièce que nous confectionnons améliore la suivante.",
+      "metrics": [
+        { "value": "100%", "label": "Pièces confectionnées sur mesure" },
+        { "value": "1 Patron", "label": "Patron personnel par client" },
+        { "value": "Multi-étapes", "label": "Processus de production" },
+        { "value": "Permanente", "label": "Conservation des mesures" }
+      ],
+      "cta": "Découvrez Notre Norme Sur Mesure"
+    },
+    "gallerySection": {
+      "eyebrow": "Galerie",
+      "heading": "De Vrais Clients. Un Vrai Savoir-Faire. De Vrais Résultats.",
+      "subheadline": "Chaque image de la galerie reflète les pièces, les matériaux et le travail de détail derrière chaque commande que nous réalisons.",
+      "categories": [
+        { "title": "Pièces Terminées", "description": "Pièces sur mesure achevées, photographiées après repassage et inspection finaux.", "viewMoreLabel": "Voir Plus de Pièces" },
+        { "title": "Tissu & Détail", "description": "Photographie rapprochée des matériaux montrant le tissage, la texture et les détails de construction.", "viewMoreLabel": "Voir Plus de Tissus" },
+        { "title": "Processus d'Atelier", "description": "Détails de matériaux et de finition de pièces traversant notre atelier de tailoring.", "viewMoreLabel": "Voir le Processus Complet" },
+        { "title": "Ajustement Client", "description": "La référence d'essayage utilisée pour vérifier les mesures et l'ajustement de la pièce pour chaque client.", "viewMoreLabel": "En Savoir Plus sur l'Essayage" }
+      ],
+      "authenticityStatement": "Chaque image présentée ici représente nos véritables pièces, tissus ou processus de tailoring.",
+      "cta": "Explorez la Galerie Complète"
+    },
+    "reviews": {
+      "eyebrow": "Avis",
+      "heading": "La Confiance de Clients qui Valorisent l'Ajustement, le Savoir-Faire et le Service Personnalisé",
+      "subheadline": "Nos clients reviennent car le processus est personnel, l'ajustement constant, et l'expérience s'améliore à chaque commande.",
+      "reviews": [
+        { "context": "Mariage", "quote": "L'ajustement était nettement différent de tout ce qui est prêt-à-porter. Le processus de consultation et de mesures a rendu le résultat vraiment personnel." },
+        { "context": "Omra", "quote": "Ce qui m'a le plus impressionné, c'est à quel point la seconde commande a été plus simple, mes mesures et mon patron étant déjà enregistrés." },
+        { "context": "Port Quotidien", "quote": "La qualité des finitions et la tombée générale ont rendu la pièce nettement plus raffinée qu'un tailoring standard." }
+      ],
+      "metrics": [
+        { "value": "4,9/5", "label": "Note Moyenne" },
+        { "value": "Vérifiés", "label": "Avis Clients" },
+        { "value": "Réel", "label": "Processus d'Atelier" },
+        { "value": "Personnelles", "label": "Mesures Enregistrées" }
+      ],
+      "authenticityStatement": "Chaque témoignage présenté ici reflète une véritable expérience de tailoring sur mesure et illustre le type de retours clients que reçoit notre atelier.",
+      "cta": "Lire Plus de Témoignages Clients"
+    },
+    "trustBadges": {
+      "eyebrow": "Confiance & Assurance",
+      "heading": "Pourquoi Nos Clients Commandent en Toute Confiance",
+      "subheadline": "Notre processus est conçu pour réduire l'incertitude, préserver la constance et livrer une pièce conçue spécialement pour vous.",
+      "primaryCards": [
+        { "title": "Un Patron Fait pour Vous", "description": "Créé spécifiquement pour votre corps." },
+        { "title": "Profil d'Ajustement Enregistré", "description": "Les futures commandes deviennent nettement plus rapides." },
+        { "title": "Contrôle Qualité", "description": "Chaque pièce est inspectée avant livraison." }
+      ],
+      "secondaryBadges": ["Sélection de Tissus Premium", "Délai de Production Transparent", "Consultation Tailleur Dédiée", "Profil Client Sécurisé"],
+      "summary": {
+        "heading": "Le Tailoring Sur Mesure Ne Consiste Pas à Acheter des Vêtements",
+        "body": "Il s'agit de créer une pièce qui existe parce que vous existez. De la consultation et de la prise de mesures à la formulation du patron, la production, le contrôle qualité et la livraison, chaque étape est conçue pour produire une pièce qui s'ajuste plus naturellement, dure plus longtemps, et devient plus simple à recommander avec le temps."
+      },
+      "finalCta": {
+        "heading": "Prêt à Découvrir le Tailoring Sur Mesure ?",
+        "subheadline": "Réservez une consultation et débutez le processus de création d'une pièce conçue spécialement pour vous.",
+        "primaryCta": "Réserver une Consultation",
+        "secondaryCta": "Découvrir les Tissus"
+      }
+    },
+    "fabric": {
+      "eyebrow": "Matière",
+      "heading": "Le Tissu, Là où le Savoir-Faire Commence",
+      "body": "Chaque rouleau est sourcé, inspecté, et choisi selon la façon dont la pièce va bouger, respirer, et conserver sa forme.",
+      "cta": "Découvrir Tous les Tissus",
+      "cards": [
+        { "origin": "Importé — Italie", "trait": "Tombée structurée, poids adapté aux saisons fraîches" },
+        { "origin": "Importé — Égypte", "trait": "Respirant, finition nette" },
+        { "origin": "Importé — Belgique", "trait": "Léger, adapté aux climats chauds" },
+        { "origin": "Importé — Japon", "trait": "Léger lustre, idéal pour les occasions" }
+      ]
+    },
+    "craftsmanship": {
+      "eyebrow": "Processus",
+      "heading": "Le Savoir-Faire, Étape par Étape",
+      "steps": [
+        { "title": "Consultation", "description": "Une session privée pour comprendre votre occasion, vos préférences de silhouette et votre mode de vie." },
+        { "title": "Mesures", "description": "Prise de mesures complète du corps par un mesureur formé, enregistrée au millimètre près." },
+        { "title": "Formulation du Patron", "description": "Vos mesures deviennent un patron qui n'existe nulle part ailleurs." },
+        { "title": "Production Artisanale", "description": "Coupé, cousu et fini à la main dans notre atelier de Bandung." }
+      ]
+    },
+    "gallery": {
+      "eyebrow": "Portfolio",
+      "heading": "Une Trace du Savoir-Faire",
+      "filterLabels": { "all": "Tout", "wedding": "Mariage", "umrah": "Omra", "formal": "Formel", "daily": "Quotidien", "premium": "Premium" }
+    },
+    "stories": {
+      "eyebrow": "Témoignages Clients",
+      "heading": "Portée, Pas Seulement Confectionnée",
+      "stories": [
+        { "purpose": "Mariage", "quote": "L'ajustement était exact — rien de ce que j'ai porté ne s'en approche." },
+        { "purpose": "Omra", "quote": "Léger, respirant, et pourtant toujours élégant pour l'occasion." },
+        { "purpose": "Quotidien", "quote": "J'en ai commandé une, puis je suis revenu pour trois autres." }
+      ]
+    },
+    "finalCta": {
+      "heading": "Commencez Votre Premier Thobe Sur Mesure",
+      "body": "Chaque pièce sur mesure commence par une simple conversation.",
+      "urgency": "Réservations de rendez-vous privés actuellement ouvertes pour ce mois-ci."
+    },
+    "digitalBespoke": {
+      "eyebrow": "Studio de Design — Sur Mesure, Où que Vous Soyez",
+      "heading": "Le Tailoring Sur Mesure Sans Limite de Distance",
+      "body": "Concevez votre thobe où que vous soyez, par appel vidéo, via le Studio de Design, ou grâce à notre service de visite à domicile — la même expérience que si vous étiez en personne dans le showroom Local Tailor.",
+      "experiencesHeading": "Trois Façons d'Utiliser le Studio de Design",
+      "cta": "Découvrir le Studio de Design",
+      "audienceLabel": "Idéal Pour",
+      "experiences": [
+        {
+          "eyebrow": "Gratuit",
+          "title": "Essayage par Appel Vidéo",
+          "description": "Consultation, conception et guidage des mesures — entièrement à distance.",
+          "details": ["Consultation des besoins", "Choix du design dans le Studio de Design", "Guidage des mesures", "Vérification de la taille", "Finalisation du design"],
+          "audience": ["Hors de la ville", "Autres îles", "À l'étranger", "Clients occupés"]
+        },
+        {
+          "title": "Visite à Domicile",
+          "description": "Notre équipe se déplace chez vous avec tout le matériel nécessaire pour une session personnelle en face à face.",
+          "details": ["Nuancier de tissus", "Échantillons de composants", "Tablette du Studio de Design", "Outils de mesure"],
+          "audience": ["Familles", "Couples", "Mariages", "Entreprises", "VIP"]
+        },
+        {
+          "title": "Expérience en Showroom",
+          "description": "Option de vous rendre directement dans notre showroom à Bandung pour une consultation et une prise de mesures en personne.",
+          "details": ["Consultation directement à l'atelier", "Voir et toucher notre collection de tissus en personne", "Mesures prises directement par un mesureur"]
+        }
+      ]
+    },
+    "knowledge": {
+      "eyebrow": "Guides",
+      "heading": "Guides & Connaissances",
+      "body": "Un guide complet sur les tissus, les tailles, le style, le tailoring, les mariages et l'omra, par l'équipe Local Tailor.",
+      "categoriesHeading": "Parcourir les Catégories",
+      "readGuideLabel": "Lire le Guide",
+      "viewAllCta": "Voir Tous les Guides",
+      "freeConsultationCta": "Consultation Gratuite"
+    }
   },
   "languageSwitcher": {
     "openLabel": "Changer de langue",

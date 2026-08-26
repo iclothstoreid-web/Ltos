@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { reviewsCopy } from '@/lib/marketing/copy'
 import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
@@ -30,20 +33,29 @@ type ReviewsSectionProps = {
 // person. CTA defaults to /#gallery per this sprint's own brief, since
 // /reviews doesn't exist yet.
 export function ReviewsSection({ ctaHref = '/#gallery', highlightReviewId }: ReviewsSectionProps = {}) {
+  const t = useTranslations('home.reviews')
+  const translatedReviews = t.raw('reviews') as { context: string; quote: string }[]
+  const metrics = t.raw('metrics') as { value: string; label: string }[]
+
+  const mergedReviews = reviewsCopy.reviews.map((review, i) => ({
+    ...review,
+    context: translatedReviews[i]?.context ?? review.context,
+    quote: translatedReviews[i]?.quote ?? review.quote,
+  }))
   const orderedReviews = highlightReviewId
-    ? [...reviewsCopy.reviews].sort((a, b) => (a.id === highlightReviewId ? -1 : b.id === highlightReviewId ? 1 : 0))
-    : reviewsCopy.reviews
+    ? [...mergedReviews].sort((a, b) => (a.id === highlightReviewId ? -1 : b.id === highlightReviewId ? 1 : 0))
+    : mergedReviews
 
   return (
     <section id="reviews" aria-labelledby="reviews-heading" className="bg-luxury-navy px-6 py-24 md:px-10">
       <div className="mx-auto max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
           <GoldAccentLine className="mx-auto mb-4" />
-          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{reviewsCopy.eyebrow}</p>
+          <p className="font-luxury-sans text-xs uppercase tracking-[0.2em] text-luxury-gold">{t('eyebrow')}</p>
           <h2 id="reviews-heading" className="mt-3 font-fraunces text-3xl text-luxury-ivory md:text-4xl">
-            {reviewsCopy.heading}
+            {t('heading')}
           </h2>
-          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{reviewsCopy.subheadline}</p>
+          <p className="mt-4 font-luxury-sans text-sm text-luxury-taupe">{t('subheadline')}</p>
         </Reveal>
 
         <ul className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -77,7 +89,7 @@ export function ReviewsSection({ ctaHref = '/#gallery', highlightReviewId }: Rev
 
         <Reveal delay={0.15} className="mt-16 border-y border-luxury-gold/[0.14] py-10">
           <ul className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-            {reviewsCopy.metrics.map((metric) => (
+            {metrics.map((metric) => (
               <li key={metric.label} className="text-center">
                 <p className="font-fraunces text-lg text-luxury-gold md:text-xl">{metric.value}</p>
                 <p className="mt-1 font-luxury-sans text-xs uppercase tracking-[0.08em] text-luxury-taupe">{metric.label}</p>
@@ -88,11 +100,11 @@ export function ReviewsSection({ ctaHref = '/#gallery', highlightReviewId }: Rev
 
         <Reveal delay={0.2} className="mt-14 text-center">
           <blockquote className="mx-auto max-w-xl border-l-2 border-luxury-gold/40 pl-5 text-left">
-            <p className="font-luxury-sans text-sm italic leading-relaxed text-luxury-taupe">{reviewsCopy.authenticityStatement}</p>
+            <p className="font-luxury-sans text-sm italic leading-relaxed text-luxury-taupe">{t('authenticityStatement')}</p>
           </blockquote>
 
           <MagneticButton href={ctaHref} variant="primary" className="mt-10">
-            {reviewsCopy.cta}
+            {t('cta')}
           </MagneticButton>
         </Reveal>
       </div>
