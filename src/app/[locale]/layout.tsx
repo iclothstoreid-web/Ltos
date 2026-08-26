@@ -3,6 +3,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { locales, isAppLocale } from '@/i18n/config'
 import { HtmlLangSync } from '@/components/marketing/shell/HtmlLangSync'
+import { GlobalWhatsAppChat } from '@/components/marketing/GlobalWhatsAppChat'
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
@@ -39,6 +40,14 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={params.locale} messages={messages}>
       <HtmlLangSync />
       {children}
+      {/* Global Floating WhatsApp Chat CTA — mounted once here so it
+          appears on every public marketing/customer-facing page (this is
+          the only layout every route under [locale]/ shares) and never on
+          the internal LTOS apps (owner/workspace/fitter/inventory/
+          command-center/production/journey), which all live outside
+          [locale] routing entirely per src/middleware.ts's own
+          NO_LOCALE_PREFIXES list. */}
+      <GlobalWhatsAppChat />
     </NextIntlClientProvider>
   )
 }

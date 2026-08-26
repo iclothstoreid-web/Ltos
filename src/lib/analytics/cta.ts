@@ -36,6 +36,13 @@ export const CTA_REGISTRY: CtaDefinition[] = [
   { id: 'location_sticky_whatsapp', label: 'Floating WhatsApp', page: '/locations/[city]' },
   { id: 'contact_chat_whatsapp', label: 'Chat on WhatsApp', page: '/contact' },
   { id: 'contact_get_directions', label: 'Get Directions', page: '/contact' },
+  // Global Floating WhatsApp Chat — mounted once in [locale]/layout.tsx,
+  // appears on every public page. Unlike every other entry here, its
+  // `page` field is never actually read from this registry (trackCTA's
+  // `page` argument is the CTA's *current* pathname at click time, not
+  // this static label) — kept for the registry's own "every id has an
+  // entry" convention and for the CRO dashboard's CTA leaderboard lookup.
+  { id: 'global_floating_whatsapp', label: 'Chat dengan Tailor', page: 'GlobalWhatsAppChat' },
   { id: 'review_write_google', label: 'Tulis Ulasan di Google', page: 'GoogleReviewCTA' },
   // Sprint W10 — Revenue Landing Pages (RevenueLandingPage.tsx). Unlike
   // /locations/[city]'s CTAs (one shared id across all cities), each
