@@ -37,7 +37,12 @@ export const LOCAL_TAILOR_CONFIG: BrandConfig = {
     logoHorizontal: '/brand/local-tailor/horizontal.svg',
     logoMark: '/brand/local-tailor/mark.svg',
     favicon: '/brand/icon-192.png',
-    manifest: '/manifest.json'
+    // Was sharing Tarda's own /manifest.json (name/short_name/description
+    // still said "Tarda" / "Bogor" live in production) — now points at its
+    // own manifest so the two brands stop overwriting each other's PWA
+    // identity. Tarda's own TARDA_CONFIG.assets.manifest below is
+    // deliberately untouched.
+    manifest: '/manifest-local-tailor.json'
   },
   colors: {
     primary: '#221814',
