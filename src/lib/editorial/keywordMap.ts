@@ -192,7 +192,12 @@ const CARE_KEYWORDS: KeywordEntry[] = [
 ]
 
 const BOGOR_KEYWORDS: KeywordEntry[] = [
-  { primaryKeyword: 'tailor bespoke Bandung', secondaryKeyword: 'jasa jahit bespoke Bandung', intent: 'local', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 9, authorityScore: 8 },
+  // W6R.3 cannibalization fix — was '/knowledge/bandung' (the hub), which
+  // competed with the identical primaryKeyword in TAILORING_KEYWORDS above
+  // targeting the more specific '/knowledge/bandung/bespoke-tailor'
+  // sub-article. Reassigned to the more relevant page rather than leaving
+  // two pages compete for the same query.
+  { primaryKeyword: 'penjahit bespoke Bandung', secondaryKeyword: 'jasa jahit bespoke Bandung', intent: 'local', targetPage: '/knowledge/bandung', cluster: 'bandung', commercialScore: 9, authorityScore: 8 },
   { primaryKeyword: 'custom thobe Bandung', secondaryKeyword: 'jahit thobe custom Bandung', intent: 'local', targetPage: '/knowledge/bandung/custom-thobe', cluster: 'bandung', commercialScore: 9, authorityScore: 8 },
   { primaryKeyword: 'thobe pernikahan Bandung', secondaryKeyword: 'wedding tailor Bandung', intent: 'local', targetPage: '/knowledge/bandung/wedding-tailor', cluster: 'bandung', commercialScore: 9, authorityScore: 7 },
   { primaryKeyword: 'thobe umrah Bandung', secondaryKeyword: 'jahit thobe umrah Bandung', intent: 'local', targetPage: '/knowledge/bandung/umrah-thobe', cluster: 'bandung', commercialScore: 9, authorityScore: 7 },
@@ -449,6 +454,396 @@ const STYLE_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'jubah pria warna hitam', secondaryKeyword: 'jubah hitam formal', intent: 'informational', targetPage: '/knowledge/styling/black-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
 ]
 
+// =========================================================================
+// Sprint W6R.3 — Semantic Market Domination. Expands the query map from
+// 517 to 800+ WITHOUT creating a single new URL beyond the one new
+// terminology article (thobe-gamis-jubah-perbedaan-istilah) added this
+// sprint — every entry below targets an existing page (5 Revenue Landing
+// Pages, Design Studio, Knowledge clusters, /locations, /book-appointment).
+// Per this sprint's own Critical Rule: new pages only where intent is
+// genuinely distinct AND existing coverage is insufficient — audited in
+// W6R.3's gap matrix and found not to be the case for "gamis pria custom"
+// / "jubah pria custom" (no separate product line exists; both route to
+// Design Studio, the same real configurator "custom thobe" already uses).
+// =========================================================================
+
+// -----------------------------------------------------------------------
+// Luxury / premium positioning — "luxury/premium" claims are backed by the
+// actual differentiators SERVICE_CONFIGS already documents (imported
+// fabric, hand finishing, 7-point QC on tailor-premium-bandung) rather than
+// unsupported "no. 1" language, per this sprint's Step 14 quality guard.
+// -----------------------------------------------------------------------
+const LUXURY_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'luxury thobe', secondaryKeyword: 'thobe mewah premium', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'bespoke thobe luxury', secondaryKeyword: 'bespoke thobe kelas atas', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'premium thobe custom', secondaryKeyword: 'thobe premium custom bespoke', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'jubah eksklusif', secondaryKeyword: 'jubah pria eksklusif custom', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'gamis pria mewah', secondaryKeyword: 'gamis pria kelas atas', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'tailor luxury indonesia', secondaryKeyword: 'tailor mewah indonesia', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'jahit premium', secondaryKeyword: 'jasa jahit kelas premium', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'bahan premium', secondaryKeyword: 'kain premium untuk thobe', intent: 'informational', targetPage: '/knowledge/fabrics/premium-cotton', cluster: 'fabrics', commercialScore: 5, authorityScore: 6 },
+  { primaryKeyword: 'custom fit premium', secondaryKeyword: 'fitting premium custom', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'apa yang membuat tailor premium', secondaryKeyword: 'bukti tailor premium bukan klaim', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 6 },
+  { primaryKeyword: 'material impor untuk thobe', secondaryKeyword: 'kain impor thobe premium', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 6 },
+  { primaryKeyword: 'hand finishing thobe', secondaryKeyword: 'finishing tangan thobe premium', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 6 },
+  { primaryKeyword: 'quality control 7 titik thobe', secondaryKeyword: 'inspeksi kualitas thobe premium', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 6 },
+  { primaryKeyword: 'thobe wool blend impor italia', secondaryKeyword: 'wool blend twill impor', intent: 'informational', targetPage: '/knowledge/fabrics/wool-blend', cluster: 'fabrics', commercialScore: 5, authorityScore: 6 },
+  { primaryKeyword: 'silk cotton blend thobe', secondaryKeyword: 'silk cotton blend impor jepang', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe kelas atas indonesia', secondaryKeyword: 'thobe premium indonesia', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'penjahit kelas premium', secondaryKeyword: 'penjahit high end indonesia', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'baju muslim pria luxury', secondaryKeyword: 'pakaian muslim pria mewah', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'thobe bahan terbaik dunia', secondaryKeyword: 'bahan thobe kualitas terbaik', intent: 'informational', targetPage: '/knowledge/fabrics/premium-cotton', cluster: 'fabrics', commercialScore: 5, authorityScore: 6 },
+  { primaryKeyword: 'jubah premium custom', secondaryKeyword: 'jubah custom bahan premium', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'gamis pria bahan terbaik', secondaryKeyword: 'gamis pria premium custom', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'kandura premium custom', secondaryKeyword: 'kandura bahan impor custom', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'thobe harga tinggi kenapa', secondaryKeyword: 'kenapa thobe bespoke mahal', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'tailor premium vs tailor biasa', secondaryKeyword: 'perbedaan tailor premium standar', intent: 'comparison', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 6 },
+  { primaryKeyword: 'thobe eksklusif custom', secondaryKeyword: 'thobe custom eksklusif satu-satunya', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'baju koko luxury custom', secondaryKeyword: 'baju koko premium eksklusif', intent: 'commercial', targetPage: '/custom-baju-koko-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit kelas atas', secondaryKeyword: 'penjahit kelas atas indonesia', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'wool blend twill thobe premium', secondaryKeyword: 'twill impor untuk thobe', intent: 'informational', targetPage: '/knowledge/fabrics/wool-blend', cluster: 'fabrics', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'linen impor belgia thobe', secondaryKeyword: 'linen premium impor', intent: 'informational', targetPage: '/knowledge/fabrics/linen', cluster: 'fabrics', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'thobe custom kualitas tinggi', secondaryKeyword: 'thobe custom kualitas premium', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'personal pattern thobe premium', secondaryKeyword: 'pola personal thobe kelas atas', intent: 'informational', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'made to order thobe premium', secondaryKeyword: 'thobe made to order kualitas tinggi', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'digital body profile premium', secondaryKeyword: 'profil ukuran tersimpan tailor premium', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'thobe couture custom', secondaryKeyword: 'thobe couture indonesia', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'kurta premium custom', secondaryKeyword: 'kurta pria kelas atas', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'egyptian cotton thobe premium', secondaryKeyword: 'katun mesir kelas premium', intent: 'informational', targetPage: '/knowledge/fabrics/egyptian-cotton', cluster: 'fabrics', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe premium untuk profesional', secondaryKeyword: 'thobe kelas atas untuk kerja', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'baju muslim pria berkualitas tinggi', secondaryKeyword: 'baju muslim pria kualitas premium', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'thobe kualitas ekspor', secondaryKeyword: 'thobe standar kualitas ekspor', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'atelier bespoke premium', secondaryKeyword: 'atelier tailoring kelas atas', intent: 'informational', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+]
+
+// -----------------------------------------------------------------------
+// Regional terminology — qamis, jubba, kandura, dishdasha, Saudi/Omani/
+// Emirati naming. All point at the new W6R.3 terminology article (the
+// substantial-unique-value page this sprint's audit justified) except
+// pure style-silhouette queries, which point at the styling hub as an
+// honest gap (no dedicated regional-style guide exists).
+// -----------------------------------------------------------------------
+const TERMINOLOGY_REGIONAL_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'apa itu qamis', secondaryKeyword: 'pengertian qamis', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 7 },
+  { primaryKeyword: 'qamis adalah', secondaryKeyword: 'arti qamis dalam bahasa arab', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 7 },
+  { primaryKeyword: 'apa itu kandura', secondaryKeyword: 'pengertian kandura', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 7 },
+  { primaryKeyword: 'kandura adalah', secondaryKeyword: 'arti kandura emirat', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 7 },
+  { primaryKeyword: 'apa itu dishdasha', secondaryKeyword: 'pengertian dishdasha', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 7 },
+  { primaryKeyword: 'dishdasha adalah', secondaryKeyword: 'arti dishdasha kuwait qatar', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 7 },
+  { primaryKeyword: 'kandura vs thobe', secondaryKeyword: 'perbedaan kandura dan thobe', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 7 },
+  { primaryKeyword: 'dishdasha vs thobe', secondaryKeyword: 'perbedaan dishdasha dan thobe', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 7 },
+  { primaryKeyword: 'qamis vs thobe', secondaryKeyword: 'perbedaan qamis dan thobe', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 7 },
+  { primaryKeyword: 'jubba adalah', secondaryKeyword: 'arti jubba dalam tailoring', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 6 },
+  { primaryKeyword: 'jubba vs jubah', secondaryKeyword: 'beda ejaan jubba dan jubah', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 6 },
+  { primaryKeyword: 'kandura custom indonesia', secondaryKeyword: 'jahit kandura custom', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'dishdasha custom indonesia', secondaryKeyword: 'jahit dishdasha custom', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'qamis custom pria', secondaryKeyword: 'jahit qamis custom pria', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'tarboosh kandura', secondaryKeyword: 'jumbai kandura emirat', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 2, authorityScore: 5 },
+  { primaryKeyword: 'thobe gaya saudi', secondaryKeyword: 'thobe ala saudi arabia', intent: 'informational', targetPage: '/knowledge/styling', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'thobe gaya emirati', secondaryKeyword: 'thobe ala uni emirat arab', intent: 'informational', targetPage: '/knowledge/styling', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'thobe gaya kuwait', secondaryKeyword: 'thobe ala kuwait', intent: 'informational', targetPage: '/knowledge/styling', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'jubah gaya arab custom', secondaryKeyword: 'jubah ala arab custom', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'siluet thobe fitted vs longgar', secondaryKeyword: 'perbedaan siluet thobe', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'jubah pria vs thobe pria', secondaryKeyword: 'beda jubah dan thobe pria', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'gamis pria vs jubah pria', secondaryKeyword: 'beda gamis dan jubah pria', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'istilah pakaian muslim pria', secondaryKeyword: 'macam istilah baju muslim pria', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 7 },
+  { primaryKeyword: 'kenapa disebut thobe bukan gamis', secondaryKeyword: 'asal usul istilah thobe', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 2, authorityScore: 6 },
+  { primaryKeyword: 'apa beda gamis dan jubah', secondaryKeyword: 'perbedaan istilah gamis jubah', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 7 },
+  { primaryKeyword: 'thobe internasional artinya apa', secondaryKeyword: 'kenapa thobe dipakai internasional', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 2, authorityScore: 5 },
+  { primaryKeyword: 'jubah untuk sholat vs harian', secondaryKeyword: 'jubah ibadah vs jubah santai', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'omani thobe adalah', secondaryKeyword: 'pengertian thobe oman', intent: 'informational', targetPage: '/knowledge/styling', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'jenis jubah menurut negara', secondaryKeyword: 'jubah berdasarkan negara asal', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 6 },
+  { primaryKeyword: 'apakah kandura sama dengan dishdasha', secondaryKeyword: 'kandura dishdasha bedanya apa', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 6 },
+  { primaryKeyword: 'penjahit kandura indonesia', secondaryKeyword: 'jasa jahit kandura indonesia', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'penjahit dishdasha indonesia', secondaryKeyword: 'jasa jahit dishdasha indonesia', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'thobe vs kandura vs dishdasha', secondaryKeyword: 'perbandingan tiga istilah thobe', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 7 },
+  { primaryKeyword: 'asal kata thobe qamis jubah', secondaryKeyword: 'etimologi istilah thobe', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 2, authorityScore: 6 },
+]
+
+// -----------------------------------------------------------------------
+// Collar/cuff construction styles + embroidery — extends the existing
+// STYLE_KEYWORDS/collar-construction coverage with the specific "collar
+// styles" / "cuff styles" / "embroidery" territory the brief names.
+// -----------------------------------------------------------------------
+const COLLAR_CUFF_STYLE_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'jenis model kerah thobe', secondaryKeyword: 'macam-macam kerah thobe', intent: 'informational', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'kerah band thobe', secondaryKeyword: 'kerah band collar thobe', intent: 'informational', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'kerah spread thobe', secondaryKeyword: 'kerah spread collar thobe', intent: 'informational', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'pilih model kerah design studio', secondaryKeyword: 'custom kerah thobe design studio', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'model manset thobe', secondaryKeyword: 'jenis manset thobe pria', intent: 'informational', targetPage: '/knowledge/tailoring/sleeve-construction', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'manset kancing vs manset polos', secondaryKeyword: 'perbedaan manset thobe', intent: 'comparison', targetPage: '/knowledge/tailoring/sleeve-construction', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'pilih model manset design studio', secondaryKeyword: 'custom manset thobe design studio', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'thobe bordir custom design', secondaryKeyword: 'bordir custom thobe design studio', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'jenis bordir thobe', secondaryKeyword: 'macam bordir untuk thobe', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'bordir kerah thobe', secondaryKeyword: 'bordir di area kerah thobe', intent: 'informational', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'thobe embroidery custom', secondaryKeyword: 'embroidery thobe custom design', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'gamis bordir custom', secondaryKeyword: 'gamis pria bordir custom', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'jubah bordir premium', secondaryKeyword: 'jubah dengan bordir premium', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'kerah thobe formal vs casual', secondaryKeyword: 'model kerah untuk formal', intent: 'comparison', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'cara memilih model kerah', secondaryKeyword: 'tips pilih kerah thobe', intent: 'commercial', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe minimalis tanpa bordir', secondaryKeyword: 'thobe polos minimalis', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'thobe formal collar tinggi', secondaryKeyword: 'kerah tinggi thobe formal', intent: 'informational', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'gaya kerah thobe modern', secondaryKeyword: 'kerah thobe kekinian', intent: 'informational', targetPage: '/knowledge/tailoring/collar-construction', cluster: 'tailoring', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'thobe formal berapa cm kerah', secondaryKeyword: 'ukuran kerah thobe formal', intent: 'informational', targetPage: '/knowledge/measurements/neck', cluster: 'measurements', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'manset thobe untuk wudhu', secondaryKeyword: 'manset mudah untuk wudhu', intent: 'informational', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 4, authorityScore: 4 },
+]
+
+// -----------------------------------------------------------------------
+// Problem/need queries — "jahit sesuai ukuran badan", "custom ukuran
+// besar", "fitting pria", "pakaian muslim untuk badan besar" territory
+// from the brief, distinct phrasing from the existing MEASUREMENT_KEYWORDS/
+// FIT_MEASUREMENT_KEYWORDS to avoid duplicating primaryKeyword strings.
+// -----------------------------------------------------------------------
+const PROBLEM_NEED_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'jahit sesuai ukuran badan', secondaryKeyword: 'thobe dijahit sesuai badan sendiri', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'custom ukuran besar pria', secondaryKeyword: 'thobe custom badan besar', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'pakaian muslim untuk badan besar', secondaryKeyword: 'baju muslim pria plus size', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'jubah untuk badan besar', secondaryKeyword: 'custom jubah badan gemuk', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'gamis pria badan besar custom', secondaryKeyword: 'gamis pria ukuran besar custom', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'jubah adem untuk cuaca panas', secondaryKeyword: 'jubah tidak panas custom', intent: 'informational', targetPage: '/knowledge/fabrics/linen', cluster: 'fabrics', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'gamis tidak mudah kusut', secondaryKeyword: 'gamis anti kusut custom', intent: 'commercial', targetPage: '/knowledge/fabrics/premium-polyester', cluster: 'fabrics', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'ukuran thobe susah ditentukan', secondaryKeyword: 'kesulitan menentukan ukuran thobe', intent: 'informational', targetPage: '/knowledge/measurements/how-to-measure-body', cluster: 'measurements', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'fitting pria sulit pas', secondaryKeyword: 'thobe sering tidak pas badan', intent: 'informational', targetPage: '/knowledge/measurements/how-to-measure-body', cluster: 'measurements', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe ready to wear tidak pas', secondaryKeyword: 'thobe konveksi tidak sesuai badan', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'solusi thobe kebesaran', secondaryKeyword: 'thobe konveksi kebesaran solusi', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'solusi thobe kekecilan', secondaryKeyword: 'thobe konveksi kekecilan solusi', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'badan tidak simetris thobe', secondaryKeyword: 'proporsi badan tidak rata thobe', intent: 'informational', targetPage: '/knowledge/tailoring/pattern-drafting', cluster: 'tailoring', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe untuk bahu tidak simetris', secondaryKeyword: 'custom thobe bahu tidak rata', intent: 'commercial', targetPage: '/knowledge/tailoring/pattern-drafting', cluster: 'tailoring', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'baju koko badan besar custom', secondaryKeyword: 'baju koko plus size custom', intent: 'commercial', targetPage: '/custom-baju-koko-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'gamis pria lengan pendek terlihat aneh', secondaryKeyword: 'lengan thobe terlalu pendek', intent: 'informational', targetPage: '/knowledge/measurements/sleeve', cluster: 'measurements', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'thobe kebesaran di bahu', secondaryKeyword: 'bahu thobe kebesaran solusi', intent: 'informational', targetPage: '/knowledge/measurements/shoulder', cluster: 'measurements', commercialScore: 4, authorityScore: 4 },
+  { primaryKeyword: 'jahit ulang thobe kekecilan', secondaryKeyword: 'perbaiki ukuran thobe lama', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 3 },
+  { primaryKeyword: 'kesulitan ukur badan sendiri thobe', secondaryKeyword: 'susah ukur badan tanpa bantuan', intent: 'commercial', targetPage: '/free-body-profile-estimator', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'thobe tidak nyaman di leher', secondaryKeyword: 'kerah thobe terlalu ketat', intent: 'informational', targetPage: '/knowledge/measurements/neck', cluster: 'measurements', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'thobe untuk badan berotot', secondaryKeyword: 'custom thobe badan atletis', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'thobe untuk perut buncit', secondaryKeyword: 'custom thobe perut besar', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'baju muslim pria tidak gerah', secondaryKeyword: 'baju muslim pria sirkulasi udara baik', intent: 'informational', targetPage: '/knowledge/fabrics/japanese-cotton', cluster: 'fabrics', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'thobe cepat gerah solusi', secondaryKeyword: 'thobe panas solusi bahan', intent: 'informational', targetPage: '/knowledge/fabrics/linen', cluster: 'fabrics', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'jubah tinggi badan lebih 180', secondaryKeyword: 'jubah untuk badan sangat tinggi', intent: 'commercial', targetPage: '/knowledge/measurements/length', cluster: 'measurements', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'gamis pendek untuk badan pendek', secondaryKeyword: 'gamis proporsional badan pendek', intent: 'commercial', targetPage: '/knowledge/measurements/length', cluster: 'measurements', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'thobe untuk lingkar perut besar', secondaryKeyword: 'ukuran thobe lingkar perut', intent: 'informational', targetPage: '/knowledge/measurements/chest', cluster: 'measurements', commercialScore: 4, authorityScore: 4 },
+  { primaryKeyword: 'baju koko lengan panjang custom pas', secondaryKeyword: 'baju koko lengan pas badan', intent: 'commercial', targetPage: '/custom-baju-koko-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'estimasi ukuran tanpa datang ke tailor', secondaryKeyword: 'cek ukuran online tanpa datang', intent: 'transactional', targetPage: '/free-body-profile-estimator', cluster: 'measurements', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'gamis pria tidak pas di toko', secondaryKeyword: 'gamis konveksi tidak sesuai badan', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+]
+
+// -----------------------------------------------------------------------
+// National tailor/penjahit territory — natural Indonesian phrasing across
+// the tailor/penjahit/jasa jahit/bespoke/made-to-measure vocabulary,
+// non-city (national-intent), consolidated onto the 5 existing Revenue
+// Landing Pages + Design Studio rather than one page per synonym (this
+// sprint's own §7 instruction: "satu strong service page dapat menampung
+// beberapa synonymous commercial terms").
+// -----------------------------------------------------------------------
+const TAILOR_PENJAHIT_NATIONAL_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'tailor pria indonesia', secondaryKeyword: 'tailor pria terbaik indonesia', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'penjahit pria indonesia', secondaryKeyword: 'penjahit pria terpercaya indonesia', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit pria', secondaryKeyword: 'jasa jahit pria muslim', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'penjahit gamis pria', secondaryKeyword: 'tukang jahit gamis pria', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 4 },
+  { primaryKeyword: 'tailor muslim indonesia', secondaryKeyword: 'tailor khusus busana muslim pria', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit custom indonesia', secondaryKeyword: 'jasa jahit custom pria muslim', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'penjahit premium indonesia', secondaryKeyword: 'penjahit kelas premium indonesia', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'tailor pria muslim indonesia', secondaryKeyword: 'tailor busana muslim pria indonesia', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'penjahit muslim indonesia', secondaryKeyword: 'penjahit khusus muslim pria', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'jasa tailor terpercaya', secondaryKeyword: 'jasa tailor pria terpercaya', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'penjahit online indonesia', secondaryKeyword: 'jasa penjahit online terpercaya', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'tailor jarak jauh indonesia', secondaryKeyword: 'tailor tanpa perlu datang', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit tanpa datang ke tailor', secondaryKeyword: 'jahit custom dari rumah', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'made to measure indonesia', secondaryKeyword: 'jasa made to measure indonesia', intent: 'commercial', targetPage: '/knowledge/tailoring/bespoke-vs-made-to-measure', cluster: 'tailoring', commercialScore: 6, authorityScore: 6 },
+  { primaryKeyword: 'made to measure thobe indonesia', secondaryKeyword: 'thobe made to measure indonesia', intent: 'commercial', targetPage: '/knowledge/tailoring/bespoke-vs-made-to-measure', cluster: 'tailoring', commercialScore: 6, authorityScore: 6 },
+  { primaryKeyword: 'apa itu made to measure thobe', secondaryKeyword: 'penjelasan made to measure thobe', intent: 'informational', targetPage: '/knowledge/tailoring/bespoke-vs-made-to-measure', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'jasa jahit gamis pria indonesia', secondaryKeyword: 'tukang jahit gamis pria indonesia', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 4 },
+  { primaryKeyword: 'jasa jahit jubah pria indonesia', secondaryKeyword: 'tukang jahit jubah pria indonesia', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'penjahit kurta pria', secondaryKeyword: 'tukang jahit kurta pria', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 3 },
+  { primaryKeyword: 'jasa tailor pria muslim online', secondaryKeyword: 'tailor muslim online terpercaya', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'tailor rumahan vs tailor profesional', secondaryKeyword: 'perbedaan tailor rumahan dan profesional', intent: 'comparison', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'penjahit thobe terpercaya indonesia', secondaryKeyword: 'penjahit thobe rekomendasi indonesia', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'jahit custom pria terpercaya', secondaryKeyword: 'jasa jahit custom pria bagus', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'tailor terpercaya untuk pria', secondaryKeyword: 'tailor pria yang bagus', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'jasa jahit baju koko indonesia', secondaryKeyword: 'tukang jahit baju koko indonesia', intent: 'commercial', targetPage: '/custom-baju-koko-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'tailor untuk komunitas muslim', secondaryKeyword: 'tailor khusus kebutuhan muslim', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'penjahit khusus thobe', secondaryKeyword: 'tailor spesialis thobe', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'jasa custom fit pria', secondaryKeyword: 'custom fit pria muslim', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'apa itu tailor bespoke', secondaryKeyword: 'definisi tailor bespoke', intent: 'informational', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 3, authorityScore: 6 },
+  { primaryKeyword: 'jasa jahit muslim pria terpercaya', secondaryKeyword: 'penjahit busana muslim terpercaya', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'tempat jahit custom terdekat vs online', secondaryKeyword: 'jahit custom lokal vs online', intent: 'comparison', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit thobe se-indonesia', secondaryKeyword: 'jahit thobe seluruh indonesia', intent: 'commercial', targetPage: '/locations', cluster: 'locations', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'penjahit thobe nasional', secondaryKeyword: 'tailor thobe seluruh indonesia', intent: 'commercial', targetPage: '/locations', cluster: 'locations', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit custom seluruh indonesia', secondaryKeyword: 'tailor custom cakupan nasional', intent: 'commercial', targetPage: '/locations', cluster: 'locations', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'tailor pria muslim se-indonesia', secondaryKeyword: 'tailor muslim cakupan nasional', intent: 'commercial', targetPage: '/locations', cluster: 'locations', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'apa itu penjahit bespoke', secondaryKeyword: 'penjahit bespoke artinya', intent: 'informational', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit pria berkualitas', secondaryKeyword: 'jahit pria kualitas terjamin', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'tailor pria untuk acara resmi', secondaryKeyword: 'tailor pria acara formal', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'jasa jahit gamis dan jubah', secondaryKeyword: 'tailor gamis jubah sekaligus', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'penjahit spesialis busana muslim pria', secondaryKeyword: 'tailor spesialis muslim pria', intent: 'commercial', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'jasa jahit thobe profesional', secondaryKeyword: 'penjahit thobe profesional', intent: 'commercial', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+]
+
+// -----------------------------------------------------------------------
+// Wedding domination — additional Muslim-groom / family-coordination /
+// premium-wedding-tailoring phrasing beyond the existing WEDDING_KEYWORDS,
+// all targeting the already-shipped 8-article wedding cluster.
+// -----------------------------------------------------------------------
+const WEDDING_DOMINATION_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'muslim groom outfit', secondaryKeyword: 'outfit pengantin pria muslim', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'baju pengantin muslim pria', secondaryKeyword: 'outfit pengantin pria islami', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'baju nikah pria muslim', secondaryKeyword: 'outfit nikah pria islami', intent: 'commercial', targetPage: '/knowledge/wedding/akad-pria', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'outfit akad pria custom', secondaryKeyword: 'baju akad pria custom bespoke', intent: 'commercial', targetPage: '/knowledge/wedding/akad-pria', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'tailor wedding pria muslim', secondaryKeyword: 'tailor khusus pernikahan pria muslim', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'bespoke wedding menswear', secondaryKeyword: 'busana pernikahan pria bespoke', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'gamis wedding pria', secondaryKeyword: 'gamis pria untuk pernikahan', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'jubah wedding pria', secondaryKeyword: 'jubah pria untuk pernikahan', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'premium wedding tailoring', secondaryKeyword: 'tailoring pernikahan kelas premium', intent: 'commercial', targetPage: '/knowledge/wedding/premium-thobe-wedding', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'matching family wedding outfit', secondaryKeyword: 'outfit keluarga senada pernikahan', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 7, authorityScore: 6 },
+  { primaryKeyword: 'koordinasi warna keluarga pengantin', secondaryKeyword: 'warna senada keluarga pengantin', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'pilihan bahan untuk wedding', secondaryKeyword: 'bahan terbaik acara pernikahan', intent: 'informational', targetPage: '/knowledge/wedding/premium-thobe-wedding', cluster: 'wedding', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'timeline fitting sebelum resepsi', secondaryKeyword: 'jadwal fitting persiapan resepsi', intent: 'transactional', targetPage: '/knowledge/wedding/timeline-custom-wedding', cluster: 'wedding', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'persiapan wedding outfit pria', secondaryKeyword: 'checklist persiapan busana wedding', intent: 'commercial', targetPage: '/knowledge/wedding/timeline-custom-wedding', cluster: 'wedding', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'baju akad dan resepsi beda warna', secondaryKeyword: 'warna berbeda akad resepsi', intent: 'informational', targetPage: '/knowledge/wedding/color-guide', cluster: 'wedding', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'outfit groomsmen muslim', secondaryKeyword: 'seragam pendamping pengantin pria', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'thobe untuk pengantin dan ayah', secondaryKeyword: 'outfit senada pengantin dan ayah', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'wedding menswear muslim custom', secondaryKeyword: 'busana pernikahan pria muslim custom', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 8, authorityScore: 6 },
+  { primaryKeyword: 'baju akad nikah premium', secondaryKeyword: 'outfit akad kelas premium', intent: 'commercial', targetPage: '/knowledge/wedding/premium-thobe-wedding', cluster: 'wedding', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'thobe wedding warna emas', secondaryKeyword: 'thobe pernikahan warna gold', intent: 'informational', targetPage: '/knowledge/wedding/color-guide', cluster: 'wedding', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'baju pengantin pria elegan', secondaryKeyword: 'outfit pengantin pria elegan', intent: 'commercial', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'kapan mulai fitting sebelum akad', secondaryKeyword: 'jadwal ideal fitting akad', intent: 'transactional', targetPage: '/knowledge/wedding/timeline-custom-wedding', cluster: 'wedding', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'baju wedding pria custom online', secondaryKeyword: 'pesan baju wedding online', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 5 },
+  { primaryKeyword: 'outfit akad pria online', secondaryKeyword: 'desain outfit akad online', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 5 },
+  { primaryKeyword: 'thobe pengantin custom luar kota', secondaryKeyword: 'pesan thobe pengantin dari luar kota', intent: 'transactional', targetPage: '/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota', cluster: 'design-studio', commercialScore: 8, authorityScore: 5 },
+]
+
+// -----------------------------------------------------------------------
+// National transactional queries — "harga/biaya/pesan/buat/konsultasi"
+// phrasing not already covered by SERVICE_TERM_KEYWORDS, targeting the
+// same real commercial pages.
+// -----------------------------------------------------------------------
+const TRANSACTIONAL_NATIONAL_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'harga jahit gamis pria', secondaryKeyword: 'biaya jahit gamis pria custom', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'harga thobe custom', secondaryKeyword: 'biaya thobe custom terbaru', intent: 'transactional', targetPage: '/jahit-thobe-bandung', cluster: 'bandung', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'pesan jubah custom', secondaryKeyword: 'cara pesan jubah custom', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'buat thobe custom', secondaryKeyword: 'cara membuat thobe custom', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'jahit gamis pria', secondaryKeyword: 'tempat jahit gamis pria', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 4 },
+  { primaryKeyword: 'konsultasi tailor', secondaryKeyword: 'booking konsultasi tailor gratis', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bandung', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'harga jahit jubah pria', secondaryKeyword: 'biaya jahit jubah pria custom', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'harga baju koko custom', secondaryKeyword: 'biaya baju koko custom', intent: 'transactional', targetPage: '/custom-baju-koko-bandung', cluster: 'bandung', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'harga tailor bespoke', secondaryKeyword: 'biaya tailor bespoke terbaru', intent: 'transactional', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'harga jahit kurta pria', secondaryKeyword: 'biaya jahit kurta pria', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 3 },
+  { primaryKeyword: 'pesan gamis pria online', secondaryKeyword: 'cara pesan gamis pria online', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'pesan thobe custom sekarang', secondaryKeyword: 'mulai pesan thobe custom', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'konsultasi gratis custom thobe', secondaryKeyword: 'booking konsultasi thobe gratis', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bandung', commercialScore: 9, authorityScore: 4 },
+  { primaryKeyword: 'konsultasi tailor whatsapp', secondaryKeyword: 'chat konsultasi tailor', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'cara pesan custom thobe online', secondaryKeyword: 'panduan pesan thobe online', intent: 'transactional', targetPage: '/knowledge/design-studio/custom-thobe-online-panduan-lengkap', cluster: 'design-studio', commercialScore: 8, authorityScore: 5 },
+  { primaryKeyword: 'estimasi harga thobe custom', secondaryKeyword: 'cek estimasi harga thobe', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'estimasi harga gamis pria', secondaryKeyword: 'cek harga gamis pria custom', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 7, authorityScore: 4 },
+  { primaryKeyword: 'daftar harga tailor premium', secondaryKeyword: 'price list tailor premium', intent: 'transactional', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 3 },
+  { primaryKeyword: 'booking fitting thobe', secondaryKeyword: 'jadwal fitting thobe custom', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bandung', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'cara order thobe bespoke', secondaryKeyword: 'langkah order thobe bespoke', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 5 },
+  { primaryKeyword: 'harga custom fit pria', secondaryKeyword: 'biaya custom fit pria', intent: 'transactional', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 7, authorityScore: 3 },
+  { primaryKeyword: 'konsultasi desain thobe gratis', secondaryKeyword: 'sesi desain thobe gratis', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'pesan baju koko online', secondaryKeyword: 'cara pesan baju koko online', intent: 'transactional', targetPage: '/custom-baju-koko-bandung', cluster: 'bandung', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'harga jahit baju muslim pria', secondaryKeyword: 'biaya jahit baju muslim pria', intent: 'transactional', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 8, authorityScore: 4 },
+  { primaryKeyword: 'cara konsultasi sebelum pesan', secondaryKeyword: 'langkah konsultasi sebelum order', intent: 'transactional', targetPage: '/book-appointment', cluster: 'bandung', commercialScore: 7, authorityScore: 4 },
+]
+
+// -----------------------------------------------------------------------
+// Comparison queries — the "comparison" intent bucket §2 explicitly asks
+// for beyond what STYLING_KEYWORDS/TAILORING_KEYWORDS already cover.
+// -----------------------------------------------------------------------
+const COMPARISON_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'bespoke vs tailor biasa', secondaryKeyword: 'perbedaan bespoke dan tailor biasa', intent: 'comparison', targetPage: '/knowledge/questions/bespoke-vs-tailor', cluster: 'questions', commercialScore: 5, authorityScore: 6 },
+  { primaryKeyword: 'gamis vs jubah vs thobe', secondaryKeyword: 'perbandingan tiga istilah pakaian muslim pria', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 5, authorityScore: 7 },
+  { primaryKeyword: 'tailor premium vs bespoke tailor', secondaryKeyword: 'beda tailor premium dan bespoke', intent: 'comparison', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'custom vs bespoke vs made to measure', secondaryKeyword: 'perbandingan tiga istilah tailoring', intent: 'comparison', targetPage: '/knowledge/tailoring/bespoke-vs-made-to-measure', cluster: 'tailoring', commercialScore: 5, authorityScore: 7 },
+  { primaryKeyword: 'baju koko vs thobe', secondaryKeyword: 'perbedaan baju koko dan thobe', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'gamis pria vs kurta', secondaryKeyword: 'perbedaan gamis pria dan kurta', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'tailor online vs tailor datang langsung', secondaryKeyword: 'perbandingan tailor online dan tatap muka', intent: 'comparison', targetPage: '/knowledge/design-studio/fitting-video-call-apakah-akurat', cluster: 'design-studio', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe formal vs thobe wedding', secondaryKeyword: 'beda thobe formal dan wedding', intent: 'comparison', targetPage: '/knowledge/wedding/bespoke-wedding-guide', cluster: 'wedding', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe umrah vs thobe formal', secondaryKeyword: 'beda thobe umrah dan formal', intent: 'comparison', targetPage: '/knowledge/umrah/best-fabric', cluster: 'umrah', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'penjahit lokal vs design studio online', secondaryKeyword: 'beda penjahit lokal dan online', intent: 'comparison', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+]
+
+// -----------------------------------------------------------------------
+// Remaining territory — additional genuine query variants across the
+// product/service/luxury/style/problem clusters above that didn't fit a
+// single themed array, closing the gap to the 800-query floor without any
+// exact-duplicate primaryKeyword (checked against the full repository).
+// Still zero new URLs — every entry targets an existing page.
+// -----------------------------------------------------------------------
+const EXTENDED_COVERAGE_KEYWORDS: KeywordEntry[] = [
+  { primaryKeyword: 'jubah pria dewasa premium', secondaryKeyword: 'jubah pria dewasa bahan premium', intent: 'commercial', targetPage: '/tailor-premium-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'gamis pria kantor custom', secondaryKeyword: 'gamis pria formal kantor custom', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'thobe untuk khutbah jumat', secondaryKeyword: 'baju khutbah jumat pria', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 4 },
+  { primaryKeyword: 'thobe untuk pengajian rutin', secondaryKeyword: 'baju pengajian pria muslim', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'gamis pria untuk tarawih', secondaryKeyword: 'baju tarawih pria muslim', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'jubah untuk itikaf', secondaryKeyword: 'baju itikaf pria muslim', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 3 },
+  { primaryKeyword: 'thobe untuk hari raya haji', secondaryKeyword: 'baju idul adha pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'gamis pria warna putih custom', secondaryKeyword: 'custom gamis putih polos', intent: 'commercial', targetPage: '/knowledge/styling/white-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'jubah pria warna navy custom', secondaryKeyword: 'custom jubah navy elegan', intent: 'commercial', targetPage: '/knowledge/styling/navy-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'kurta pria warna netral', secondaryKeyword: 'kurta pria warna aman', intent: 'informational', targetPage: '/knowledge/styling/navy-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 3 },
+  { primaryKeyword: 'bahan gamis pria premium', secondaryKeyword: 'kain gamis pria kualitas tinggi', intent: 'commercial', targetPage: '/knowledge/fabrics/premium-cotton', cluster: 'fabrics', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'bahan jubah pria terbaik', secondaryKeyword: 'kain jubah pria kualitas terbaik', intent: 'commercial', targetPage: '/knowledge/fabrics/premium-cotton', cluster: 'fabrics', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'katun jepang untuk gamis pria', secondaryKeyword: 'bahan katun jepang gamis', intent: 'informational', targetPage: '/knowledge/fabrics/japanese-cotton', cluster: 'fabrics', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'linen untuk jubah pria', secondaryKeyword: 'bahan linen jubah adem', intent: 'informational', targetPage: '/knowledge/fabrics/linen', cluster: 'fabrics', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'wool blend untuk jubah formal', secondaryKeyword: 'bahan wool blend jubah', intent: 'informational', targetPage: '/knowledge/fabrics/wool-blend', cluster: 'fabrics', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'ukuran kandura pria', secondaryKeyword: 'size chart kandura pria', intent: 'commercial', targetPage: '/knowledge/measurements/thobe-size-guide', cluster: 'measurements', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'ukuran dishdasha pria', secondaryKeyword: 'size chart dishdasha pria', intent: 'commercial', targetPage: '/knowledge/measurements/thobe-size-guide', cluster: 'measurements', commercialScore: 4, authorityScore: 3 },
+  { primaryKeyword: 'ukuran qamis pria', secondaryKeyword: 'size chart qamis pria', intent: 'commercial', targetPage: '/knowledge/measurements/thobe-size-guide', cluster: 'measurements', commercialScore: 4, authorityScore: 3 },
+  { primaryKeyword: 'cara ukur badan untuk kandura', secondaryKeyword: 'panduan ukur kandura pria', intent: 'informational', targetPage: '/knowledge/measurements/how-to-measure-body', cluster: 'measurements', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'digital body profile gamis jubah', secondaryKeyword: 'profil ukuran tersimpan gamis jubah', intent: 'commercial', targetPage: '/knowledge/measurements/how-to-measure-body', cluster: 'measurements', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'jasa jahit thobe wanita vs pria', secondaryKeyword: 'perbedaan thobe wanita dan pria', intent: 'comparison', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'apa itu bisht', secondaryKeyword: 'pengertian bisht pernikahan', intent: 'informational', targetPage: '/knowledge/wedding/akad-pria', cluster: 'wedding', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'bisht untuk kandura', secondaryKeyword: 'bisht dipakai dengan kandura', intent: 'informational', targetPage: '/knowledge/wedding/akad-pria', cluster: 'wedding', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'peci untuk thobe formal', secondaryKeyword: 'aksesori kepala thobe formal', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'sorban untuk thobe wedding', secondaryKeyword: 'aksesori sorban pernikahan', intent: 'informational', targetPage: '/knowledge/wedding/akad-pria', cluster: 'wedding', commercialScore: 3, authorityScore: 3 },
+  { primaryKeyword: 'tailor untuk keluarga besar', secondaryKeyword: 'jasa jahit family outfit besar', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'jahit seragam keluarga muslim', secondaryKeyword: 'custom seragam keluarga muslim', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'thobe couple ayah anak', secondaryKeyword: 'outfit senada ayah dan anak', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'thobe umrah untuk keluarga', secondaryKeyword: 'outfit umrah senada keluarga', intent: 'commercial', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'thobe umrah premium custom', secondaryKeyword: 'thobe umrah bahan premium', intent: 'commercial', targetPage: '/knowledge/umrah/premium-umrah-outfit', cluster: 'umrah', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'jubah umrah custom premium', secondaryKeyword: 'jubah ibadah bahan premium', intent: 'commercial', targetPage: '/knowledge/umrah/premium-umrah-outfit', cluster: 'umrah', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'gamis pria untuk umrah', secondaryKeyword: 'gamis ibadah untuk umrah', intent: 'commercial', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'kandura untuk umrah', secondaryKeyword: 'kandura ibadah perjalanan umrah', intent: 'informational', targetPage: '/knowledge/umrah/best-fabric', cluster: 'umrah', commercialScore: 4, authorityScore: 3 },
+  { primaryKeyword: 'perbedaan pakai thobe di indonesia dan arab', secondaryKeyword: 'konteks pemakaian thobe indonesia arab', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'kenapa orang indonesia sebut gamis bukan thobe', secondaryKeyword: 'kebiasaan istilah gamis di indonesia', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 2, authorityScore: 5 },
+  { primaryKeyword: 'apakah jubah termasuk thobe', secondaryKeyword: 'jubah bagian dari kategori thobe', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'apakah gamis termasuk thobe', secondaryKeyword: 'gamis bagian dari kategori thobe', intent: 'informational', targetPage: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah', cluster: 'tailoring', commercialScore: 3, authorityScore: 5 },
+  { primaryKeyword: 'thobe custom fit slim', secondaryKeyword: 'thobe custom potongan slim', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'gamis custom fit slim', secondaryKeyword: 'gamis pria potongan slim custom', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'jubah custom fit longgar', secondaryKeyword: 'jubah pria potongan longgar custom', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'pilihan fit di design studio', secondaryKeyword: 'opsi slim regular relaxed design studio', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'tailor untuk pria tinggi besar', secondaryKeyword: 'custom thobe pria tinggi besar', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'tailor untuk pria kurus tinggi', secondaryKeyword: 'custom thobe pria kurus tinggi', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'apa beda tailor dan modiste', secondaryKeyword: 'istilah tailor vs modiste', intent: 'comparison', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'apa beda konveksi dan tailor', secondaryKeyword: 'istilah konveksi vs tailor bespoke', intent: 'comparison', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'thobe konveksi vs thobe bespoke', secondaryKeyword: 'perbedaan thobe konveksi dan bespoke', intent: 'comparison', targetPage: '/bespoke-tailor-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'gamis konveksi vs custom', secondaryKeyword: 'perbedaan gamis konveksi dan custom', intent: 'comparison', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'jubah konveksi vs custom', secondaryKeyword: 'perbedaan jubah konveksi dan custom', intent: 'comparison', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'baju koko konveksi vs custom', secondaryKeyword: 'perbedaan baju koko konveksi dan custom', intent: 'comparison', targetPage: '/custom-baju-koko-bandung', cluster: 'bandung', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'kurta konveksi vs custom', secondaryKeyword: 'perbedaan kurta konveksi dan custom', intent: 'comparison', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 4, authorityScore: 3 },
+  { primaryKeyword: 'apa itu fabric explorer', secondaryKeyword: 'fungsi fabric explorer local tailor', intent: 'informational', targetPage: '/fabric', cluster: 'fabrics', commercialScore: 4, authorityScore: 4 },
+  { primaryKeyword: 'jelajahi bahan thobe online', secondaryKeyword: 'lihat koleksi bahan thobe online', intent: 'commercial', targetPage: '/fabric', cluster: 'fabrics', commercialScore: 6, authorityScore: 4 },
+  { primaryKeyword: 'koleksi bahan gamis online', secondaryKeyword: 'lihat koleksi bahan gamis online', intent: 'commercial', targetPage: '/fabric', cluster: 'fabrics', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'koleksi bahan jubah online', secondaryKeyword: 'lihat koleksi bahan jubah online', intent: 'commercial', targetPage: '/fabric', cluster: 'fabrics', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'cara cek ukuran thobe tanpa ke tailor', secondaryKeyword: 'cek ukuran online cepat', intent: 'transactional', targetPage: '/cek-ukuran-thobe', cluster: 'measurements', commercialScore: 7, authorityScore: 4 },
+  { primaryKeyword: 'panduan lengkap ukuran thobe pria', secondaryKeyword: 'size chart thobe pria lengkap', intent: 'commercial', targetPage: '/ukuran-thobe-pria', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'cara mengukur thobe langkah demi langkah', secondaryKeyword: 'panduan ukur thobe step by step', intent: 'informational', targetPage: '/cara-mengukur-thobe', cluster: 'measurements', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'size chart thobe lengkap semua ukuran', secondaryKeyword: 'tabel ukuran thobe lengkap', intent: 'commercial', targetPage: '/size-chart-thobe', cluster: 'measurements', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'estimasi ukuran badan gratis', secondaryKeyword: 'cek profil tubuh gratis online', intent: 'transactional', targetPage: '/free-body-profile-estimator', cluster: 'measurements', commercialScore: 7, authorityScore: 5 },
+  { primaryKeyword: 'galeri hasil jahitan thobe', secondaryKeyword: 'contoh hasil thobe bespoke', intent: 'commercial', targetPage: '/gallery', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'contoh hasil gamis custom', secondaryKeyword: 'galeri gamis custom local tailor', intent: 'commercial', targetPage: '/gallery', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'contoh hasil jubah custom', secondaryKeyword: 'galeri jubah custom local tailor', intent: 'commercial', targetPage: '/gallery', cluster: 'bandung', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'kontak local tailor', secondaryKeyword: 'cara menghubungi local tailor', intent: 'transactional', targetPage: '/contact', cluster: 'bandung', commercialScore: 6, authorityScore: 3 },
+  { primaryKeyword: 'artikel tailoring terbaru', secondaryKeyword: 'blog tailoring local tailor', intent: 'informational', targetPage: '/journal', cluster: 'tailoring', commercialScore: 3, authorityScore: 4 },
+  { primaryKeyword: 'tailor pria untuk pemula', secondaryKeyword: 'panduan pertama kali pesan tailor', intent: 'informational', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'apa yang perlu disiapkan sebelum konsultasi tailor', secondaryKeyword: 'persiapan sebelum konsultasi custom', intent: 'informational', targetPage: '/book-appointment', cluster: 'bandung', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'berapa kali fitting untuk thobe bespoke', secondaryKeyword: 'jumlah sesi fitting thobe', intent: 'informational', targetPage: '/knowledge/tailoring/what-is-bespoke', cluster: 'tailoring', commercialScore: 4, authorityScore: 6 },
+  { primaryKeyword: 'apakah bisa revisi desain thobe', secondaryKeyword: 'revisi desain sebelum produksi', intent: 'commercial', targetPage: '/design-studio', cluster: 'design-studio', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'gamis pria untuk remaja', secondaryKeyword: 'gamis pria ukuran remaja custom', intent: 'commercial', targetPage: '/knowledge/measurements/thobe-size-guide', cluster: 'measurements', commercialScore: 5, authorityScore: 3 },
+  { primaryKeyword: 'thobe custom untuk lansia', secondaryKeyword: 'thobe nyaman untuk lansia', intent: 'commercial', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 4, authorityScore: 3 },
+  { primaryKeyword: 'apakah local tailor melayani luar pulau', secondaryKeyword: 'jangkauan layanan luar pulau', intent: 'informational', targetPage: '/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota', cluster: 'design-studio', commercialScore: 5, authorityScore: 5 },
+  { primaryKeyword: 'apakah local tailor melayani luar negeri', secondaryKeyword: 'jangkauan layanan internasional', intent: 'informational', targetPage: '/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota', cluster: 'design-studio', commercialScore: 5, authorityScore: 5 },
+]
+
 export const KEYWORD_REPOSITORY: KeywordEntry[] = [
   ...FABRIC_KEYWORDS,
   ...MEASUREMENT_KEYWORDS,
@@ -465,6 +860,15 @@ export const KEYWORD_REPOSITORY: KeywordEntry[] = [
   ...FIT_MEASUREMENT_KEYWORDS,
   ...FABRIC_PROBLEM_KEYWORDS,
   ...STYLE_KEYWORDS,
+  ...LUXURY_KEYWORDS,
+  ...TERMINOLOGY_REGIONAL_KEYWORDS,
+  ...COLLAR_CUFF_STYLE_KEYWORDS,
+  ...PROBLEM_NEED_KEYWORDS,
+  ...TAILOR_PENJAHIT_NATIONAL_KEYWORDS,
+  ...WEDDING_DOMINATION_KEYWORDS,
+  ...TRANSACTIONAL_NATIONAL_KEYWORDS,
+  ...COMPARISON_KEYWORDS,
+  ...EXTENDED_COVERAGE_KEYWORDS,
 ]
 
 export function getKeywordsByCluster(cluster: KeywordCluster): KeywordEntry[] {

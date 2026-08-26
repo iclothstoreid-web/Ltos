@@ -169,6 +169,29 @@ export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
     primaryPath: '/design-studio',
     relatedPaths: ['/knowledge/design-studio/custom-thobe-online-panduan-lengkap', '/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota'],
   },
+  // Sprint W6R.3 — Semantic Market Domination §10 entity tree (Local Tailor
+  // -> Tailoring -> Menswear -> Muslim Menswear -> Thobe -> Gamis Pria ->
+  // Jubah -> ...). Local Tailor has no separate gamis/jubah product line
+  // (see the terminology article this points to) — both entities point at
+  // the same real /design-studio commercial surface as 'custom-thobe'
+  // above, honestly describing them as related terminology rather than a
+  // distinct SKU.
+  {
+    slug: 'gamis-pria',
+    name: 'Gamis Pria',
+    type: 'Thing',
+    description: 'Istilah Indonesia untuk pakaian pria muslim potongan panjang, terkait erat dengan thobe dan jubah — dijelaskan dan dilayani melalui proses bespoke yang sama.',
+    primaryPath: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah',
+    relatedPaths: ['/design-studio', '/knowledge/tailoring'],
+  },
+  {
+    slug: 'jubah',
+    name: 'Jubah',
+    type: 'Thing',
+    description: 'Istilah yang secara tradisional menunjukkan potongan lebih longgar dibanding thobe, sering tertukar penggunaannya dalam percakapan sehari-hari di Indonesia.',
+    primaryPath: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah',
+    relatedPaths: ['/design-studio', '/knowledge/tailoring'],
+  },
 ]
 
 export function getEntityBySlug(slug: string): KnowledgeGraphEntity | undefined {

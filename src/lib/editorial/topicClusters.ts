@@ -65,6 +65,8 @@ export const TOPIC_CLUSTERS: TopicCluster[] = [
       'sleeve-construction',
       'handmade-details',
       'quality-control',
+      // Sprint W6R.3 — semantic synonym coverage (thobe/qamis/jubba/gamis/kandura/dishdasha).
+      'thobe-gamis-jubah-perbedaan-istilah',
     ],
   },
   {

@@ -43,6 +43,7 @@ export const QUESTION_ARTICLES: KnowledgeArticle[] = [
     relatedArticles: [
       { category: 'tailoring', slug: 'what-is-bespoke' },
       { category: 'measurements', slug: 'how-to-measure-body' },
+      { category: 'tailoring', slug: 'thobe-gamis-jubah-perbedaan-istilah' },
     ],
     relatedCategories: ['fabrics', 'styling'],
     tags: { service: ['bespoke'] },

@@ -113,6 +113,7 @@ export const TAILORING_ARTICLES: KnowledgeArticle[] = [
       { category: 'tailoring', slug: 'bespoke-vs-made-to-measure' },
       { category: 'tailoring', slug: 'pattern-drafting' },
       { category: 'measurements', slug: 'how-to-measure-body' },
+      { category: 'tailoring', slug: 'thobe-gamis-jubah-perbedaan-istilah' },
     ],
     relatedFabrics: [
       { category: 'fabrics', slug: 'egyptian-cotton' },
@@ -862,6 +863,175 @@ export const TAILORING_ARTICLES: KnowledgeArticle[] = [
       { category: 'fabrics', slug: 'wool-blend' },
     ],
     relatedCategories: ['measurements'],
+    tags: { service: ['bespoke'] },
+  },
+  // Sprint W6R.3 — Semantic Market Domination §3. Thobe, qamis, jubba, gamis
+  // pria, kandura, and dishdasha are related but not identical terms —
+  // conflating them would be inaccurate, and Local Tailor only actually
+  // produces one garment family (the Model Thobe catalog in Design Studio;
+  // grepped src/lib/design for any distinct "gamis"/"jubah"/"kandura" SKU
+  // and found none). This article explains the real terminology
+  // relationship honestly — regional/linguistic origin and where usage
+  // genuinely differs in silhouette — rather than claiming they're all
+  // exactly the same word, and is transparent that they're served by the
+  // same bespoke process rather than separate product lines.
+  {
+    slug: 'thobe-gamis-jubah-perbedaan-istilah',
+    category: 'tailoring',
+    eyebrow: 'Panduan Tailoring',
+    title: 'Thobe, Qamis, Jubah, Gamis Pria, Kandura, Dishdasha — Apa Bedanya?',
+    navLabel: 'Istilah Thobe, Gamis, Jubah',
+    metaDescription:
+      'Thobe, qamis, jubba, gamis pria, kandura, dan dishdasha sering dianggap sama — padahal berasal dari bahasa dan konteks yang berbeda. Penjelasan istilah yang akurat, bukan menyamaratakan semuanya.',
+    dek: 'Istilah-istilah ini saling terkait erat, tapi bukan kata yang benar-benar identik — masing-masing punya asal bahasa dan konteks penggunaan sendiri.',
+    definition:
+      'Thobe, qamis, jubba, gamis pria, kandura, dan dishdasha semuanya merujuk pada pakaian pria muslim berpotongan panjang hingga mata kaki, namun istilahnya berasal dari bahasa dan wilayah yang berbeda-beda, dan pada beberapa kasus menunjukkan perbedaan siluet yang nyata, bukan sekadar sinonim penuh.',
+    quickAnswer:
+      'Thobe adalah istilah internasional yang paling umum dipakai; qamis adalah kata Arab yang secara harfiah berarti "kemeja"; jubah/jubba secara tradisional menunjukkan potongan yang lebih longgar, sering dipakai sebagai lapisan luar; gamis pria adalah istilah Indonesia yang mencakup keduanya; kandura adalah sebutan khas Uni Emirat Arab; dan dishdasha adalah istilah generik yang umum dipakai di Kuwait, Qatar, dan Bahrain. Semuanya dikerjakan oleh Local Tailor melalui proses bespoke yang sama.',
+    keyTakeaways: [
+      'Thobe adalah istilah paling umum dipakai secara internasional untuk pakaian pria muslim panjang hingga mata kaki',
+      'Qamis (قميص) secara harfiah berarti "kemeja" dalam bahasa Arab, dan dipakai luas di berbagai negara Arab sebagai istilah umum',
+      'Jubah/jubba secara tradisional cenderung menunjukkan potongan yang lebih longgar dibanding thobe yang lebih fitted, meski di percakapan sehari-hari Indonesia kedua istilah sering tertukar',
+      'Gamis pria adalah istilah Indonesia yang mencakup baik potongan fitted maupun longgar, tergantung konteks daerah dan penutur',
+      'Kandura adalah sebutan khas Uni Emirat Arab, umumnya dikenali dari aksen tarboosh (jumbai kecil) di area leher',
+      'Dishdasha adalah istilah generik yang lebih umum dipakai di Kuwait, Qatar, dan Bahrain untuk pakaian yang secara konstruksi mirip thobe',
+      'Local Tailor tidak memproduksi ini sebagai lini produk terpisah — semuanya dilayani lewat satu proses bespoke yang sama di Design Studio',
+    ],
+    sections: [
+      {
+        heading: 'Kenapa Ada Begitu Banyak Istilah untuk Satu Jenis Pakaian',
+        block: {
+          kind: 'paragraphs',
+          items: [
+            'Pakaian pria muslim berpotongan panjang hingga mata kaki ini dikenakan di banyak negara dengan bahasa dan tradisi tekstil yang berbeda-beda — dari Asia Selatan, Timur Tengah, hingga Asia Tenggara. Setiap wilayah mengembangkan istilahnya sendiri berdasarkan bahasa lokal, dan istilah-istilah itu kemudian bercampur ketika orang berbicara lintas budaya, terutama di internet dan platform pencarian.',
+            'Akibatnya, istilah seperti thobe, qamis, jubah, gamis, kandura, dan dishdasha sering dipakai bergantian seolah artinya persis sama. Pada banyak kasus penggunaan sehari-hari memang saling menggantikan tanpa masalah — tapi secara linguistik dan historis, tidak semuanya benar-benar identik, dan mengetahui perbedaannya membantu Anda menjelaskan dengan lebih tepat apa yang sebenarnya Anda inginkan saat konsultasi.',
+          ],
+        },
+      },
+      {
+        heading: 'Penjelasan Setiap Istilah',
+        block: { kind: 'paragraphs', items: [] },
+        subsections: [
+          {
+            heading: 'Thobe',
+            block: {
+              kind: 'paragraphs',
+              items: [
+                'Thobe adalah istilah yang paling umum dipakai secara internasional, termasuk di Indonesia, untuk merujuk pakaian pria muslim potongan panjang ini secara umum — istilah inilah yang paling sering muncul dalam pencarian dan paling luas dikenali lintas negara.',
+              ],
+            },
+          },
+          {
+            heading: 'Qamis (Qamees)',
+            block: {
+              kind: 'paragraphs',
+              items: [
+                'Qamis (قميص) secara harfiah berarti "kemeja" dalam bahasa Arab. Di banyak negara Arab, qamis dipakai sebagai istilah umum untuk pakaian ini, sama seperti thobe — perbedaannya lebih pada bahasa asal daripada perbedaan bentuk pakaian itu sendiri.',
+              ],
+            },
+          },
+          {
+            heading: 'Jubah / Jubba',
+            block: {
+              kind: 'paragraphs',
+              items: [
+                'Jubah (atau jubba) secara tradisional menunjukkan potongan yang lebih longgar dibanding thobe yang cenderung lebih fitted di bagian bahu dan badan — secara historis, jubba bahkan kadang dipakai sebagai lapisan luar di atas pakaian dalam. Namun dalam percakapan sehari-hari di Indonesia, "jubah" dan "thobe" sering dipakai bertukar tanpa membedakan siluet secara ketat.',
+              ],
+            },
+          },
+          {
+            heading: 'Gamis Pria',
+            block: {
+              kind: 'paragraphs',
+              items: [
+                'Gamis adalah istilah Indonesia yang umum dipakai untuk pakaian panjang ini — "gamis pria" secara spesifik merujuk pada versi untuk pria (berbeda dari gamis wanita yang punya konteks dan potongan berbeda). Di penggunaan sehari-hari, gamis pria sering mencakup baik potongan yang lebih fitted (mendekati thobe) maupun yang lebih longgar (mendekati jubah), tergantung daerah dan preferensi penutur.',
+              ],
+            },
+          },
+          {
+            heading: 'Kandura',
+            block: {
+              kind: 'paragraphs',
+              items: [
+                'Kandura adalah sebutan khas Uni Emirat Arab untuk pakaian ini, dan sering dikenali dari detail tarboosh — jumbai kecil yang menjuntai dari area leher, elemen yang secara tradisional lebih identik dengan kandura dibanding thobe dari wilayah lain.',
+              ],
+            },
+          },
+          {
+            heading: 'Dishdasha',
+            block: {
+              kind: 'paragraphs',
+              items: [
+                'Dishdasha adalah istilah yang lebih umum dipakai di Kuwait, Qatar, dan Bahrain. Secara konstruksi, dishdasha sangat mirip dengan thobe dan kandura — perbedaan utamanya kembali lagi pada istilah regional, bukan perbedaan pola yang mendasar.',
+              ],
+            },
+          },
+        ],
+      },
+      {
+        heading: 'Rekomendasi Ahli',
+        block: {
+          kind: 'paragraphs',
+          items: [
+            'Saat konsultasi, sebutkan saja istilah yang paling familiar bagi Anda — thobe, gamis pria, atau jubah — tim kami memahami semuanya merujuk pada kebutuhan yang sama. Yang lebih penting untuk didiskusikan adalah siluet yang Anda inginkan (lebih fitted atau lebih longgar), bukan istilah mana yang "paling benar".',
+          ],
+        },
+      },
+      {
+        heading: 'Kesalahan Umum dalam Memahami Istilah Ini',
+        block: {
+          kind: 'list',
+          items: [
+            'Menganggap semua istilah ini 100% identik tanpa perbedaan konteks sama sekali',
+            'Mengira jubah selalu berarti potongan longgar dan thobe selalu fitted, padahal di percakapan sehari-hari Indonesia keduanya sering tertukar',
+            'Mengasumsikan kandura dan dishdasha adalah produk yang berbeda dari thobe, padahal konstruksinya pada dasarnya serupa',
+            'Berpikir perlu memilih istilah yang "benar" sebelum konsultasi — padahal yang penting justru siluet dan preferensi Anda sendiri',
+          ],
+        },
+      },
+    ],
+    expertNote:
+      'Kami sengaja tidak menjual "gamis" atau "jubah" sebagai lini produk terpisah dari thobe — semuanya melalui satu proses pola personal yang sama di Design Studio, dengan siluet (fitted atau longgar) sebagai salah satu pilihan desain, bukan kategori produk yang berbeda.',
+    comparisonTable: {
+      caption: 'Asal istilah dan konteks penggunaan umum',
+      headers: ['Istilah', 'Asal / Konteks', 'Catatan Siluet'],
+      rows: [
+        ['Thobe', 'Istilah internasional paling umum', 'Umumnya lebih fitted'],
+        ['Qamis', 'Bahasa Arab, arti harfiah "kemeja"', 'Setara dengan thobe'],
+        ['Jubah / Jubba', 'Tradisional, sering lapisan luar', 'Secara historis lebih longgar'],
+        ['Gamis Pria', 'Istilah Indonesia', 'Bervariasi, fitted maupun longgar'],
+        ['Kandura', 'Uni Emirat Arab', 'Dikenali dari detail tarboosh'],
+        ['Dishdasha', 'Kuwait, Qatar, Bahrain', 'Konstruksi mirip thobe/kandura'],
+      ],
+    },
+    faq: [
+      {
+        question: 'Apakah thobe, gamis, dan jubah adalah pakaian yang sama persis?',
+        answer:
+          'Secara fungsi dan konstruksi dasar, ya — semuanya pakaian pria muslim potongan panjang hingga mata kaki. Namun secara istilah, masing-masing berasal dari bahasa dan konteks berbeda, dan jubah secara tradisional cenderung menunjukkan potongan yang lebih longgar.',
+      },
+      {
+        question: 'Apa beda kandura dan dishdasha dengan thobe?',
+        answer:
+          'Kandura adalah sebutan khas Uni Emirat Arab (dikenali dari detail tarboosh), dan dishdasha umum dipakai di Kuwait, Qatar, dan Bahrain — keduanya secara konstruksi pada dasarnya serupa dengan thobe, perbedaannya lebih pada istilah regional.',
+      },
+      {
+        question: 'Apakah Local Tailor bisa membuat gamis atau jubah, bukan hanya thobe?',
+        answer:
+          'Bisa — kami tidak membedakannya sebagai produk terpisah. Sebutkan istilah yang familiar bagi Anda dan diskusikan siluet yang diinginkan (fitted atau longgar) saat konsultasi atau di Design Studio.',
+      },
+      {
+        question: 'Kenapa istilah "jubba" jarang dipakai di Indonesia?',
+        answer:
+          '"Jubba" adalah ejaan/pengucapan yang lebih umum di sebagian literatur Arab dan Asia Selatan; di Indonesia istilah yang lebih umum dipakai sehari-hari adalah "jubah" untuk konsep yang sama.',
+      },
+    ],
+    relatedArticles: [
+      { category: 'tailoring', slug: 'what-is-bespoke' },
+      { category: 'tailoring', slug: 'collar-construction' },
+      { category: 'styling', slug: 'formal-thobe' },
+    ],
+    relatedCategories: ['styling', 'measurements'],
     tags: { service: ['bespoke'] },
   },
 ]

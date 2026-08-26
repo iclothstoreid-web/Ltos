@@ -36,6 +36,18 @@ export const COVERAGE_MATRIX: CoverageEntry[] = [
 
   { category: 'tailoring', topic: 'Bespoke, pola, interlining, konstruksi, jahitan tangan, QC', status: 'complete', notes: '8 artikel W6-6 live' },
   { category: 'tailoring', topic: 'Video/visual dokumentasi proses produksi', status: 'planned', notes: 'Konten saat ini teks-only, tidak ada foto/video proses nyata' },
+  {
+    category: 'tailoring',
+    topic: 'Terminologi thobe/qamis/jubba/gamis/kandura/dishdasha',
+    status: 'complete',
+    notes: 'W6R.3 — 1 artikel baru menjelaskan asal istilah & perbedaan konteks penggunaan secara akurat, bukan menyamaratakan',
+  },
+  {
+    category: 'styling',
+    topic: 'Gaya regional (Saudi, Omani, Emirati silhouette)',
+    status: 'planned',
+    notes: 'Disinggung singkat di artikel terminologi W6R.3, belum ada panduan gaya regional mendalam — query diarahkan ke hub styling sebagai gap yang jujur',
+  },
 
   { category: 'care', topic: 'Cuci, setrika, simpan, kerutan, putih, wool, dry clean, usia pakai', status: 'complete', notes: '8 artikel W6-6 live' },
   { category: 'care', topic: 'Penghilangan noda spesifik per jenis noda', status: 'partial', notes: 'Disinggung umum di remove-wrinkles, belum artikel khusus per jenis noda' },
@@ -44,7 +56,12 @@ export const COVERAGE_MATRIX: CoverageEntry[] = [
   { category: 'questions', topic: 'Voice search / conversational query coverage', status: 'partial', notes: '24 halaman saat ini menjawab format teks singkat, belum dioptimalkan khusus voice search' },
 
   { category: 'bandung', topic: 'Positioning lokal Bandung (custom, bespoke, wedding, umrah)', status: 'complete', notes: '5 halaman W6-10, tanpa klaim palsu' },
-  { category: 'bandung', topic: 'Kota lain di luar Bandung', status: 'planned', notes: 'Belum ada local authority cluster untuk kota selain Bandung' },
+  {
+    category: 'bandung',
+    topic: 'Kota lain di luar Bandung',
+    status: 'complete',
+    notes: 'W6R.2 — 9 kota /locations/[city] tambahan (Jakarta, Bogor, Depok, Bekasi, Tangerang, Surabaya, Yogyakarta, Semarang, Medan), honest remote-service positioning, Tier 2 kota lain sengaja belum diimplementasi',
+  },
 ]
 
 export function getCoverageForCategory(category: KnowledgeCategorySlug): CoverageEntry[] {
