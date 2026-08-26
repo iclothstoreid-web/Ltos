@@ -34,6 +34,16 @@ export interface KeywordEntry {
   cluster: KeywordCluster
   commercialScore: number
   authorityScore: number
+  // Sprint W6R.3 Patch (Faith & Occasion) — optional so the 814
+  // pre-existing entries above need no retrofit. `status` records the
+  // Critical-Rule decision this query went through (query -> intent ->
+  // existing page -> coverage); `semanticParent` is the entity-graph node
+  // this query belongs under (see src/lib/seo/entities.ts), used to keep
+  // the Faith & Occasion queries traceable back to the "religious
+  // occasion -> clothing need" relevance chain the patch requires rather
+  // than floating as standalone religious keywords.
+  status?: 'covered' | 'expanded' | 'new-page' | 'do-not-target'
+  semanticParent?: string
 }
 
 const FABRIC_KEYWORDS: KeywordEntry[] = [
@@ -367,15 +377,18 @@ const OCCASION_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'thobe untuk umrah', secondaryKeyword: 'baju umrah custom', intent: 'commercial', targetPage: '/knowledge/umrah', cluster: 'umrah', commercialScore: 7, authorityScore: 6 },
   { primaryKeyword: 'thobe untuk haji', secondaryKeyword: 'baju ibadah haji pria', intent: 'informational', targetPage: '/knowledge/umrah', cluster: 'umrah', commercialScore: 4, authorityScore: 5 },
   { primaryKeyword: 'baju haji pria custom', secondaryKeyword: 'thobe custom untuk haji', intent: 'commercial', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 5, authorityScore: 5 },
-  { primaryKeyword: 'thobe untuk Idul Fitri', secondaryKeyword: 'baju lebaran pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 6, authorityScore: 5 },
-  { primaryKeyword: 'baju lebaran pria custom', secondaryKeyword: 'thobe lebaran custom', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 6, authorityScore: 5 },
+  // W6R.3 Patch retarget — reassigned from the generic formal-thobe page
+  // to the new, more specific hari-raya-thobe-style article once it
+  // existed, per this patch's own "expand/consolidate, don't compete" rule.
+  { primaryKeyword: 'thobe untuk Idul Fitri', secondaryKeyword: 'baju lebaran pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 6, authorityScore: 5 },
+  { primaryKeyword: 'baju lebaran pria custom', secondaryKeyword: 'thobe lebaran custom', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 6, authorityScore: 5 },
   { primaryKeyword: 'thobe untuk sholat Jumat', secondaryKeyword: 'baju sholat Jumat pria', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
   { primaryKeyword: 'thobe untuk kajian', secondaryKeyword: 'baju kajian pria muslim', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
   { primaryKeyword: 'thobe untuk acara formal', secondaryKeyword: 'baju formal pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 6, authorityScore: 6 },
   { primaryKeyword: 'outfit keluarga pengantin pria', secondaryKeyword: 'seragam keluarga pengantin', intent: 'commercial', targetPage: '/knowledge/wedding/family-outfit', cluster: 'wedding', commercialScore: 7, authorityScore: 6 },
   { primaryKeyword: 'thobe couple pernikahan', secondaryKeyword: 'outfit couple muslim nikah', intent: 'commercial', targetPage: '/knowledge/wedding/couple-muslim', cluster: 'wedding', commercialScore: 7, authorityScore: 6 },
   { primaryKeyword: 'thobe akad vs resepsi bedanya apa', secondaryKeyword: 'perbedaan outfit akad resepsi', intent: 'comparison', targetPage: '/knowledge/wedding/akad-pria', cluster: 'wedding', commercialScore: 5, authorityScore: 6 },
-  { primaryKeyword: 'warna thobe untuk Idul Fitri', secondaryKeyword: 'warna baju lebaran pria', intent: 'informational', targetPage: '/knowledge/styling/white-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
+  { primaryKeyword: 'warna thobe untuk Idul Fitri', secondaryKeyword: 'warna baju lebaran pria', intent: 'informational', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 4, authorityScore: 5 },
   { primaryKeyword: 'thobe formal untuk kajian rutin', secondaryKeyword: 'baju kajian rapi pria', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
   { primaryKeyword: 'thobe premium untuk haji dan umrah', secondaryKeyword: 'baju ibadah premium', intent: 'commercial', targetPage: '/knowledge/umrah/premium-umrah-outfit', cluster: 'umrah', commercialScore: 6, authorityScore: 5 },
   { primaryKeyword: 'persiapan baju sebelum haji', secondaryKeyword: 'checklist pakaian haji', intent: 'informational', targetPage: '/knowledge/umrah/packing-guide', cluster: 'umrah', commercialScore: 4, authorityScore: 5 },
@@ -776,7 +789,7 @@ const EXTENDED_COVERAGE_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'thobe untuk pengajian rutin', secondaryKeyword: 'baju pengajian pria muslim', intent: 'informational', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
   { primaryKeyword: 'gamis pria untuk tarawih', secondaryKeyword: 'baju tarawih pria muslim', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 4 },
   { primaryKeyword: 'jubah untuk itikaf', secondaryKeyword: 'baju itikaf pria muslim', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 3 },
-  { primaryKeyword: 'thobe untuk hari raya haji', secondaryKeyword: 'baju idul adha pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4 },
+  { primaryKeyword: 'thobe untuk hari raya haji', secondaryKeyword: 'baju idul adha pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 5, authorityScore: 4 },
   { primaryKeyword: 'gamis pria warna putih custom', secondaryKeyword: 'custom gamis putih polos', intent: 'commercial', targetPage: '/knowledge/styling/white-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4 },
   { primaryKeyword: 'jubah pria warna navy custom', secondaryKeyword: 'custom jubah navy elegan', intent: 'commercial', targetPage: '/knowledge/styling/navy-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4 },
   { primaryKeyword: 'kurta pria warna netral', secondaryKeyword: 'kurta pria warna aman', intent: 'informational', targetPage: '/knowledge/styling/navy-thobe', cluster: 'styling', commercialScore: 3, authorityScore: 3 },
@@ -844,6 +857,84 @@ const EXTENDED_COVERAGE_KEYWORDS: KeywordEntry[] = [
   { primaryKeyword: 'apakah local tailor melayani luar negeri', secondaryKeyword: 'jangkauan layanan internasional', intent: 'informational', targetPage: '/knowledge/design-studio/cara-pesan-custom-thobe-luar-kota', cluster: 'design-studio', commercialScore: 5, authorityScore: 5 },
 ]
 
+// =========================================================================
+// Sprint W6R.3 Patch — Faith & Occasion Semantic Expansion. Every entry
+// carries `status` + `semanticParent` per the patch's own requirement.
+// Chain enforced throughout: religious occasion -> clothing need ->
+// fabric/fit/style/custom tailoring -> existing page. Zero new pages
+// beyond the one already justified in styling.ts (hari-raya-thobe-style);
+// everything else is 'covered' (an existing page already answers it) or
+// 'expanded' (an existing page gains new query coverage without new
+// content). Nothing here is fabricated religious content, an endorsement,
+// or a "product improves your ibadah" claim — every target page is a
+// clothing/fabric/fit/tailoring page, never a bare religious topic.
+// =========================================================================
+const FAITH_OCCASION_KEYWORDS: KeywordEntry[] = [
+  // --- Umrah / Haji — existing /knowledge/umrah cluster + fabric/care ---
+  { primaryKeyword: 'jubah pria untuk umrah', secondaryKeyword: 'jubah ibadah umrah', intent: 'commercial', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 6, authorityScore: 5, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'pakaian pria untuk umrah', secondaryKeyword: 'baju ibadah pria untuk umrah', intent: 'commercial', targetPage: '/knowledge/umrah', cluster: 'umrah', commercialScore: 6, authorityScore: 6, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'jubah pria untuk haji', secondaryKeyword: 'jubah ibadah haji', intent: 'commercial', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'bahan thobe adem untuk umrah', secondaryKeyword: 'kain umrah tidak panas', intent: 'informational', targetPage: '/knowledge/umrah/best-fabric', cluster: 'umrah', commercialScore: 4, authorityScore: 6, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'bahan jubah tidak panas untuk haji', secondaryKeyword: 'kain jubah haji adem', intent: 'informational', targetPage: '/knowledge/umrah/best-fabric', cluster: 'umrah', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'pakaian nyaman untuk perjalanan ibadah', secondaryKeyword: 'baju nyaman perjalanan umrah haji', intent: 'informational', targetPage: '/knowledge/umrah/best-fabric', cluster: 'umrah', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'gamis pria untuk haji', secondaryKeyword: 'gamis ibadah haji custom', intent: 'commercial', targetPage: '/knowledge/umrah/custom-umrah-thobe', cluster: 'umrah', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'perlengkapan pakaian haji pria', secondaryKeyword: 'checklist baju haji pria', intent: 'informational', targetPage: '/knowledge/umrah/packing-guide', cluster: 'umrah', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'thobe tahan lama untuk ibadah haji panjang', secondaryKeyword: 'thobe haji durasi lama', intent: 'informational', targetPage: '/knowledge/umrah/best-fabric', cluster: 'umrah', commercialScore: 4, authorityScore: 4, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'gaya thobe haji dan umrah', secondaryKeyword: 'styling thobe ibadah haji umrah', intent: 'informational', targetPage: '/knowledge/styling/umrah-thobe-style', cluster: 'styling', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'umrah' },
+  { primaryKeyword: 'thobe ihram vs thobe umrah biasa', secondaryKeyword: 'beda ihram dan thobe umrah', intent: 'comparison', targetPage: '/knowledge/umrah', cluster: 'umrah', commercialScore: 3, authorityScore: 4, status: 'covered', semanticParent: 'umrah' },
+
+  // --- Jumatan / Shalat Jumat — existing styling/fabric pages ---
+  { primaryKeyword: 'thobe untuk Jumatan', secondaryKeyword: 'baju Jumatan pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'gamis pria untuk Jumatan', secondaryKeyword: 'gamis Jumatan custom', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'jubah pria untuk Jumat', secondaryKeyword: 'jubah Jumatan pria', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'baju muslim pria untuk shalat Jumat', secondaryKeyword: 'outfit shalat Jumat pria', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'pakaian pria untuk Jumatan', secondaryKeyword: 'baju pria Jumatan rapi', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'thobe santai untuk shalat Jumat', secondaryKeyword: 'thobe casual Jumatan', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'bahan thobe untuk Jumatan cuaca panas', secondaryKeyword: 'kain adem untuk shalat Jumat', intent: 'informational', targetPage: '/knowledge/fabrics/linen', cluster: 'fabrics', commercialScore: 4, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+
+  // --- Kajian / Pengajian / Majelis — existing styling+fabric pages ---
+  { primaryKeyword: 'jubah pria untuk pengajian', secondaryKeyword: 'jubah pengajian custom', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'pakaian muslim pria untuk majelis', secondaryKeyword: 'outfit majelis pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'outfit pria untuk kajian', secondaryKeyword: 'gaya thobe kajian rutin', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'pakaian muslim formal untuk pengajian', secondaryKeyword: 'baju formal pengajian pria', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'gamis pria untuk majelis taklim', secondaryKeyword: 'gamis majelis taklim custom', intent: 'commercial', targetPage: '/knowledge/styling/formal-thobe', cluster: 'styling', commercialScore: 5, authorityScore: 3, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'thobe santai untuk kajian mingguan', secondaryKeyword: 'thobe casual kajian rutin', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'bahan nyaman untuk duduk lama kajian', secondaryKeyword: 'kain nyaman duduk lama majelis', intent: 'informational', targetPage: '/knowledge/fabrics/premium-cotton', cluster: 'fabrics', commercialScore: 3, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+
+  // --- Idul Fitri / Hari Raya — new dedicated styling article ---
+  { primaryKeyword: 'gamis pria Lebaran', secondaryKeyword: 'gamis pria custom untuk Lebaran', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 7, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'jubah pria Hari Raya', secondaryKeyword: 'jubah pria custom Hari Raya', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 7, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'baju muslim pria Idul Fitri', secondaryKeyword: 'outfit Idul Fitri pria muslim', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 7, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'custom thobe Lebaran', secondaryKeyword: 'thobe custom untuk Lebaran', intent: 'transactional', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 8, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'gamis pria premium Lebaran', secondaryKeyword: 'gamis pria kelas premium Lebaran', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 7, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'outfit pria Hari Raya', secondaryKeyword: 'gaya outfit pria Hari Raya', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 6, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'baju baru Lebaran pria', secondaryKeyword: 'tradisi baju baru Lebaran pria', intent: 'informational', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 5, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'kapan pesan thobe Lebaran', secondaryKeyword: 'timeline pesan thobe sebelum Lebaran', intent: 'transactional', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 7, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'family outfit Lebaran', secondaryKeyword: 'outfit keluarga senada Lebaran', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 7, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'thobe untuk sholat Id', secondaryKeyword: 'baju sholat Idul Fitri pria', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 6, authorityScore: 5, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'baju silaturahmi Lebaran pria', secondaryKeyword: 'outfit silaturahmi Hari Raya', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 6, authorityScore: 4, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'warna thobe segar untuk Lebaran', secondaryKeyword: 'warna cerah thobe Hari Raya', intent: 'informational', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'jubah pria Idul Fitri custom', secondaryKeyword: 'jubah custom untuk Idul Fitri', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 6, authorityScore: 4, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+  { primaryKeyword: 'gamis pria Idul Adha', secondaryKeyword: 'gamis pria untuk Hari Raya Haji', intent: 'commercial', targetPage: '/knowledge/styling/hari-raya-thobe-style', cluster: 'styling', commercialScore: 5, authorityScore: 4, status: 'new-page', semanticParent: 'hari-raya-thobe' },
+
+  // --- Shalat / Ibadah harian — existing fabric/fit/styling pages ---
+  { primaryKeyword: 'thobe nyaman untuk shalat', secondaryKeyword: 'thobe fleksibel gerakan shalat', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'jubah pria untuk shalat', secondaryKeyword: 'jubah nyaman untuk ibadah shalat', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'pakaian muslim pria untuk ibadah', secondaryKeyword: 'baju muslim pria khusus ibadah', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'thobe putih untuk ibadah', secondaryKeyword: 'thobe putih shalat harian', intent: 'informational', targetPage: '/knowledge/styling/white-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'bahan thobe nyaman untuk shalat', secondaryKeyword: 'kain thobe fleksibel gerakan sujud', intent: 'informational', targetPage: '/knowledge/fabrics/premium-cotton', cluster: 'fabrics', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'pakaian muslim pria breathable', secondaryKeyword: 'baju muslim pria sirkulasi udara', intent: 'informational', targetPage: '/knowledge/fabrics/japanese-cotton', cluster: 'fabrics', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'thobe fit longgar untuk gerakan shalat', secondaryKeyword: 'fit thobe nyaman sujud rukuk', intent: 'informational', targetPage: '/knowledge/measurements/slim-vs-regular-fit', cluster: 'measurements', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'panjang thobe ideal untuk shalat', secondaryKeyword: 'panjang thobe agar tidak terinjak saat sujud', intent: 'informational', targetPage: '/knowledge/measurements/length', cluster: 'measurements', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+
+  // --- Hijrah / lifestyle — light touch only, real search intent, no
+  // generic religious content (per patch's explicit warning) ---
+  { primaryKeyword: 'gaya berpakaian muslim pria', secondaryKeyword: 'panduan gaya busana muslim pria', intent: 'informational', targetPage: '/knowledge/styling', cluster: 'styling', commercialScore: 4, authorityScore: 6, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'wardrobe muslim pria', secondaryKeyword: 'koleksi pakaian muslim pria', intent: 'informational', targetPage: '/knowledge/styling', cluster: 'styling', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'pakaian modest pria', secondaryKeyword: 'busana modest pria muslim', intent: 'informational', targetPage: '/knowledge/styling', cluster: 'styling', commercialScore: 4, authorityScore: 5, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+  { primaryKeyword: 'thobe untuk gaya hidup sehari-hari', secondaryKeyword: 'thobe lifestyle harian pria muslim', intent: 'informational', targetPage: '/knowledge/styling/casual-thobe', cluster: 'styling', commercialScore: 4, authorityScore: 4, status: 'covered', semanticParent: 'jumatan-kajian-wear' },
+]
+
 export const KEYWORD_REPOSITORY: KeywordEntry[] = [
   ...FABRIC_KEYWORDS,
   ...MEASUREMENT_KEYWORDS,
@@ -869,6 +960,7 @@ export const KEYWORD_REPOSITORY: KeywordEntry[] = [
   ...TRANSACTIONAL_NATIONAL_KEYWORDS,
   ...COMPARISON_KEYWORDS,
   ...EXTENDED_COVERAGE_KEYWORDS,
+  ...FAITH_OCCASION_KEYWORDS,
 ]
 
 export function getKeywordsByCluster(cluster: KeywordCluster): KeywordEntry[] {

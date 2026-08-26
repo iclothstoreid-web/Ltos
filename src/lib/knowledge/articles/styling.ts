@@ -358,6 +358,7 @@ export const STYLING_ARTICLES: KnowledgeArticle[] = [
     relatedArticles: [
       { category: 'styling', slug: 'umrah-thobe-style' },
       { category: 'styling', slug: 'casual-thobe' },
+      { category: 'styling', slug: 'hari-raya-thobe-style' },
     ],
     relatedFabrics: [
       { category: 'fabrics', slug: 'japanese-cotton' },
@@ -449,6 +450,7 @@ export const STYLING_ARTICLES: KnowledgeArticle[] = [
       { category: 'styling', slug: 'navy-thobe' },
       { category: 'styling', slug: 'black-thobe' },
       { category: 'styling', slug: 'wedding-thobe-style' },
+      { category: 'styling', slug: 'hari-raya-thobe-style' },
     ],
     relatedFabrics: [
       { category: 'fabrics', slug: 'wool-blend' },
@@ -726,5 +728,105 @@ export const STYLING_ARTICLES: KnowledgeArticle[] = [
       { category: 'fabrics', slug: 'linen' },
     ],
     relatedCategories: ['umrah'],
+  },
+  // Sprint W6R.3 Patch — Faith & Occasion Semantic Expansion. Idul Fitri/
+  // Lebaran is a genuinely distinct occasion from Wedding/Umrah (the two
+  // occasions that already have dedicated styling articles): the "baju
+  // baru Lebaran" tradition, family-matching for silaturahmi visits, and a
+  // fixed, non-negotiable deadline (must be ready before Eid, unlike
+  // wedding's more flexible planning window) are real, different needs —
+  // not thin duplication of formal-thobe. Consolidates what would
+  // otherwise be 3 separate doorway pages (/gamis-lebaran, /jubah-lebaran,
+  // /thobe-lebaran) into this one strong guide, per the patch brief's own
+  // instruction.
+  {
+    slug: 'hari-raya-thobe-style',
+    category: 'styling',
+    eyebrow: 'Panduan Gaya',
+    title: 'Gaya Thobe Idul Fitri & Hari Raya — Panduan Lengkap',
+    navLabel: 'Gaya Hari Raya',
+    metaDescription:
+      'Panduan styling thobe untuk Idul Fitri dan Hari Raya — kombinasi warna segar, rekomendasi bahan, family outfit untuk silaturahmi, dan timeline pemesanan sebelum Lebaran.',
+    dek: 'Menyusun tampilan thobe yang segar dan rapi untuk tradisi baju baru Lebaran dan silaturahmi keluarga.',
+    definition:
+      'Gaya thobe Idul Fitri adalah kombinasi warna yang lebih segar dari thobe formal harian, bahan yang nyaman untuk aktivitas silaturahmi seharian, dan sering disusun senada dengan anggota keluarga lain — mengikuti tradisi "baju baru Lebaran" yang identik dengan Hari Raya di Indonesia.',
+    sections: [
+      {
+        heading: 'Styling Overview',
+        block: {
+          kind: 'paragraphs',
+          items: [
+            'Idul Fitri punya tuntutan gaya yang berbeda dari acara formal lain — bukan sekadar rapi, tapi juga terasa "baru" dan segar sesuai tradisi baju baru Lebaran, sambil tetap nyaman dipakai seharian untuk kunjungan silaturahmi dari satu rumah ke rumah lain.',
+            'Berbeda dari pernikahan yang biasanya punya rentang waktu perencanaan lebih longgar, thobe Lebaran punya tenggat yang tetap: harus selesai sebelum hari-H, sehingga memesan lebih awal jauh lebih penting dibanding acara lain.',
+          ],
+        },
+      },
+      {
+        heading: 'Kombinasi Warna',
+        block: {
+          kind: 'list',
+          items: [
+            'Warna-warna segar seperti krem terang, putih gading, atau pastel netral yang terasa "baru" tanpa berlebihan',
+            'Navy atau hijau tua sebagai alternatif yang tetap elegan untuk kunjungan formal ke kerabat yang dituakan',
+            'Selaraskan warna dengan anggota keluarga lain jika ingin tampil kompak saat silaturahmi',
+          ],
+        },
+      },
+      {
+        heading: 'Rekomendasi Bahan',
+        block: {
+          kind: 'paragraphs',
+          items: [
+            'Katun premium dan katun Jepang paling umum dipilih — nyaman dipakai seharian penuh untuk berpindah dari satu kunjungan ke kunjungan lain, sekaligus cukup rapi untuk kesan yang lebih dari sekadar thobe harian biasa.',
+          ],
+        },
+      },
+      {
+        heading: 'Family Outfit untuk Silaturahmi',
+        block: {
+          kind: 'paragraphs',
+          items: [
+            'Banyak keluarga memilih warna atau motif senada untuk foto keluarga dan kunjungan silaturahmi bersama — prinsip yang sama dengan family outfit pernikahan, hanya dengan warna yang lebih segar dan nuansa yang lebih santai sesuai suasana Hari Raya.',
+          ],
+        },
+      },
+      {
+        heading: 'Acara yang Cocok',
+        block: {
+          kind: 'list',
+          items: [
+            'Sholat Id berjamaah',
+            'Kunjungan silaturahmi ke kerabat dan tetangga',
+            'Open house atau acara kumpul keluarga besar saat Lebaran',
+          ],
+        },
+      },
+    ],
+    faq: [
+      {
+        question: 'Kapan sebaiknya mulai memesan thobe custom untuk Lebaran?',
+        answer:
+          'Idealnya 4–6 minggu sebelum Idul Fitri, mengingat permintaan custom biasanya meningkat menjelang Lebaran dan tenggat hari-H tidak bisa digeser seperti acara lain.',
+      },
+      {
+        question: 'Apakah thobe Lebaran harus warna terang?',
+        answer:
+          'Tidak harus — warna segar seperti krem atau pastel netral adalah pilihan populer untuk kesan "baru", namun navy atau hijau tua juga umum dipilih untuk kunjungan yang lebih formal.',
+      },
+      {
+        question: 'Apakah Local Tailor bisa membuat outfit senada untuk seluruh keluarga saat Lebaran?',
+        answer:
+          'Bisa — prosesnya sama seperti family outfit pernikahan, dengan warna dan bahan disesuaikan untuk suasana Hari Raya yang lebih segar dan santai.',
+      },
+    ],
+    relatedArticles: [
+      { category: 'styling', slug: 'formal-thobe' },
+      { category: 'styling', slug: 'white-thobe' },
+      { category: 'wedding', slug: 'family-outfit' },
+    ],
+    relatedFabrics: [
+      { category: 'fabrics', slug: 'premium-cotton' },
+      { category: 'fabrics', slug: 'japanese-cotton' },
+    ],
   },
 ]

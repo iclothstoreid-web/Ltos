@@ -192,6 +192,28 @@ export const SECONDARY_ENTITIES: KnowledgeGraphEntity[] = [
     primaryPath: '/knowledge/tailoring/thobe-gamis-jubah-perbedaan-istilah',
     relatedPaths: ['/design-studio', '/knowledge/tailoring'],
   },
+  // Sprint W6R.3 Patch — Faith & Occasion Semantic Expansion §Semantic
+  // Relationships. Jumatan/Kajian/Majelis deliberately have no dedicated
+  // primaryPath of their own — per this patch's "DO NOT TARGET AS
+  // STANDALONE SEO PAGES" rule, they route to the existing styling
+  // articles that already serve that clothing-need intent, never to a
+  // generic religious-content page.
+  {
+    slug: 'hari-raya-thobe',
+    name: 'Thobe Idul Fitri / Hari Raya',
+    type: 'Product',
+    description: 'Thobe custom untuk Idul Fitri dan Hari Raya — warna segar, family outfit untuk silaturahmi, dipesan sebelum tenggat Lebaran.',
+    primaryPath: '/knowledge/styling/hari-raya-thobe-style',
+    relatedPaths: ['/design-studio', '/knowledge/wedding/family-outfit'],
+  },
+  {
+    slug: 'jumatan-kajian-wear',
+    name: 'Pakaian untuk Jumatan, Kajian, dan Majelis',
+    type: 'Thing',
+    description: 'Kebutuhan pakaian pria muslim untuk shalat Jumat, kajian, pengajian, dan majelis — dilayani oleh gaya thobe formal dan casual yang sudah ada, bukan artikel keagamaan generik.',
+    primaryPath: '/knowledge/styling/formal-thobe',
+    relatedPaths: ['/knowledge/styling/casual-thobe', '/knowledge/styling'],
+  },
 ]
 
 export function getEntityBySlug(slug: string): KnowledgeGraphEntity | undefined {

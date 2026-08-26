@@ -27,6 +27,18 @@ export const COVERAGE_MATRIX: CoverageEntry[] = [
   { category: 'styling', topic: 'Warna inti (navy, olive, hitam, putih)', status: 'complete', notes: '4 warna utama tercakup' },
   { category: 'styling', topic: 'Konteks acara (formal, casual, wedding, umrah)', status: 'complete', notes: '4 konteks utama tercakup' },
   { category: 'styling', topic: 'Aksesori detail (bisht, peci, jam tangan) mendalam', status: 'partial', notes: 'Disinggung di beberapa artikel, belum ada artikel dedicated' },
+  {
+    category: 'styling',
+    topic: 'Idul Fitri / Hari Raya (baju baru Lebaran, family outfit silaturahmi)',
+    status: 'complete',
+    notes: 'W6R.3 Patch — 1 artikel baru (hari-raya-thobe-style), konsolidasi 3 potensi doorway page (/gamis-lebaran /jubah-lebaran /thobe-lebaran) jadi satu guide',
+  },
+  {
+    category: 'styling',
+    topic: 'Jumatan / Kajian / Pengajian / Majelis / Shalat harian',
+    status: 'partial',
+    notes: 'W6R.3 Patch — dilayani query-level oleh formal-thobe/casual-thobe/white-thobe (existing), tidak ada artikel dedicated karena existing coverage sudah cukup relevan — bukan gap yang tidak ditangani',
+  },
 
   { category: 'wedding', topic: 'Akad, resepsi, couple, family, timeline, warna, premium', status: 'complete', notes: '8 artikel W6-5 live' },
   { category: 'wedding', topic: 'Wedding vendor coordination (fotografer, MUA, dst.)', status: 'planned', notes: 'Di luar scope tailoring, kandidat partnership content' },

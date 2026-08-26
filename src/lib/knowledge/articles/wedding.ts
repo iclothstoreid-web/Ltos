@@ -702,6 +702,7 @@ export const WEDDING_ARTICLES: KnowledgeArticle[] = [
       { category: 'wedding', slug: 'color-guide' },
       { category: 'wedding', slug: 'couple-muslim' },
       { category: 'wedding', slug: 'timeline-custom-wedding' },
+      { category: 'styling', slug: 'hari-raya-thobe-style' },
     ],
     relatedFabrics: [
       { category: 'fabrics', slug: 'premium-cotton' },

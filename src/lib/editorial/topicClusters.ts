@@ -31,7 +31,17 @@ export const TOPIC_CLUSTERS: TopicCluster[] = [
     category: 'styling',
     clusterName: 'Gaya Thobe',
     pillarSlug: 'formal-thobe',
-    supportingSlugs: ['navy-thobe', 'olive-thobe', 'black-thobe', 'white-thobe', 'casual-thobe', 'wedding-thobe-style', 'umrah-thobe-style'],
+    supportingSlugs: [
+      'navy-thobe',
+      'olive-thobe',
+      'black-thobe',
+      'white-thobe',
+      'casual-thobe',
+      'wedding-thobe-style',
+      'umrah-thobe-style',
+      // W6R.3 Patch — Faith & Occasion Semantic Expansion.
+      'hari-raya-thobe-style',
+    ],
   },
   {
     category: 'wedding',
