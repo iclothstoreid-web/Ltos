@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Caveat } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
-import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
+// TEMPORARY DIAGNOSTIC (GA4 isolated production test) — AnalyticsProvider
+// import commented out alongside its usage below, not deleted. Restore by
+// uncommenting both once the diagnostic is done. See root layout body for
+// the raw official gtag.js snippet standing in its place.
+// import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { isRtlLocale } from '@/i18n/config'
 import './globals.css'
 
@@ -99,13 +103,32 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: `window.__LTOS_BRAND = ${JSON.stringify(brand.id)};` }}
         />
 
-        {/* Sprint W9-1 §15 — root-level mount: GA4/Clarity loading,
-            attribution capture, a baseline page_view on every route, and
-            experiment context. Renders no visible UI itself — zero impact
-            on any page's markup. Both loaders no-op until a real
-            NEXT_PUBLIC_GA4_MEASUREMENT_ID / NEXT_PUBLIC_CLARITY_PROJECT_ID
-            is set (see src/lib/analytics/constants.ts). */}
-        <AnalyticsProvider>{children}</AnalyticsProvider>
+        {/* TEMPORARY DIAGNOSTIC (GA4 isolated production test) —
+            AnalyticsProvider (Sprint W9-1 §15's LTOS GA4/Clarity/attribution
+            mount) is disabled for this diagnostic only, so no LTOS wrapper
+            or custom event can duplicate/interfere with the raw official
+            gtag.js snippet below. Nothing deleted — restore by uncommenting
+            the import above and this line once the diagnostic concludes. */}
+        {/* <AnalyticsProvider>{children}</AnalyticsProvider> */}
+        {children}
+
+        {/* TEMPORARY DIAGNOSTIC (GA4 isolated production test) — raw,
+            unmodified official Google gtag.js snippet for measurement ID
+            G-CMW9654S0, standing in for LTOS's own GA4 loader while it's
+            disabled above. Verbatim from Google's own snippet: no
+            send_page_view:false, no Consent Mode, no LTOS wrapper, no
+            custom events. Remove this block when restoring AnalyticsProvider. */}
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMW9654S0" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-CMW9654S0');`,
+          }}
+        />
       </body>
     </html>
   )
