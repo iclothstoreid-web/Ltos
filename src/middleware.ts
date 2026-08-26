@@ -81,14 +81,39 @@ export async function middleware(request: NextRequest) {
   const normalizedHost = host.split(':')[0].toLowerCase()
   const isLocalTailorHost = normalizedHost.includes('ltos') || normalizedHost.includes('localtailor')
 
-  // Local Tailor's apex root must not fall into the legacy auth flow. Keep
-  // public root routing on the marketing homepage and let the brand
-  // resolver/locale setup serve the correct page for the current host.
-  // This is intentionally scoped to the Local Tailor hostname(s) and does
-  // not change TARDA routing.
-  if (isLocalTailorHost && pathname === '/') {
-    return NextResponse.redirect(new URL('/en', request.url))
-  }
+  // PRODUCTION I18N ROUTING FIX — this used to unconditionally force
+  // Local Tailor's apex "/" to "/en", which made Bahasa Indonesia (the
+  // default locale, canonical at unprefixed "/" per localePrefix:
+  // 'as-needed') permanently unreachable: every request to "/" — a fresh
+  // visitor, an id-ID browser, or even clicking "Bahasa Indonesia" in the
+  // language switcher itself — got bounced to English before next-intl's
+  // own locale negotiation ever ran.
+  //
+  // Investigated why the rule existed rather than deleting it blindly: at
+  // the time it was added (65f467b, alongside a same-commit fix to the
+  // legacy unprefixed /login page), the concern was Local Tailor's apex
+  // root "falling into the legacy auth flow". That is no longer possible
+  // given this file's current shape — matchRule()/isNoLocalePath() only
+  // ever match "/" against prefixed rules (ROUTE_RULES entries like
+  // '/owner', '/workspace', NO_LOCALE_PREFIXES entries like '/login'),
+  // and bare "/" matches none of them, so "/" already falls straight
+  // through to `intlMiddleware(request)` below with no special-casing
+  // needed — verified locally: requesting "/" on a host that does NOT
+  // match isLocalTailorHost (so this block never ran) returns 200 with
+  // negotiated locale content, never an auth page. The one-time legacy
+  // /login concern this rule bundled together with "/" was separately and
+  // more precisely fixed by the /login rule directly below (redirecting
+  // to /owner/login instead of piggybacking on this one), so removing
+  // this "/" branch changes nothing about /login's behavior.
+  //
+  // "/" now gets exactly the same treatment every other locale path on
+  // this host already gets: it falls through to intlMiddleware, which
+  // honors an explicit NEXT_LOCALE cookie (e.g. from the language
+  // switcher) first, then Accept-Language, then the 'id' default —
+  // restoring Indonesian as a reachable, explicit-choice-respecting
+  // locale without touching localePrefix, without introducing an /id
+  // prefix, and without changing TARDA routing (this whole file's
+  // isLocalTailorHost checks never applied to Tarda to begin with).
 
   // /login used to redirect here too, bouncing straight to the marketing
   // homepage — that was correct back when /login was only the old
