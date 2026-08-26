@@ -12,13 +12,19 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 // since next.config.js can't import the TS source.
 const LOCALE_PREFIXES = ['', '/en', '/ar', '/fr', '/ja', '/de']
 
+// Sprint W6R.2 — '/locations/bogor' removed from this list. It used to
+// mean "the old, mislabeled Bandung location page" and correctly redirected
+// to '/locations/bandung'. As of W6R.2, '/locations/bogor' is a real,
+// distinct city service-area page (src/lib/seo/cityConfig.ts's own BOGOR
+// entry) — leaving this redirect in would have permanently 301'd that new
+// page straight into Bandung's, silently shadowing it (caught by this
+// sprint's own smoke test before deploy).
 const RENAMED_PATHS = [
   ['/bespoke-tailor-bogor', '/bespoke-tailor-bandung'],
   ['/tailor-premium-bogor', '/tailor-premium-bandung'],
   ['/custom-baju-koko-bogor', '/custom-baju-koko-bandung'],
   ['/jahit-thobe-bogor', '/jahit-thobe-bandung'],
   ['/tailor-baju-umroh-bogor', '/tailor-baju-umroh-bandung'],
-  ['/locations/bogor', '/locations/bandung'],
   ['/knowledge/bogor', '/knowledge/bandung'],
   ['/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bogor', '/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bandung'],
   ['/knowledge/design-studio/layanan-home-visit-bogor', '/knowledge/design-studio/layanan-home-visit-bandung'],

@@ -73,6 +73,8 @@ export interface CityConfig {
   provinceIsoCode: string
   /** true only for Bandung — the one real physical workshop/showroom. */
   isPrimary: boolean
+  /** Sprint W6R.2 — National hub grouping only (src/app/[locale]/locations/page.tsx). A real, conventional Indonesian regional grouping, not a coverage claim. */
+  region: 'Jabodetabek' | 'Jawa Barat' | 'Jawa Tengah & DIY' | 'Jawa Timur' | 'Sumatra'
   hero: CityHeroConfig
   /** Unique paragraph per city — no template-filled copy-paste across cities. */
   description: string
@@ -140,6 +142,7 @@ const BANDUNG: CityConfig = {
   province: 'Jawa Barat',
   provinceIsoCode: 'JB',
   isPrimary: true,
+  region: 'Jawa Barat',
   hero: {
     eyebrow: 'Tailor Bandung — Bespoke Thobe & Baju Koko',
     headline: 'Tailor Bandung untuk Custom Thobe dan Baju Koko, Dijahit di Workshop Kami Sendiri',
@@ -222,6 +225,7 @@ const JAKARTA: CityConfig = {
   province: 'DKI Jakarta',
   provinceIsoCode: 'JK',
   isPrimary: false,
+  region: 'Jabodetabek',
   hero: {
     eyebrow: 'Bespoke Thobe untuk Profesional Jakarta',
     headline: 'Custom Thobe Jakarta — Bespoke Tailoring untuk Jadwal Padat Profesional',
@@ -260,6 +264,7 @@ const BEKASI: CityConfig = {
   province: 'Jawa Barat',
   provinceIsoCode: 'JB',
   isPrimary: false,
+  region: 'Jabodetabek',
   hero: {
     eyebrow: 'Bespoke Thobe untuk Keluarga Bekasi',
     headline: 'Custom Thobe Bekasi — Bespoke Tailoring untuk Momen Pernikahan dan Keluarga',
@@ -298,6 +303,7 @@ const TANGERANG: CityConfig = {
   province: 'Banten',
   provinceIsoCode: 'BT',
   isPrimary: false,
+  region: 'Jabodetabek',
   hero: {
     eyebrow: 'Bespoke Thobe untuk Acara Korporat Tangerang',
     headline: 'Custom Thobe Tangerang — Bespoke Tailoring untuk Acara Korporat dan Formal',
@@ -336,6 +342,7 @@ const SURABAYA: CityConfig = {
   province: 'Jawa Timur',
   provinceIsoCode: 'JI',
   isPrimary: false,
+  region: 'Jawa Timur',
   hero: {
     eyebrow: 'Bespoke Thobe untuk Pernikahan Surabaya',
     headline: 'Custom Thobe Surabaya — Bespoke Tailoring untuk Pernikahan dan Formalwear',
@@ -363,7 +370,215 @@ const SURABAYA: CityConfig = {
   ],
 }
 
-export const CITY_CONFIGS: CityConfig[] = [BANDUNG, JAKARTA, BEKASI, TANGERANG, SURABAYA]
+// -----------------------------------------------------------------------
+// Bogor — weekend/leisure angle: Puncak, Sentul, Tajur, the cooler-climate
+// getaway city just south of Jakarta, framed around family weekend visits
+// and leisure/formal occasions rather than Jakarta's daily business wear.
+// -----------------------------------------------------------------------
+const BOGOR: CityConfig = {
+  slug: 'bogor',
+  city: 'Bogor',
+  province: 'Jawa Barat',
+  provinceIsoCode: 'JB',
+  isPrimary: false,
+  region: 'Jabodetabek',
+  hero: {
+    eyebrow: 'Bespoke Thobe untuk Keluarga Bogor',
+    headline: 'Custom Thobe Bogor — Bespoke Tailoring untuk Akhir Pekan dan Acara Keluarga',
+    subheadline: 'Melayani klien di kawasan Bogor, Sentul, dan sekitar Puncak — konsultasi via WhatsApp, garmen dikirim langsung ke rumah Anda.',
+    keywordPhrases: ['custom thobe bogor', 'jahit thobe bogor', 'bespoke tailor bogor'],
+  },
+  description:
+    'Bogor dikenal sebagai kota dengan udara lebih sejuk dibanding Jakarta, dan banyak klien kami dari kawasan ini serta sekitar Sentul dan Puncak memesan thobe custom menjelang akhir pekan keluarga atau acara formal yang tidak terburu-buru. Konsultasi via WhatsApp membantu menentukan material yang tetap nyaman meski suhu lebih rendah dari kota-kota pesisir, sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan. Jarak yang relatif dekat ke Bandung juga membuat sebagian klien Bogor memilih datang langsung ke workshop saat momen tersebut memungkinkan.',
+  trustStatement: 'Dipercaya keluarga di Bogor — dari kawasan kota hingga Sentul dan Puncak — untuk akhir pekan dan acara formal keluarga.',
+  keywordPrimary: 'custom thobe bogor',
+  keywordSecondary: ['jahit thobe bogor', 'bespoke tailor bogor', 'penjahit thobe bogor'],
+  localContext: ['Bogor Kota', 'Sentul', 'Tajur', 'Puncak'],
+  services: [
+    { title: 'Konsultasi via WhatsApp', description: 'Menentukan model dan material yang nyaman untuk iklim Bogor yang lebih sejuk.' },
+    { title: 'Custom Thobe & Baju Koko', description: 'Pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga langsung.' },
+    { title: 'Opsi Kunjungan Langsung ke Bandung', description: 'Jarak yang relatif dekat membuat kunjungan langsung ke workshop tetap praktis bagi sebagian klien.' },
+    { title: 'Pengiriman ke Bogor', description: 'Garmen selesai dikirim ke Bogor Kota, Sentul, Tajur, dan sekitarnya.' },
+  ],
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
+  reviewHighlightIds: [],
+  relatedGuides: [
+    { category: 'fabrics', slug: 'wool-blend' },
+    { category: 'measurements', slug: 'thobe-size-guide' },
+    { category: 'tailoring', slug: 'what-is-bespoke' },
+  ],
+}
+
+// -----------------------------------------------------------------------
+// Depok — young professional/student angle: Margonda, Universitas
+// Indonesia area, framed around clients starting their bespoke journey
+// early (first formal thobe, early-career professionals) rather than
+// Jakarta's established-professional framing.
+// -----------------------------------------------------------------------
+const DEPOK: CityConfig = {
+  slug: 'depok',
+  city: 'Depok',
+  province: 'Jawa Barat',
+  provinceIsoCode: 'JB',
+  isPrimary: false,
+  region: 'Jabodetabek',
+  hero: {
+    eyebrow: 'Bespoke Thobe untuk Klien Muda Depok',
+    headline: 'Custom Thobe Depok — Bespoke Tailoring untuk Profesional dan Keluarga Muda',
+    subheadline: 'Melayani klien di kawasan Margonda dan sekitar Universitas Indonesia — konsultasi via WhatsApp, cocok untuk thobe formal pertama Anda.',
+    keywordPhrases: ['custom thobe depok', 'jahit thobe depok', 'bespoke tailor depok'],
+  },
+  description:
+    'Sebagai kota yang berbatasan langsung dengan Jakarta dan dikenal sebagai lokasi Universitas Indonesia, klien kami dari Depok — terutama sekitar Margonda — sering kali adalah profesional muda atau keluarga baru yang memesan thobe custom pertama mereka untuk acara formal, kajian, atau ibadah Jumat. Konsultasi via WhatsApp membantu menjelaskan proses bespoke secara jelas bagi klien yang baru pertama kali memesan busana custom, sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan.',
+  trustStatement: 'Dipercaya profesional muda dan keluarga di Depok — dari Margonda hingga sekitar UI — untuk thobe custom pertama mereka.',
+  keywordPrimary: 'custom thobe depok',
+  keywordSecondary: ['jahit thobe depok', 'bespoke tailor depok', 'tailor pria depok'],
+  localContext: ['Margonda', 'Depok Town Square', 'Universitas Indonesia'],
+  services: [
+    { title: 'Konsultasi untuk Pemesanan Pertama', description: 'Penjelasan proses bespoke dari awal, cocok bagi yang baru pertama kali memesan custom.' },
+    { title: 'Custom Thobe & Baju Koko', description: 'Pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga langsung.' },
+    { title: 'Digital Body Profile', description: 'Pengukuran tersimpan untuk pemesanan berikutnya tanpa perlu diulang dari nol.' },
+    { title: 'Pengiriman ke Depok', description: 'Garmen selesai dikirim ke Margonda, sekitar UI, dan sekitarnya.' },
+  ],
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
+  reviewHighlightIds: [],
+  relatedGuides: [
+    { category: 'tailoring', slug: 'what-is-bespoke' },
+    { category: 'measurements', slug: 'how-to-measure-body' },
+    { category: 'fabrics', slug: 'premium-cotton' },
+  ],
+}
+
+// -----------------------------------------------------------------------
+// Yogyakarta — cultural/academic angle: known as Indonesia's "Kota
+// Pelajar" (student city, home to UGM and many universities) with a
+// strong formal/ceremonial dress culture, framed around formal occasions
+// and the city's large academic community rather than a business angle.
+// -----------------------------------------------------------------------
+const YOGYAKARTA: CityConfig = {
+  slug: 'yogyakarta',
+  city: 'Yogyakarta',
+  province: 'DI Yogyakarta',
+  provinceIsoCode: 'YO',
+  isPrimary: false,
+  region: 'Jawa Tengah & DIY',
+  hero: {
+    eyebrow: 'Bespoke Thobe untuk Klien Yogyakarta',
+    headline: 'Custom Thobe Yogyakarta — Bespoke Tailoring untuk Acara Formal dan Keagamaan',
+    subheadline: 'Melayani klien di Yogyakarta, kota pelajar dengan budaya berbusana formal yang kental — konsultasi via WhatsApp, garmen dikirim ke seluruh area DIY.',
+    keywordPhrases: ['custom thobe yogyakarta', 'jahit thobe yogyakarta', 'bespoke tailor yogyakarta'],
+  },
+  description:
+    'Yogyakarta dikenal sebagai kota pelajar dengan populasi akademisi dan mahasiswa yang besar, sekaligus kota dengan tradisi berbusana formal yang kuat untuk acara keagamaan dan seremonial. Klien kami dari Yogyakarta umumnya memesan thobe custom untuk kajian, acara kampus formal, atau ibadah — mencari busana yang tetap terlihat rapi dan personal, bukan sekadar seragam. Konsultasi via WhatsApp membantu menentukan model dan material yang sesuai sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan.',
+  trustStatement: 'Dipercaya klien di Yogyakarta — dari komunitas akademisi hingga keluarga — untuk acara formal dan keagamaan.',
+  keywordPrimary: 'custom thobe yogyakarta',
+  keywordSecondary: ['jahit thobe yogyakarta', 'bespoke tailor yogyakarta', 'tailor pria yogyakarta'],
+  localContext: ['Yogyakarta Kota', 'Sleman', 'Bantul'],
+  services: [
+    { title: 'Konsultasi via WhatsApp', description: 'Menentukan model dan material yang sesuai untuk acara formal dan keagamaan.' },
+    { title: 'Custom Thobe & Baju Koko', description: 'Pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga langsung.' },
+    { title: 'Pengukuran Digital Body Profile', description: 'Diukur langsung oleh fitter, tersimpan untuk pemesanan berikutnya.' },
+    { title: 'Pengiriman ke Yogyakarta', description: 'Garmen selesai dikirim ke Yogyakarta Kota, Sleman, Bantul, dan sekitarnya.' },
+  ],
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
+  reviewHighlightIds: [],
+  relatedGuides: [
+    { category: 'styling', slug: 'formal-thobe' },
+    { category: 'measurements', slug: 'thobe-size-guide' },
+    { category: 'tailoring', slug: 'what-is-bespoke' },
+  ],
+}
+
+// -----------------------------------------------------------------------
+// Semarang — Central Java business hub angle: the provincial capital and
+// a major port/trading city, framed around business professionals and the
+// coastal, humid climate distinct from Yogyakarta's cultural framing.
+// -----------------------------------------------------------------------
+const SEMARANG: CityConfig = {
+  slug: 'semarang',
+  city: 'Semarang',
+  province: 'Jawa Tengah',
+  provinceIsoCode: 'JT',
+  isPrimary: false,
+  region: 'Jawa Tengah & DIY',
+  hero: {
+    eyebrow: 'Bespoke Thobe untuk Profesional Semarang',
+    headline: 'Custom Thobe Semarang — Bespoke Tailoring untuk Iklim Pesisir dan Acara Formal',
+    subheadline: 'Melayani klien profesional di Semarang, ibu kota Jawa Tengah — material dipilih mempertimbangkan iklim pesisir yang lembap.',
+    keywordPhrases: ['custom thobe semarang', 'jahit thobe semarang', 'bespoke tailor semarang'],
+  },
+  description:
+    'Sebagai ibu kota Jawa Tengah dan kota pelabuhan dengan iklim pesisir yang cenderung lembap, klien kami di Semarang umumnya adalah profesional yang membutuhkan thobe formal untuk acara kantor maupun ibadah, dengan pertimbangan material yang tetap nyaman di cuaca panas dan lembap. Konsultasi via WhatsApp membantu menentukan pilihan bahan yang breathable sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan, dan garmen selesai dikirim langsung ke alamat Anda di Semarang.',
+  trustStatement: 'Dipercaya profesional di Semarang untuk busana formal bespoke yang sesuai dengan iklim pesisir Jawa Tengah.',
+  keywordPrimary: 'custom thobe semarang',
+  keywordSecondary: ['jahit thobe semarang', 'bespoke tailor semarang', 'tailor pria semarang'],
+  localContext: ['Semarang Tengah', 'Simpang Lima', 'Candi Baru'],
+  services: [
+    { title: 'Konsultasi via WhatsApp', description: 'Menentukan material breathable yang sesuai untuk iklim pesisir yang lembap.' },
+    { title: 'Custom Thobe & Baju Koko', description: 'Pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga langsung.' },
+    { title: 'Digital Body Profile', description: 'Pengukuran tersimpan untuk pemesanan berikutnya tanpa perlu diulang.' },
+    { title: 'Pengiriman ke Semarang', description: 'Garmen selesai dikirim ke Semarang Tengah, Simpang Lima, Candi Baru, dan sekitarnya.' },
+  ],
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
+  reviewHighlightIds: [],
+  relatedGuides: [
+    { category: 'fabrics', slug: 'japanese-cotton' },
+    { category: 'measurements', slug: 'thobe-size-guide' },
+    { category: 'styling', slug: 'formal-thobe' },
+  ],
+}
+
+// -----------------------------------------------------------------------
+// Medan — Sumatra authority angle: the largest city in Sumatra and its
+// main business/trading hub, framed around business professionals and a
+// large, established Muslim community rather than a wedding or leisure angle.
+// -----------------------------------------------------------------------
+const MEDAN: CityConfig = {
+  slug: 'medan',
+  city: 'Medan',
+  province: 'Sumatera Utara',
+  provinceIsoCode: 'SU',
+  isPrimary: false,
+  region: 'Sumatra',
+  hero: {
+    eyebrow: 'Bespoke Thobe untuk Klien Medan',
+    headline: 'Custom Thobe Medan — Bespoke Tailoring untuk Kota Terbesar di Sumatra',
+    subheadline: 'Melayani klien di Medan, kota terbesar di Sumatra — konsultasi via WhatsApp, garmen dikirim ke seluruh area Medan dan sekitarnya.',
+    keywordPhrases: ['custom thobe medan', 'jahit thobe medan', 'bespoke tailor medan'],
+  },
+  description:
+    'Sebagai kota terbesar di Sumatra dan pusat bisnis utama di wilayah tersebut, Medan memiliki komunitas Muslim yang besar dengan kebutuhan busana formal untuk acara bisnis, keagamaan, maupun keluarga. Klien kami dari Medan umumnya mencari thobe custom untuk kajian, acara formal, atau ibadah Jumat, dengan material yang nyaman untuk iklim tropis Sumatra. Konsultasi via WhatsApp membantu menentukan pilihan model dan bahan sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan.',
+  trustStatement: 'Dipercaya klien di Medan — kota terbesar di Sumatra — untuk busana formal dan keagamaan bespoke.',
+  keywordPrimary: 'custom thobe medan',
+  keywordSecondary: ['jahit thobe medan', 'bespoke tailor medan', 'tailor pria medan'],
+  localContext: ['Medan Kota', 'Medan Polonia', 'Medan Baru'],
+  services: [
+    { title: 'Konsultasi via WhatsApp', description: 'Menentukan model dan material yang nyaman untuk iklim tropis Sumatra.' },
+    { title: 'Custom Thobe & Baju Koko', description: 'Pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga langsung.' },
+    { title: 'Digital Body Profile', description: 'Pengukuran tersimpan untuk pemesanan berikutnya tanpa perlu diulang.' },
+    { title: 'Pengiriman ke Medan', description: 'Garmen selesai dikirim ke Medan Kota, Polonia, Medan Baru, dan sekitarnya.' },
+  ],
+  faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
+  reviewHighlightIds: [],
+  relatedGuides: [
+    { category: 'fabrics', slug: 'linen' },
+    { category: 'measurements', slug: 'thobe-size-guide' },
+    { category: 'tailoring', slug: 'what-is-bespoke' },
+  ],
+}
+
+export const CITY_CONFIGS: CityConfig[] = [
+  BANDUNG,
+  JAKARTA,
+  BOGOR,
+  DEPOK,
+  BEKASI,
+  TANGERANG,
+  SURABAYA,
+  YOGYAKARTA,
+  SEMARANG,
+  MEDAN,
+]
 
 export function getCityBySlug(slug: string): CityConfig | undefined {
   return CITY_CONFIGS.find((city) => city.slug === slug)
@@ -373,7 +588,17 @@ export function getAllCitySlugs(): string[] {
   return CITY_CONFIGS.map((city) => city.slug)
 }
 
-/** Sibling city pages, for cross-linking (Bandung <-> Jakarta <-> Bekasi <-> Tangerang <-> Surabaya). */
+/** Sibling city pages, for cross-linking — every /locations/[city] page links to every other one it doesn't already appear on. */
 export function getOtherCities(currentSlug: string): CityConfig[] {
   return CITY_CONFIGS.filter((city) => city.slug !== currentSlug)
+}
+
+/** Sprint W6R.2 — National hub regional grouping (src/app/[locale]/locations/page.tsx), in a fixed display order rather than CITY_CONFIGS' declaration order. */
+const REGION_DISPLAY_ORDER: CityConfig['region'][] = ['Jawa Barat', 'Jabodetabek', 'Jawa Tengah & DIY', 'Jawa Timur', 'Sumatra']
+
+export function getCitiesByRegion(): { region: CityConfig['region']; cities: CityConfig[] }[] {
+  return REGION_DISPLAY_ORDER.map((region) => ({
+    region,
+    cities: CITY_CONFIGS.filter((city) => city.region === region),
+  })).filter((group) => group.cities.length > 0)
 }

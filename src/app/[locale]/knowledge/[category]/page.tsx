@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { KNOWLEDGE_CATEGORIES, getCategoryBySlug } from '@/lib/knowledge/categories'
+import { getCityBySlug } from '@/lib/seo/cityConfig'
 import { getArticlesByCategory } from '@/lib/knowledge/articles'
 import { getRelatedCategories } from '@/lib/knowledge/relatedArticles'
 import { buildKnowledgeBreadcrumb } from '@/lib/knowledge/breadcrumbs'
@@ -43,12 +45,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export const revalidate = 86400
 
+// Sprint W6R.2 §8 — Knowledge -> Location internal linking, kept
+// deliberately small: only the categories where a city page genuinely
+// serves the same intent get 2-3 real slugs (never all 9-10 cities, per
+// this sprint's own "don't jam a 20-city list into every article" rule),
+// and only city slugs that exist in CITY_CONFIGS are ever listed.
+const RELATED_LOCATION_SLUGS: Partial<Record<string, string[]>> = {
+  wedding: ['jakarta', 'bekasi', 'bandung'],
+  umrah: ['bandung'],
+  tailoring: ['bandung'],
+  bandung: ['bandung'],
+}
+
 export default function KnowledgeCategoryPage({ params }: PageProps) {
   const category = getCategoryBySlug(params.category)
   if (!category) notFound()
 
   const articles = getArticlesByCategory(category.slug)
   const relatedCategories = getRelatedCategories(category.relatedCategories)
+  const relatedLocations = (RELATED_LOCATION_SLUGS[category.slug] ?? [])
+    .map((slug) => getCityBySlug(slug))
+    .filter((city): city is NonNullable<typeof city> => !!city)
 
   const breadcrumbItems = buildKnowledgeBreadcrumb({ category })
   const breadcrumbSchema = buildKnowledgeBreadcrumbSchema(breadcrumbItems)
@@ -127,6 +144,29 @@ export default function KnowledgeCategoryPage({ params }: PageProps) {
             <div className="mt-6">
               <KnowledgeCategoryGrid categories={relatedCategories} headingId="related-categories-heading" />
             </div>
+          </section>
+        )}
+
+        {relatedLocations.length > 0 && (
+          <section aria-labelledby="related-locations-heading" className="mx-auto mt-14 max-w-3xl text-center">
+            <h2 id="related-locations-heading" className="font-fraunces text-xl text-luxury-ivory md:text-2xl">
+              Layanan untuk Pelanggan di Kota Anda
+            </h2>
+            <p className="mt-3 font-luxury-sans text-sm text-luxury-taupe">
+              Untuk pelanggan di luar Bandung, lihat panduan layanan custom di kota Anda:
+            </p>
+            <ul className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              {relatedLocations.map((city) => (
+                <li key={city.slug}>
+                  <Link
+                    href={`/locations/${city.slug}`}
+                    className="rounded-full border border-luxury-gold/[0.18] px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe transition hover:border-luxury-gold/60 hover:text-luxury-gold"
+                  >
+                    Custom Thobe {city.city}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 
