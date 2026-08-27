@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "render:test": "tsx scripts/render-test-runner.ts",
-    "seo:validate": "tsx scripts/seo-validate.ts"
+    "seo:validate": "tsx scripts/seo-validate.ts",
+    "brand:check": "tsx scripts/brand-isolation-check.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

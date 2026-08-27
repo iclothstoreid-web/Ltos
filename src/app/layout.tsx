@@ -23,11 +23,13 @@ const caveat = Caveat({ subsets: ['latin'], weight: ['500', '600', '700'], varia
 
 import { headers } from 'next/headers'
 import { getBrandForRequestHost } from '@/lib/brand/resolver'
-import { TARDA_CONFIG, LOCAL_TAILOR_CONFIG } from '@/lib/brand/config'
+import { LOCAL_TAILOR_CONFIG } from '@/lib/brand/config'
 
 export async function generateMetadata(): Promise<Metadata> {
-  // Attempt to read host from server headers — Next.js provides headers()
-  // in server components. If unavailable, default to TARDA_CONFIG for dev.
+  // Resolve the brand from the request host. A missing host now resolves
+  // to Local Tailor (see getBrandFromHost) — never TARDA — so an
+  // unidentified render can't emit TARDA title/description/manifest/OG on
+  // localtailor.id.
   const h = headers()
   const host = h.get('host')
   const brand = getBrandForRequestHost(host)
@@ -36,21 +38,26 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL('https://' + brand.canonicalDomain),
     title: brand.metadata?.title ?? 'LTOS',
     description: brand.metadata?.description ?? '',
-    manifest: brand.assets?.manifest ?? '/manifest.json',
+    manifest: brand.assets?.manifest ?? '/manifest-local-tailor.json',
     openGraph: {
       title: brand.metadata?.title,
       description: brand.metadata?.description,
       images: brand.assets.ogImage ? [brand.assets.ogImage] : undefined,
     },
+    // Next.js's file-based icon convention (src/app/icon.svg / favicon.ico
+    // / apple-icon.png — the shared text-free monogram) takes precedence
+    // over these; kept in sync so any consumer of the metadata object
+    // still sees a brand-correct, non-TARDA path.
     icons: {
-      icon: brand.assets.favicon ?? '/brand/icon-192.png',
-      apple: brand.assets.favicon ?? '/brand/icon-192.png',
+      icon: brand.assets.favicon ?? '/icon.svg',
+      apple: brand.assets.favicon ?? '/icon.svg',
     },
   }
 }
 
 export const viewport: Viewport = {
-  themeColor: TARDA_CONFIG.colors?.themeColor ?? '#6A4A34',
+  // Shared "Walnut Atelier" theme colour — identical across both brands.
+  themeColor: LOCAL_TAILOR_CONFIG.colors?.themeColor ?? '#6A4A34',
 }
 
 // Sprint W11.5 — the ONLY <html> in the app (App Router allows exactly

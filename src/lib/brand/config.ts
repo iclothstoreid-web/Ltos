@@ -32,11 +32,20 @@ export const LOCAL_TAILOR_CONFIG: BrandConfig = {
   canonicalDomain: 'localtailor.id',
   domains: ['localtailor.id', 'ltos.vercel.app'],
   assets: {
-    // Historical Local Tailor assets are preserved under public/brand/local-tailor/.
-    // The Tarda OG image remains a separate TARDA asset and must not be reused here.
+    // Local Tailor's own assets, all under public/brand/local-tailor/ +
+    // the file-based Next.js icon convention (src/app/icon.svg /
+    // favicon.ico / apple-icon.png — the shared, text-free monogram).
+    // Tarda's OG image (/brand/og-image.png) and wordmark
+    // (/brand/tarda-home.svg) are separate TARDA-only assets and must
+    // never be referenced here.
     logoHorizontal: '/brand/local-tailor/horizontal.svg',
     logoMark: '/brand/local-tailor/mark.svg',
-    favicon: '/brand/icon-192.png',
+    // Points at the file-based icon (not the shared-name /brand/icon-192.png)
+    // so nothing about Local Tailor's icon resolution can be confused with
+    // Tarda's. Next.js's file-based icon convention overrides metadata.icons
+    // anyway; this keeps the config self-consistent for any other reader.
+    favicon: '/icon.svg',
+    ogImage: '/brand/local-tailor/horizontal-tagline.svg',
     // Was sharing Tarda's own /manifest.json (name/short_name/description
     // still said "Tarda" / "Bogor" live in production) — now points at its
     // own manifest so the two brands stop overwriting each other's PWA

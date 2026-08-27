@@ -9,7 +9,11 @@ import { Link } from '@/i18n/routing'
 // is the single source of truth already used by every location page's
 // schema, metadata, and CTAs (Sprint W8-1/8-2/8-3). No address/phone string
 // is ever re-typed here.
-const FOOTER_WHATSAPP_MESSAGE = 'Halo Tarda, saya ingin bertanya lebih lanjut.'
+// TARDA-only: consumed solely inside the `brand.id === 'tarda'` branch
+// below (the WhatsApp CTA that renders exclusively for the Tarda brand).
+// Kept gated at the point of use so no Tarda-identity string is
+// reachable from a Local Tailor render.
+const TARDA_FOOTER_WHATSAPP_MESSAGE = 'Halo Tarda, saya ingin bertanya lebih lanjut.'
 
 const EXPLORE_LINKS = [
   { key: 'designStudio', href: '/design-studio' },
@@ -47,7 +51,10 @@ export async function Footer() {
   const host = headers().get('host')
   const brand = getBrandForRequestHost(host ?? undefined)
 
-  const whatsappUrl = brand.id === 'tarda' ? buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, FOOTER_WHATSAPP_MESSAGE) : undefined
+  const whatsappUrl =
+    brand.id === 'tarda'
+      ? buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, TARDA_FOOTER_WHATSAPP_MESSAGE)
+      : undefined
   const columns = [
     { title: t('columns.explore'), links: EXPLORE_LINKS },
     { title: t('columns.studio'), links: STUDIO_LINKS },

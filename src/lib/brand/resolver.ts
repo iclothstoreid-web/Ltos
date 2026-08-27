@@ -4,7 +4,13 @@ import type { BrandConfig } from './types'
 // Lightweight host -> brand resolution. Pure function so it can be used
 // in both server and client contexts where a host string is available.
 export function getBrandFromHost(host?: string): BrandConfig {
-  if (!host) return TARDA_CONFIG // default to TARDA for safety in dev
+  // No host = an unidentified runtime state (build-time SSG, a server
+  // context without request headers, dev). Local Tailor is the ONLY live
+  // production brand (tarda.vercel.app alias removed) and is the correct
+  // safe default — TARDA must never be the fallback for an unidentified
+  // Local Tailor state, or its identity/assets leak onto localtailor.id.
+  // TARDA still resolves for its own explicit `tarda.vercel.app` host below.
+  if (!host) return LOCAL_TAILOR_CONFIG
   const hostname = host.split(':')[0].toLowerCase()
 
   // Exact matches first

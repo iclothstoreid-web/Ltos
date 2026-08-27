@@ -31,11 +31,11 @@ const OG_IMAGE = {
 }
 
 export const homepageMetadata: Metadata = {
-  title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
+  title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You | Local Tailor',
   description:
     'Bespoke thobe, handcrafted in Bandung. A pattern formulated from your measurements alone, made from imported fabrics and finished by hand.',
   openGraph: {
-    title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
+    title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You | Local Tailor',
     description: 'Designed around your body, your lifestyle, and your identity.',
     url: BUSINESS.url,
     siteName: BUSINESS.name,
@@ -44,7 +44,7 @@ export const homepageMetadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You',
+    title: 'Bespoke Tailor — Custom Thobe, Crafted Exclusively for You | Local Tailor',
     description: 'Designed around your body, your lifestyle, and your identity.',
     images: [OG_IMAGE.url],
   },
@@ -89,7 +89,7 @@ export function buildWebSiteSchema() {
 // (not partial) Twitter Card rather than a placeholder pointing at a
 // fabricated asset.
 export const bodyEstimatorMetadata: Metadata = {
-  title: 'Cek Ukuran Thobe Gratis — Body Profile Estimator | Bespoke Tailor',
+  title: 'Cek Ukuran Thobe Gratis — Body Profile Estimator | Local Tailor',
   description:
     'Dapatkan estimasi ukuran thobe, rekomendasi fit, dan body profile Anda dalam kurang dari 30 detik. Gratis, tanpa pengukuran manual.',
   robots: {
