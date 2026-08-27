@@ -2,6 +2,7 @@
 
 import { memo } from 'react'
 import type { ConfiguratorOption } from '@/types/configurator'
+import { ConfiguratorThumb } from './preview/ConfiguratorThumb'
 
 interface OptionCardProps {
   option: ConfiguratorOption
@@ -57,8 +58,13 @@ export const OptionCard = memo(function OptionCard({
         }`}
       >
         {option.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={option.photoUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <ConfiguratorThumb
+            photoUrl={option.photoUrl}
+            alt=""
+            size={isSwatch ? 48 : 64}
+            quality={68}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <span className="font-luxury-sans text-[9px] text-luxury-taupe">
             {isSwatch ? option.name.slice(0, 2).toUpperCase() : 'No Photo'}

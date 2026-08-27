@@ -3,6 +3,7 @@
 import { memo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { ConfiguratorOption } from '@/types/configurator'
+import { ConfiguratorThumb } from './ConfiguratorThumb'
 
 interface CuffLayerProps {
   cuff: ConfiguratorOption | null
@@ -24,10 +25,7 @@ export const CuffLayer = memo(function CuffLayer({ cuff }: CuffLayerProps) {
             className="flex items-center gap-1.5 rounded-full border border-luxury-gold/30 bg-luxury-navy-deep/80 py-1 pl-1 pr-2.5 backdrop-blur-sm"
           >
             <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-luxury-navy">
-              {cuff.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={cuff.photoUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-              ) : null}
+              <ConfiguratorThumb photoUrl={cuff.photoUrl} alt="" size={32} quality={65} className="h-full w-full object-cover" />
             </span>
             <span className="font-luxury-sans text-[9px] uppercase tracking-[0.08em] text-luxury-ivory">{cuff.name}</span>
           </motion.div>

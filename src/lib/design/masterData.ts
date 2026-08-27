@@ -557,7 +557,11 @@ export async function uploadMasterDataPhoto(
 
   const { error } = await supabase.storage
     .from('master-data-photos')
-    .upload(path, params.file, { upsert: true })
+    // 30-day browser/CDN cache (vs. the 1-hour Storage default). Safe
+    // because Supabase's Smart CDN purges this object's edge cache on
+    // every upsert, so a re-uploaded photo still propagates immediately —
+    // see the Design Studio image pipeline audit (2026-08-27).
+    .upload(path, params.file, { upsert: true, cacheControl: '2592000' })
   if (error) throw error
 
   const { data } = supabase.storage.from('master-data-photos').getPublicUrl(path)

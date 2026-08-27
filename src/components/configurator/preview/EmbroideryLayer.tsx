@@ -3,6 +3,7 @@
 import { memo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { ConfiguratorOption } from '@/types/configurator'
+import { ConfiguratorThumb } from './ConfiguratorThumb'
 
 interface EmbroideryLayerProps {
   embroidery: ConfiguratorOption | null
@@ -25,8 +26,7 @@ export const EmbroideryLayer = memo(function EmbroideryLayer({ embroidery }: Emb
             title={embroidery.name}
           >
             {embroidery.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={embroidery.photoUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <ConfiguratorThumb photoUrl={embroidery.photoUrl} alt="" size={48} quality={65} className="h-full w-full object-cover" />
             ) : (
               <span className="font-luxury-sans text-[8px] text-luxury-gold">✦</span>
             )}

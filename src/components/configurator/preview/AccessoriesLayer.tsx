@@ -3,6 +3,7 @@
 import { memo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { ConfiguratorOption } from '@/types/configurator'
+import { ConfiguratorThumb } from './ConfiguratorThumb'
 
 interface AccessoriesLayerProps {
   accessories: ConfiguratorOption[]
@@ -26,8 +27,7 @@ export const AccessoriesLayer = memo(function AccessoriesLayer({ accessories }: 
             className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-luxury-gold/40 bg-luxury-navy-deep/85"
           >
             {accessory.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={accessory.photoUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <ConfiguratorThumb photoUrl={accessory.photoUrl} alt="" size={40} quality={65} className="h-full w-full object-cover" />
             ) : (
               <span className="font-luxury-sans text-[7px] text-luxury-taupe">{accessory.name.slice(0, 2).toUpperCase()}</span>
             )}
