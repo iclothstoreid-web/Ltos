@@ -13,13 +13,14 @@ interface BaseGarmentProps {
 // onto. Simple compositing preview only, per the W2-2 brief: no AI render,
 // just a stack this structure can be swapped to drive later.
 //
-// The preview box renders at 192×256 CSS and zooms to 2×, so a ~400 px
-// transform variant covers the sharpest case — vs. the 6–16 MB
-// `master-data-photos` original this used to load straight into <img src>
-// (audit 2026-08-27). Falls back to the untransformed URL if the
-// transform endpoint rejects a legacy over-resolution source.
-const PREVIEW_SIZE = 400
-const PREVIEW_QUALITY = 80
+// Sprint DS-UX — the preview box now renders up to ~540 px tall (58vh,
+// aspect 3:4) and zooms to 2×, so a ~640 px transform variant covers the
+// sharpest case — vs. the 6–16 MB `master-data-photos` original this used
+// to load straight into <img src> (audit 2026-08-27). Falls back to the
+// untransformed URL if the transform endpoint rejects a legacy
+// over-resolution source.
+const PREVIEW_SIZE = 640
+const PREVIEW_QUALITY = 82
 
 export const BaseGarment = memo(function BaseGarment({ model }: BaseGarmentProps) {
   const [transformFailed, setTransformFailed] = useState(false)

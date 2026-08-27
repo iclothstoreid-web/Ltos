@@ -7,6 +7,7 @@ import { trackConfiguratorOpened } from '@/lib/configurator/analytics'
 import { trackConfiguratorStart, trackConfiguratorExit } from '@/lib/analytics/designStudioAnalytics'
 import { trackFunnelStep } from '@/lib/analytics/funnel'
 import { fetchWithTimeout, isOnline } from '@/lib/configurator/network'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useConfiguratorStore } from '@/stores/configurator-store'
 import { ConfiguratorPanel } from './ConfiguratorPanel'
 import { GarmentPreview } from './GarmentPreview'
@@ -14,23 +15,24 @@ import { PriceSummaryCard } from './PriceSummaryCard'
 import { StickyCTA } from './StickyCTA'
 import { EstimateSync } from './EstimateSync'
 
-// Mobile-only and pulls in `vaul` — code-split out of the initial bundle
-// (W2-5) so desktop visitors never download it. No loading fallback needed:
-// its own trigger/overlay/content are all `md:hidden` and it renders
-// nothing visible until the user taps the trigger.
+// Mobile + tablet only, and pulls in `vaul` — code-split out of the
+// initial bundle (W2-5) so desktop visitors never download it. Sprint
+// DS-UX only mounts it below xl (isDesktopLayout), so the desktop 3-zone
+// aside is the sole option browser there; its trigger/overlay/content are
+// `xl:hidden` too as a belt-and-braces guard.
 const MobileConfiguratorDrawer = dynamic(() => import('./MobileConfiguratorDrawer').then((m) => m.MobileConfiguratorDrawer), {
   ssr: false,
 })
 
-// Composes the configurator into the responsive layout. Desktop keeps the
-// exact W2-1 3-column grid (locked). Mobile drops the W2-1 inline/accordion
-// panel in favor of a fullscreen preview + drawer trigger (W2-2) so the
-// same ConfiguratorPanel content doesn't render twice on small screens.
-// Catalog fetch (GET /api/design/options) is unchanged from W2-1 in
-// contract; W2-5 adds a timeout, manual retry, and offline-aware messaging
-// around the same fetch. The config->estimate debounce effect is unchanged
-// too, just relocated into EstimateSync so this shell never subscribes to
-// `config` itself.
+// Composes the configurator into the responsive layout. Sprint DS-UX:
+//   xl+     — 3 zones: option browser (~27%) · sticky preview (~52%) · sticky estimate (~21%)
+//   md–xl   — sticky preview + estimate rail; options via the drawer
+//   <md     — preview only; options via the drawer; StickyCTA for the total
+// The desktop <aside> (and its ConfiguratorPanel subtree) is only mounted
+// at xl, so tablet/mobile never pay for a hidden panel. Catalog fetch (GET
+// /api/design/options), the config->estimate debounce (EstimateSync), and
+// every store/analytics wire are all unchanged — this sprint is layout
+// and card presentation only, no configurator business logic touched.
 interface DesignStudioClientProps {
   // Sprint W3-4 §8 — Design Studio Preselection. Already-resolved
   // configurator option ids (see src/app/design-studio/page.tsx's
@@ -45,6 +47,11 @@ export function DesignStudioClient({ initialFabricId = null, initialColorId = nu
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [retryNonce, setRetryNonce] = useState(0)
+  // Sprint DS-UX — 3-zone desktop layout starts at xl. Below that the
+  // option browser is the drawer only, so the desktop <aside> (and its
+  // whole ConfiguratorPanel subtree) is never mounted on tablet/mobile —
+  // `undefined` until mounted keeps SSR neutral.
+  const isDesktopLayout = useMediaQuery('(min-width: 1280px)')
   const openedRef = useRef(false)
   const preselectedRef = useRef(false)
   const updateConfig = useConfiguratorStore((state) => state.updateConfig)
@@ -139,22 +146,35 @@ export function DesignStudioClient({ initialFabricId = null, initialColorId = nu
   }, [catalogError, retryCatalog])
 
   return (
-    <div className="min-h-screen bg-luxury-navy-deep pb-24 md:pb-0">
-      <div className="grid grid-cols-1 md:grid-cols-[380px_1fr_320px] md:items-start">
-        <aside className="hidden md:order-1 md:block md:h-screen md:overflow-y-auto md:border-r md:border-luxury-gold/10">
-          <ConfiguratorPanel catalog={catalog} error={catalogError} loading={catalogLoading} onRetry={retryCatalog} />
-        </aside>
+    // The configurator is embedded at the foot of the marketing page, under
+    // a position:fixed Nav (~84px). The sticky preview/estimate columns and
+    // the sticky category bar are all offset by top-[84px] to clear it; see
+    // page.tsx's matching scroll-mt-[84px] on #the-studio.
+    <div className="min-h-screen bg-luxury-navy-deep pb-24 xl:pb-0">
+      {/* Desktop (xl+): LEFT ~27% option browser · CENTER ~52% preview (sticky) · RIGHT ~21% estimate (sticky).
+          Tablet (md–xl): CENTER preview (sticky) + RIGHT estimate rail, options via drawer.
+          Mobile (<md): preview only, options via drawer, StickyCTA for the running total. */}
+      <div className="grid grid-cols-1 items-start md:grid-cols-[1fr_clamp(240px,25vw,308px)] xl:grid-cols-[minmax(336px,27%)_1fr_minmax(280px,21%)]">
+        {isDesktopLayout && (
+          <aside className="hidden xl:block xl:min-h-[calc(100dvh_-_84px)] xl:border-r xl:border-luxury-gold/10">
+            <ConfiguratorPanel catalog={catalog} error={catalogError} loading={catalogLoading} onRetry={retryCatalog} />
+          </aside>
+        )}
 
-        <main className="order-1 flex min-h-[calc(100vh-5rem)] items-center justify-center md:order-2 md:h-screen md:min-h-0">
+        <main className="order-1 flex min-h-[72vh] items-stretch justify-center md:order-none md:sticky md:top-[84px] md:h-[calc(100dvh_-_84px)] md:min-h-0">
           <GarmentPreview catalog={catalog} error={catalogError} loading={catalogLoading} onRetry={retryCatalog} />
         </main>
 
-        <aside className="order-3 hidden p-6 md:sticky md:top-0 md:block md:h-screen md:overflow-y-auto">
+        <aside className="order-2 hidden p-4 md:sticky md:top-[84px] md:block md:max-h-[calc(100dvh_-_84px)] md:overflow-y-auto md:border-l md:border-luxury-gold/10 xl:p-6">
           <PriceSummaryCard />
         </aside>
       </div>
 
-      <MobileConfiguratorDrawer catalog={catalog} loading={catalogLoading} error={catalogError} />
+      {/* Drawer trigger is cheap (vaul keeps its content unmounted until
+          opened); hidden at xl where the aside takes over. */}
+      {isDesktopLayout !== true && (
+        <MobileConfiguratorDrawer catalog={catalog} loading={catalogLoading} error={catalogError} />
+      )}
       <StickyCTA />
       <EstimateSync />
     </div>

@@ -224,7 +224,7 @@ export default async function DesignStudioPage({ searchParams }: PageProps) {
           <RelatedServicesLinks heading="Cari Layanan Spesifik? Jelajahi Halaman Berikut" />
         </article>
 
-        <section id="the-studio" aria-labelledby="the-studio-heading" className="border-t border-luxury-gold/[0.14]">
+        <section id="the-studio" aria-labelledby="the-studio-heading" className="scroll-mt-[84px] border-t border-luxury-gold/[0.14]">
           <h2 id="the-studio-heading" className="sr-only">
             Design Studio — Konfigurator Desain
           </h2>

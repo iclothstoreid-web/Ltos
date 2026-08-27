@@ -29,17 +29,14 @@ const FIELD_TRACKERS: Record<Exclude<ConfiguratorField, 'embroidery' | 'colorId'
 }
 
 // Sprint W9-1 §6 — new §2-taxonomy events, additive alongside the
-// pre-existing FIELD_TRACKERS above (not a replacement). No `modelId`
-// entry: model_selected isn't part of this sprint's GA4 event list —
-// only fabric_selected/collar_selected/cuff_selected/embroidery_selected
-// are.
+// pre-existing FIELD_TRACKERS above (not a replacement).
 const GA4_FIELD_TRACKERS: Partial<Record<Exclude<ConfiguratorField, 'embroidery' | 'colorId'>, (id: string, name: string) => void>> = {
   collarId: trackCollarSelectedGa4,
   cuffId: trackCuffSelectedGa4,
   fabricId: trackFabricSelectedGa4,
 }
 
-type OpenSection = ConfiguratorField | 'accessories'
+type CategoryKey = ConfiguratorField | 'accessories'
 
 interface ConfiguratorPanelProps {
   catalog: ConfiguratorCatalog | null
@@ -48,36 +45,60 @@ interface ConfiguratorPanelProps {
   onRetry?: () => void
 }
 
-const PHOTO_SECTIONS: { field: Exclude<ConfiguratorField, 'embroidery' | 'colorId'>; label: string }[] = [
-  { field: 'modelId', label: 'Model' },
-  { field: 'collarId', label: 'Kerah' },
-  { field: 'cuffId', label: 'Manset' },
-  { field: 'fabricId', label: 'Material' },
+// Sprint DS-UX — the option browser is now a single-category view driven
+// by a tab bar instead of one long stack of always-open accordions. Each
+// category renders a roomy 2-column card grid (photos ~2× the old
+// thumbnail), so a visitor can actually compare models / collars / cuffs
+// before committing. Store wiring, trackers, and every handler are
+// byte-identical to the accordion version — this is presentation only.
+const CATEGORIES: { key: CategoryKey; label: string }[] = [
+  { key: 'modelId', label: 'Model' },
+  { key: 'collarId', label: 'Kerah' },
+  { key: 'cuffId', label: 'Manset' },
+  { key: 'fabricId', label: 'Material' },
+  { key: 'colorId', label: 'Warna' },
+  { key: 'embroidery', label: 'Bordir' },
+  { key: 'accessories', label: 'Aksesori' },
 ]
 
 export function ConfiguratorPanel({ catalog, loading, error, onRetry }: ConfiguratorPanelProps) {
-  const [openSection, setOpenSection] = useState<OpenSection>('modelId')
+  const [active, setActive] = useState<CategoryKey>('modelId')
+
+  // Primitive selector — re-renders the panel only when the *set* of
+  // categories that carry a selection changes (≤7 times a session), not on
+  // every pick. Feeds the little "chosen" dot on each tab.
+  const chosenMask = useConfiguratorStore((s) => {
+    const c = s.config
+    return [
+      !!c.modelId, !!c.collarId, !!c.cuffId, !!c.fabricId,
+      !!c.colorId, !!c.embroidery, c.accessories.length > 0,
+    ].join(',')
+  })
+  const chosen = chosenMask.split(',').map((v) => v === 'true')
 
   if (loading) {
     return (
-      <div className="space-y-4 p-6" aria-busy="true" aria-label="Memuat pilihan konfigurasi">
-        {PHOTO_SECTIONS.map((section) => (
-          <div key={section.field} className="animate-pulse rounded-xl border border-luxury-gold/10 bg-luxury-charcoal/40 p-4">
-            <div className="mb-3 h-3 w-24 rounded bg-luxury-taupe/20" />
-            <div className="flex gap-3">
-              <div className="h-16 w-16 rounded-lg bg-luxury-taupe/20" />
-              <div className="h-16 w-16 rounded-lg bg-luxury-taupe/20" />
-              <div className="h-16 w-16 rounded-lg bg-luxury-taupe/20" />
+      <div className="p-5" aria-busy="true" aria-label="Memuat pilihan konfigurasi">
+        <div className="mb-5 flex gap-2 overflow-hidden">
+          {CATEGORIES.slice(0, 5).map((c) => (
+            <div key={c.key} className="h-8 w-16 shrink-0 animate-pulse rounded-full bg-luxury-taupe/15" />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="animate-pulse rounded-xl border border-luxury-gold/10 bg-luxury-charcoal/40">
+              <div className="aspect-square rounded-t-xl bg-luxury-taupe/15" />
+              <div className="m-3 h-3 w-3/4 rounded bg-luxury-taupe/20" />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="m-6 rounded-xl border border-error/30 bg-error/5 p-6 text-center">
+      <div className="m-5 rounded-xl border border-error/30 bg-error/5 p-6 text-center">
         <p className="font-luxury-sans text-sm text-luxury-ivory">Gagal memuat pilihan konfigurasi.</p>
         <p className="mt-1 font-luxury-sans text-xs text-luxury-taupe">{error}</p>
         {onRetry && (
@@ -93,78 +114,83 @@ export function ConfiguratorPanel({ catalog, loading, error, onRetry }: Configur
     )
   }
 
-  // Defensive fallback, not a reachable state given how DesignStudioClient
-  // wires loading/error/catalog together — kept as a message instead of
-  // `return null` so a future timing change can never produce a blank
+  // Defensive fallback, not a reachable state — kept as a message instead
+  // of `return null` so a future timing change can never produce a blank
   // panel ("jangan pernah membuat configurator blank screen").
   if (!catalog) {
     return (
-      <div className="m-6 rounded-xl border border-luxury-gold/10 p-6 text-center">
+      <div className="m-5 rounded-xl border border-luxury-gold/10 p-6 text-center">
         <p className="font-luxury-sans text-xs text-luxury-taupe">Pilihan konfigurasi belum tersedia.</p>
       </div>
     )
   }
 
   return (
-    <div className="divide-y divide-luxury-gold/10">
-      {PHOTO_SECTIONS.map((section) => (
-        <RadioSection
-          key={section.field}
-          field={section.field}
-          label={section.label}
-          isOpen={openSection === section.field}
-          onOpen={setOpenSection}
-          options={catalog.fields[section.field]}
-        />
-      ))}
+    <div>
+      {/* Category tab bar — horizontally scrollable, sticky to the top of
+          whichever scroll container holds it (the desktop aside, or the
+          mobile drawer body), so it stays reachable while the options
+          scroll beneath it. */}
+      <div
+        role="tablist"
+        aria-label="Kategori konfigurasi"
+        className="sticky top-0 z-10 flex gap-1.5 overflow-x-auto border-b border-luxury-gold/10 bg-luxury-navy-deep/95 px-4 py-3 backdrop-blur-sm xl:top-[84px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {CATEGORIES.map((cat, i) => {
+          const isActive = active === cat.key
+          return (
+            <button
+              key={cat.key}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setActive(cat.key)}
+              className={`relative shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 font-luxury-sans text-[11px] uppercase tracking-[0.1em] transition ${
+                isActive
+                  ? 'border-luxury-gold bg-luxury-gold/15 text-luxury-gold'
+                  : 'border-luxury-gold/15 text-luxury-taupe hover:border-luxury-gold/40 hover:text-luxury-ivory'
+              }`}
+            >
+              {cat.label}
+              {chosen[i] && (
+                <span
+                  aria-hidden="true"
+                  className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${isActive ? 'bg-luxury-gold' : 'bg-luxury-gold/60'}`}
+                />
+              )}
+            </button>
+          )
+        })}
+      </div>
 
-      <ColorSection isOpen={openSection === 'colorId'} onOpen={setOpenSection} options={catalog.fields.colorId} />
-
-      <EmbroiderySection isOpen={openSection === 'embroidery'} onOpen={setOpenSection} options={catalog.fields.embroidery} />
-
-      <AccessoriesSection isOpen={openSection === 'accessories'} onOpen={setOpenSection} options={catalog.accessories} />
+      <div className="px-4 py-5">
+        {active === 'modelId' && <PhotoGrid field="modelId" label="Model" options={catalog.fields.modelId} />}
+        {active === 'collarId' && <PhotoGrid field="collarId" label="Kerah" options={catalog.fields.collarId} />}
+        {active === 'cuffId' && <PhotoGrid field="cuffId" label="Manset" options={catalog.fields.cuffId} />}
+        {active === 'fabricId' && <PhotoGrid field="fabricId" label="Material" options={catalog.fields.fabricId} />}
+        {active === 'colorId' && <ColorGrid options={catalog.fields.colorId} />}
+        {active === 'embroidery' && <EmbroiderySection options={catalog.fields.embroidery} />}
+        {active === 'accessories' && <AccessoriesSection options={catalog.accessories} />}
+      </div>
     </div>
   )
 }
 
-function SectionHeader({ label, isOpen, onToggle, panelId }: { label: string; isOpen: boolean; onToggle: () => void; panelId: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={isOpen}
-      aria-controls={panelId}
-      className="flex w-full cursor-pointer items-center justify-between px-6 py-4 md:cursor-default"
-    >
-      <span className="font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-ivory">{label}</span>
-      <span aria-hidden="true" className="font-luxury-sans text-[10px] uppercase tracking-[0.1em] text-luxury-taupe md:hidden">
-        {isOpen ? '−' : '+'}
-      </span>
-    </button>
-  )
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return <p className="font-luxury-sans text-xs text-luxury-taupe">{children}</p>
 }
 
-interface RadioSectionProps {
+interface PhotoGridProps {
   field: Exclude<ConfiguratorField, 'embroidery' | 'colorId'>
   label: string
-  isOpen: boolean
-  onOpen: (section: OpenSection) => void
   options: ConfiguratorOption[]
 }
 
-// modelId / collarId / cuffId / fabricId share this shape — single-select,
-// native <input type="radio"> group per field, photo card variant. Color
-// gets its own component below (swatch variant + its own copy).
-//
-// `onOpen` is the raw, referentially-stable setOpenSection setter passed
-// straight through from the parent (W2-5) — previously each section got a
-// freshly-created `() => setOpenSection(field)` closure every render,
-// which silently defeated this component's own React.memo on every open/
-// close toggle. Same reasoning for OptionCard's onChange below.
-const RadioSection = memo(function RadioSection({ field, label, isOpen, onOpen, options }: RadioSectionProps) {
+// modelId / collarId / cuffId / fabricId — single-select, native radio
+// group, 2-column photo cards. `onOpen`/`isOpen`/SectionHeader are gone;
+// only one section is ever mounted at a time now.
+const PhotoGrid = memo(function PhotoGrid({ field, label, options }: PhotoGridProps) {
   const selectedId = useConfiguratorStore((s) => s.config[field])
   const updateConfig = useConfiguratorStore((s) => s.updateConfig)
-  const panelId = `configurator-panel-${field}`
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -178,49 +204,29 @@ const RadioSection = memo(function RadioSection({ field, label, isOpen, onOpen, 
     [field, options, updateConfig]
   )
 
+  if (options.length === 0) return <EmptyState>Belum ada pilihan aktif untuk kategori ini.</EmptyState>
+
   return (
-    <div>
-      <SectionHeader label={label} isOpen={isOpen} onToggle={() => onOpen(field)} panelId={panelId} />
-      <div id={panelId} className={`px-6 pb-5 ${isOpen ? 'block' : 'hidden'} md:block`}>
-        {options.length === 0 ? (
-          <p className="font-luxury-sans text-xs text-luxury-taupe">Belum ada pilihan aktif untuk kategori ini.</p>
-        ) : (
-          <fieldset className="flex flex-wrap gap-3">
-            <legend className="sr-only">{label}</legend>
-            {options.map((option) => (
-              <OptionCard
-                key={option.id}
-                option={option}
-                groupName={field}
-                inputType="radio"
-                variant="photo"
-                checked={selectedId === option.id}
-                onChange={handleSelect}
-              />
-            ))}
-          </fieldset>
-        )}
-      </div>
-    </div>
+    <fieldset className="grid grid-cols-2 gap-3">
+      <legend className="sr-only">{label}</legend>
+      {options.map((option) => (
+        <OptionCard
+          key={option.id}
+          option={option}
+          groupName={field}
+          inputType="radio"
+          variant="photo"
+          checked={selectedId === option.id}
+          onChange={handleSelect}
+        />
+      ))}
+    </fieldset>
   )
 })
 
-// Color gets its own component rather than reusing RadioSection generically
-// because it's excluded from PHOTO_SECTIONS above (swatch variant + its own
-// "Warna" copy) — folding it back into the generic list would just make the
-// variant lookup less readable for one field.
-const ColorSection = memo(function ColorSection({
-  isOpen,
-  onOpen,
-  options,
-}: {
-  isOpen: boolean
-  onOpen: (section: OpenSection) => void
-  options: ConfiguratorOption[]
-}) {
+const ColorGrid = memo(function ColorGrid({ options }: { options: ConfiguratorOption[] }) {
   const selectedId = useConfiguratorStore((s) => s.config.colorId)
   const updateConfig = useConfiguratorStore((s) => s.updateConfig)
-  const panelId = 'configurator-panel-colorId'
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -231,50 +237,34 @@ const ColorSection = memo(function ColorSection({
     [options, updateConfig]
   )
 
+  if (options.length === 0) return <EmptyState>Belum ada pilihan aktif untuk kategori ini.</EmptyState>
+
   return (
-    <div>
-      <SectionHeader label="Warna" isOpen={isOpen} onToggle={() => onOpen('colorId')} panelId={panelId} />
-      <div id={panelId} className={`px-6 pb-5 ${isOpen ? 'block' : 'hidden'} md:block`}>
-        {options.length === 0 ? (
-          <p className="font-luxury-sans text-xs text-luxury-taupe">Belum ada pilihan aktif untuk kategori ini.</p>
-        ) : (
-          <fieldset className="flex flex-wrap gap-3">
-            <legend className="sr-only">Warna</legend>
-            {options.map((option) => (
-              <OptionCard
-                key={option.id}
-                option={option}
-                groupName="colorId"
-                inputType="radio"
-                variant="swatch"
-                checked={selectedId === option.id}
-                onChange={handleSelect}
-              />
-            ))}
-          </fieldset>
-        )}
-      </div>
-    </div>
+    <fieldset className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+      <legend className="sr-only">Warna</legend>
+      {options.map((option) => (
+        <OptionCard
+          key={option.id}
+          option={option}
+          groupName="colorId"
+          inputType="radio"
+          variant="swatch"
+          checked={selectedId === option.id}
+          onChange={handleSelect}
+        />
+      ))}
+    </fieldset>
   )
 })
 
-// Toggle + motif picker. The free-text field is intentionally local-only
-// draft state — DesignConfig (locked this sprint) has no field for it yet,
-// so it isn't wired into the store or the estimate/save API contract.
-const EmbroiderySection = memo(function EmbroiderySection({
-  isOpen,
-  onOpen,
-  options,
-}: {
-  isOpen: boolean
-  onOpen: (section: OpenSection) => void
-  options: ConfiguratorOption[]
-}) {
+// Toggle + motif picker. The free-text field stays local-only draft state
+// — DesignConfig has no field for it yet, so it isn't wired into the store
+// or the estimate/save API contract.
+const EmbroiderySection = memo(function EmbroiderySection({ options }: { options: ConfiguratorOption[] }) {
   const embroideryId = useConfiguratorStore((s) => s.config.embroidery)
   const updateConfig = useConfiguratorStore((s) => s.updateConfig)
   const [customText, setCustomText] = useState('')
   const enabled = embroideryId !== null
-  const panelId = 'configurator-panel-embroidery'
 
   function handleToggle(next: boolean) {
     if (!next) {
@@ -299,77 +289,65 @@ const EmbroiderySection = memo(function EmbroiderySection({
   )
 
   return (
-    <div>
-      <SectionHeader label="Bordir" isOpen={isOpen} onToggle={() => onOpen('embroidery')} panelId={panelId} />
-      <div id={panelId} className={`space-y-4 px-6 pb-5 ${isOpen ? 'block' : 'hidden'} md:block`}>
-        <label className="flex cursor-pointer items-center justify-between">
-          <span className="font-luxury-sans text-xs text-luxury-taupe">Gunakan Bordir</span>
-          <span className="relative inline-flex h-6 w-11 items-center">
+    <div className="space-y-4">
+      <label className="flex cursor-pointer items-center justify-between">
+        <span className="font-luxury-sans text-xs text-luxury-taupe">Gunakan Bordir</span>
+        <span className="relative inline-flex h-6 w-11 items-center">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => handleToggle(e.target.checked)}
+            className="peer sr-only"
+            aria-label="Aktifkan bordir"
+          />
+          <span className="absolute inset-0 rounded-full bg-luxury-taupe/20 transition peer-checked:bg-luxury-gold peer-focus-visible:ring-2 peer-focus-visible:ring-luxury-gold/70 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-luxury-navy-deep" />
+          <span className="relative ml-1 h-4 w-4 rounded-full bg-luxury-ivory transition peer-checked:translate-x-5" />
+        </span>
+      </label>
+
+      {enabled && (
+        <>
+          {options.length === 0 ? (
+            <EmptyState>Belum ada motif bordir aktif.</EmptyState>
+          ) : (
+            <fieldset className="grid grid-cols-2 gap-3">
+              <legend className="sr-only">Motif Bordir</legend>
+              {options.map((option) => (
+                <OptionCard
+                  key={option.id}
+                  option={option}
+                  groupName="embroidery"
+                  inputType="radio"
+                  checked={embroideryId === option.id}
+                  onChange={handleSelect}
+                />
+              ))}
+            </fieldset>
+          )}
+
+          <div>
+            <label htmlFor="embroidery-text" className="mb-1.5 block font-luxury-sans text-[10px] uppercase tracking-[0.1em] text-luxury-taupe">
+              Teks / Inisial (draft)
+            </label>
             <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => handleToggle(e.target.checked)}
-              className="peer sr-only"
-              aria-label="Aktifkan bordir"
+              id="embroidery-text"
+              type="text"
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              maxLength={30}
+              placeholder="Contoh: A.R."
+              className="w-full rounded-md border border-luxury-gold/15 bg-luxury-navy px-3 py-2 font-luxury-sans text-xs text-luxury-ivory placeholder:text-luxury-taupe/60 focus:border-luxury-gold/50 focus:outline-none"
             />
-            <span className="absolute inset-0 rounded-full bg-luxury-taupe/20 transition peer-checked:bg-luxury-gold peer-focus-visible:ring-2 peer-focus-visible:ring-luxury-gold/70 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-luxury-navy-deep" />
-            <span className="relative ml-1 h-4 w-4 rounded-full bg-luxury-ivory transition peer-checked:translate-x-5" />
-          </span>
-        </label>
-
-        {enabled && (
-          <>
-            {options.length === 0 ? (
-              <p className="font-luxury-sans text-xs text-luxury-taupe">Belum ada motif bordir aktif.</p>
-            ) : (
-              <fieldset className="flex flex-wrap gap-3">
-                <legend className="sr-only">Motif Bordir</legend>
-                {options.map((option) => (
-                  <OptionCard
-                    key={option.id}
-                    option={option}
-                    groupName="embroidery"
-                    inputType="radio"
-                    checked={embroideryId === option.id}
-                    onChange={handleSelect}
-                  />
-                ))}
-              </fieldset>
-            )}
-
-            <div>
-              <label htmlFor="embroidery-text" className="mb-1.5 block font-luxury-sans text-[10px] uppercase tracking-[0.1em] text-luxury-taupe">
-                Teks / Inisial (draft)
-              </label>
-              <input
-                id="embroidery-text"
-                type="text"
-                value={customText}
-                onChange={(e) => setCustomText(e.target.value)}
-                maxLength={30}
-                placeholder="Contoh: A.R."
-                className="w-full rounded-md border border-luxury-gold/15 bg-luxury-navy px-3 py-2 font-luxury-sans text-xs text-luxury-ivory placeholder:text-luxury-taupe/60 focus:border-luxury-gold/50 focus:outline-none"
-              />
-            </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 })
 
-const AccessoriesSection = memo(function AccessoriesSection({
-  isOpen,
-  onOpen,
-  options,
-}: {
-  isOpen: boolean
-  onOpen: (section: OpenSection) => void
-  options: ConfiguratorOption[]
-}) {
+const AccessoriesSection = memo(function AccessoriesSection({ options }: { options: ConfiguratorOption[] }) {
   const selectedIds = useConfiguratorStore((s) => s.config.accessories)
   const updateConfig = useConfiguratorStore((s) => s.updateConfig)
-  const panelId = 'configurator-panel-accessories'
 
   const handleToggleAccessory = useCallback(
     (id: string) => {
@@ -385,28 +363,21 @@ const AccessoriesSection = memo(function AccessoriesSection({
     [options, selectedIds, updateConfig]
   )
 
+  if (options.length === 0) return <EmptyState>Belum ada pilihan aktif untuk kategori ini.</EmptyState>
+
   return (
-    <div>
-      <SectionHeader label="Aksesori" isOpen={isOpen} onToggle={() => onOpen('accessories')} panelId={panelId} />
-      <div id={panelId} className={`px-6 pb-5 ${isOpen ? 'block' : 'hidden'} md:block`}>
-        {options.length === 0 ? (
-          <p className="font-luxury-sans text-xs text-luxury-taupe">Belum ada pilihan aktif untuk kategori ini.</p>
-        ) : (
-          <fieldset className="flex flex-wrap gap-3">
-            <legend className="sr-only">Aksesori</legend>
-            {options.map((option) => (
-              <OptionCard
-                key={option.id}
-                option={option}
-                groupName="accessories"
-                inputType="checkbox"
-                checked={selectedIds.includes(option.id)}
-                onChange={handleToggleAccessory}
-              />
-            ))}
-          </fieldset>
-        )}
-      </div>
-    </div>
+    <fieldset className="grid grid-cols-2 gap-3">
+      <legend className="sr-only">Aksesori</legend>
+      {options.map((option) => (
+        <OptionCard
+          key={option.id}
+          option={option}
+          groupName="accessories"
+          inputType="checkbox"
+          checked={selectedIds.includes(option.id)}
+          onChange={handleToggleAccessory}
+        />
+      ))}
+    </fieldset>
   )
 })
