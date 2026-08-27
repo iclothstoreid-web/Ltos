@@ -186,6 +186,14 @@ export async function middleware(request: NextRequest) {
 // requested static files (anything with a dot in its last segment) — the
 // function body above decides per-path whether that's the auth-gated app,
 // an excluded unlocalized surface, or the locale-routed public site.
+//
+// `/design/:path*` is listed explicitly because a saved-design share slug
+// (session.ts: `<payload>.<hmac>`) contains a dot, so the first pattern's
+// `.*\..*` static-file exclusion would otherwise skip it entirely — and
+// then next-intl never runs, so the canonical unprefixed
+// `localtailor.id/design/<slug>` (default 'id' locale) 404s while only the
+// `/en/`- and `/id/`-prefixed forms resolve. This second entry restores
+// the share URL the save route actually hands out.
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', '/design/:path*'],
 }
