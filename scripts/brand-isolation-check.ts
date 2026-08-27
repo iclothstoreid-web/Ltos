@@ -16,15 +16,23 @@
 //      apple-icon.png) exist, and icon.svg contains no "Tarda".
 //   4. public/manifest-local-tailor.json says "Local Tailor" (not "Tarda"
 //      / "Bogor") and references only files that exist.
-//   5. The public marketing source surface contains no ungated "Tarda" /
-//      "tarda.vercel.app" / "Tarda, Bogor" reference. Lines that are
-//      legitimately TARDA-only (a `brand.id === 'tarda'` branch, the
+//   5. The search-engine identity constants every canonical / OG / JSON-LD
+//      builder falls back to (PRIMARY_ENTITY, CITY_BUSINESS, FABRIC_SITE_
+//      ORIGIN) are Local Tailor / Bandung / localtailor.id — never Tarda,
+//      and never Bogor as the business's own locality.
+//   6. The public marketing + search source surface (incl. sitemap routes
+//      and next.config.js) contains no ungated "Tarda" / "tarda.vercel.app"
+//      / "Tarda, Bogor" reference. Lines that are legitimately TARDA-only
+//      (a `brand.id === 'tarda'` branch, a TARDA_-prefixed constant, the
 //      TARDA_CONFIG object, or a comment) are allowed.
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { getBrandFromHost } from '../src/lib/brand/resolver'
 import { LOCAL_TAILOR_CONFIG, TARDA_CONFIG } from '../src/lib/brand/config'
+import { PRIMARY_ENTITY } from '../src/lib/seo/entities'
+import { CITY_BUSINESS } from '../src/lib/seo/cityConfig'
+import { FABRIC_SITE_ORIGIN } from '../src/lib/materials/seo'
 
 const ROOT = path.join(__dirname, '..')
 
@@ -116,7 +124,21 @@ if (existsSync(ltManifestPath)) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. Public marketing source surface — no ungated TARDA reference
+// 5. Search-engine identity constants — the business name / locality / site
+//    origin that every canonical, OG, and JSON-LD builder falls back to
+//    must be Local Tailor / Bandung / localtailor.id, never Tarda / Bogor.
+// ---------------------------------------------------------------------------
+{
+  check('PRIMARY_ENTITY.name is "Local Tailor"', PRIMARY_ENTITY.name === 'Local Tailor', PRIMARY_ENTITY.name)
+  check('PRIMARY_ENTITY.addressLocality is not Bogor', !/bogor/i.test(PRIMARY_ENTITY.addressLocality), PRIMARY_ENTITY.addressLocality)
+  check('PRIMARY_ENTITY has no "tarda"', !/tarda/i.test(JSON.stringify(PRIMARY_ENTITY)))
+  check('CITY_BUSINESS.name is a Local Tailor name (not "Tarda, Bogor")', /local tailor/i.test(CITY_BUSINESS.name) && !/tarda/i.test(CITY_BUSINESS.name), CITY_BUSINESS.name)
+  check('CITY_BUSINESS business locality/address is Bandung, not Bogor', /bandung/i.test(CITY_BUSINESS.addressLocality) && !/bogor/i.test(CITY_BUSINESS.streetAddress), `${CITY_BUSINESS.addressLocality} / ${CITY_BUSINESS.streetAddress}`)
+  check('FABRIC_SITE_ORIGIN is localtailor.id', /^https:\/\/(www\.)?localtailor\.id$/.test(FABRIC_SITE_ORIGIN) && !/tarda/i.test(FABRIC_SITE_ORIGIN), FABRIC_SITE_ORIGIN)
+}
+
+// ---------------------------------------------------------------------------
+// 6. Public marketing + search source surface — no ungated TARDA reference
 // ---------------------------------------------------------------------------
 const SURFACE_DIRS = [
   'src/components/marketing',
@@ -126,11 +148,21 @@ const SURFACE_DIRS = [
   'src/lib/configurator',
   'src/lib/content',
   'src/lib/knowledge',
+  'src/lib/sitemap',
   'src/app/[locale]',
   'src/app/design',
+  'src/app/sitemap.xml',
+  'src/app/sitemap-pages.xml',
+  'src/app/sitemap-knowledge.xml',
+  'src/app/sitemap-journal.xml',
+  'src/app/sitemap-images.xml',
   'messages',
 ]
-const SURFACE_FILES = ['src/app/layout.tsx', 'src/app/robots.ts', 'src/lib/brand/resolver.ts']
+// NOTE: src/lib/brand/config.ts is deliberately NOT scanned textually — it
+// is the one file that legitimately *defines* TARDA_CONFIG (footerLabel
+// 'Tarda, Bogor', canonicalDomain 'tarda.vercel.app'). Its structural
+// safety is asserted above (LOCAL_TAILOR_CONFIG.assets + TARDA_CONFIG.domains).
+const SURFACE_FILES = ['src/app/layout.tsx', 'src/app/robots.ts', 'src/lib/brand/resolver.ts', 'next.config.js']
 const FORBIDDEN = /tarda\.vercel\.app|showroom tarda|tarda workshop|tim tarda|tarda,\s*bogor/i
 // A line may legitimately mention TARDA if it is a TARDA-only code path.
 // A line is allowed to name TARDA if it is: a `brand.id === 'tarda'` (or
