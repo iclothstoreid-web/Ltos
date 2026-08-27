@@ -12,6 +12,7 @@ export function GET() {
   const xml = serializeSitemapIndex([
     `${FABRIC_SITE_ORIGIN}/sitemap-pages.xml`,
     `${FABRIC_SITE_ORIGIN}/sitemap-knowledge.xml`,
+    `${FABRIC_SITE_ORIGIN}/sitemap-journal.xml`,
     `${FABRIC_SITE_ORIGIN}/sitemap-images.xml`,
   ])
 

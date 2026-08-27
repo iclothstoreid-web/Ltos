@@ -9,6 +9,10 @@ import { WalnutGrainOverlay } from './shell/WalnutGrainOverlay'
 import { Hero } from './sections/Hero'
 import { TrustBar } from './sections/TrustBar'
 import { ConfiguratorPreview } from './sections/ConfiguratorPreview'
+import { createPublicClient } from '@/lib/supabase/public'
+import { fetchHomepageMediaMap } from '@/lib/content/homepageMedia'
+import { websiteMediaUrl } from '@/lib/content/mediaUrl'
+import type { SlotOverride } from './shell/SlotImage'
 import { buildLocalBusinessSchema, buildWebSiteSchema } from '@/lib/marketing/seo'
 import { organizationSchema } from '@/lib/seo/schema'
 import { JsonLd } from '@/components/seo/JsonLd'
@@ -59,7 +63,30 @@ const KnowledgePreview = dynamic(() => import('./sections/KnowledgePreview').the
 const Faq = dynamic(() => import('./sections/Faq').then((m) => m.Faq))
 const FinalCta = dynamic(() => import('./sections/FinalCta').then((m) => m.FinalCta))
 
-export function HomePage() {
+// Sprint DS-UX Scope B — Owner-managed homepage image slots
+// (homepage_media_slots). Each section falls back to its built-in asset
+// when the slot is unset, so this can never blank a section. Wrapped in a
+// catch so a Content/DB hiccup never takes the homepage down.
+async function resolveHomepageSlots(): Promise<Record<string, SlotOverride | null>> {
+  try {
+    const map = await fetchHomepageMediaMap(createPublicClient())
+    const pick = (key: string, width: number, height: number): SlotOverride | null => {
+      const slot = map[key]
+      const url = slot?.path ? websiteMediaUrl(slot.path, { width, height, quality: 72, resize: 'cover' }) : null
+      return url ? { url, alt: slot?.alt ?? '' } : null
+    }
+    return {
+      appointment: pick('appointment', 900, 1125),
+      consultation: pick('consultation', 900, 1125),
+      craftsmanship: pick('craftsmanship', 1000, 1250),
+    }
+  } catch {
+    return { appointment: null, consultation: null, craftsmanship: null }
+  }
+}
+
+export async function HomePage() {
+  const slots = await resolveHomepageSlots()
   const localBusinessSchema = buildLocalBusinessSchema()
   const webSiteSchema = buildWebSiteSchema()
   // Sprint W7-2 — Organization is a broader entity identity than the
@@ -82,7 +109,7 @@ export function HomePage() {
       <main>
         <Hero />
         <Suspense fallback={null}>
-          <PrivateAppointment />
+          <PrivateAppointment imageOverride={slots.appointment} />
         </Suspense>
         <TrustBar />
         <ConfiguratorPreview />
@@ -93,7 +120,7 @@ export function HomePage() {
           <BespokeProcessSection />
         </Suspense>
         <Suspense fallback={null}>
-          <ConsultationSection />
+          <ConsultationSection imageOverride={slots.consultation} />
         </Suspense>
         <Suspense fallback={null}>
           <MeasurementSection />
@@ -114,7 +141,7 @@ export function HomePage() {
           <CraftsmanshipSection />
         </Suspense>
         <Suspense fallback={null}>
-          <WorkshopSection />
+          <WorkshopSection imageOverride={slots.craftsmanship} />
         </Suspense>
         <Suspense fallback={null}>
           <AuthoritySection />

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { createPublicClient } from '@/lib/supabase/public'
 import { getGalleryPieces } from '@/lib/gallery/galleryRepository'
 import { buildSimplePageMetadata } from '@/lib/marketing/seo'
@@ -81,13 +80,20 @@ export default async function GalleryPage() {
             <ul className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>li]:mb-4">
               {pieces.map((piece) => (
                 <li key={piece.id} className="break-inside-avoid">
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-sm">
-                    <Image
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-luxury-charcoal/40">
+                    {/* Curated + catalog photos are both served through the
+                        Supabase transform endpoint (see galleryRepository) —
+                        plain <img> keeps that URL as-is instead of routing it
+                        back through /_next/image. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={piece.photoUrl}
-                      alt={`${piece.name}, bespoke thobe photography`}
-                      fill
+                      srcSet={piece.srcSet}
                       sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover"
+                      alt={`${piece.name}, bespoke thobe photography`}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
                   </div>
                   <p className="mt-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe">

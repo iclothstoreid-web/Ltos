@@ -1,9 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { appointmentCopy } from '@/lib/marketing/copy'
 import { garmentPhotos } from '@/lib/marketing/assets'
+import { SlotImage, type SlotOverride } from '../shell/SlotImage'
 import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
@@ -14,7 +14,7 @@ import { GoldAccentLine } from '../placeholders/GoldAccentLine'
 // directly, just the proportion/hierarchy). Positioned right after the
 // Hero so the appointment CTA is the most prominent thing on the page
 // after the headline itself, per the revision brief's CTA-review note.
-export function PrivateAppointment() {
+export function PrivateAppointment({ imageOverride = null }: { imageOverride?: SlotOverride | null }) {
   const t = useTranslations('booking')
 
   return (
@@ -24,12 +24,11 @@ export function PrivateAppointment() {
       className="grid grid-cols-1 bg-luxury-navy-deep lg:grid-cols-[45fr_55fr]"
     >
       <div className="relative aspect-[4/5] w-full lg:aspect-auto lg:min-h-[720px]">
-        <Image
-          src={garmentPhotos.blackPinstripe}
-          alt={appointmentCopy.photoAlt}
-          fill
+        <SlotImage
+          override={imageOverride}
+          fallbackSrc={garmentPhotos.blackPinstripe}
+          fallbackAlt={appointmentCopy.photoAlt}
           sizes="(min-width: 1024px) 45vw, 100vw"
-          className="object-cover"
         />
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-luxury-black/40 via-transparent to-transparent lg:bg-gradient-to-r" />
       </div>

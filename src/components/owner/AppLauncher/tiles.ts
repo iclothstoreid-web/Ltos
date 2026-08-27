@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BarChart3, Boxes, LayoutDashboard, Route, Ruler, ScanLine, Sparkles, Users } from 'lucide-react'
+import { BarChart3, Boxes, LayoutDashboard, Newspaper, Route, Ruler, ScanLine, Sparkles, Users } from 'lucide-react'
 
 export interface LauncherTileConfig {
   name: string
@@ -95,5 +95,14 @@ export const LAUNCHER_TILES: LauncherTileConfig[] = [
     href: '/owner/analytics',
     icon: BarChart3,
     color: '#7A3540', // muted deep wine
+  },
+  {
+    // Sprint DS-UX Scope B — Owner OS -> Content: Media Library, Journal
+    // articles, Gallery, Homepage image slots for the public website.
+    name: 'Content',
+    description: 'Media, artikel Journal, galeri, gambar homepage',
+    href: '/owner/content',
+    icon: Newspaper,
+    color: '#4A5C3A', // muted sage — a new deep/desaturated tone in range
   },
 ]

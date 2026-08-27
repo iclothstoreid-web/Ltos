@@ -7,8 +7,12 @@ import { garmentPhotos, fabricPhotos } from '@/lib/marketing/assets'
 import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
+import { SlotImage, type SlotOverride } from '../shell/SlotImage'
 
 type WorkshopSectionProps = {
+  // Sprint DS-UX Scope B — Owner-managed "craftsmanship" homepage slot
+  // overrides the main photo only (the inset fabric macro stays built-in).
+  imageOverride?: SlotOverride | null
   // Sprint W5-10 — added; this section was the one single-CTA section
   // still hardcoded (no override), inconsistent with its siblings.
   // Defaults to /gallery, not /#craftsmanship — GallerySection has a
@@ -24,7 +28,7 @@ type WorkshopSectionProps = {
 // the brief explicitly says not to add a new stock image, so this reuses
 // what's real and on-brand. Card-left / content-right, same convention as
 // the section before it.
-export function WorkshopSection({ ctaHref = '/gallery' }: WorkshopSectionProps = {}) {
+export function WorkshopSection({ ctaHref = '/gallery', imageOverride = null }: WorkshopSectionProps = {}) {
   const t = useTranslations('home.workshop')
   const pillars = t.raw('pillars') as string[]
 
@@ -33,12 +37,11 @@ export function WorkshopSection({ ctaHref = '/gallery' }: WorkshopSectionProps =
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal className="relative aspect-[4/5] w-full">
           <div className="absolute inset-0 overflow-hidden rounded-sm">
-            <Image
-              src={garmentPhotos.navy}
-              alt={workshopCopy.photoAlt}
-              fill
+            <SlotImage
+              override={imageOverride}
+              fallbackSrc={garmentPhotos.navy}
+              fallbackAlt={workshopCopy.photoAlt}
               sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
             />
             <div aria-hidden="true" className="absolute inset-0 ring-1 ring-inset ring-luxury-gold/10" />
           </div>
