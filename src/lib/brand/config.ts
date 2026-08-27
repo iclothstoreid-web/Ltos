@@ -12,7 +12,12 @@ export const TARDA_CONFIG: BrandConfig = {
     logoMark: '/brand/tarda-home.svg',
     ogImage: '/brand/og-image.png',
     favicon: '/brand/icon-192.png',
-    manifest: '/manifest.json',
+    // Was '/manifest.json' — the conventional bare path, which a crawler /
+    // PWA probe hits by convention and which serves on ANY host including
+    // localtailor.id, exposing "Tarda" / "Bogor" there. Moved to an
+    // explicitly Tarda-scoped filename; the bare /manifest.json path now
+    // 404s rather than serving Tarda's identity on the Local Tailor domain.
+    manifest: '/manifest-tarda.json',
   },
   colors: {
     primary: '#0b1012',
@@ -46,11 +51,9 @@ export const LOCAL_TAILOR_CONFIG: BrandConfig = {
     // anyway; this keeps the config self-consistent for any other reader.
     favicon: '/icon.svg',
     ogImage: '/brand/local-tailor/horizontal-tagline.svg',
-    // Was sharing Tarda's own /manifest.json (name/short_name/description
-    // still said "Tarda" / "Bogor" live in production) — now points at its
-    // own manifest so the two brands stop overwriting each other's PWA
-    // identity. Tarda's own TARDA_CONFIG.assets.manifest below is
-    // deliberately untouched.
+    // Its own manifest (name/short_name "Local Tailor", "…handcrafted in
+    // Bandung") — never Tarda's, which now lives at /manifest-tarda.json.
+    // The two brands no longer share a Web App Manifest.
     manifest: '/manifest-local-tailor.json'
   },
   colors: {

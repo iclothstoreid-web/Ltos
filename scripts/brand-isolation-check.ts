@@ -123,6 +123,14 @@ if (existsSync(ltManifestPath)) {
   }
 }
 
+// The bare, conventional /manifest.json path serves on ANY host (Vercel
+// serves public/ files regardless of domain), so if it exists it must NOT
+// carry Tarda identity — Tarda's manifest lives at /manifest-tarda.json,
+// reached only via TARDA_CONFIG on its own host.
+const bareManifest = path.join(ROOT, 'public/manifest.json')
+check('public/manifest.json does not serve Tarda identity on the bare path', !existsSync(bareManifest) || !/tarda|bogor/i.test(readFileSync(bareManifest, 'utf8')), existsSync(bareManifest) ? 'present' : '404 (removed)')
+check('TARDA_CONFIG.assets.manifest is a Tarda-scoped filename, not the bare /manifest.json', TARDA_CONFIG.assets?.manifest !== '/manifest.json', TARDA_CONFIG.assets?.manifest)
+
 // ---------------------------------------------------------------------------
 // 5. Search-engine identity constants — the business name / locality / site
 //    origin that every canonical, OG, and JSON-LD builder falls back to
