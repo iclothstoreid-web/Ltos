@@ -12,11 +12,11 @@ import { KpiOperatorCenter } from '@/components/owner/kpi-operator/KpiOperatorCe
 
 export const metadata: Metadata = {
   title: 'KPI Operator | Owner OS',
-  description: 'Owner OS — Tarda Operating System',
+  description: 'Owner OS — Local Tailor Operating System',
   applicationName: 'Owner OS',
   openGraph: {
     title: 'Owner OS',
-    description: 'Tarda Operating System',
+    description: 'Local Tailor Operating System',
   },
 }
 

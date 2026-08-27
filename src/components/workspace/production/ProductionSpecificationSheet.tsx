@@ -56,7 +56,7 @@ export function ProductionSpecificationSheet({
     >
       <div className="flex items-center justify-between pb-5 border-b-2 border-on-surface">
         <div>
-          <p className="font-serif text-xl tracking-tight">TARDA</p>
+          <p className="font-serif text-xl tracking-tight">LOCAL TAILOR</p>
           <p className="text-[9px] uppercase tracking-[0.25em] text-secondary mt-1">
             Production Specification Sheet
           </p>

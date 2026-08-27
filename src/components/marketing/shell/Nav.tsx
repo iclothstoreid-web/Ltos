@@ -37,8 +37,7 @@ export function Nav() {
       }`}
     >
       <nav aria-label="Primary" className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-10">
-        {/* Restore the prior Local Tailor logo scale; keep the navbar height
-            and spacing unchanged while avoiding the Tarda-only size bump. */}
+        {/* Local Tailor logo scale; navbar height and spacing unchanged. */}
         <Link href="/" aria-label={t('brand')} className="flex shrink-0 items-center">
           <BrandLogo inline variant="horizontal" className="w-[140px] text-luxury-ivory md:w-[150px]" />
         </Link>

@@ -16,13 +16,13 @@ const fraunces = Fraunces({
 // customer-facing route only — customers should never see "LTOS" in their
 // browser tab or when this link is shared.
 export const metadata: Metadata = {
-  title: 'Customer Journey | Tarda',
+  title: 'Customer Journey | Local Tailor',
   description: 'Track your bespoke journey from consultation to delivery.',
   applicationName: 'Customer Journey',
   openGraph: {
     title: 'Customer Journey',
     description: 'Track your bespoke journey from consultation to delivery.',
-    siteName: 'Tarda Operating System',
+    siteName: 'Local Tailor Operating System',
     type: 'website',
   },
 }

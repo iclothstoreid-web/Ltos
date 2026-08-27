@@ -8,7 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // LTOS Design System (Tarda migration)
+        // LTOS Design System
         // Primary brand (Midnight)
         primary: '#0B1628',
         'primary-light': '#12253A',

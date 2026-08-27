@@ -20,7 +20,7 @@ const BUSINESS = {
 // the site's own dark brand background, 1200x630 per the OpenGraph/Twitter
 // `summary_large_image` spec. Single shared constant so every metadata
 // builder below points at the exact same asset. Brand & Location
-// Correction — was pointing at the Tarda-brand SVG; now uses the real
+// Correction — now uses the real
 // Local Tailor lockup asset that already exists under public/brand/
 // local-tailor/ (no new asset fabricated).
 const OG_IMAGE = {

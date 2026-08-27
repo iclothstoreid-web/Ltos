@@ -6,7 +6,7 @@ import { formatRupiah } from '@/lib/format/money'
 // not importing from src/lib/marketing/seo.ts (the header/nav already uses
 // the real current brand, see src/lib/marketing/copy.ts's navCopy.brand).
 // Keep these two in sync if either file's brand constant changes again.
-// Brand & Location Correction — public Local Tailor identity, not Tarda.
+// LTOS is single-brand: public Local Tailor identity.
 export const DESIGN_BRAND_NAME = 'Local Tailor'
 
 // "Belum perlu image rendering dinamis" — static placeholder only. A later

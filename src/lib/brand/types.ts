@@ -1,4 +1,10 @@
-export type BrandId = 'tarda' | 'local-tailor'
+// LTOS is a single-brand system: Local Tailor. `BrandId` is intentionally a
+// single-member union — the multi-brand (Tarda + Local Tailor) layer was
+// removed in "refactor: remove Tarda and restore Local Tailor single brand".
+// BrandConfig stays as the one centralized place Local Tailor's public
+// identity (name, canonical domain, logo/OG/manifest asset paths, theme
+// colours, default metadata) is defined.
+export type BrandId = 'local-tailor'
 
 export interface BrandConfig {
   id: BrandId

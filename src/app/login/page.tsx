@@ -54,7 +54,7 @@ export default function LoginPage() {
         <div className="mb-10 text-center">
           <BrandLogo variant="horizontal" className="mx-auto mb-6 block h-11 w-auto text-luxury-ivory md:h-14" />
           <h1 className="font-serif text-headline text-luxury-ivory">
-            Tarda
+            Local Tailor
           </h1>
           <p className="mt-2 text-body text-luxury-taupe">
             Business Operating System

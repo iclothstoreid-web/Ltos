@@ -1,4 +1,4 @@
-// Sprint W6 — Tarda Knowledge Engine. Shared content schema for every
+// Sprint W6 — Knowledge Engine. Shared content schema for every
 // /knowledge page. 26 articles across 3 live categories (fabrics/measurements/
 // styling) share this one schema and are rendered by one dynamic route
 // (src/app/knowledge/[category]/[slug]/page.tsx) rather than 26 bespoke page

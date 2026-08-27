@@ -30,7 +30,7 @@ export function InventoryDashboard({
     <div className="space-y-10">
       <div>
         <h1 className="font-serif text-headline text-on-surface">Inventory Hub Workspace</h1>
-        <p className="text-body text-secondary mt-1">Ringkasan material Tarda hari ini.</p>
+        <p className="text-body text-secondary mt-1">Ringkasan material Local Tailor hari ini.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

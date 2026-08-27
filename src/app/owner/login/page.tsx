@@ -74,7 +74,7 @@ export default function OwnerLoginPage() {
             Owner OS
           </h1>
           <p className="mt-3 text-label text-luxury-taupe/80">
-            Secure access for Tarda management.
+            Secure access for Local Tailor management.
           </p>
         </div>
 

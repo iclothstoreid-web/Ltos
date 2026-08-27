@@ -16,17 +16,12 @@ import { FABRIC_CATEGORY_LABELS, FABRIC_TEXTURE_LABELS, type FabricCategory } fr
 // the two could silently drift, which is exactly how this constant was
 // still pointing at the pre-custom-domain Vercel URL after production
 // moved to localtailor.id (verified live + in Search Console via DNS).
-// Not to be confused with TARDA_CONFIG.canonicalDomain in
-// src/lib/brand/config.ts, which is the separate Tarda brand's own login
-// app domain and is intentionally untouched by this migration.
 export const FABRIC_SITE_ORIGIN = 'https://localtailor.id'
 
 // Mirrors the shape of src/lib/configurator/seo.ts's buildDesignMetadata —
 // same brand constant/OG conventions, scoped to the Fabric Explorer.
 //
-// Brand & Location Correction — the public Local Tailor site's brand
-// identity is "Local Tailor", not "Tarda" (Tarda is a separate brand/app,
-// see src/lib/brand/config.ts's TARDA_CONFIG, untouched by this correction).
+// LTOS is single-brand: the public site's identity is "Local Tailor".
 export const FABRIC_BRAND_NAME = 'Local Tailor'
 
 // Sprint W3-5 §10 — every gallery/hero photo on this route is a portrait

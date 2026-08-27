@@ -21,33 +21,25 @@ const inter = Inter({ subsets: ['latin'] })
 // `font-fraunces` usages sitewide (see tailwind.config.ts's `handwritten` token).
 const caveat = Caveat({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-handwritten' })
 
-import { headers } from 'next/headers'
-import { getBrandForRequestHost } from '@/lib/brand/resolver'
 import { LOCAL_TAILOR_CONFIG } from '@/lib/brand/config'
 
-export async function generateMetadata(): Promise<Metadata> {
-  // Resolve the brand from the request host. A missing host now resolves
-  // to Local Tailor (see getBrandFromHost) — never TARDA — so an
-  // unidentified render can't emit TARDA title/description/manifest/OG on
-  // localtailor.id.
-  const h = headers()
-  const host = h.get('host')
-  const brand = getBrandForRequestHost(host)
-
+// LTOS is single-brand (Local Tailor). Every supported host resolves here.
+// Per-page metadata (e.g. src/lib/marketing/seo.ts's homepageMetadata)
+// merges over this root default; Next.js's file-based icon convention
+// (src/app/icon.svg / favicon.ico / apple-icon.png — the text-free
+// monogram) takes precedence over `icons` below.
+export function generateMetadata(): Metadata {
+  const brand = LOCAL_TAILOR_CONFIG
   return {
     metadataBase: new URL('https://' + brand.canonicalDomain),
     title: brand.metadata?.title ?? 'LTOS',
     description: brand.metadata?.description ?? '',
-    manifest: brand.assets?.manifest ?? '/manifest-local-tailor.json',
+    manifest: brand.assets?.manifest ?? '/manifest.json',
     openGraph: {
       title: brand.metadata?.title,
       description: brand.metadata?.description,
       images: brand.assets.ogImage ? [brand.assets.ogImage] : undefined,
     },
-    // Next.js's file-based icon convention (src/app/icon.svg / favicon.ico
-    // / apple-icon.png — the shared text-free monogram) takes precedence
-    // over these; kept in sync so any consumer of the metadata object
-    // still sees a brand-correct, non-TARDA path.
     icons: {
       icon: brand.assets.favicon ?? '/icon.svg',
       apple: brand.assets.favicon ?? '/icon.svg',
@@ -56,7 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  // Shared "Walnut Atelier" theme colour — identical across both brands.
+  // "Walnut Atelier" theme colour.
   themeColor: LOCAL_TAILOR_CONFIG.colors?.themeColor ?? '#6A4A34',
 }
 
@@ -90,24 +82,9 @@ export default async function RootLayout({
   const locale = await getLocale()
   const dir = isRtlLocale(locale) ? 'rtl' : 'ltr'
 
-  // Resolve brand server-side and inject a small runtime signal so client
-  // components can synchronously read the active brand without needing JS
-  // to call any network APIs. This avoids hydration mismatch and keeps the
-  // brand decision server-driven.
-  const h = headers()
-  const host = h.get('host')
-  const { getBrandForRequestHost } = await import('@/lib/brand/resolver')
-  const brand = getBrandForRequestHost(host)
-
   return (
     <html lang={locale} dir={dir}>
       <body className={`${inter.className} ${caveat.variable} bg-surface text-on-surface antialiased`}>
-        {/* server-injected brand id for client components */}
-        <script
-          // small inline payload; intentionally minimal
-          dangerouslySetInnerHTML={{ __html: `window.__LTOS_BRAND = ${JSON.stringify(brand.id)};` }}
-        />
-
         {/* GA4 bootstrap — moved server-side (next/script, beforeInteractive)
             so the Google tag is present in the actual HTML response Google's
             own installation checker/Tag Assistant crawl, not only injected

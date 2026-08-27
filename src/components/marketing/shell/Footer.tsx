@@ -1,19 +1,7 @@
 import { getTranslations } from 'next-intl/server'
-import { CITY_BUSINESS } from '@/lib/seo/cityConfig'
-import { buildContentWhatsAppUrl } from '@/lib/content/whatsapp'
+import { BRAND } from '@/lib/brand/config'
 import { Logo } from '@/components/brand/Logo'
 import { Link } from '@/i18n/routing'
-
-// Sprint W8-B — NAP Consistency System. This is the only place the footer
-// reads business identity from — CITY_BUSINESS in src/lib/seo/cityConfig.ts
-// is the single source of truth already used by every location page's
-// schema, metadata, and CTAs (Sprint W8-1/8-2/8-3). No address/phone string
-// is ever re-typed here.
-// TARDA-only: consumed solely inside the `brand.id === 'tarda'` branch
-// below (the WhatsApp CTA that renders exclusively for the Tarda brand).
-// Kept gated at the point of use so no Tarda-identity string is
-// reachable from a Local Tailor render.
-const TARDA_FOOTER_WHATSAPP_MESSAGE = 'Halo Tarda, saya ingin bertanya lebih lanjut.'
 
 const EXPLORE_LINKS = [
   { key: 'designStudio', href: '/design-studio' },
@@ -37,40 +25,20 @@ const SIZE_GUIDE_LINKS = [
   { key: 'howToMeasure', href: '/cara-mengukur-thobe' },
 ] as const
 
-import { headers } from 'next/headers'
-import { getBrandForRequestHost } from '@/lib/brand/resolver'
-
 export async function Footer() {
   const t = await getTranslations('footer')
-  const tNav = await getTranslations('nav')
 
-  // Resolve brand from the current request host and render Tarda's
-  // city-specific business details only when the resolved brand is TARDA.
-  // For other brands (e.g., Local Tailor) do not show Bogor nor the
-  // Tarda-specific tagline; instead use the brand's metadata/displayName.
-  const host = headers().get('host')
-  const brand = getBrandForRequestHost(host ?? undefined)
-
-  const whatsappUrl =
-    brand.id === 'tarda'
-      ? buildContentWhatsAppUrl(CITY_BUSINESS.whatsappInternational, TARDA_FOOTER_WHATSAPP_MESSAGE)
-      : undefined
   const columns = [
     { title: t('columns.explore'), links: EXPLORE_LINKS },
     { title: t('columns.studio'), links: STUDIO_LINKS },
     { title: t('columns.sizeGuide'), links: SIZE_GUIDE_LINKS },
   ]
 
-  // LTOS i18n — the non-tarda branch used to bypass next-intl entirely
-  // (brand.metadata?.description / a hardcoded "All rights reserved."
-  // template), which is why the footer stayed in English on every locale
-  // for the Local Tailor brand. Both branches now read through `t()`;
-  // taglineFallback carries the same text brand.metadata.description
-  // already had (English source), and legalWithBrand parameterizes the
-  // brand name into the same "All rights reserved." wording `legal` uses.
-  const taglineText = brand.id === 'tarda' ? t('tagline') : t('taglineFallback')
+  // LTOS is single-brand (Local Tailor). Tagline + legal line read through
+  // next-intl so they stay translated on every locale.
+  const taglineText = t('taglineFallback')
   const year = new Date().getFullYear()
-  const legalText = brand.id === 'tarda' ? t('legal', { year }) : t('legalWithBrand', { year, brand: brand.displayName })
+  const legalText = t('legalWithBrand', { year, brand: BRAND.displayName })
 
   return (
     // Walnut Atelier rebrand — bg-luxury-charcoal (Smoked Walnut), not the
@@ -83,26 +51,8 @@ export async function Footer() {
     <footer className="border-t border-luxury-gold/[0.14] bg-luxury-charcoal px-6 py-16 md:px-10">
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
-          <Logo variant="horizontalTagline" title={brand.displayName} className="h-10 w-auto text-luxury-ivory" />
+          <Logo variant="horizontalTagline" title={BRAND.displayName} className="h-10 w-auto text-luxury-ivory" />
           <p className="mt-3 max-w-xs font-luxury-sans text-sm text-luxury-taupe">{taglineText}</p>
-
-          {brand.id === 'tarda' && (
-            <>
-              <address className="mt-4 max-w-xs font-luxury-sans text-xs not-italic leading-relaxed text-luxury-taupe">
-                {CITY_BUSINESS.streetAddress}
-              </address>
-              {whatsappUrl && (
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-block font-luxury-sans text-xs text-luxury-taupe hover:text-luxury-gold"
-                >
-                  WhatsApp: +{CITY_BUSINESS.whatsappInternational}
-                </a>
-              )}
-            </>
-          )}
         </div>
 
         {columns.map((column) => (

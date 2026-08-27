@@ -29,10 +29,10 @@ export const CITY_SITE_ORIGIN = FABRIC_SITE_ORIGIN
 // fabricated precise location in structured data. Every other city in
 // CITY_CONFIGS is a service-area landing page, never a fabricated branch.
 //
-// Brand & Location Correction — production launch identity is Local Tailor,
-// primary workshop location is Bandung (previously mislabeled "Tarda
-// Bogor" — this entry's own localContext neighborhoods, see BANDUNG below,
-// were already real Bandung-area places, not Bogor ones, so this corrects
+// Brand & Location Correction — brand identity is Local Tailor and the
+// primary workshop location is Bandung (an earlier revision of this config
+// carried a stale Bogor label; this entry's own localContext neighborhoods,
+// see BANDUNG below, were already real Bandung-area places, so this corrects
 // a stale label rather than inventing a new location). whatsappLocal /
 // whatsappInternational are left exactly as they were: no new phone number
 // was supplied, and this correction does not fabricate one.

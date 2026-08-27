@@ -14,30 +14,30 @@ export interface AppBranding {
 export const APP_BRANDING = {
   owner: {
     name: 'Owner OS',
-    subtitle: 'Tarda Operating System',
-    description: 'Secure access for Tarda management.',
+    subtitle: 'Local Tailor Operating System',
+    description: 'Secure access for Local Tailor management.',
     loginPath: '/owner/login',
     forgotPasswordPath: '/owner/forgot-password',
     resetPasswordPath: '/owner/reset-password',
-    browserTitle: 'Owner OS | Tarda',
+    browserTitle: 'Owner OS | Local Tailor',
   },
   fitter: {
     name: 'Fitter App',
-    subtitle: 'Tarda Operating System',
+    subtitle: 'Local Tailor Operating System',
     description: 'Professional measurement and customer fitting workspace.',
     loginPath: '/fitter/login',
     forgotPasswordPath: '/fitter/forgot-password',
     resetPasswordPath: '/fitter/reset-password',
-    browserTitle: 'Fitter App | Tarda',
+    browserTitle: 'Fitter App | Local Tailor',
   },
   inventory: {
     name: 'Inventory Hub',
-    subtitle: 'Tarda Operating System',
+    subtitle: 'Local Tailor Operating System',
     description: 'Material, inventory, stock, and estimation management.',
     loginPath: '/inventory/login',
     forgotPasswordPath: '/inventory/forgot-password',
     resetPasswordPath: '/inventory/reset-password',
-    browserTitle: 'Inventory Hub | Tarda',
+    browserTitle: 'Inventory Hub | Local Tailor',
   },
 } as const satisfies Record<string, AppBranding>
 

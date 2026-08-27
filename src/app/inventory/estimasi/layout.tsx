@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Inventory Hub | Tarda',
+  title: 'Inventory Hub | Local Tailor',
   description: 'Material, inventory, stock, and estimation management.',
   applicationName: 'Inventory Hub',
   openGraph: {

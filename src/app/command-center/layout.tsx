@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Owner OS | Tarda',
-  description: 'Owner OS — Tarda Operating System',
+  title: 'Owner OS | Local Tailor',
+  description: 'Owner OS — Local Tailor Operating System',
   applicationName: 'Owner OS',
   openGraph: {
     title: 'Owner OS',
-    description: 'Tarda Operating System',
+    description: 'Local Tailor Operating System',
   },
 }
 

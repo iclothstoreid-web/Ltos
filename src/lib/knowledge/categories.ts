@@ -263,11 +263,10 @@ export const KNOWLEDGE_CATEGORIES: KnowledgeCategory[] = [
     // real process (consultation, measurement, pattern, production,
     // fitting, delivery) already documented across the other 8 clusters.
     //
-    // Brand & Location Correction — this category was previously "bogor"
-    // (Tarda Bogor); Local Tailor's production launch is centered on
-    // Bandung, the real workshop location (see src/lib/seo/cityConfig.ts's
-    // BANDUNG entry), so the category itself is renamed rather than kept
-    // under a stale slug.
+    // Brand & Location Correction — this category was previously the "bogor"
+    // slug; Local Tailor's real workshop location is Bandung (see
+    // src/lib/seo/cityConfig.ts's BANDUNG entry), so the category itself is
+    // renamed rather than kept under a stale slug.
     slug: 'bandung',
     label: 'Bandung',
     eyebrow: 'Local Tailor Bandung',

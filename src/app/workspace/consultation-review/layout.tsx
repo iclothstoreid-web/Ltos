@@ -3,7 +3,7 @@ import { Fraunces } from 'next/font/google'
 import { MaterialSymbolsLink } from '@/components/ui/MaterialSymbolsLink'
 
 export const metadata: Metadata = {
-  title: 'Fitter App | Tarda',
+  title: 'Fitter App | Local Tailor',
   applicationName: 'Fitter App',
   description: 'Professional measurement and customer fitting workspace.',
 }

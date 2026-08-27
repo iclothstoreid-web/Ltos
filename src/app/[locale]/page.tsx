@@ -1,30 +1,19 @@
 import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
-import { createClient } from '@/lib/supabase/server'
 import { HomePage } from '@/components/marketing/HomePage'
 import { homepageMetadata } from '@/lib/marketing/seo'
 import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 import { withLocaleAlternates } from '@/i18n/alternates'
-import { getBrandForRequestHost } from '@/lib/brand/resolver'
 
 export async function generateMetadata(): Promise<Metadata> {
   return withLocaleAlternates(homepageMetadata, FABRIC_SITE_ORIGIN, '/')
 }
 
-// Sprint W1 — `/` is now the public luxury homepage for anonymous
-// visitors. Authenticated staff keep the exact redirect this route always
-// had (straight to their workspace), but Local Tailor must remain public on
-// its public marketing host even when a valid session exists.
-export default async function RootPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const host = headers().get('host') ?? ''
-  const brand = getBrandForRequestHost(host)
-
-  if (user && brand.id !== 'local-tailor') {
-    redirect('/workspace/check-in')
-  }
-
+// `/` is the public luxury homepage. LTOS is single-brand (Local Tailor)
+// and its public marketing surface stays public for everyone, including
+// authenticated staff (who reach their workspace via /owner/login ->
+// App Launcher, not via a root redirect). This route previously bounced
+// authenticated users to /workspace/check-in on non-Local-Tailor hosts;
+// with Tarda removed there is no such host, so the redirect is gone.
+export default function RootPage() {
   return <HomePage />
 }

@@ -8,11 +8,11 @@ import { CommunicationsCenter } from '@/components/owner/communications/Communic
 
 export const metadata: Metadata = {
   title: 'Komunikasi | Owner OS',
-  description: 'Owner OS — Tarda Operating System',
+  description: 'Owner OS — Local Tailor Operating System',
   applicationName: 'Owner OS',
   openGraph: {
     title: 'Owner OS',
-    description: 'Tarda Operating System',
+    description: 'Local Tailor Operating System',
   },
 }
 

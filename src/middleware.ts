@@ -111,16 +111,15 @@ export async function middleware(request: NextRequest) {
   // honors an explicit NEXT_LOCALE cookie (e.g. from the language
   // switcher) first, then Accept-Language, then the 'id' default —
   // restoring Indonesian as a reachable, explicit-choice-respecting
-  // locale without touching localePrefix, without introducing an /id
-  // prefix, and without changing TARDA routing (this whole file's
-  // isLocalTailorHost checks never applied to Tarda to begin with).
+  // locale without touching localePrefix and without introducing an /id
+  // prefix.
 
   // /login used to redirect here too, bouncing straight to the marketing
-  // homepage — that was correct back when /login was only the old
-  // Tarda-branded generic login page (src/app/login/page.tsx) with nowhere
-  // useful to send Local Tailor traffic. Now that /owner/login is LTOS's
-  // real entry point (Owner OS -> App Launcher), /login should open that
-  // instead of being swallowed by the homepage redirect above.
+  // homepage — that was correct back when /login was only the old generic
+  // Business-OS login page (src/app/login/page.tsx) with nowhere useful to
+  // send traffic. Now that /owner/login is LTOS's real entry point (Owner
+  // OS -> App Launcher), /login should open that instead of being swallowed
+  // by the homepage redirect above.
   if (isLocalTailorHost && pathname === '/login') {
     return NextResponse.redirect(new URL('/owner/login', request.url))
   }

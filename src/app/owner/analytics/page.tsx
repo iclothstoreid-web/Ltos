@@ -7,7 +7,7 @@ import { ExecutiveDashboard } from '@/components/analytics/ExecutiveDashboard'
 import { CroDashboard } from '@/components/analytics/CroDashboard'
 
 export const metadata: Metadata = {
-  title: 'Analytics | Tarda',
+  title: 'Analytics | Local Tailor',
   robots: { index: false, follow: false },
 }
 

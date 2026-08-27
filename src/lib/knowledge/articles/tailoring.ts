@@ -4,7 +4,7 @@ import type { KnowledgeArticle } from '../types'
 // E-E-A-T through real construction/process detail, not marketing
 // language. Claims here are general tailoring craft knowledge (pattern
 // drafting, interlining, construction technique) — not fabricated
-// proprietary Tarda statistics.
+// proprietary internal statistics.
 export const TAILORING_ARTICLES: KnowledgeArticle[] = [
   {
     slug: 'what-is-bespoke',
