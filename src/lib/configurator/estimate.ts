@@ -38,6 +38,18 @@ function priceBreakdown(
   const cuff = findOption(catalog.fields.cuffId, config.cuffId)
   if (cuff) breakdown.push({ kind: 'cuff', label: cuff.name, amount: cuff.price, optionId: cuff.id })
 
+  // Saku / Plaket / Handmade Zig-Zag — same pattern: whatever `price` the
+  // Master Data row carries (0 for Saku/Plaket today, a real delta for
+  // Handmade Zig-Zag). No invented pricing.
+  const pocket = findOption(catalog.fields.pocketId, config.pocketId)
+  if (pocket) breakdown.push({ kind: 'pocket', label: pocket.name, amount: pocket.price, optionId: pocket.id })
+
+  const placket = findOption(catalog.fields.placketId, config.placketId)
+  if (placket) breakdown.push({ kind: 'placket', label: placket.name, amount: placket.price, optionId: placket.id })
+
+  const zigzag = findOption(catalog.fields.zigzagId, config.zigzagId)
+  if (zigzag) breakdown.push({ kind: 'zigzag', label: zigzag.name, amount: zigzag.price, optionId: zigzag.id })
+
   const embroidery = findOption(catalog.fields.embroidery, config.embroidery)
   if (embroidery) breakdown.push({ kind: 'embroidery', label: embroidery.name, amount: embroidery.price, optionId: embroidery.id })
 
@@ -85,6 +97,9 @@ export function hashEstimateInput(config: DesignConfig, serviceLevel: ServiceLev
     cu: config.cuffId,
     f: config.fabricId,
     co: config.colorId,
+    sk: config.pocketId,
+    pl: config.placketId,
+    hz: config.zigzagId,
     e: config.embroidery,
     a: [...config.accessories].sort(),
     s: serviceLevel,

@@ -16,6 +16,10 @@ export interface ConfiguratorOption {
   name: string
   price: number
   photoUrl: string | null
+  // 'warna_bahan' only — the swatch hex (design_master_options.metadata.hex,
+  // falling back to the linked dna_colors.hex). Null for every other
+  // category and for a colour whose hex hasn't been set in Owner OS yet.
+  colorHex: string | null
   sellingPoints: string[]
   sortOrder: number
   materialId: string | null
@@ -30,6 +34,9 @@ export type ConfiguratorField =
   | 'cuffId'
   | 'fabricId'
   | 'colorId'
+  | 'pocketId'
+  | 'placketId'
+  | 'zigzagId'
   | 'embroidery'
 
 export type ConfiguratorOptionsByField = Record<ConfiguratorField, ConfiguratorOption[]>
@@ -43,6 +50,13 @@ export interface DesignConfig {
   cuffId: string | null
   fabricId: string | null
   colorId: string | null
+  // Sprint DS-UX follow-up — Saku / Plaket / Handmade Zig-Zag, all
+  // single-select. Optional in effect: an old saved design (or a fresh
+  // session) simply has them null. Only Handmade Zig-Zag carries a real
+  // price; Saku/Plaket are priced at 0 in Master Data today.
+  pocketId: string | null
+  placketId: string | null
+  zigzagId: string | null
   embroidery: string | null
   accessories: string[]
 }
@@ -54,6 +68,9 @@ export function emptyDesignConfig(): DesignConfig {
     cuffId: null,
     fabricId: null,
     colorId: null,
+    pocketId: null,
+    placketId: null,
+    zigzagId: null,
     embroidery: null,
     accessories: [],
   }
@@ -63,7 +80,8 @@ export function emptyDesignConfig(): DesignConfig {
 // ConfiguratorField-selectable master-data category the way the others
 // are, so EstimateLine gets its own kind enum rather than reusing
 // ConfiguratorField.
-export type EstimateLineKind = 'base' | 'fabric' | 'collar' | 'cuff' | 'embroidery' | 'accessories' | 'service'
+export type EstimateLineKind =
+  | 'base' | 'fabric' | 'collar' | 'cuff' | 'pocket' | 'placket' | 'zigzag' | 'embroidery' | 'accessories' | 'service'
 
 export interface EstimateLine {
   kind: EstimateLineKind

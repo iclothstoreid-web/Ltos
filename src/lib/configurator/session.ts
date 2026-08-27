@@ -61,6 +61,13 @@ interface CompactSession {
   cu: string | null
   f: string | null
   co: string | null
+  // Sprint DS-UX follow-up — Saku / Plaket / Handmade Zig-Zag. Optional in
+  // the wire format: an older slug simply omits them and expand() reads
+  // them as null, so every previously shared /design/<slug> URL keeps
+  // resolving unchanged.
+  sk?: string | null
+  pl?: string | null
+  hz?: string | null
   e: string | null
   a: string[]
   s: ServiceLevel
@@ -74,6 +81,9 @@ function compact(session: DesignSession): CompactSession {
     cu: session.config.cuffId,
     f: session.config.fabricId,
     co: session.config.colorId,
+    sk: session.config.pocketId,
+    pl: session.config.placketId,
+    hz: session.config.zigzagId,
     e: session.config.embroidery,
     a: session.config.accessories,
     s: session.serviceLevel,
@@ -89,6 +99,9 @@ function expand(raw: CompactSession): DesignSession {
       cuffId: raw.cu ?? null,
       fabricId: raw.f ?? null,
       colorId: raw.co ?? null,
+      pocketId: raw.sk ?? null,
+      placketId: raw.pl ?? null,
+      zigzagId: raw.hz ?? null,
       embroidery: raw.e ?? null,
       accessories: Array.isArray(raw.a) ? raw.a : [],
     },

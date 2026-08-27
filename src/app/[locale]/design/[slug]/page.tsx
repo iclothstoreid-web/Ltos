@@ -50,6 +50,9 @@ const resolveDesignShare = cache(async (slug: string) => {
     cuff: findOption(catalog.fields.cuffId, session.config.cuffId),
     fabric: findOption(catalog.fields.fabricId, session.config.fabricId),
     color: findOption(catalog.fields.colorId, session.config.colorId),
+    pocket: findOption(catalog.fields.pocketId, session.config.pocketId),
+    placket: findOption(catalog.fields.placketId, session.config.placketId),
+    zigzag: findOption(catalog.fields.zigzagId, session.config.zigzagId),
     embroidery: findOption(catalog.fields.embroidery, session.config.embroidery),
   }
   const accessories = session.config.accessories

@@ -532,6 +532,48 @@ export function MasterDataManager({ initialOptions }: MasterDataManagerProps) {
                       </div>
                     </div>
 
+                    {editingCategory === 'warna_bahan' && (() => {
+                      // Warna Swatch — the hex the public Design Studio renders
+                      // as the colour card (list_active_design_master_options
+                      // returns metadata.hex). Same value as the `hex` row in
+                      // Tabel Spesifikasi below; this is just a first-class,
+                      // obvious editor for it.
+                      const hexIndex = editingSpecRows.findIndex(r => r.key.trim().toLowerCase() === 'hex')
+                      const hexValue = hexIndex >= 0 ? editingSpecRows[hexIndex].value : ''
+                      const setHex = (value: string) => {
+                        if (hexIndex >= 0) updateSpecRow(hexIndex, 'value', value)
+                        else setEditingSpecRows(prev => [...prev, { key: 'hex', value }])
+                      }
+                      return (
+                        <div>
+                          <p className="font-sans text-[10px] uppercase tracking-widest text-[#444748] mb-2">
+                            Warna Swatch (HEX)
+                          </p>
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="h-10 w-10 shrink-0 rounded-md border border-[#c4c7c7]"
+                              style={{ backgroundColor: /^#[0-9a-fA-F]{6}$/.test(hexValue) ? hexValue : '#f3f3f3' }}
+                            />
+                            <input
+                              type="color"
+                              value={/^#[0-9a-fA-F]{6}$/.test(hexValue) ? hexValue : '#775a19'}
+                              onChange={e => setHex(e.target.value)}
+                              className="h-9 w-14 border-none p-0"
+                            />
+                            <input
+                              value={hexValue}
+                              onChange={e => setHex(e.target.value)}
+                              placeholder="#0B1F3A"
+                              className="w-32 border-b border-[#c4c7c7] bg-transparent py-1 font-mono text-sm outline-none focus:border-[#775a19]"
+                            />
+                          </div>
+                          <p className="mt-1 font-sans text-xs text-[#444748]">
+                            Kosongkan bila belum ada nilai — Design Studio akan menampilkan placeholder aman.
+                          </p>
+                        </div>
+                      )
+                    })()}
+
                     {editingCategory === 'bahan' && (
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

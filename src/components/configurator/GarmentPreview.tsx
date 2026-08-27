@@ -46,6 +46,9 @@ export const GarmentPreview = memo(function GarmentPreview({ catalog, loading, e
   const cuffId = useConfiguratorStore((s) => s.config.cuffId)
   const fabricId = useConfiguratorStore((s) => s.config.fabricId)
   const colorId = useConfiguratorStore((s) => s.config.colorId)
+  const pocketId = useConfiguratorStore((s) => s.config.pocketId)
+  const placketId = useConfiguratorStore((s) => s.config.placketId)
+  const zigzagId = useConfiguratorStore((s) => s.config.zigzagId)
   const embroideryId = useConfiguratorStore((s) => s.config.embroidery)
   const accessoryIds = useConfiguratorStore((s) => s.config.accessories)
 
@@ -54,6 +57,9 @@ export const GarmentPreview = memo(function GarmentPreview({ catalog, loading, e
   const cuff = useMemo(() => (catalog ? findOption(catalog.fields.cuffId, cuffId) : null), [catalog, cuffId])
   const fabric = useMemo(() => (catalog ? findOption(catalog.fields.fabricId, fabricId) : null), [catalog, fabricId])
   const color = useMemo(() => (catalog ? findOption(catalog.fields.colorId, colorId) : null), [catalog, colorId])
+  const pocket = useMemo(() => (catalog ? findOption(catalog.fields.pocketId, pocketId) : null), [catalog, pocketId])
+  const placket = useMemo(() => (catalog ? findOption(catalog.fields.placketId, placketId) : null), [catalog, placketId])
+  const zigzag = useMemo(() => (catalog ? findOption(catalog.fields.zigzagId, zigzagId) : null), [catalog, zigzagId])
   const embroidery = useMemo(
     () => (catalog ? findOption(catalog.fields.embroidery, embroideryId) : null),
     [catalog, embroideryId]
@@ -114,7 +120,10 @@ export const GarmentPreview = memo(function GarmentPreview({ catalog, loading, e
     { label: 'Manset', option: cuff },
     { label: 'Material', option: fabric },
     { label: 'Warna', option: color },
+    { label: 'Saku', option: pocket },
+    { label: 'Plaket', option: placket },
     { label: 'Bordir', option: embroidery },
+    { label: 'Zig-Zag', option: zigzag },
   ]
   const hasAnyDetail = detailItems.some((d) => d.option) || accessories.length > 0
 
@@ -198,6 +207,8 @@ export const GarmentPreview = memo(function GarmentPreview({ catalog, loading, e
 // slot changes, so the gold flash fires on every real change.
 const DetailChip = memo(function DetailChip({ label, option }: { label: string; option: ConfiguratorOption }) {
   const thumb = option.photoUrl ? configuratorThumb(option.photoUrl, 48, 60) : null
+  const hex = !thumb ? option.colorHex : null
+  const swatch = thumb || hex
 
   return (
     <motion.span
@@ -205,14 +216,19 @@ const DetailChip = memo(function DetailChip({ label, option }: { label: string; 
       initial={{ boxShadow: '0 0 0 0 rgba(200,162,74,0.55)' }}
       animate={{ boxShadow: '0 0 0 6px rgba(200,162,74,0)' }}
       transition={{ duration: 0.7, ease: 'easeOut' }}
-      className={`flex items-center gap-2 rounded-full border border-luxury-gold/20 bg-luxury-navy-deep/70 py-1 pr-3 backdrop-blur-sm ${thumb ? 'pl-1' : 'pl-3'}`}
+      className={`flex items-center gap-2 rounded-full border border-luxury-gold/20 bg-luxury-navy-deep/70 py-1 pr-3 backdrop-blur-sm ${swatch ? 'pl-1' : 'pl-3'}`}
     >
-      {thumb && (
+      {thumb ? (
         <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-luxury-navy">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={thumb} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
         </span>
-      )}
+      ) : hex ? (
+        <span
+          className="h-7 w-7 shrink-0 rounded-full ring-1 ring-inset ring-white/20"
+          style={{ backgroundColor: hex }}
+        />
+      ) : null}
       <span className="min-w-0 font-luxury-sans leading-tight">
         <span className="block text-[8px] uppercase tracking-[0.12em] text-luxury-taupe">{label}</span>
         <span className="block max-w-[9rem] truncate text-[11px] text-luxury-ivory">{option.name}</span>

@@ -19,6 +19,9 @@ export interface ResolvedDesignSelection {
   cuff: ConfiguratorOption | null
   fabric: ConfiguratorOption | null
   color: ConfiguratorOption | null
+  pocket: ConfiguratorOption | null
+  placket: ConfiguratorOption | null
+  zigzag: ConfiguratorOption | null
   embroidery: ConfiguratorOption | null
 }
 
@@ -36,7 +39,10 @@ export function buildDesignDescription(selection: ResolvedDesignSelection, estim
   if (selection.fabric) parts.push(`material ${selection.fabric.name}`)
   if (selection.color) parts.push(`warna ${selection.color.name}`)
   if (selection.collar) parts.push(`kerah ${selection.collar.name}`)
+  if (selection.pocket) parts.push(`saku ${selection.pocket.name}`)
+  if (selection.placket) parts.push(`plaket ${selection.placket.name}`)
   if (selection.embroidery) parts.push(`bordir ${selection.embroidery.name}`)
+  if (selection.zigzag) parts.push(`handmade zig-zag ${selection.zigzag.name}`)
   const summary = parts.join(', ')
   return `${summary}. Estimasi ${formatRupiah(estimate.total)}, selesai dalam ${estimate.productionDays} hari kerja.`
 }

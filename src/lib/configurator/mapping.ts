@@ -22,6 +22,9 @@ const FIELD_CATEGORY_MAP: Record<ConfiguratorField, MasterDataCategory> = {
   cuffId: 'manset',
   fabricId: 'bahan',
   colorId: 'warna_bahan',
+  pocketId: 'saku',
+  placketId: 'plaket',
+  zigzagId: 'handmade_zigzag',
   embroidery: 'bordir',
 }
 
@@ -33,6 +36,7 @@ interface PublicMasterOptionRow {
   name: string
   price: number
   photo_url: string | null
+  color_hex: string | null
   selling_points: string[] | null
   sort_order: number
   material_id: string | null
@@ -46,6 +50,7 @@ function toConfiguratorOption(row: PublicMasterOptionRow): ConfiguratorOption {
     name: row.name,
     price: row.price,
     photoUrl: row.photo_url,
+    colorHex: row.color_hex ?? null,
     sellingPoints: row.selling_points ?? [],
     sortOrder: row.sort_order,
     materialId: row.material_id,

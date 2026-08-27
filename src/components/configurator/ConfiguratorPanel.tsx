@@ -10,6 +10,9 @@ import {
   trackCuffSelected,
   trackFabricSelected,
   trackColorSelected,
+  trackPocketSelected,
+  trackPlacketSelected,
+  trackZigzagSelected,
   trackEmbroideryAdded,
   trackAccessoriesAdded,
 } from '@/lib/configurator/analytics'
@@ -26,6 +29,9 @@ const FIELD_TRACKERS: Record<Exclude<ConfiguratorField, 'embroidery' | 'colorId'
   collarId: trackCollarSelected,
   cuffId: trackCuffSelected,
   fabricId: trackFabricSelected,
+  pocketId: trackPocketSelected,
+  placketId: trackPlacketSelected,
+  zigzagId: trackZigzagSelected,
 }
 
 // Sprint W9-1 §6 — new §2-taxonomy events, additive alongside the
@@ -57,7 +63,10 @@ const CATEGORIES: { key: CategoryKey; label: string }[] = [
   { key: 'cuffId', label: 'Manset' },
   { key: 'fabricId', label: 'Material' },
   { key: 'colorId', label: 'Warna' },
+  { key: 'pocketId', label: 'Saku' },
+  { key: 'placketId', label: 'Plaket' },
   { key: 'embroidery', label: 'Bordir' },
+  { key: 'zigzagId', label: 'Handmade Zig-Zag' },
   { key: 'accessories', label: 'Aksesori' },
 ]
 
@@ -67,11 +76,12 @@ export function ConfiguratorPanel({ catalog, loading, error, onRetry }: Configur
   // Primitive selector — re-renders the panel only when the *set* of
   // categories that carry a selection changes (≤7 times a session), not on
   // every pick. Feeds the little "chosen" dot on each tab.
+  // Order MUST match CATEGORIES above — feeds the per-tab "chosen" dot.
   const chosenMask = useConfiguratorStore((s) => {
     const c = s.config
     return [
-      !!c.modelId, !!c.collarId, !!c.cuffId, !!c.fabricId,
-      !!c.colorId, !!c.embroidery, c.accessories.length > 0,
+      !!c.modelId, !!c.collarId, !!c.cuffId, !!c.fabricId, !!c.colorId,
+      !!c.pocketId, !!c.placketId, !!c.embroidery, !!c.zigzagId, c.accessories.length > 0,
     ].join(',')
   })
   const chosen = chosenMask.split(',').map((v) => v === 'true')
@@ -168,7 +178,10 @@ export function ConfiguratorPanel({ catalog, loading, error, onRetry }: Configur
         {active === 'cuffId' && <PhotoGrid field="cuffId" label="Manset" options={catalog.fields.cuffId} />}
         {active === 'fabricId' && <PhotoGrid field="fabricId" label="Material" options={catalog.fields.fabricId} />}
         {active === 'colorId' && <ColorGrid options={catalog.fields.colorId} />}
+        {active === 'pocketId' && <PhotoGrid field="pocketId" label="Saku" options={catalog.fields.pocketId} clearable />}
+        {active === 'placketId' && <PhotoGrid field="placketId" label="Plaket" options={catalog.fields.placketId} clearable />}
         {active === 'embroidery' && <EmbroiderySection options={catalog.fields.embroidery} />}
+        {active === 'zigzagId' && <PhotoGrid field="zigzagId" label="Handmade Zig-Zag" options={catalog.fields.zigzagId} clearable />}
         {active === 'accessories' && <AccessoriesSection options={catalog.accessories} />}
       </div>
     </div>
@@ -183,12 +196,15 @@ interface PhotoGridProps {
   field: Exclude<ConfiguratorField, 'embroidery' | 'colorId'>
   label: string
   options: ConfiguratorOption[]
+  // Saku / Plaket / Handmade Zig-Zag are optional add-ons — allow clearing
+  // the choice. Model / Kerah / Material stay always-one-selected.
+  clearable?: boolean
 }
 
-// modelId / collarId / cuffId / fabricId — single-select, native radio
-// group, 2-column photo cards. `onOpen`/`isOpen`/SectionHeader are gone;
-// only one section is ever mounted at a time now.
-const PhotoGrid = memo(function PhotoGrid({ field, label, options }: PhotoGridProps) {
+// modelId / collarId / cuffId / fabricId / pocketId / placketId / zigzagId —
+// single-select, native radio group, 2-column photo cards. Only one section
+// is ever mounted at a time.
+const PhotoGrid = memo(function PhotoGrid({ field, label, options, clearable }: PhotoGridProps) {
   const selectedId = useConfiguratorStore((s) => s.config[field])
   const updateConfig = useConfiguratorStore((s) => s.updateConfig)
 
@@ -204,23 +220,38 @@ const PhotoGrid = memo(function PhotoGrid({ field, label, options }: PhotoGridPr
     [field, options, updateConfig]
   )
 
+  const handleClear = useCallback(() => {
+    updateConfig({ [field]: null } as Partial<DesignConfig>)
+  }, [field, updateConfig])
+
   if (options.length === 0) return <EmptyState>Belum ada pilihan aktif untuk kategori ini.</EmptyState>
 
   return (
-    <fieldset className="grid grid-cols-2 gap-3">
-      <legend className="sr-only">{label}</legend>
-      {options.map((option) => (
-        <OptionCard
-          key={option.id}
-          option={option}
-          groupName={field}
-          inputType="radio"
-          variant="photo"
-          checked={selectedId === option.id}
-          onChange={handleSelect}
-        />
-      ))}
-    </fieldset>
+    <div>
+      {clearable && selectedId && (
+        <button
+          type="button"
+          onClick={handleClear}
+          className="mb-3 cursor-pointer font-luxury-sans text-[11px] uppercase tracking-[0.1em] text-luxury-taupe transition hover:text-luxury-gold"
+        >
+          Hapus pilihan {label}
+        </button>
+      )}
+      <fieldset className="grid grid-cols-2 gap-3">
+        <legend className="sr-only">{label}</legend>
+        {options.map((option) => (
+          <OptionCard
+            key={option.id}
+            option={option}
+            groupName={field}
+            inputType="radio"
+            variant="photo"
+            checked={selectedId === option.id}
+            onChange={handleSelect}
+          />
+        ))}
+      </fieldset>
+    </div>
   )
 })
 

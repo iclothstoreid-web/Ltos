@@ -45,7 +45,7 @@ export function EstimateSync() {
 
     return () => clearTimeout(timerRef.current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.modelId, config.collarId, config.cuffId, config.fabricId, config.colorId, config.embroidery, config.accessories.join(','), serviceLevel, retryNonce])
+  }, [config.modelId, config.collarId, config.cuffId, config.fabricId, config.colorId, config.pocketId, config.placketId, config.zigzagId, config.embroidery, config.accessories.join(','), serviceLevel, retryNonce])
 
   return null
 }

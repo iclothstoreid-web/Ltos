@@ -47,6 +47,18 @@ export function trackColorSelected(optionId: string, optionName: string): void {
   pushEvent('color_selected', { optionId, optionName })
 }
 
+export function trackPocketSelected(optionId: string, optionName: string): void {
+  pushEvent('pocket_selected', { optionId, optionName })
+}
+
+export function trackPlacketSelected(optionId: string, optionName: string): void {
+  pushEvent('placket_selected', { optionId, optionName })
+}
+
+export function trackZigzagSelected(optionId: string, optionName: string): void {
+  pushEvent('zigzag_selected', { optionId, optionName })
+}
+
 export function trackEmbroideryAdded(optionId: string, optionName: string): void {
   pushEvent('embroidery_added', { optionId, optionName })
 }

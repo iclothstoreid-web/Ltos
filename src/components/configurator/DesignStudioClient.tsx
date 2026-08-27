@@ -84,7 +84,7 @@ export function DesignStudioClient({ initialFabricId = null, initialColorId = nu
   useEffect(() => {
     return () => {
       const config = configRef.current
-      const totalOptionsSelected = [config.modelId, config.collarId, config.cuffId, config.fabricId, config.colorId, config.embroidery].filter(Boolean).length + (config.accessories.length > 0 ? 1 : 0)
+      const totalOptionsSelected = [config.modelId, config.collarId, config.cuffId, config.fabricId, config.colorId, config.pocketId, config.placketId, config.zigzagId, config.embroidery].filter(Boolean).length + (config.accessories.length > 0 ? 1 : 0)
       trackConfiguratorExit('unmount', totalOptionsSelected)
     }
   }, [])
