@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import BrandLogo from '@/components/brand/BrandLogo'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { NavServicesMenu } from './NavServicesMenu'
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false)
@@ -50,7 +51,10 @@ export function Nav() {
             caught during verification). Tablets now get the same clean
             drawer as mobile instead of a cramped inline row, matching the
             brief's own "tablet isn't just a shrunk desktop" instruction. */}
-        <ul className="hidden items-center gap-10 lg:flex">
+        <ul className="hidden items-center gap-9 lg:flex">
+          <li>
+            <NavServicesMenu />
+          </li>
           {links.map((link) => (
             <li key={link.href}>
               <Link
@@ -109,6 +113,9 @@ export function Nav() {
                 comfortable touch target) plus more generous outer padding,
                 per the brief's "drawer harus premium, padding lebih lega". */}
             <ul className="flex flex-col gap-1 px-6 pb-8 pt-2">
+              <li>
+                <NavServicesMenu mobile onNavigate={() => setDrawerOpen(false)} />
+              </li>
               {links.map((link) => (
                 <li key={link.href}>
                   <Link

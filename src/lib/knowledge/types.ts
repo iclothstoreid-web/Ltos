@@ -131,6 +131,12 @@ export interface KnowledgeArticle {
   // e.g. every fabric article points at the `care` hub (Fabric -> Care)
   // even though no /knowledge/care articles exist this sprint.
   relatedCategories?: KnowledgeCategorySlug[]
+  // National SEO (P0-3 / cannibalization fixes) — per-article override for
+  // the commercial "money page" link in KnowledgeCTAGroup. Takes precedence
+  // over the category-level cta.ts `commercial` config, for the few
+  // articles whose commercial owner differs from their cluster default
+  // (e.g. /knowledge/bandung/umrah-thobe -> /tailor-baju-umroh-bandung).
+  commercialCta?: { label: string; href: string }
   // Sprint W6-7 — Related Content Engine tag dimensions.
   tags?: KnowledgeTags
   // Sprint W6-10 — Content Refresh Engine metadata. Optional; freshness.ts

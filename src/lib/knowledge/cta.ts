@@ -13,6 +13,11 @@ export interface KnowledgeCTAConfig {
   showFabricExplorer: boolean
   showEstimatePrice: boolean
   showBodyProfile: boolean
+  // National SEO (P0-3 / Task 14) — optional forward link from this
+  // cluster to its commercial "money page" (a Revenue Landing Page or a
+  // national pillar). Set on high-relevance clusters only; it is defined
+  // here once per category, never per article.
+  commercial?: { label: string; href: string }
 }
 
 const DEFAULT_CTA_CONFIG: KnowledgeCTAConfig = {
@@ -56,6 +61,16 @@ const CATEGORY_CTA_CONFIG: Partial<Record<KnowledgeCategorySlug, KnowledgeCTACon
     showFabricExplorer: false,
     showEstimatePrice: false,
     showBodyProfile: true,
+    commercial: { label: 'Custom Thobe Indonesia', href: '/custom-thobe-indonesia' },
+  },
+  tailoring: {
+    heading: 'Siap Memulai Proses Bespoke Anda?',
+    body: 'Pelajari lebih lanjut proses bespoke Local Tailor, atau mulai konsultasi untuk thobe custom Anda.',
+    consultationLabel: 'Konsultasi Gratis',
+    showFabricExplorer: true,
+    showEstimatePrice: true,
+    showBodyProfile: true,
+    commercial: { label: 'Bespoke Tailor Indonesia', href: '/bespoke-tailor-indonesia' },
   },
   bandung: {
     heading: 'Siap Memulai Thobe Bespoke di Bandung?',
@@ -64,6 +79,7 @@ const CATEGORY_CTA_CONFIG: Partial<Record<KnowledgeCategorySlug, KnowledgeCTACon
     showFabricExplorer: true,
     showEstimatePrice: true,
     showBodyProfile: true,
+    commercial: { label: 'Bespoke Tailor Bandung', href: '/bespoke-tailor-bandung' },
   },
   // Sprint Y — every design-studio cluster article must lead back to
   // /design-studio (the brief's own requirement); showEstimatePrice is the
@@ -75,6 +91,7 @@ const CATEGORY_CTA_CONFIG: Partial<Record<KnowledgeCategorySlug, KnowledgeCTACon
     showFabricExplorer: false,
     showEstimatePrice: true,
     showBodyProfile: true,
+    commercial: { label: 'Custom Thobe Indonesia', href: '/custom-thobe-indonesia' },
   },
 }
 

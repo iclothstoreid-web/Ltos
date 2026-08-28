@@ -10,7 +10,18 @@
       "locations": "Locations"
     },
     "cta": "Book Appointment",
-    "languageSwitcher": "Language"
+    "languageSwitcher": "Language",
+    "services": {
+      "label": "Services",
+      "items": {
+        "customThobeIndonesia": "Custom Thobe Indonesia",
+        "bespokeTailorIndonesia": "Bespoke Tailor Indonesia",
+        "jahitThobeBandung": "Thobe Tailoring Bandung",
+        "tailorPremiumBandung": "Premium Tailor Bandung",
+        "bespokeTailorBandung": "Bespoke Tailor Bandung",
+        "locations": "Locations"
+      }
+    }
   },
   "hero": {
     "eyebrow": "Bespoke Thobe, Bandung",
@@ -100,7 +111,8 @@
     "columns": {
       "explore": "Explore",
       "studio": "Studio",
-      "sizeGuide": "Size Guide"
+      "sizeGuide": "Size Guide",
+      "services": "Services"
     },
     "links": {
       "designStudio": "Design Studio",
@@ -115,7 +127,12 @@
       "freeSizeCheck": "Free Size Check",
       "sizeChartThobe": "Thobe Size Chart",
       "menThobeSize": "Men's Thobe Sizing",
-      "howToMeasure": "How to Measure a Thobe"
+      "howToMeasure": "How to Measure a Thobe",
+      "customThobeIndonesia": "Custom Thobe Indonesia",
+      "bespokeTailorIndonesia": "Bespoke Tailor Indonesia",
+      "jahitThobeBandung": "Thobe Tailoring Bandung",
+      "tailorPremiumBandung": "Premium Tailor Bandung",
+      "bespokeTailorBandung": "Bespoke Tailor Bandung"
     },
     "legal": "© {year} Bespoke Tailor. All rights reserved.",
     "legalWithBrand": "© {year} {brand}. All rights reserved."
@@ -335,6 +352,9 @@
     },
     "digitalBespoke": {
       "eyebrow": "Design Studio — Bespoke from Anywhere",
+      "nationalLinksLabel": "Service pages",
+      "pillarCustomThobe": "Custom Thobe Indonesia",
+      "pillarBespokeTailor": "Bespoke Tailor Indonesia",
       "heading": "Bespoke Tailoring Without Distance Limits",
       "body": "Design your thobe from anywhere via video call, Design Studio, and our home visit service — the same experience as being in the Local Tailor showroom in person.",
       "experiencesHeading": "Three Ways to Use Design Studio",

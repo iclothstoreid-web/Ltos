@@ -10,7 +10,18 @@
       "locations": "店舗情報"
     },
     "cta": "予約する",
-    "languageSwitcher": "言語"
+    "languageSwitcher": "言語",
+    "services": {
+      "label": "サービス",
+      "items": {
+        "customThobeIndonesia": "カスタムトーブ（インドネシア）",
+        "bespokeTailorIndonesia": "ビスポークテーラー（インドネシア）",
+        "jahitThobeBandung": "トーブ仕立て（バンドン）",
+        "tailorPremiumBandung": "プレミアムテーラー（バンドン）",
+        "bespokeTailorBandung": "ビスポークテーラー（バンドン）",
+        "locations": "店舗情報"
+      }
+    }
   },
   "hero": {
     "eyebrow": "オーダーメイドトーブ、バンドン",
@@ -100,7 +111,8 @@
     "columns": {
       "explore": "サイトメニュー",
       "studio": "スタジオ",
-      "sizeGuide": "サイズガイド"
+      "sizeGuide": "サイズガイド",
+      "services": "サービス"
     },
     "links": {
       "designStudio": "デザインスタジオ",
@@ -115,7 +127,12 @@
       "freeSizeCheck": "無料サイズチェック",
       "sizeChartThobe": "トーブサイズチャート",
       "menThobeSize": "メンズトーブサイズ",
-      "howToMeasure": "トーブの採寸方法"
+      "howToMeasure": "トーブの採寸方法",
+      "customThobeIndonesia": "カスタムトーブ（インドネシア）",
+      "bespokeTailorIndonesia": "ビスポークテーラー（インドネシア）",
+      "jahitThobeBandung": "トーブ仕立て（バンドン）",
+      "tailorPremiumBandung": "プレミアムテーラー（バンドン）",
+      "bespokeTailorBandung": "ビスポークテーラー（バンドン）"
     },
     "legal": "© {year} Bespoke Tailor. All rights reserved.",
     "legalWithBrand": "© {year} {brand}. All rights reserved."
@@ -335,6 +352,9 @@
     },
     "digitalBespoke": {
       "eyebrow": "デザインスタジオ — どこからでもオーダーメイド",
+      "nationalLinksLabel": "サービスページ",
+      "pillarCustomThobe": "カスタムトーブ（インドネシア）",
+      "pillarBespokeTailor": "ビスポークテーラー（インドネシア）",
       "heading": "距離を超えたオーダーメイドテーラリング",
       "body": "ビデオ通話、デザインスタジオ、そして訪問サービスを通じて、どこからでもトーブをデザインできます — Local Tailorのショールームに直接お越しいただくのと同じ体験です。",
       "experiencesHeading": "デザインスタジオの3つの利用方法",

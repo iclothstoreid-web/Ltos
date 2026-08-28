@@ -10,7 +10,18 @@
       "locations": "Standorte"
     },
     "cta": "Termin Buchen",
-    "languageSwitcher": "Sprache"
+    "languageSwitcher": "Sprache",
+    "services": {
+      "label": "Leistungen",
+      "items": {
+        "customThobeIndonesia": "Custom Thobe Indonesien",
+        "bespokeTailorIndonesia": "Bespoke Tailor Indonesien",
+        "jahitThobeBandung": "Thobe-Schneiderei Bandung",
+        "tailorPremiumBandung": "Premium-Schneider Bandung",
+        "bespokeTailorBandung": "Bespoke Tailor Bandung",
+        "locations": "Standorte"
+      }
+    }
   },
   "hero": {
     "eyebrow": "Maßgeschneiderte Thobe, Bandung",
@@ -100,7 +111,8 @@
     "columns": {
       "explore": "Entdecken",
       "studio": "Studio",
-      "sizeGuide": "Größenberatung"
+      "sizeGuide": "Größenberatung",
+      "services": "Leistungen"
     },
     "links": {
       "designStudio": "Design Studio",
@@ -115,7 +127,12 @@
       "freeSizeCheck": "Kostenlose Größenprüfung",
       "sizeChartThobe": "Thobe Größentabelle",
       "menThobeSize": "Thobe Größen für Herren",
-      "howToMeasure": "Thobe Richtig Ausmessen"
+      "howToMeasure": "Thobe Richtig Ausmessen",
+      "customThobeIndonesia": "Custom Thobe Indonesien",
+      "bespokeTailorIndonesia": "Bespoke Tailor Indonesien",
+      "jahitThobeBandung": "Thobe-Schneiderei Bandung",
+      "tailorPremiumBandung": "Premium-Schneider Bandung",
+      "bespokeTailorBandung": "Bespoke Tailor Bandung"
     },
     "legal": "© {year} Bespoke Tailor. Alle Rechte vorbehalten.",
     "legalWithBrand": "© {year} {brand}. Alle Rechte vorbehalten."
@@ -335,6 +352,9 @@
     },
     "digitalBespoke": {
       "eyebrow": "Design Studio — Maßschneiderei von Überall",
+      "nationalLinksLabel": "Leistungsseiten",
+      "pillarCustomThobe": "Custom Thobe Indonesien",
+      "pillarBespokeTailor": "Bespoke Tailor Indonesien",
       "heading": "Maßschneiderei ohne Entfernungsgrenzen",
       "body": "Gestalten Sie Ihre Thobe von überall aus — per Videoanruf, im Design Studio oder über unseren Hausbesuch-Service — dasselbe Erlebnis, als wären Sie persönlich im Local Tailor Showroom.",
       "experiencesHeading": "Drei Wege, das Design Studio zu Nutzen",

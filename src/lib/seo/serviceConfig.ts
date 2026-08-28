@@ -36,6 +36,18 @@ export interface ServiceValueProp {
   description: string
 }
 
+// National-pillar-only section ("Layanan di Seluruh Indonesia") — how the
+// one Bandung workshop serves customers nationwide, using only the
+// already-verified remote model (see
+// /knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bandung).
+export interface ServiceNationalCoverage {
+  heading: string
+  intro: string
+  points: ServiceValueProp[]
+  /** Honest "the workshop is physically in Bandung" anchor — never a branch claim. */
+  bandungAnchorNote: string
+}
+
 // Sprint W11.5 Task 8 — English + Arabic localization for the 5 Revenue
 // Landing Pages, per the brief's explicit "English and Arabic first" scope
 // (fr/ja/de are out of scope for these commercial-intent pages this
@@ -54,6 +66,8 @@ export interface ServiceTranslation {
   faq: ServiceFaqItem[]
   whatsappMessage: string
   ctaLabel: string
+  /** National pillars only — localized coverage section. */
+  nationalCoverage?: ServiceNationalCoverage
 }
 
 export interface ServiceConfig {
@@ -71,6 +85,21 @@ export interface ServiceConfig {
   relatedGuides: { category: string; slug: string }[]
   whatsappMessage: string
   ctaLabel: string
+  /**
+   * 'local' (default) — the 5 Bandung Revenue Landing Pages: `-bandung`
+   *   slug + H1, Bandung geo meta, city-scoped areaServed + related links.
+   * 'national' — the Indonesia-wide commercial pillars
+   *   (/custom-thobe-indonesia, /bespoke-tailor-indonesia): country-level
+   *   areaServed, no city geo meta, an extra ServiceNationalCoverage
+   *   section, and related links that point down to the local pages +
+   *   /locations rather than sideways to Bandung siblings.
+   * There is exactly one physical workshop (Bandung) either way — `scope`
+   * only changes how the *search intent* is framed, never the business
+   * identity.
+   */
+  scope?: 'local' | 'national'
+  /** Required when scope === 'national'. */
+  nationalCoverage?: ServiceNationalCoverage
   /** en/ar full-page translations (Task 8 scope). Indonesian (the base fields above) is always the fallback. */
   translations?: Partial<Record<'en' | 'ar', ServiceTranslation>>
 }
@@ -87,36 +116,38 @@ export function localizeService(service: ServiceConfig, locale: string): Service
   return { ...service, ...translation }
 }
 
-const REVIEW_FAQ_ITEM: ServiceFaqItem = {
+// Exported so the national pillars (nationalConfig.ts) reuse the exact
+// same verified location/review FAQ answers rather than re-authoring them.
+export const REVIEW_FAQ_ITEM: ServiceFaqItem = {
   question: 'Bagaimana cara memberi ulasan setelah pesanan selesai?',
   answer:
     'Setelah garmen Anda selesai, kami akan mengirimkan tautan Google Review via WhatsApp — ulasan Anda membantu klien lain menemukan Local Tailor dan hanya membutuhkan waktu singkat untuk ditulis.',
 }
 
-const LOCATION_FAQ_ITEM: ServiceFaqItem = {
+export const LOCATION_FAQ_ITEM: ServiceFaqItem = {
   question: 'Di mana lokasi workshop untuk konsultasi tatap muka?',
   answer:
     'Workshop dan showroom kami berada di Bandung, Jawa Barat — satu-satunya lokasi fisik Local Tailor, tempat konsultasi, pengukuran, dan produksi berlangsung. Detail lengkap lokasi dan area yang kami layani ada di halaman lokasi Bandung.',
 }
 
-const REVIEW_FAQ_ITEM_EN: ServiceFaqItem = {
+export const REVIEW_FAQ_ITEM_EN: ServiceFaqItem = {
   question: 'How can I leave a review after my order is finished?',
   answer:
     "Once your garment is complete, we'll send you a Google Review link via WhatsApp — your review helps other clients find Local Tailor and only takes a moment to write.",
 }
 
-const LOCATION_FAQ_ITEM_EN: ServiceFaqItem = {
+export const LOCATION_FAQ_ITEM_EN: ServiceFaqItem = {
   question: 'Where is the workshop for an in-person consultation?',
   answer:
     "Our workshop and showroom are in Bandung, West Java — Local Tailor's only physical location, where consultation, measurement, and production all take place. Full location details and the areas we serve are on the Bandung location page.",
 }
 
-const REVIEW_FAQ_ITEM_AR: ServiceFaqItem = {
+export const REVIEW_FAQ_ITEM_AR: ServiceFaqItem = {
   question: 'كيف يمكنني كتابة تقييم بعد اكتمال طلبي؟',
   answer: 'بمجرد اكتمال قطعتك، سنرسل لك رابط تقييم Google عبر واتساب — تقييمك يساعد عملاء آخرين على إيجاد Local Tailor ولا يستغرق سوى لحظات لكتابته.',
 }
 
-const LOCATION_FAQ_ITEM_AR: ServiceFaqItem = {
+export const LOCATION_FAQ_ITEM_AR: ServiceFaqItem = {
   question: 'أين تقع الورشة لإجراء استشارة حضورية؟',
   answer:
     'تقع ورشتنا وصالة العرض في باندونغ، جاوة الغربية — وهي الموقع الفعلي الوحيد لـ Local Tailor، حيث تجري الاستشارة والقياس والإنتاج. التفاصيل الكاملة للموقع والمناطق التي نخدمها متوفرة في صفحة موقع باندونغ.',

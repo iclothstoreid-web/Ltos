@@ -12,6 +12,7 @@ import { localizeService, type ServiceConfig } from '@/lib/seo/serviceConfig'
 import { localeToHreflang, type AppLocale, isRtlLocale } from '@/i18n/config'
 import { ServiceHero } from './ServiceHero'
 import { ServiceValueProps } from './ServiceValueProps'
+import { ServiceNationalCoverage } from './ServiceNationalCoverage'
 import { ServiceGallery } from './ServiceGallery'
 import { ServiceFAQ } from './ServiceFAQ'
 import { ServiceReviews } from './ServiceReviews'
@@ -44,6 +45,7 @@ export async function RevenueLandingPage({ service: baseService, searchParams }:
   const locale = (await getLocale()) as AppLocale
   const service = localizeService(baseService, locale)
   const utm = parseUtmParams(searchParams)
+  const isNational = service.scope === 'national'
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: service.hero.eyebrow, path: `/${service.slug}` },
@@ -64,7 +66,7 @@ export async function RevenueLandingPage({ service: baseService, searchParams }:
             description: service.hero.subheadline,
             url: pageUrl,
             serviceType: 'Bespoke Tailoring',
-            areaServed: SERVICE_AREA_NAMES.join(', '),
+            areaServed: isNational ? 'Indonesia' : SERVICE_AREA_NAMES.join(', '),
             inLanguage: localeToHreflang[locale],
           }),
         ]}
@@ -84,10 +86,11 @@ export async function RevenueLandingPage({ service: baseService, searchParams }:
           <Breadcrumbs items={breadcrumbItems} />
         </div>
         <ServiceValueProps service={service} />
+        {isNational && <ServiceNationalCoverage service={service} />}
         <BespokeProcessSection />
         <ServiceGallery service={service} />
         <ServiceReviews service={service} />
-        <GoogleReviewCTA city="Bandung" />
+        <GoogleReviewCTA city={isNational ? undefined : 'Bandung'} />
         <LocationPricing />
         <ServiceCTA service={service} utm={utm} />
         <ServiceFAQ service={service} />

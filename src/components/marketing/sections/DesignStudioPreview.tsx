@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 import { Reveal } from '../shell/Reveal'
 import { MagneticButton } from '../shell/MagneticButton'
 import { GoldAccentLine } from '../placeholders/GoldAccentLine'
@@ -38,6 +39,27 @@ export function DesignStudioPreview() {
           <MagneticButton href="/design-studio" variant="primary">
             {t('cta')}
           </MagneticButton>
+        </Reveal>
+
+        {/* National SEO (P0-3) — the homepage path into the two national
+            commercial pillars. Integrated into this existing "bespoke from
+            anywhere" section rather than adding a new homepage section. */}
+        <Reveal>
+          <p className="mt-8 font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe/80">{t('nationalLinksLabel')}</p>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/custom-thobe-indonesia"
+              className="rounded-full border border-luxury-gold/[0.16] px-4 py-2 font-luxury-sans text-[11px] uppercase tracking-[0.1em] text-luxury-taupe transition hover:border-luxury-gold/60 hover:text-luxury-gold"
+            >
+              {t('pillarCustomThobe')}
+            </Link>
+            <Link
+              href="/bespoke-tailor-indonesia"
+              className="rounded-full border border-luxury-gold/[0.16] px-4 py-2 font-luxury-sans text-[11px] uppercase tracking-[0.1em] text-luxury-taupe transition hover:border-luxury-gold/60 hover:text-luxury-gold"
+            >
+              {t('pillarBespokeTailor')}
+            </Link>
+          </div>
         </Reveal>
       </div>
     </section>

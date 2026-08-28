@@ -3,6 +3,7 @@ import { Reveal } from '@/components/marketing/shell/Reveal'
 import { GoldAccentLine } from '@/components/marketing/placeholders/GoldAccentLine'
 import { getKnowledgeArticle } from '@/lib/knowledge/articles'
 import { SERVICE_CONFIGS, type ServiceConfig } from '@/lib/seo/serviceConfig'
+import { NATIONAL_CONFIGS } from '@/lib/seo/nationalConfig'
 
 interface ServiceRelatedLinksProps {
   service: ServiceConfig
@@ -41,7 +42,43 @@ export function ServiceRelatedLinks({ service }: ServiceRelatedLinksProps) {
   const guides = service.relatedGuides
     .map(({ category, slug }) => getKnowledgeArticle(category, slug))
     .filter((article): article is NonNullable<typeof article> => article != null)
-  const siblings = pickSiblingServices(service.slug)
+  const isNational = service.scope === 'national'
+
+  // National SEO (Task 13) — each local Bandung page links UP to its
+  // national parent (varied, not mechanical). custom-baju-koko / umroh have
+  // no P0 national parent yet (P1 deferred), so they point at the closest
+  // one, /custom-thobe-indonesia.
+  const NATIONAL_PARENT: Record<string, string> = {
+    'bespoke-tailor-bandung': '/bespoke-tailor-indonesia',
+    'tailor-premium-bandung': '/bespoke-tailor-indonesia',
+    'jahit-thobe-bandung': '/custom-thobe-indonesia',
+    'custom-baju-koko-bandung': '/custom-thobe-indonesia',
+    'tailor-baju-umroh-bandung': '/custom-thobe-indonesia',
+  }
+
+  // National pillar: link DOWN to the Bandung service pages + the other
+  // national pillar + the locations hub (national -> local -> geo). Local
+  // page: sideways sibling links + the Bandung location page + up to its
+  // national parent.
+  const relatedLabel = isNational ? 'Halaman Terkait' : 'Layanan Terkait'
+  const parentHref = NATIONAL_PARENT[service.slug]
+  const relatedServiceLinks: { key: string; href: string; label: string }[] = isNational
+    ? [
+        ...NATIONAL_CONFIGS.filter((n) => n.slug !== service.slug).map((n) => ({
+          key: n.slug,
+          href: `/${n.slug}`,
+          label: n.hero.eyebrow,
+        })),
+        ...SERVICE_CONFIGS.map((s) => ({ key: s.slug, href: `/${s.slug}`, label: s.hero.eyebrow })),
+        { key: 'locations', href: '/locations', label: 'Cakupan Layanan per Kota' },
+      ]
+    : [
+        ...(parentHref
+          ? [{ key: 'national-parent', href: parentHref, label: 'Layanan Nasional — Seluruh Indonesia' }]
+          : []),
+        ...pickSiblingServices(service.slug).map((s) => ({ key: s.slug, href: `/${s.slug}`, label: s.hero.eyebrow })),
+        { key: 'locations-bandung', href: '/locations/bandung', label: 'Lokasi Workshop Bandung' },
+      ]
 
   return (
     <section aria-labelledby="service-related-links-heading" className="bg-luxury-navy-deep px-6 py-24 md:px-10">
@@ -70,25 +107,19 @@ export function ServiceRelatedLinks({ service }: ServiceRelatedLinksProps) {
           </ul>
         )}
 
-        {siblings.length > 0 && (
+        {relatedServiceLinks.length > 0 && (
           <div className="mt-10 text-center">
-            <p className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">Layanan Terkait</p>
+            <p className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">{relatedLabel}</p>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
-              {siblings.map((sibling) => (
+              {relatedServiceLinks.map((link) => (
                 <Link
-                  key={sibling.slug}
-                  href={`/${sibling.slug}`}
+                  key={link.key}
+                  href={link.href}
                   className="rounded-full border border-luxury-gold/[0.14] px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe transition hover:border-luxury-gold/60 hover:text-luxury-gold"
                 >
-                  {sibling.hero.eyebrow}
+                  {link.label}
                 </Link>
               ))}
-              <Link
-                href="/locations/bandung"
-                className="rounded-full border border-luxury-gold/[0.14] px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe transition hover:border-luxury-gold/60 hover:text-luxury-gold"
-              >
-                Lokasi Workshop Bandung
-              </Link>
             </div>
           </div>
         )}

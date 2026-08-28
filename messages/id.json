@@ -10,7 +10,18 @@
       "locations": "Lokasi"
     },
     "cta": "Buat Janji Temu",
-    "languageSwitcher": "Bahasa"
+    "languageSwitcher": "Bahasa",
+    "services": {
+      "label": "Layanan",
+      "items": {
+        "customThobeIndonesia": "Custom Thobe Indonesia",
+        "bespokeTailorIndonesia": "Bespoke Tailor Indonesia",
+        "jahitThobeBandung": "Jahit Thobe Bandung",
+        "tailorPremiumBandung": "Tailor Premium Bandung",
+        "bespokeTailorBandung": "Bespoke Tailor Bandung",
+        "locations": "Lokasi"
+      }
+    }
   },
   "hero": {
     "eyebrow": "Thobe Bespoke, Bandung",
@@ -100,7 +111,8 @@
     "columns": {
       "explore": "Jelajahi",
       "studio": "Studio",
-      "sizeGuide": "Panduan Ukuran"
+      "sizeGuide": "Panduan Ukuran",
+      "services": "Layanan"
     },
     "links": {
       "designStudio": "Design Studio",
@@ -115,7 +127,12 @@
       "freeSizeCheck": "Cek Ukuran Gratis",
       "sizeChartThobe": "Size Chart Thobe",
       "menThobeSize": "Ukuran Thobe Pria",
-      "howToMeasure": "Cara Mengukur Thobe"
+      "howToMeasure": "Cara Mengukur Thobe",
+      "customThobeIndonesia": "Custom Thobe Indonesia",
+      "bespokeTailorIndonesia": "Bespoke Tailor Indonesia",
+      "jahitThobeBandung": "Jahit Thobe Bandung",
+      "tailorPremiumBandung": "Tailor Premium Bandung",
+      "bespokeTailorBandung": "Bespoke Tailor Bandung"
     },
     "legal": "© {year} Bespoke Tailor. Hak cipta dilindungi undang-undang.",
     "legalWithBrand": "© {year} {brand}. Hak cipta dilindungi undang-undang."
@@ -335,6 +352,9 @@
     },
     "digitalBespoke": {
       "eyebrow": "Design Studio — Bespoke dari Mana Saja",
+      "nationalLinksLabel": "Halaman layanan",
+      "pillarCustomThobe": "Custom Thobe Indonesia",
+      "pillarBespokeTailor": "Bespoke Tailor Indonesia",
       "heading": "Bespoke Tailoring Tanpa Batas Jarak",
       "body": "Rancang thobe Anda dari mana saja melalui video call, Design Studio, dan layanan home visit — pengalaman yang sama seperti berada langsung di showroom Local Tailor.",
       "experiencesHeading": "Tiga Cara Menggunakan Design Studio",

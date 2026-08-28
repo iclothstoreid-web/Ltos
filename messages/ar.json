@@ -10,7 +10,18 @@
       "locations": "المواقع"
     },
     "cta": "احجز موعدًا",
-    "languageSwitcher": "اللغة"
+    "languageSwitcher": "اللغة",
+    "services": {
+      "label": "الخدمات",
+      "items": {
+        "customThobeIndonesia": "ثوب مخصص إندونيسيا",
+        "bespokeTailorIndonesia": "خياط بيسبوك إندونيسيا",
+        "jahitThobeBandung": "خياطة ثوب باندونغ",
+        "tailorPremiumBandung": "خياط فاخر باندونغ",
+        "bespokeTailorBandung": "خياط بيسبوك باندونغ",
+        "locations": "المواقع"
+      }
+    }
   },
   "hero": {
     "eyebrow": "ثوب مفصّل حسب الطلب، باندونغ",
@@ -100,7 +111,8 @@
     "columns": {
       "explore": "استكشف",
       "studio": "الاستوديو",
-      "sizeGuide": "دليل المقاسات"
+      "sizeGuide": "دليل المقاسات",
+      "services": "الخدمات"
     },
     "links": {
       "designStudio": "استوديو التصميم",
@@ -115,7 +127,12 @@
       "freeSizeCheck": "تحقق من مقاسك مجانًا",
       "sizeChartThobe": "جدول مقاسات الثوب",
       "menThobeSize": "مقاسات ثوب الرجال",
-      "howToMeasure": "كيفية قياس الثوب"
+      "howToMeasure": "كيفية قياس الثوب",
+      "customThobeIndonesia": "ثوب مخصص إندونيسيا",
+      "bespokeTailorIndonesia": "خياط بيسبوك إندونيسيا",
+      "jahitThobeBandung": "خياطة ثوب باندونغ",
+      "tailorPremiumBandung": "خياط فاخر باندونغ",
+      "bespokeTailorBandung": "خياط بيسبوك باندونغ"
     },
     "legal": "© {year} Bespoke Tailor. جميع الحقوق محفوظة.",
     "legalWithBrand": "© {year} {brand}. جميع الحقوق محفوظة."
@@ -335,6 +352,9 @@
     },
     "digitalBespoke": {
       "eyebrow": "استوديو التصميم — بيسبوك من أي مكان",
+      "nationalLinksLabel": "صفحات الخدمات",
+      "pillarCustomThobe": "ثوب مخصص إندونيسيا",
+      "pillarBespokeTailor": "خياط بيسبوك إندونيسيا",
       "heading": "خياطة بيسبوك بلا حدود للمسافة",
       "body": "صمّم ثوبك من أي مكان عبر مكالمة فيديو، أو استوديو التصميم، أو خدمة الزيارة المنزلية — نفس التجربة كأنك في صالة عرض Local Tailor شخصيًا.",
       "experiencesHeading": "ثلاث طرق لاستخدام استوديو التصميم",

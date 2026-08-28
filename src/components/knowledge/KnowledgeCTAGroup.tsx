@@ -4,6 +4,7 @@ import { CTAConsultation } from './CTAConsultation'
 import { CTAFabricExplorer } from './CTAFabricExplorer'
 import { CTABodyProfile } from './CTABodyProfile'
 import { CTAEstimatePrice } from './CTAEstimatePrice'
+import { CTACommercial } from './CTACommercial'
 
 interface KnowledgeCTAGroupProps {
   heading?: string
@@ -13,6 +14,10 @@ interface KnowledgeCTAGroupProps {
   // config, overriding any heading/body passed explicitly. Omitting it
   // keeps every pre-W6-10 call site's explicit heading/body unchanged.
   category?: KnowledgeCategorySlug
+  // National SEO — per-article commercial link, wins over the category
+  // config's `commercial` when the article's money page differs from its
+  // cluster default.
+  commercialOverride?: { label: string; href: string }
 }
 
 // Shared card wrapper around the commercial funnel CTAs (Consultation /
@@ -20,8 +25,9 @@ interface KnowledgeCTAGroupProps {
 // bordered-card shape as the W0.5 content cluster's ArticleConversionCTAs,
 // reused on every /knowledge landing/hub/article page rather than
 // repeating the markup 3+ times.
-export function KnowledgeCTAGroup({ heading, body, category }: KnowledgeCTAGroupProps) {
+export function KnowledgeCTAGroup({ heading, body, category, commercialOverride }: KnowledgeCTAGroupProps) {
   const config = category ? getCTAConfig(category) : undefined
+  const commercial = commercialOverride ?? config?.commercial
   const resolvedHeading = config?.heading ?? heading ?? 'Siap Melanjutkan ke Langkah Berikutnya?'
   const resolvedBody =
     config?.body ?? body ?? 'Konsultasikan kebutuhan Anda, jelajahi koleksi bahan, atau cek Digital Body Profile Anda sebelum memesan thobe bespoke.'
@@ -34,6 +40,7 @@ export function KnowledgeCTAGroup({ heading, body, category }: KnowledgeCTAGroup
 
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
         <CTAConsultation label={config?.consultationLabel} />
+        {commercial && <CTACommercial label={commercial.label} href={commercial.href} />}
         {(config?.showFabricExplorer ?? true) && <CTAFabricExplorer />}
         {config?.showEstimatePrice && <CTAEstimatePrice />}
         {(config?.showBodyProfile ?? true) && <CTABodyProfile />}

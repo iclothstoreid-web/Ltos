@@ -10,7 +10,18 @@
       "locations": "Adresses"
     },
     "cta": "Prendre Rendez-vous",
-    "languageSwitcher": "Langue"
+    "languageSwitcher": "Langue",
+    "services": {
+      "label": "Services",
+      "items": {
+        "customThobeIndonesia": "Custom Thobe Indonésie",
+        "bespokeTailorIndonesia": "Bespoke Tailor Indonésie",
+        "jahitThobeBandung": "Couture de Thobe Bandung",
+        "tailorPremiumBandung": "Tailleur Premium Bandung",
+        "bespokeTailorBandung": "Bespoke Tailor Bandung",
+        "locations": "Adresses"
+      }
+    }
   },
   "hero": {
     "eyebrow": "Thobe Sur Mesure, Bandung",
@@ -100,7 +111,8 @@
     "columns": {
       "explore": "Découvrir",
       "studio": "Studio",
-      "sizeGuide": "Guide des Tailles"
+      "sizeGuide": "Guide des Tailles",
+      "services": "Services"
     },
     "links": {
       "designStudio": "Studio de Design",
@@ -115,7 +127,12 @@
       "freeSizeCheck": "Vérifier ma Taille Gratuitement",
       "sizeChartThobe": "Guide des Tailles Thobe",
       "menThobeSize": "Tailles Thobe Homme",
-      "howToMeasure": "Comment Mesurer un Thobe"
+      "howToMeasure": "Comment Mesurer un Thobe",
+      "customThobeIndonesia": "Custom Thobe Indonésie",
+      "bespokeTailorIndonesia": "Bespoke Tailor Indonésie",
+      "jahitThobeBandung": "Couture de Thobe Bandung",
+      "tailorPremiumBandung": "Tailleur Premium Bandung",
+      "bespokeTailorBandung": "Bespoke Tailor Bandung"
     },
     "legal": "© {year} Bespoke Tailor. Tous droits réservés.",
     "legalWithBrand": "© {year} {brand}. Tous droits réservés."
@@ -335,6 +352,9 @@
     },
     "digitalBespoke": {
       "eyebrow": "Studio de Design — Sur Mesure, Où que Vous Soyez",
+      "nationalLinksLabel": "Pages de services",
+      "pillarCustomThobe": "Custom Thobe Indonésie",
+      "pillarBespokeTailor": "Bespoke Tailor Indonésie",
       "heading": "Le Tailoring Sur Mesure Sans Limite de Distance",
       "body": "Concevez votre thobe où que vous soyez, par appel vidéo, via le Studio de Design, ou grâce à notre service de visite à domicile — la même expérience que si vous étiez en personne dans le showroom Local Tailor.",
       "experiencesHeading": "Trois Façons d'Utiliser le Studio de Design",

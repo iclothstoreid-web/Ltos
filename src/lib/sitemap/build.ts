@@ -8,6 +8,7 @@ import { ALL_KNOWLEDGE_ARTICLES } from '@/lib/knowledge/articles'
 import { fabricPhotos, garmentPhotos, measurementMannequinSrc } from '@/lib/marketing/assets'
 import { CITY_CONFIGS } from '@/lib/seo/cityConfig'
 import { SERVICE_CONFIGS } from '@/lib/seo/serviceConfig'
+import { NATIONAL_CONFIGS } from '@/lib/seo/nationalConfig'
 import { locales, localeToHreflang } from '@/i18n/config'
 import { pathForLocale } from '@/i18n/alternates'
 
@@ -85,6 +86,10 @@ export async function buildPagesSitemapEntries(supabase: SupabaseClient): Promis
     // pages (0.7), reflecting these are the highest-purchase-intent pages
     // in the site.
     ...SERVICE_CONFIGS.flatMap((service) => localizedEntries(`/${service.slug}`, 'weekly', 0.85)),
+    // National SEO (P0) — the two Indonesia-wide commercial pillars sit one
+    // step above the Bandung Revenue Landing Pages in the funnel (national
+    // -> local -> geo), so priority 0.9, level with design-studio/fabric.
+    ...NATIONAL_CONFIGS.flatMap((national) => localizedEntries(`/${national.slug}`, 'weekly', 0.9)),
   ]
 
   const materialEntries: SitemapUrlEntry[] = materials.flatMap((material) =>

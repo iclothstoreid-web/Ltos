@@ -3,13 +3,25 @@ import { BRAND } from '@/lib/brand/config'
 import { Logo } from '@/components/brand/Logo'
 import { Link } from '@/i18n/routing'
 
+// National SEO (P0-3) — commercial column: the two national pillars, the
+// three highest-intent Bandung service pages, and the locations hub. Gives
+// these pages a sitewide crawlable inbound link (the audit found them
+// orphaned from nav/footer/homepage).
+const SERVICE_LINKS = [
+  { key: 'customThobeIndonesia', href: '/custom-thobe-indonesia' },
+  { key: 'bespokeTailorIndonesia', href: '/bespoke-tailor-indonesia' },
+  { key: 'bespokeTailorBandung', href: '/bespoke-tailor-bandung' },
+  { key: 'jahitThobeBandung', href: '/jahit-thobe-bandung' },
+  { key: 'tailorPremiumBandung', href: '/tailor-premium-bandung' },
+  { key: 'locations', href: '/locations' },
+] as const
+
 const EXPLORE_LINKS = [
   { key: 'designStudio', href: '/design-studio' },
   { key: 'fabrics', href: '/fabric' },
   { key: 'gallery', href: '/gallery' },
   { key: 'journal', href: '/journal' },
   { key: 'knowledge', href: '/knowledge' },
-  { key: 'locations', href: '/locations' },
 ] as const
 
 const STUDIO_LINKS = [
@@ -29,6 +41,7 @@ export async function Footer() {
   const t = await getTranslations('footer')
 
   const columns = [
+    { title: t('columns.services'), links: SERVICE_LINKS },
     { title: t('columns.explore'), links: EXPLORE_LINKS },
     { title: t('columns.studio'), links: STUDIO_LINKS },
     { title: t('columns.sizeGuide'), links: SIZE_GUIDE_LINKS },
@@ -49,7 +62,7 @@ export async function Footer() {
     // of those, distinct from the page's main background — and restores
     // 4.8:1+ for the taupe text without changing any text color.
     <footer className="border-t border-luxury-gold/[0.14] bg-luxury-charcoal px-6 py-16 md:px-10">
-      <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-x-8 gap-y-12 sm:grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
         <div>
           <Logo variant="horizontalTagline" title={BRAND.displayName} className="h-10 w-auto text-luxury-ivory" />
           <p className="mt-3 max-w-xs font-luxury-sans text-sm text-luxury-taupe">{taglineText}</p>

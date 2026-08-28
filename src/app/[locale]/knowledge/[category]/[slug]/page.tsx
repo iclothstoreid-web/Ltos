@@ -245,7 +245,7 @@ export default function KnowledgeArticlePage({ params }: PageProps) {
           </section>
         )}
 
-        <KnowledgeCTAGroup category={article.category} />
+        <KnowledgeCTAGroup category={article.category} commercialOverride={article.commercialCta} />
       </article>
     </div>
   )

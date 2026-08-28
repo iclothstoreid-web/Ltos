@@ -21,6 +21,24 @@ const FIXED_LINKS = [
   { label: 'Book a Consultation', href: '/book-appointment' },
 ] as const
 
+// National SEO (P0-3, Task 11) — every city page links up to the two
+// national commercial pillars (national -> local -> geo).
+const NATIONAL_LINKS = [
+  { label: 'Custom Thobe Indonesia', href: '/custom-thobe-indonesia' },
+  { label: 'Bespoke Tailor Indonesia', href: '/bespoke-tailor-indonesia' },
+] as const
+
+// National SEO (Task 12) — the Bandung location page (isPrimary) also links
+// to the 5 Bandung Revenue Landing Pages, so the "tailor bandung" geo page
+// and the commercial-intent pages are connected without duplicating them.
+const BANDUNG_SERVICE_LINKS = [
+  { label: 'Bespoke Tailor Bandung', href: '/bespoke-tailor-bandung' },
+  { label: 'Tailor Premium Bandung', href: '/tailor-premium-bandung' },
+  { label: 'Jahit Thobe Bandung', href: '/jahit-thobe-bandung' },
+  { label: 'Custom Baju Koko Bandung', href: '/custom-baju-koko-bandung' },
+  { label: 'Tailor Baju Umroh Bandung', href: '/tailor-baju-umroh-bandung' },
+] as const
+
 export function CityRelatedGuides({ city }: CityRelatedGuidesProps) {
   const guides = city.relatedGuides
     .map(({ category, slug }) => getKnowledgeArticle(category, slug))
@@ -53,7 +71,22 @@ export function CityRelatedGuides({ city }: CityRelatedGuidesProps) {
           </ul>
         )}
 
-        <Reveal delay={0.1} className="mt-10 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-10 text-center">
+          <p className="font-luxury-sans text-[10px] uppercase tracking-[0.14em] text-luxury-taupe">Layanan</p>
+          <Reveal delay={0.08} className="mt-3 flex flex-wrap items-center justify-center gap-3">
+            {[...NATIONAL_LINKS, ...(city.isPrimary ? BANDUNG_SERVICE_LINKS : [])].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-full border border-luxury-gold/[0.14] px-5 py-2 font-luxury-sans text-xs uppercase tracking-[0.1em] text-luxury-taupe transition hover:border-luxury-gold/60 hover:text-luxury-gold"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </Reveal>
+        </div>
+
+        <Reveal delay={0.1} className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {FIXED_LINKS.map((link) => (
             <Link
               key={link.href}

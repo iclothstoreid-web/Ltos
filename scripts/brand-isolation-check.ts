@@ -36,6 +36,7 @@ import * as brandConfigModule from '../src/lib/brand/config'
 import { PRIMARY_ENTITY } from '../src/lib/seo/entities'
 import { CITY_BUSINESS } from '../src/lib/seo/cityConfig'
 import { FABRIC_SITE_ORIGIN } from '../src/lib/materials/seo'
+import { NATIONAL_CONFIGS } from '../src/lib/seo/nationalConfig'
 
 const ROOT = path.join(__dirname, '..')
 
@@ -135,6 +136,24 @@ check('PRIMARY_ENTITY has no "tarda"', !/tarda/i.test(JSON.stringify(PRIMARY_ENT
 check('CITY_BUSINESS.name is a Local Tailor name', /local tailor/i.test(CITY_BUSINESS.name) && !/tarda/i.test(CITY_BUSINESS.name), CITY_BUSINESS.name)
 check('CITY_BUSINESS locality/address is Bandung, not Bogor', /bandung/i.test(CITY_BUSINESS.addressLocality) && !/bogor/i.test(CITY_BUSINESS.streetAddress), `${CITY_BUSINESS.addressLocality} / ${CITY_BUSINESS.streetAddress}`)
 check('FABRIC_SITE_ORIGIN is localtailor.id', /^https:\/\/(www\.)?localtailor\.id$/.test(FABRIC_SITE_ORIGIN) && !/tarda/i.test(FABRIC_SITE_ORIGIN), FABRIC_SITE_ORIGIN)
+
+// ---------------------------------------------------------------------------
+// 5b. National commercial pillars (P0) — every entry is a single-brand
+//     Local Tailor page: scope-tagged, unique non-empty primary keyword,
+//     carries a coverage section, a route file on disk, and no "tarda".
+// ---------------------------------------------------------------------------
+{
+  const seen = new Set<string>()
+  for (const n of NATIONAL_CONFIGS) {
+    check(`nationalConfig ${n.slug}: scope === 'national'`, n.scope === 'national')
+    check(`nationalConfig ${n.slug}: keywordPrimary is non-empty`, typeof n.keywordPrimary === 'string' && n.keywordPrimary.trim().length > 0, n.keywordPrimary)
+    check(`nationalConfig ${n.slug}: keywordPrimary is unique`, !seen.has(n.keywordPrimary), n.keywordPrimary)
+    seen.add(n.keywordPrimary)
+    check(`nationalConfig ${n.slug}: has nationalCoverage`, !!n.nationalCoverage)
+    check(`nationalConfig ${n.slug}: no "tarda" anywhere in the config`, !/tarda/i.test(JSON.stringify(n)))
+    check(`nationalConfig ${n.slug}: route file exists`, existsSync(path.join(ROOT, 'src/app/[locale]', n.slug, 'page.tsx')))
+  }
+}
 
 // ---------------------------------------------------------------------------
 // 6. No runtime "tarda" token anywhere under the runtime/public surface

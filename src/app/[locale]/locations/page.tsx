@@ -167,8 +167,13 @@ export default function LocationsHubPage() {
                 Mulai dari Mana Pun Anda Berada
               </h2>
             </Reveal>
-            <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {[
+                // National SEO (Task 11) — the two commercial pillars lead
+                // the grid: this hub answers "melayani seluruh Indonesia"
+                // intent, and these are where that intent converts.
+                { title: 'Custom Thobe Indonesia', description: 'Pesan custom thobe dari kota mana pun lewat proses konsultasi dan desain jarak jauh.', href: '/custom-thobe-indonesia' },
+                { title: 'Bespoke Tailor Indonesia', description: 'Bespoke tailoring untuk busana pria muslim — satu atelier di Bandung, layanan nasional.', href: '/bespoke-tailor-indonesia' },
                 { title: 'Design Studio', description: 'Jelajahi Model, Kerah, Manset, Material, dan Warna, lihat estimasi harga langsung.', href: '/design-studio' },
                 { title: 'Fabric Explorer', description: 'Bandingkan karakteristik dan tampilan setiap pilihan bahan sebelum memutuskan.', href: '/fabric' },
                 { title: 'Book Appointment', description: 'Jadwalkan konsultasi via WhatsApp sesuai waktu Anda.', href: '/book-appointment' },

@@ -18,11 +18,16 @@ export const BANDUNG_ARTICLES: KnowledgeArticle[] = [
   {
     slug: 'custom-thobe',
     category: 'bandung',
-    eyebrow: 'Local Tailor Bandung',
-    title: 'Custom Thobe di Bandung — Layanan Bespoke Local Tailor',
-    navLabel: 'Custom Thobe Bandung',
-    metaDescription: 'Layanan custom thobe bespoke di Bandung — konsultasi, pengukuran presisi, dan produksi thobe yang dijahit khusus sesuai kebutuhan Anda.',
-    dek: 'Thobe custom yang dijahit khusus untuk Anda, dari konsultasi hingga produksi, berbasis di Bandung.',
+    eyebrow: 'Panduan Local Tailor',
+    // Cannibalization fix C2 — the commercial owner for "custom/jahit thobe
+    // bandung" is /jahit-thobe-bandung; this article is re-scoped to the
+    // supporting informational intent (what the process involves, what is
+    // included, how the estimate is set) and forwards commercial intent
+    // via the 'bandung' KnowledgeCTAGroup.
+    title: 'Custom Thobe Bandung: Proses, yang Termasuk, dan Estimasi',
+    navLabel: 'Proses Custom Thobe',
+    metaDescription: 'Apa yang termasuk dalam custom thobe di Local Tailor Bandung — tahap konsultasi, pengukuran, pembentukan pola, produksi, dan bagaimana estimasi harga ditentukan.',
+    dek: 'Apa saja yang termasuk saat memesan custom thobe di Local Tailor, tahap demi tahap.',
     definition:
       'Custom thobe di Bandung dari Local Tailor adalah layanan bespoke — thobe dijahit berdasarkan pola yang dibentuk khusus dari pengukuran badan Anda sendiri, bukan pola standar generik.',
     quickAnswer:
@@ -81,16 +86,23 @@ export const BANDUNG_ARTICLES: KnowledgeArticle[] = [
       { category: 'questions', slug: 'how-much-does-bespoke-thobe-cost' },
     ],
     relatedCategories: ['tailoring', 'fabrics'],
+    // C2 — the commercial owner for "custom/jahit thobe bandung".
+    commercialCta: { label: 'Jahit Thobe Bandung', href: '/jahit-thobe-bandung' },
     tags: { service: ['bespoke'] },
   },
   {
     slug: 'bespoke-tailor',
     category: 'bandung',
-    eyebrow: 'Local Tailor Bandung',
-    title: 'Bespoke Tailor di Bandung — Proses Local Tailor',
-    navLabel: 'Bespoke Tailor Bandung',
-    metaDescription: 'Local Tailor adalah bespoke tailor di Bandung — pola dibentuk baru dari pengukuran individu, bukan disesuaikan dari pola standar.',
-    dek: 'Memahami apa yang membedakan bespoke tailor sesungguhnya dari layanan jahit pada umumnya.',
+    eyebrow: 'Panduan Local Tailor',
+    // Cannibalization fix C1 — the commercial owner for "bespoke tailor
+    // bandung" is /bespoke-tailor-bandung. This article is re-scoped to a
+    // pure process explainer ("how bespoke works here"), not a service
+    // page, and forwards commercial intent via the 'bandung'
+    // KnowledgeCTAGroup + the related links below.
+    title: 'Cara Kerja Bespoke Tailoring di Local Tailor',
+    navLabel: 'Cara Kerja Bespoke',
+    metaDescription: 'Bagaimana proses bespoke tailoring bekerja di Local Tailor — pembentukan pola baru dari pengukuran individu, sesi fitting, dan quality control bertahap, bukan penyesuaian pola standar.',
+    dek: 'Memahami langkah-langkah yang membedakan bespoke tailoring dari layanan jahit pada umumnya.',
     definition:
       'Local Tailor adalah bespoke tailor yang berbasis di Bandung — setiap thobe dijahit dari pola yang dibentuk baru dari nol berdasarkan pengukuran individu klien, bukan pola standar yang disesuaikan.',
     quickAnswer:
@@ -200,11 +212,15 @@ export const BANDUNG_ARTICLES: KnowledgeArticle[] = [
   {
     slug: 'umrah-thobe',
     category: 'bandung',
-    eyebrow: 'Local Tailor Bandung',
-    title: 'Thobe Umrah di Bandung — Layanan Local Tailor',
-    navLabel: 'Thobe Umrah Bandung',
-    metaDescription: 'Layanan thobe umrah custom di Bandung dari Local Tailor — bahan breathable, penyesuaian fungsional, untuk kenyamanan ibadah Anda.',
-    dek: 'Thobe umrah yang disesuaikan dengan kebutuhan ibadah Anda, dijahit di Bandung.',
+    eyebrow: 'Panduan Local Tailor',
+    // Cannibalization fix C3 — the commercial owner for "tailor/thobe baju
+    // umroh bandung" is /tailor-baju-umroh-bandung. This article is
+    // re-scoped to the choosing/preparing intent (fabric, quantity,
+    // comfort, preparation), not a service page.
+    title: 'Memilih Thobe Umrah: Bahan, Jumlah, Kenyamanan, dan Persiapan',
+    navLabel: 'Memilih Thobe Umrah',
+    metaDescription: 'Panduan memilih thobe untuk umrah — bahan breathable sesuai musim, jumlah yang ideal untuk durasi perjalanan, dan penyesuaian fungsional untuk kenyamanan ibadah.',
+    dek: 'Pertimbangan bahan, jumlah, dan kenyamanan saat menyiapkan thobe untuk umrah.',
     definition:
       'Local Tailor menyediakan layanan thobe umrah custom di Bandung, mencakup konsultasi pemilihan bahan breathable dan penyesuaian fungsional seperti manset mudah wudhu, untuk kenyamanan selama ibadah.',
     quickAnswer:
@@ -240,6 +256,8 @@ export const BANDUNG_ARTICLES: KnowledgeArticle[] = [
       { category: 'bandung', slug: 'custom-thobe' },
     ],
     relatedCategories: ['umrah'],
+    // C3 — the commercial owner for "tailor baju umroh bandung".
+    commercialCta: { label: 'Tailor Baju Umroh Bandung', href: '/tailor-baju-umroh-bandung' },
     tags: { occasion: ['umrah'], service: ['bespoke'] },
   },
 ]

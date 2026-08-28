@@ -32,6 +32,16 @@ export const SERVICE_AREA_NAMES = ['Bandung'] as const
 export function buildServiceLocalBusinessSchema(service: ServiceConfig): JsonLdSchema {
   const pageUrl = `${CITY_SITE_ORIGIN}/${service.slug}`
 
+  // Same one real-world entity (one `@id`, one Bandung address) regardless
+  // of page scope. Only `areaServed` changes: the 5 local pages signal the
+  // city the workshop is in; the national pillars (scope: 'national')
+  // signal the country they ship to and consult across — the verified
+  // remote model, never a second address.
+  const areaServed =
+    service.scope === 'national'
+      ? { '@type': 'Country', name: 'Indonesia' }
+      : SERVICE_AREA_NAMES.map((name) => ({ '@type': 'City', name }))
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Tailor',
@@ -47,11 +57,7 @@ export function buildServiceLocalBusinessSchema(service: ServiceConfig): JsonLdS
       postalCode: CITY_BUSINESS.postalCode,
       addressCountry: CITY_BUSINESS.addressCountry,
     },
-    // ServiceArea — the real neighborhoods this one Bandung workshop already
-    // serves (Task 3), signaled the same schema.org-recommended way as
-    // areaServed on every /locations page: never a second fabricated
-    // address per area.
-    areaServed: SERVICE_AREA_NAMES.map((name) => ({ '@type': 'City', name })),
+    areaServed,
     availableLanguage: ALL_AVAILABLE_LANGUAGES,
   }
 }

@@ -18,6 +18,15 @@ export function buildServiceMetadata(service: ServiceConfig): Metadata {
   const title = `${capitalizeWords(service.keywordPrimary)} | ${FABRIC_BRAND_NAME}`
   const description = service.hero.subheadline.slice(0, 300)
 
+  // The 5 local pages describe the one real Bandung workshop and carry a
+  // city-level geo meta. The national pillars (scope: 'national') target
+  // an Indonesia-wide query — a Bandung `geo.placename` there would be a
+  // location mismatch, so it drops to a country-level signal instead.
+  const geoMeta: Record<string, string | number> =
+    service.scope === 'national'
+      ? { 'geo.placename': 'Indonesia', 'geo.region': 'ID' }
+      : { 'geo.placename': 'Bandung', 'geo.region': 'ID-JB' }
+
   return {
     title,
     description,
@@ -41,9 +50,6 @@ export function buildServiceMetadata(service: ServiceConfig): Metadata {
       title,
       description,
     },
-    other: {
-      'geo.placename': 'Bandung',
-      'geo.region': 'ID-JB',
-    },
+    other: geoMeta,
   }
 }
