@@ -28,12 +28,11 @@ const RENAMED_PATHS = [
   ['/knowledge/bogor', '/knowledge/bandung'],
   ['/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bogor', '/knowledge/design-studio/bespoke-tanpa-harus-datang-ke-bandung'],
   ['/knowledge/design-studio/layanan-home-visit-bogor', '/knowledge/design-studio/layanan-home-visit-bandung'],
-  // LEGACY INBOUND REDIRECT (retained): the only remaining "tarda" string in
-  // runtime config. This is a 301 SOURCE for an old, possibly-indexed public
-  // URL slug — it points AT the current Local Tailor page, never the other
-  // way. Never canonical, never in the sitemap, never linked internally.
-  // Kept so old inbound links / search results don't 404. LTOS is otherwise
-  // single-brand Local Tailor (Tarda removed).
+  // LEGACY INBOUND REDIRECT (retained): a 301 SOURCE for an old,
+  // possibly-indexed public URL slug — it points AT the current Local
+  // Tailor page, never the other way. Never canonical, never in the
+  // sitemap, never linked internally. Kept so old inbound links / search
+  // results don't 404. LTOS is single-brand Local Tailor (Tarda removed).
   ['/knowledge/design-studio/apa-itu-design-studio-tarda', '/knowledge/design-studio/apa-itu-design-studio-local-tailor'],
 ]
 
