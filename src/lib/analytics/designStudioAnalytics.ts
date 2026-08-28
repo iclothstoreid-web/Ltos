@@ -9,7 +9,7 @@ import { GA4_EVENTS } from './events'
 // separate functions firing this sprint's own §2 GA4 taxonomy
 // (configurator_start/fabric_selected/collar_selected/cuff_selected/
 // embroidery_selected/configurator_complete/configurator_exit) through
-// the new trackEvent() pipeline (standard params, session_id, etc.) — the
+// the new trackEvent() pipeline (standard params, app_session_id, etc.) — the
 // old stub's plain dataLayer.push has none of that. Both fire
 // independently when wired into the same component; call sites should
 // import this module with an explicit alias if a name collides with the

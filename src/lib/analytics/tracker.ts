@@ -57,7 +57,14 @@ export function trackEvent(name: string, params: Record<string, string | number 
   const attribution = getAttribution()
 
   const fullParams: EventParams = {
-    session_id: getOrCreateSessionId() || undefined,
+    // NEVER send `session_id` to gtag: it is a RESERVED GA4 parameter that
+    // overrides GA4's own session id (`sid`). Our value is a crypto.randomUUID()
+    // and GA4 requires `sid` to be its numeric session-start identifier, so a
+    // UUID makes GA4 accept the hit (HTTP 204) but silently discard it — nothing
+    // reaches Realtime / DebugView / reports. Send it under a non-reserved name;
+    // GA4 keeps managing its own session, and the LTOS id stays available for
+    // experiment bucketing (see src/lib/experiments/assignment.ts).
+    app_session_id: getOrCreateSessionId() || undefined,
     user_id: options.userId,
     customer_token: options.customerToken,
     city: options.city,

@@ -18,11 +18,14 @@ export type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
 // Standard parameters attached to every event this layer fires — the
 // brief's own required list. All optional here because several are only
-// resolvable client-side after hydration (session_id) or only meaningful
+// resolvable client-side after hydration (app_session_id) or only meaningful
 // on certain pages (customer_token, city) — tracker.ts fills in whatever it
 // can from context and omits the rest, rather than sending empty strings.
+//
+// `app_session_id` (not `session_id`): `session_id` is a reserved GA4
+// parameter that overrides GA4's own session id. See tracker.ts.
 export interface StandardEventParams {
-  session_id?: string
+  app_session_id?: string
   user_id?: string
   customer_token?: string
   city?: string
