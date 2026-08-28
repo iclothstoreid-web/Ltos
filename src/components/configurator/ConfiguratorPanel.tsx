@@ -137,14 +137,23 @@ export function ConfiguratorPanel({ catalog, loading, error, onRetry }: Configur
 
   return (
     <div>
-      {/* Category tab bar — horizontally scrollable, sticky to the top of
-          whichever scroll container holds it (the desktop aside, or the
-          mobile drawer body), so it stays reachable while the options
-          scroll beneath it. */}
+      {/* Category tab bar. Sprint DS-UX-Mobile — below xl (mobile + tablet,
+          the only breakpoints that ever mount this inside
+          MobileConfiguratorDrawer) it's a fixed 5-col x 2-row grid so all 10
+          categories are visible at once with zero horizontal scrolling —
+          Plaket / Bordir / Handmade Zig-Zag / Aksesori were getting lost off
+          the end of the old single-row scroller. CATEGORIES' existing order
+          already IS the required reading order (row 1: Model/Kerah/Manset/
+          Material/Warna, row 2: Saku/Plaket/Bordir/Handmade Zig-Zag/
+          Aksesori), so grid-cols-5 alone produces it with no reordering.
+          Desktop (xl+, the <aside> context only) reverts to the original
+          horizontally-scrollable single row — untouched behavior. Sticky to
+          the top of whichever scroll container holds it (desktop aside, or
+          the mobile drawer body) either way. */}
       <div
         role="tablist"
         aria-label="Kategori konfigurasi"
-        className="sticky top-0 z-10 flex gap-1.5 overflow-x-auto border-b border-luxury-gold/10 bg-luxury-navy-deep/95 px-4 py-3 backdrop-blur-sm xl:top-[84px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="sticky top-0 z-10 grid grid-cols-5 gap-1 border-b border-luxury-gold/10 bg-luxury-navy-deep/95 px-2 py-2 backdrop-blur-sm xl:top-[84px] xl:flex xl:gap-1.5 xl:overflow-x-auto xl:px-4 xl:py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {CATEGORIES.map((cat, i) => {
           const isActive = active === cat.key
@@ -154,17 +163,17 @@ export function ConfiguratorPanel({ catalog, loading, error, onRetry }: Configur
               role="tab"
               aria-selected={isActive}
               onClick={() => setActive(cat.key)}
-              className={`relative shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 font-luxury-sans text-[11px] uppercase tracking-[0.1em] transition ${
+              className={`relative flex min-h-[44px] cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg border px-1 py-1.5 text-center font-luxury-sans text-[9px] uppercase leading-[1.15] tracking-[0.02em] transition xl:min-h-0 xl:shrink-0 xl:flex-row xl:rounded-full xl:px-3.5 xl:py-1.5 xl:text-[11px] xl:tracking-[0.1em] ${
                 isActive
                   ? 'border-luxury-gold bg-luxury-gold/15 text-luxury-gold'
                   : 'border-luxury-gold/15 text-luxury-taupe hover:border-luxury-gold/40 hover:text-luxury-ivory'
               }`}
             >
-              {cat.label}
+              <span>{cat.label}</span>
               {chosen[i] && (
                 <span
                   aria-hidden="true"
-                  className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${isActive ? 'bg-luxury-gold' : 'bg-luxury-gold/60'}`}
+                  className={`absolute right-1 top-1 h-1.5 w-1.5 rounded-full xl:static xl:ml-1.5 xl:inline-block xl:align-middle ${isActive ? 'bg-luxury-gold' : 'bg-luxury-gold/60'}`}
                 />
               )}
             </button>

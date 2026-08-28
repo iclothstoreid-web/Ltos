@@ -33,7 +33,11 @@ export function MobileConfiguratorDrawer({ catalog, loading, error }: MobileConf
             portals to the end of <body>, so DOM order alone can't be relied
             on for stacking). The inner scroll area's extra bottom padding
             keeps the last field (embroidery text) reachable above that bar. */}
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-40 flex max-h-[80vh] flex-col rounded-t-2xl bg-luxury-navy-deep outline-none xl:hidden">
+        {/* Sprint DS-UX-Mobile — max-h raised 80vh -> 88vh to give back the
+            browsing room the now 2-row (was 1-row) category tab bar takes
+            at the top of this sheet, so option lists (e.g. Saku's 9 rows)
+            still have real height to scroll within. */}
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-40 flex max-h-[88vh] flex-col rounded-t-2xl bg-luxury-navy-deep outline-none xl:hidden">
           <Drawer.Handle className="mx-auto mt-3 h-1.5 w-10 shrink-0 bg-luxury-taupe/30" />
           <Drawer.Title className="px-6 pt-4 font-luxury-sans text-xs uppercase tracking-[0.14em] text-luxury-ivory">
             Konfigurasi

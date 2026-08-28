@@ -80,7 +80,9 @@ export const GarmentPreview = memo(function GarmentPreview({ catalog, loading, e
   if (loading) {
     return (
       <div className="flex h-full min-h-[60vh] w-full items-center justify-center" aria-busy="true" aria-label="Memuat preview">
-        <div className="h-[52vh] w-[40vh] max-w-[80vw] animate-pulse rounded-2xl bg-luxury-taupe/10" />
+        {/* Mirrors the loaded preview's mobile-larger / md-and-up-unchanged
+            sizing below, so there's no size jump when the catalog arrives. */}
+        <div className="h-[61vh] w-[47vh] max-w-[80vw] animate-pulse rounded-2xl bg-luxury-taupe/10 md:h-[52vh] md:w-[40vh]" />
       </div>
     )
   }
@@ -128,13 +130,49 @@ export const GarmentPreview = memo(function GarmentPreview({ catalog, loading, e
   const hasAnyDetail = detailItems.some((d) => d.option) || accessories.length > 0
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-4 px-4 py-6 md:py-8">
+    // Sprint DS-UX-Mobile — the preview is the mobile focal point: ~17%
+    // taller (58vh -> 68vh) below md, with tightened vertical padding/gap to
+    // make room, so it reads as the dominant element over the option area.
+    // md+ (tablet/desktop, both already stable) keep the original 58vh/
+    // gap-4/py-8 untouched.
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4 py-4 md:gap-4 md:py-8">
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <div
           className="will-change-transform"
           style={{ transform: `scale(${zoom})`, transition: zoomTransition }}
         >
-          <div style={{ perspective: 1400 }} className="h-[58vh] max-h-[720px] min-h-[320px] w-auto aspect-[3/4]">
+          {/* Height is `min(68vh, width-that-fits-the-screen * 4/3)` — a
+              plain `max-h` here left the box with no other sizing driver
+              (w-auto + aspect-ratio + only a max-height resolves to the
+              min-height floor, not "as large as allowed"), so the target
+              height must be computed explicitly instead. On a tall, narrow
+              phone the aspect-derived width from a flat 68vh can exceed the
+              screen (e.g. 844px tall * 0.68 = 574px tall -> 430px wide on a
+              390px-wide screen) and force horizontal scroll; this keeps
+              width auto-derived (aspect-[3/4]) from a height that's already
+              guaranteed to fit within the viewport minus a small 0.25rem
+              safety margin per side (0.5rem total — this box is allowed to
+              bleed into its container's own px-4 padding, same as the
+              original 58vh box already did in production; the margin here
+              only guards the physical viewport edge, not that padding).
+              md+ reverts to the original, unchanged explicit h-[58vh]/
+              max-h-[720px] (no width term needed — those viewports are wide
+              enough relative to height that this never bound in practice).
+              NOTE (report this): virtually every real phone screen has a
+              portrait aspect ratio around ~9:19.5 (e.g. 390x844, 414x896) —
+              far narrower than this box's 3:4 (0.75) ratio — so on ANY
+              realistic phone, width (not the 68vh figure) is the binding
+              constraint; the achievable height caps out around ~60-62vh
+              regardless of the phone's absolute size, a real but more
+              modest gain than the full 15-20% target. Overflow-safety was
+              kept as the non-negotiable constraint per this sprint's
+              explicit, repeated "jangan menyebabkan horizontal overflow"
+              requirement — see the sprint report for exact before/after
+              numbers and this trade-off. */}
+          <div
+            style={{ perspective: 1400 }}
+            className="aspect-[3/4] h-[min(68vh,calc((100vw_-_0.5rem)*4/3))] max-h-[720px] min-h-[320px] w-auto md:h-[58vh]"
+          >
             <motion.div
               className="relative h-full w-full will-change-transform [transform-style:preserve-3d]"
               animate={{ rotateY: facing === 'back' ? 180 : 0 }}
