@@ -147,7 +147,12 @@ const RUNTIME_FILES = ['next.config.js', 'middleware.ts', 'tailwind.config.ts']
 // legacy inbound 301 redirect SOURCE (old public URL slug -> current Local
 // Tailor page). It is never canonical, never in the sitemap, never linked.
 const DOCUMENTED_LEGACY: Record<string, RegExp[]> = {
-  'next.config.js': [/apa-itu-design-studio-tarda/],
+  // next.config.js keeps two "tarda" tokens, both as 301 redirect SOURCES
+  // for old public URLs -> their current Local Tailor equivalents:
+  //  - an old Knowledge article slug
+  //  - the short-lived Tarda-scoped PWA manifest path
+  // Neither is canonical, in the sitemap, or linked internally.
+  'next.config.js': [/apa-itu-design-studio-tarda/, /'\/manifest-tarda\.json'/],
 }
 // This guard script itself necessarily contains the word.
 const SELF = 'scripts/brand-isolation-check.ts'

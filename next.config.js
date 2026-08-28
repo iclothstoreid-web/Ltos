@@ -37,6 +37,12 @@ const RENAMED_PATHS = [
   ['/knowledge/design-studio/apa-itu-design-studio-tarda', '/knowledge/design-studio/apa-itu-design-studio-local-tailor'],
 ]
 
+// The PWA manifest was briefly split per brand (manifest-local-tailor.json)
+// and then Tarda-scoped (manifest-tarda.json) before LTOS collapsed back to
+// a single brand. Both were real, linked URLs; 301 them to the one
+// canonical public/manifest.json so cached PWA installs / crawlers follow.
+const LEGACY_MANIFEST_PATHS = ['/manifest-local-tailor.json', '/manifest-tarda.json']
+
 function buildRenameRedirects() {
   const redirects = []
   for (const prefix of LOCALE_PREFIXES) {
@@ -47,6 +53,9 @@ function buildRenameRedirects() {
     // (custom-thobe, bespoke-tailor, wedding-tailor, umrah-thobe), only
     // the category segment was renamed.
     redirects.push({ source: `${prefix}/knowledge/bogor/:slug`, destination: `${prefix}/knowledge/bandung/:slug`, permanent: true })
+  }
+  for (const from of LEGACY_MANIFEST_PATHS) {
+    redirects.push({ source: from, destination: '/manifest.json', permanent: true })
   }
   return redirects
 }
