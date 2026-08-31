@@ -7,6 +7,7 @@ import {
   Package,
   Sparkles,
   Users,
+  WalletCards,
 } from 'lucide-react'
 
 interface HubCard {
@@ -17,14 +18,6 @@ interface HubCard {
   ownerOnly?: boolean
 }
 
-// UX Cleanup sprint: "Pricing" used to be its own card here pointing at the
-// same /owner/master-data route as "Design Master" (price is edited right on
-// the Design Master card) — a literal duplicate menu, so it's gone; Design
-// Master's description below covers pricing now. "Inventory" (-> /inventory)
-// was likewise a duplicate of Owner OS's own "Monitoring Persediaan" sidebar
-// item, and "KPI Fitter" (-> /command-center/kpi-fitter) duplicated that same
-// sidebar's "KPI Fitter" entry — both removed rather than left as two paths
-// to one page.
 const CARDS: HubCard[] = [
   {
     label: 'Design Master',
@@ -54,6 +47,13 @@ const CARDS: HubCard[] = [
     ownerOnly: true,
   },
   {
+    label: 'Borongan Cutting & Jahit',
+    description: 'Harga basic/detail, ledger hasil scan, rekap mingguan dan status pembayaran.',
+    href: '/owner/piecework',
+    icon: WalletCards,
+    ownerOnly: true,
+  },
+  {
     label: 'Business Rules',
     description: 'Commercial, Production, Capacity, Return, Service & Notification Rules.',
     href: '/owner/business-rules',
@@ -75,7 +75,7 @@ export function MasterDataCenterHub({ canManageOperators }: MasterDataCenterHubP
       <header className="h-20 border-b-[0.5px] border-[#c4c7c7] flex items-center px-4 sm:px-8 lg:px-16 justify-between">
         <div>
           <h1 className="font-fraunces text-xl">Master Data Center</h1>
-          <p className="text-xs text-[#444748]">Design Master, Material Inventory, Operator, Divisi & Business Rules</p>
+          <p className="text-xs text-[#444748]">Design Master, Material Inventory, Operator, Divisi, Borongan & Business Rules</p>
         </div>
         <button
           type="button"
