@@ -9,9 +9,10 @@ import { GarmentBlueprintPanel } from './GarmentBlueprintPanel'
 import { AIPreviewPanel } from './AIPreviewPanel'
 import { DesignSummaryPanel } from './DesignSummaryPanel'
 import { DesignStudioFooter } from './DesignStudioFooter'
+import { FinalPreviewFooter } from './FinalPreviewFooter'
 import { DEFAULT_SELECTIONS, CATEGORY_BY_FIELD, OPTIONAL_FIELDS, NONE_SELECTION } from './types'
 import type { DesignSelections } from './types'
-import { encodeDesignNotes, decodeDesignNotes } from './notesCodec'
+import { encodeDesignNotes, decodeDesignNotes, hasDesignBlueprint } from './notesCodec'
 import { encodeFabricQuantity, decodeFabricQuantity } from './fabricQuantityCodec'
 import { firstActiveOptionName } from '@/lib/design/masterData'
 import type { MasterOptionsByCategory } from '@/lib/design/masterData'
@@ -54,6 +55,11 @@ interface DesignStudioWorkspaceProps {
   // Render Final yet / signing failed. Never persisted; see
   // renderFinal.ts's own doc comment.
   initialPreviewUrl: string | null
+  // Design Studio Phase Detection — does `measurements` already have a row
+  // for this consultation (page.tsx, existence-only query). Combined with
+  // hasDesignBlueprint(consultation.notes) to compute the initial phase —
+  // see the `phase` comment below for the full rule.
+  hasMeasurement: boolean
 }
 
 // For any field with no saved value yet (new consultation), default
@@ -86,6 +92,7 @@ export function DesignStudioWorkspace({
   userId,
   initialRenderFinal,
   initialPreviewUrl,
+  hasMeasurement,
 }: DesignStudioWorkspaceProps) {
   const router = useRouter()
   const [supabase] = useState(() => createClient())
@@ -93,6 +100,40 @@ export function DesignStudioWorkspace({
   const [selections, setSelections] = useState<DesignSelections>(() =>
     buildInitialSelections(consultation.notes, masterOptions)
   )
+
+  // Design Studio Phase Detection — 'design' is the exact status
+  // record_measurement_decision's valid branch writes (see
+  // supabase/migrations/20260903000400_correct_measurement_handoff_to_
+  // design_studio.sql), so status alone can't distinguish "measurement just
+  // finished, Fase 1 was already saved" (new flow — open Fase 2) from "a
+  // pre-flow-reversal consultation that measured before ever touching
+  // Design Studio" (6 real rows in production as of this sprint — open
+  // Fase 1, there is nothing to preview yet). hasDesignBlueprint(notes) is
+  // what actually tells the two apart, since it's only ever true once
+  // persist() has run at least once. Every other status (check_in,
+  // waiting_measurement, measurement, review, order_created — e.g. the
+  // "Edit Desain" link from Consultation Review, which always wants the
+  // configurator) always gets Fase 1, unchanged from before this sprint.
+  // Computed once from server-loaded props, not re-derived on every
+  // consultation.notes change, so mid-session edits never flip the phase
+  // out from under the fitter — a fresh page load (refresh, or arriving via
+  // a fresh navigation) is the only way phase changes, which is exactly
+  // the "safe on refresh" behavior the flow needs.
+  const [phase] = useState<'configuration' | 'final-preview'>(() =>
+    consultation.status === 'design' && hasMeasurement && hasDesignBlueprint(consultation.notes)
+      ? 'final-preview'
+      : 'configuration'
+  )
+
+  // "Edit Desain" from Consultation Review (GarmentPreviewSection) is the
+  // ONLY way into Design Studio at status 'review' — resume routing sends
+  // 'review' straight to Consultation Review otherwise. In that case the
+  // configurator still shows (so selections can be changed), but the
+  // primary footer action must SAVE AND RETURN to Consultation Review, not
+  // push the consultation back into Measurement the way the forward flow
+  // (a brand-new consultation at 'check_in') does. Computed once from the
+  // server-loaded status, same as `phase`.
+  const [isEditFromReview] = useState(() => consultation.status === 'review')
 
   // PS-01.2 (Optimistic Conflict Protection) — `persist()` used to re-base
   // every encode on the initial `consultation.notes` prop (never refreshed),
@@ -109,11 +150,19 @@ export function DesignStudioWorkspace({
 
   // Fetch Strategy (STEP 5.3, prefetch) — same reasoning as
   // MeasurementWorkspace: consultation.id is known from page load, well
-  // before the fitter finishes the design and moves to Consultation Review.
+  // before the fitter reaches this phase's own CTA. Which route to warm
+  // depends on which phase is showing: Fase 1 (Configuration) hands off to
+  // Measurement, Fase 2 (Final Preview) hands off to Consultation Review —
+  // see resumeRouteForConsultation in check-in/types.ts and the `phase`
+  // comment above for the full flow.
   useEffect(() => {
-    router.prefetch(`/workspace/consultation-review/${consultation.id}`)
+    router.prefetch(
+      phase === 'final-preview' || isEditFromReview
+        ? `/workspace/consultation-review/${consultation.id}`
+        : `/workspace/measurement/${consultation.id}`
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [consultation.id])
+  }, [consultation.id, phase, isEditFromReview])
   const [notes, setNotes] = useState<string>(() => decodeDesignSpecification(consultation.notes)?.notes ?? '')
   // Sprint V1.2.1 (Fabric Quantity Input) — the Fitter's manual meter
   // estimate. Spec-only: Fitter no longer reserves/deducts stock (see
@@ -183,7 +232,7 @@ export function DesignStudioWorkspace({
     setSelections(prev => ({ ...prev, [key]: value }))
   }
 
-  async function persist(nextStatus?: 'review') {
+  async function persist(nextStatus?: 'measurement' | 'review') {
     setLoading(true)
     try {
       let notesToSave = encodeDesignNotes(rawNotes, selections)
@@ -206,7 +255,11 @@ export function DesignStudioWorkspace({
         consultationId: consultation.id,
         notes: notesToSave,
         nextStatus: nextStatus ?? null,
-        eventType: nextStatus ? 'design.completed' : 'design.saved',
+        eventType: nextStatus
+          ? nextStatus === 'review'
+            ? 'design.updated'
+            : 'design.completed'
+          : 'design.saved',
         eventData: { ...selections },
         expectedUpdatedAt: consultationUpdatedAt,
         createdBy: userId,
@@ -216,7 +269,11 @@ export function DesignStudioWorkspace({
       setSaveConflictError(null)
 
       if (nextStatus) {
-        router.push(`/workspace/consultation-review/${consultation.id}`)
+        router.push(
+          nextStatus === 'review'
+            ? `/workspace/consultation-review/${consultation.id}`
+            : `/workspace/measurement/${consultation.id}`
+        )
       }
     } catch (err) {
       console.error(err)
@@ -224,6 +281,41 @@ export function DesignStudioWorkspace({
     } finally {
       setLoading(false)
     }
+  }
+
+  // Fase 2 (Final Preview) exit — reuses save_design_selections exactly
+  // like persist() above (same optimistic-lock + one-transaction guarantee,
+  // no new RPC needed since p_next_status/p_event_type were always free
+  // parameters). Notes are re-sent unchanged: Fase 2 never edits
+  // selections/spec, only decides whether an AI render was generated.
+  // Reached from both "Lewatkan" and a successful "Generate Final Preview"
+  // (see handleRenderGenerate below) — either way the consultation is now
+  // ready for Consultation Review.
+  async function advanceToReview(eventType: 'design.final_preview_skipped' | 'design.final_preview_generated', eventData: Record<string, unknown>) {
+    setLoading(true)
+    try {
+      const newUpdatedAt = await saveDesignSelections(supabase, {
+        consultationId: consultation.id,
+        notes: rawNotes,
+        nextStatus: 'review',
+        eventType,
+        eventData,
+        expectedUpdatedAt: consultationUpdatedAt,
+        createdBy: userId,
+      })
+      setConsultationUpdatedAt(newUpdatedAt)
+      setSaveConflictError(null)
+      router.push(`/workspace/consultation-review/${consultation.id}`)
+    } catch (err) {
+      console.error(err)
+      setSaveConflictError(err instanceof StaleConsultationError ? err.message : null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleSkipFinalPreview() {
+    advanceToReview('design.final_preview_skipped', {})
   }
 
   // Store Private, Access by Signed URL — the ONE place this component asks
@@ -290,6 +382,18 @@ export function DesignStudioWorkspace({
         await refreshPreviewUrl()
       } catch (err) {
         setRenderFinalError(err instanceof Error ? err.message : 'Gagal menyimpan Render Final.')
+      }
+
+      // Fase 2 exit — the AI render itself succeeded (independent of
+      // whether the Render Final record above also saved, same "never
+      // blocks" philosophy as that try/catch), so this consultation is done
+      // with Final Preview and moves on to Consultation Review. Guarded on
+      // phase defensively: AIPreviewPanel (and therefore this handler) is
+      // only ever reachable while phase === 'final-preview' since Fase 1
+      // doesn't render it, but this keeps the transition co-located with
+      // the one caller it's actually meant for instead of relying on that.
+      if (phase === 'final-preview') {
+        await advanceToReview('design.final_preview_generated', { renderId: result.renderId ?? null })
       }
     }
   }
@@ -383,43 +487,65 @@ export function DesignStudioWorkspace({
           </div>
         </div>
       )}
-      <main className={`${saveConflictError ? 'pt-4' : 'pt-20'} pb-44 lg:pb-32 w-full flex flex-col lg:h-screen lg:flex-row lg:overflow-hidden`}>
-        <GarmentBlueprintPanel
-          selections={selections}
-          masterOptions={masterOptions}
-          materialStock={materialStock}
-          materialColorDnaIds={materialColorDnaIds}
-          supplierColorCodeByMaterialAndColor={supplierColorCodeByMaterialAndColor}
-          onChange={handleChange}
-          notes={notes}
-          onNotesChange={setNotes}
-          fabricQuantityMeters={fabricQuantityMeters}
-          onFabricQuantityChange={setFabricQuantityMeters}
-        />
-        <AIPreviewPanel
-          customerDigitalProfile={customerDigitalProfile}
-          designSpecification={liveSpecification}
-          renderContext={renderContext}
-          onGenerate={handleRenderGenerate}
-          renderResult={renderResult}
-          renderFinal={renderFinal}
-          previewUrl={previewUrl}
-          renderFinalBusy={renderFinalBusy}
-          renderFinalError={renderFinalError}
-          onReplaceRenderFinal={handleReplaceRenderFinal}
-          onApproveRenderFinal={handleApproveRenderFinal}
-          onDownloadRenderFinal={handleDownloadRenderFinal}
-        />
+      {/* Fase 1 (Configuration) shows the configurator + a live summary;
+          Fase 2 (Final Preview) locks configuration — no going back to the
+          configurator step per the flow spec — and shows only the AI
+          Preview + the same summary, now read-only since nothing in
+          `selections` changes here. Both phases reuse GarmentBlueprintPanel/
+          AIPreviewPanel/DesignSummaryPanel exactly as they already existed;
+          only which ones render, and the fixed lg:w-[X%] gap the missing
+          one would have filled, changes here. */}
+      <main
+        className={`${saveConflictError ? 'pt-4' : 'pt-20'} pb-44 lg:pb-32 w-full flex flex-col lg:h-screen lg:flex-row lg:overflow-hidden lg:justify-center`}
+      >
+        {phase === 'configuration' && (
+          <GarmentBlueprintPanel
+            selections={selections}
+            masterOptions={masterOptions}
+            materialStock={materialStock}
+            materialColorDnaIds={materialColorDnaIds}
+            supplierColorCodeByMaterialAndColor={supplierColorCodeByMaterialAndColor}
+            onChange={handleChange}
+            notes={notes}
+            onNotesChange={setNotes}
+            fabricQuantityMeters={fabricQuantityMeters}
+            onFabricQuantityChange={setFabricQuantityMeters}
+          />
+        )}
+        {phase === 'final-preview' && (
+          <AIPreviewPanel
+            customerDigitalProfile={customerDigitalProfile}
+            designSpecification={liveSpecification}
+            renderContext={renderContext}
+            onGenerate={handleRenderGenerate}
+            renderResult={renderResult}
+            renderFinal={renderFinal}
+            previewUrl={previewUrl}
+            renderFinalBusy={renderFinalBusy}
+            renderFinalError={renderFinalError}
+            onReplaceRenderFinal={handleReplaceRenderFinal}
+            onApproveRenderFinal={handleApproveRenderFinal}
+            onDownloadRenderFinal={handleDownloadRenderFinal}
+          />
+        )}
         <DesignSummaryPanel specification={liveSpecification} selections={selections} />
       </main>
 
-      <DesignStudioFooter
-        selections={selections}
-        colorOptions={masterOptions.warna_bahan}
-        loading={loading}
-        onSave={() => persist()}
-        onContinue={() => persist('review')}
-      />
+      {phase === 'configuration' ? (
+        <DesignStudioFooter
+          selections={selections}
+          colorOptions={masterOptions.warna_bahan}
+          loading={loading}
+          onSave={() => persist()}
+          onContinue={() => persist(isEditFromReview ? 'review' : 'measurement')}
+          continueLabel={isEditFromReview ? 'Simpan & Kembali ke Tinjauan' : 'Lanjut Pengukuran'}
+        />
+      ) : (
+        <FinalPreviewFooter
+          disabled={loading || renderResult.status === 'loading'}
+          onSkip={handleSkipFinalPreview}
+        />
+      )}
     </div>
   )
 }

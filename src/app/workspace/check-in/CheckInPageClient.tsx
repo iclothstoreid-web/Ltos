@@ -131,14 +131,18 @@ export default function CheckInPageClient({
     setCreating(false)
   }
 
-  // Fetch Strategy (STEP 5.3, prefetch) — the Measurement route is already
-  // known as soon as the session is created, but the user still reads the
-  // success screen before tapping "Lanjutkan ke Pengukuran". Prefetching as
-  // soon as that route is known (instead of waiting for the click) uses
-  // that reading time to warm the RSC payload.
+  // Fetch Strategy (STEP 5.3, prefetch) — the Design Studio route is
+  // already known as soon as the session is created, but the user still
+  // reads the success screen before tapping "Lanjutkan ke Design Studio".
+  // Prefetching as soon as that route is known (instead of waiting for the
+  // click) uses that reading time to warm the RSC payload.
+  //
+  // SELL FIRST -> MEASURE AFTER: a freshly created consultation now opens
+  // Design Studio first (product selection), not Measurement — see
+  // resumeRouteForConsultation in ./types.ts for the full flow-order map.
   useEffect(() => {
     if (successData) {
-      router.prefetch(`/workspace/measurement/${successData.consultationId}`)
+      router.prefetch(`/workspace/design-studio/${successData.consultationId}`)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [successData])
@@ -151,9 +155,9 @@ export default function CheckInPageClient({
     setError(null)
   }
 
-  const handleContinueToMeasurement = () => {
+  const handleContinueToDesignStudio = () => {
     if (!successData) return
-    router.push(`/workspace/measurement/${successData.consultationId}`)
+    router.push(`/workspace/design-studio/${successData.consultationId}`)
   }
 
   return (
@@ -261,8 +265,8 @@ export default function CheckInPageClient({
             customerName={successData.customerName}
             sessionLabel={successData.consultationNumber}
             statusLabel="Siap"
-            primaryLabel="Lanjutkan ke Pengukuran"
-            onPrimaryAction={handleContinueToMeasurement}
+            primaryLabel="Lanjutkan ke Design Studio"
+            onPrimaryAction={handleContinueToDesignStudio}
           />
         )}
       </main>

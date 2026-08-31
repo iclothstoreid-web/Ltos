@@ -116,13 +116,31 @@ function assertNeverConsultationStatus(status: never): never {
 // active consultation", i.e. safe to start a new one), everything else
 // returns its exact resume route:
 //
-//   check_in / waiting_measurement / measurement -> Measurement
-//     (per MeasurementWorkspace.tsx: 'measurement' is only ever set on the
-//     re-measure path, meaning "still needs to be (re-)measured" — it never
-//     means "measured, waiting for Design," so there is no ambiguity here;
-//     'waiting_measurement' is a reserved value nothing currently writes)
-//   design    -> Design Studio (measurement completed, flips status here)
-//   review    -> Consultation Review (Design's "Lanjutkan" flips status here)
+// SELL FIRST -> MEASURE AFTER (flow-order reversal): the main journey is
+// now check_in -> Design Studio Fase 1 (Configuration) -> Measurement ->
+// Design Studio Fase 2 (Final Preview) -> Consultation Review ->
+// order_created, i.e. product selection happens before fitting, and the AI
+// preview (which needs the customer photo Measurement captures) happens
+// right after. This is a pure routing/write-target remap — the 7-value
+// status enum itself is unchanged, so every consultation created under the
+// OLD order (measurement -> design -> review) keeps resolving correctly
+// with zero data migration:
+//
+//   check_in / waiting_measurement -> Design Studio (nothing chosen yet;
+//     start of the journey under the new order — always opens Fase 1)
+//   measurement -> Measurement (written both when Design Studio Fase 1's
+//     "Lanjut Pengukuran" hands off, and by MeasurementWorkspace's
+//     "Perlu Diukur Ulang" — either way it means "at the measurement stage")
+//   design -> Design Studio (written by a validated measurement decision —
+//     record_measurement_decision, Postgres. Design Studio itself then
+//     decides Fase 1 vs Fase 2 from persisted data: hasMeasurement AND a
+//     saved blueprint means Fase 2 [Final Preview]; either one missing
+//     means Fase 1, which is exactly what a LEGACY consultation already
+//     sitting at this status pre-flow-reversal needs — it measured under
+//     the old order but never configured a design, so there's nothing to
+//     preview yet. See DesignStudioWorkspace's `phase` computation.)
+//   review -> Consultation Review (written once Design Studio Fase 2 exits
+//     — either "Lewatkan" or a successful "Generate Final Preview")
 //   order_created / cancelled -> null (terminal, see isConsultationActive)
 export function resumeRouteForConsultation(
   status: ConsultationStatus,
@@ -131,6 +149,7 @@ export function resumeRouteForConsultation(
   switch (status) {
     case 'check_in':
     case 'waiting_measurement':
+      return `/workspace/design-studio/${consultationId}`
     case 'measurement':
       return `/workspace/measurement/${consultationId}`
     case 'design':

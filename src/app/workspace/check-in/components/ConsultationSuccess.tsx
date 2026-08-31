@@ -10,9 +10,9 @@ interface ConsultationSuccessProps {
   children?: ReactNode
 }
 
-// Primary action ("Lanjut ke Pengukuran") lives in the floating SessionBar
-// now, matching the Stitch reference's single-CTA session bar — this card
-// only confirms the session and offers a lightweight way back.
+// Primary action ("Lanjutkan ke Design Studio") lives in the floating
+// SessionBar now, matching the Stitch reference's single-CTA session bar —
+// this card only confirms the session and offers a lightweight way back.
 export function ConsultationSuccess({
   consultationId,
   consultationNumber,

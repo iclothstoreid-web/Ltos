@@ -10,6 +10,11 @@ interface DesignStudioFooterProps {
   loading: boolean
   onSave: () => void
   onContinue: () => void
+  // Forward flow (new consultation) → "Lanjut Pengukuran". Entered via
+  // "Edit Desain" from Consultation Review (status already 'review') →
+  // "Simpan & Kembali ke Tinjauan", since that path must not push the
+  // consultation back into Measurement.
+  continueLabel?: string
 }
 
 export function DesignStudioFooter({
@@ -18,6 +23,7 @@ export function DesignStudioFooter({
   loading,
   onSave,
   onContinue,
+  continueLabel = 'Lanjut Pengukuran',
 }: DesignStudioFooterProps) {
   const colorHex = colorOptions.find(c => c.name === selections.color)?.metadata.hex || '#c4c7c7'
 
@@ -64,7 +70,7 @@ export function DesignStudioFooter({
           className="flex-1 lg:flex-none px-4 sm:px-10 py-3 lg:py-4 bg-[#ffdea5] text-[#261900] font-sans text-xs sm:text-sm uppercase tracking-widest
                      flex items-center justify-center gap-2 sm:gap-3 hover:bg-[#e9c176] transition-colors group disabled:opacity-40 whitespace-nowrap"
         >
-          {loading ? 'Menyimpan...' : 'Lanjutkan ke Tinjauan Konsultasi'}
+          {loading ? 'Menyimpan...' : continueLabel}
           <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
             arrow_right_alt
           </span>

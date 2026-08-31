@@ -16,10 +16,14 @@ interface WorkflowFooterProps {
   onRemeasure: () => void
 }
 
-// The Stitch reference's footer shows a single "Continue to Design Studio"
-// CTA — but the existing (frozen) business logic also supports a
-// "remeasure" decision, so that's kept as a smaller secondary action rather
-// than dropped.
+// The Stitch reference's footer shows a single primary CTA — but the
+// existing (frozen) business logic also supports a "remeasure" decision, so
+// that's kept as a smaller secondary action rather than dropped.
+//
+// SELL FIRST -> MEASURE AFTER: Measurement now comes after Design Studio's
+// Fase 1, so the primary CTA hands back to Design Studio — which opens
+// straight into its Fase 2 (Final Preview), not the configurator, once
+// both a saved design and this measurement are on record.
 export function WorkflowFooter({
   customerName,
   sessionId,
@@ -84,7 +88,7 @@ export function WorkflowFooter({
                        font-bold tracking-wider hover:bg-[#775a19] transition-all duration-300 group
                        disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {loading ? 'MENYIMPAN...' : photoUploading ? 'MENYIMPAN FOTO...' : 'LANJUT KE DESIGN STUDIO'}
+            {loading ? 'MENYIMPAN...' : photoUploading ? 'MENYIMPAN FOTO...' : 'LANJUT PREVIEW'}
             <span className="material-symbols-outlined transition-transform duration-300 group-hover:translate-x-2">
               arrow_right_alt
             </span>

@@ -98,9 +98,17 @@ export function MeasurementWorkspace({
 
   // Fetch Strategy (STEP 5.3, prefetch) — consultation.id (the next route's
   // only parameter) is known from the moment this page loads, well before
-  // the fitter finishes filling the form and taps "Lanjut ke Design Studio".
+  // the fitter finishes filling the form and taps "Lanjut Preview".
   // Prefetching here warms that navigation during the form-filling time
   // instead of at click time.
+  //
+  // SELL FIRST -> MEASURE AFTER: Measurement now comes after Design
+  // Studio's Fase 1 (Configuration), so a validated measurement hands off
+  // back to Design Studio — which, with both a saved blueprint and this
+  // measurement now on record, opens straight into its Fase 2 (Final
+  // Preview) instead of the configurator. See DesignStudioWorkspace's
+  // `phase` computation and record_measurement_decision (Postgres) for the
+  // status this decision writes.
   useEffect(() => {
     router.prefetch(`/workspace/design-studio/${consultation.id}`)
     // eslint-disable-next-line react-hooks/exhaustive-deps

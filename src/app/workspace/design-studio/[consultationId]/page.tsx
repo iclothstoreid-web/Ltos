@@ -39,10 +39,18 @@ export default async function DesignStudioPage({ params }: Props) {
   }
 
   // Request Flow Optimization (STEP 3) — profile (needs only user.id),
-  // masterOptions (flat catalog read, no inputs), and initialRenderFinal
-  // (needs only params.consultationId) don't depend on each other's
-  // results, so they're fetched together instead of one after another.
-  const [{ data: profile }, masterOptions, initialRenderFinal] = await Promise.all([
+  // masterOptions (flat catalog read, no inputs), initialRenderFinal, and
+  // measurementExists (both need only params.consultationId) don't depend
+  // on each other's results, so they're fetched together instead of one
+  // after another.
+  //
+  // Design Studio Phase Detection — measurementExists (does `measurements`
+  // have any row for this consultation) is the persisted-data signal
+  // DesignStudioWorkspace combines with the saved-blueprint signal (see
+  // notesCodec.ts's hasDesignBlueprint) to decide whether this consultation
+  // should open straight into Fase 2 (Final Preview) instead of the
+  // configurator. Existence-only, so a lean `id` select is enough.
+  const [{ data: profile }, masterOptions, initialRenderFinal, { data: existingMeasurementRows }] = await Promise.all([
     supabase
       .from('profiles')
       .select('role')
@@ -50,7 +58,13 @@ export default async function DesignStudioPage({ params }: Props) {
       .single(),
     fetchActiveMasterOptions(supabase),
     fetchRenderFinal(supabase, params.consultationId),
+    supabase
+      .from('measurements')
+      .select('id')
+      .eq('consultation_id', params.consultationId)
+      .limit(1),
   ])
+  const hasMeasurement = Boolean(existingMeasurementRows && existingMeasurementRows.length > 0)
 
   const bahanMaterialIds = masterOptions.bahan
     .map(o => o.material_id)
@@ -125,6 +139,7 @@ export default async function DesignStudioPage({ params }: Props) {
       userId={user.id}
       initialRenderFinal={initialRenderFinal}
       initialPreviewUrl={initialPreviewUrl}
+      hasMeasurement={hasMeasurement}
     />
   )
 }

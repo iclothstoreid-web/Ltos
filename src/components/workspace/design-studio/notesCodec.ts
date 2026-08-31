@@ -40,6 +40,18 @@ export function encodeDesignNotes(existingNotes: string, selections: DesignSelec
   return [withoutOurBlock.trim(), `${MARKER}\n${encoded}`].filter(Boolean).join('\n\n')
 }
 
+// Design Studio Phase Detection — the persisted, authoritative signal for
+// "has Fase 1 (Design Configuration) ever been saved for this
+// consultation". Used by DesignStudioWorkspace to decide whether a
+// consultation that has completed Measurement should open straight into
+// Fase 2 (Final Preview) instead of the configurator — a fresh/legacy
+// consultation that never saved a blueprint always falls back to
+// Configuration, even if Measurement is already done (see
+// DesignStudioWorkspace's phase computation for the full rule).
+export function hasDesignBlueprint(raw: string | null): boolean {
+  return !!raw && raw.includes(MARKER)
+}
+
 export function decodeDesignNotes(raw: string | null): Partial<DesignSelections> {
   if (!raw || !raw.includes(MARKER)) return {}
 
