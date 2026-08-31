@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Operator, OperatorStatus } from '@/lib/production/types'
+import type { MasterDivision } from '@/lib/divisions/types'
 import { OPERATOR_STATUS_LABELS, OPERATOR_STATUS_OPTIONS } from '@/lib/operators/types'
 import { createOperator, listAllOperators, setOperatorStatus, softDeleteOperator, updateOperator } from '@/lib/operators/client'
 
 interface OperatorManagerProps {
   initialOperators: Operator[]
+  initialDivisions: MasterDivision[]
 }
 
 const STATUS_BADGE: Record<OperatorStatus, string> = {
@@ -18,28 +20,51 @@ const STATUS_BADGE: Record<OperatorStatus, string> = {
   nonaktif: 'bg-[#f3d8d8] text-[#a33]',
 }
 
+// Raw Postgres / PostgREST internals we don't want to surface verbatim to
+// the user — fall back to the friendly message instead. A `raise exception`
+// from one of the operator RPCs (plain Indonesian sentences like "Hanya
+// Admin/Owner...") passes straight through.
+function safeDbError(err: unknown, fallback: string): string {
+  const raw =
+    err && typeof err === 'object' && 'message' in err
+      ? String((err as { message: unknown }).message).trim()
+      : ''
+  if (!raw) return fallback
+  if (/constraint|violates|duplicate key|syntax|relation|does not exist|permission denied|null value/i.test(raw)) {
+    return fallback
+  }
+  return raw
+}
+
 // Sprint K Operator Management — CRUD + status (Aktif/Libur/Cuti/Nonaktif) +
 // soft delete. Every write here goes through the RPC surface in
-// supabase/migrations/20260804000000_add_operator_management.sql, which
-// keeps production_operators.is_active in sync via trigger — so marking
-// someone Libur/Cuti/Nonaktif here automatically removes them from every
-// existing capacity/KPI/picker query without touching that code (Capacity
-// Integration requirement). Divisi assignment stays read-only here (UX
-// Cleanup sprint) — an operator's division_id, once set, carries through
-// edits unchanged; it's just no longer choosable from this form.
-export function OperatorManager({ initialOperators }: OperatorManagerProps) {
+// supabase/migrations/20260804000000_add_operator_management.sql (later
+// reshaped to division_id in 20260810000000), which keeps
+// production_operators.is_active in sync via trigger — so marking someone
+// Libur/Cuti/Nonaktif here automatically removes them from every existing
+// capacity/KPI/picker query without touching that code.
+//
+// Operator identity is production_operators.id (uuid), never the name —
+// 20260904000000 dropped the legacy UNIQUE(nama) constraint, so two
+// operators may share a name across different divisions ("Deka — Persiapan
+// Material" / "Deka — Cutting"). Divisi is chosen from master_divisions
+// (get_active_divisions), the single source of truth for every divisi
+// picklist in the app.
+export function OperatorManager({ initialOperators, initialDivisions }: OperatorManagerProps) {
   const router = useRouter()
   const [supabase] = useState(() => createClient())
   const [operators, setOperators] = useState(initialOperators)
+  const [divisions] = useState(initialDivisions)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [newNama, setNewNama] = useState('')
+  const [newDivisionId, setNewDivisionId] = useState('')
   const [creating, setCreating] = useState(false)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editNama, setEditNama] = useState('')
-  const [editDivisionId, setEditDivisionId] = useState<string | null>(null)
+  const [editDivisionId, setEditDivisionId] = useState<string>('')
 
   async function refresh() {
     setLoading(true)
@@ -54,38 +79,53 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
   }
 
   async function handleCreate() {
-    if (!newNama.trim()) return
+    const nama = newNama.trim()
+    if (!nama) {
+      setError('Nama operator wajib diisi')
+      return
+    }
+    if (!newDivisionId) {
+      setError('Pilih divisi terlebih dahulu')
+      return
+    }
     setCreating(true)
     setError(null)
     try {
-      await createOperator(supabase, newNama, null)
+      await createOperator(supabase, nama, newDivisionId)
       setNewNama('')
+      setNewDivisionId('')
       await refresh()
     } catch (err) {
       console.error('[operators] create failed', err)
-      setError('Gagal menambah operator.')
+      setError(safeDbError(err, 'Gagal menambah operator.'))
     } finally {
       setCreating(false)
     }
   }
 
   function startEdit(op: Operator) {
+    setError(null)
     setEditingId(op.id)
     setEditNama(op.nama)
-    setEditDivisionId(op.division_id ?? null)
+    setEditDivisionId(op.division_id ?? '')
   }
 
   async function handleSaveEdit() {
     if (!editingId) return
+    const nama = editNama.trim()
+    if (!nama) {
+      setError('Nama operator wajib diisi')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
-      await updateOperator(supabase, editingId, editNama, editDivisionId)
+      await updateOperator(supabase, editingId, nama, editDivisionId || null)
       setEditingId(null)
       await refresh()
     } catch (err) {
       console.error('[operators] update failed', err)
-      setError('Gagal mengubah operator.')
+      setError(safeDbError(err, 'Gagal mengubah operator.'))
     } finally {
       setLoading(false)
     }
@@ -99,7 +139,7 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
       await refresh()
     } catch (err) {
       console.error('[operators] status change failed', err)
-      setError('Gagal mengubah status operator.')
+      setError(safeDbError(err, 'Gagal mengubah status operator.'))
     } finally {
       setLoading(false)
     }
@@ -114,7 +154,7 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
       await refresh()
     } catch (err) {
       console.error('[operators] delete failed', err)
-      setError('Gagal menghapus operator.')
+      setError(safeDbError(err, 'Gagal menghapus operator.'))
     } finally {
       setLoading(false)
     }
@@ -125,7 +165,7 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
       <header className="h-20 border-b-[0.5px] border-[#c4c7c7] flex items-center px-4 sm:px-8 lg:px-16 justify-between">
         <div>
           <h1 className="font-fraunces text-xl">Manajemen Operator</h1>
-          <p className="text-xs text-[#444748]">Status (Aktif/Libur/Cuti/Nonaktif) dan soft delete</p>
+          <p className="text-xs text-[#444748]">Nama, Divisi, status (Aktif/Libur/Cuti/Nonaktif) dan soft delete</p>
         </div>
         <button
           type="button"
@@ -153,15 +193,30 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
               placeholder="Nama operator"
               className="flex-1 py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
             />
+            <select
+              value={newDivisionId}
+              onChange={e => setNewDivisionId(e.target.value)}
+              className="sm:w-56 py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00] bg-white"
+            >
+              <option value="">Pilih divisi…</option>
+              {divisions.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
               onClick={handleCreate}
-              disabled={creating || !newNama.trim()}
+              disabled={creating}
               className="py-2 px-4 bg-[#161b29] text-white text-xs uppercase tracking-widest hover:bg-[#755b00] transition-colors disabled:opacity-40"
             >
               {creating ? 'Menambah...' : 'Tambah'}
             </button>
           </div>
+          <p className="text-[11px] text-[#444748]">
+            Nama boleh sama untuk operator berbeda — identitas operator memakai ID unik, bukan nama.
+          </p>
         </section>
 
         <section className="space-y-3">
@@ -181,6 +236,18 @@ export function OperatorManager({ initialOperators }: OperatorManagerProps) {
                     onChange={e => setEditNama(e.target.value)}
                     className="w-full py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00]"
                   />
+                  <select
+                    value={editDivisionId}
+                    onChange={e => setEditDivisionId(e.target.value)}
+                    className="w-full py-2 px-3 border border-[#c4c7c7] text-sm outline-none focus:border-[#755b00] bg-white"
+                  >
+                    <option value="">Belum diatur</option>
+                    {divisions.map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
                   <div className="flex gap-2">
                     <button
                       type="button"
