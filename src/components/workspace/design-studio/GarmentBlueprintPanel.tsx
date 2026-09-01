@@ -15,7 +15,6 @@ import { ButtonSelector } from './ButtonSelector'
 import { EmbroideryZigzagSelector } from './EmbroideryZigzagSelector'
 import { DesignNotesField } from './DesignNotesField'
 import { SpecDetailModal } from './SpecDetailModal'
-import { DesignLookSection } from './DesignLookSection'
 import type { DesignLook } from '@/lib/design/designLooks'
 
 interface MaterialStockInfo {
@@ -40,6 +39,8 @@ interface GarmentBlueprintPanelProps {
   onNotesChange: (value: string) => void
   fabricQuantityMeters: number | null
   onFabricQuantityChange: (value: number | null) => void
+  // Kept in the prop contract for compatibility with DesignStudioWorkspace.
+  // The preset/inspiration layer is intentionally not rendered in Fitter.
   designLooks: DesignLook[]
   appliedLookId: string | null
   onApplyLook: (look: DesignLook) => void
@@ -56,9 +57,6 @@ export function GarmentBlueprintPanel({
   onNotesChange,
   fabricQuantityMeters,
   onFabricQuantityChange,
-  designLooks,
-  appliedLookId,
-  onApplyLook,
 }: GarmentBlueprintPanelProps) {
   // "Lihat Spesifikasi" state lives here, local to the picker panel — purely
   // additive on top of the existing selection workflow, doesn't touch
@@ -101,10 +99,7 @@ export function GarmentBlueprintPanel({
           Menyempurnakan siluet untuk hasil bespoke yang sempurna.
         </p>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        <DesignLookSection looks={designLooks} activeLookId={appliedLookId} onApplyLook={onApplyLook} />
-
-        <div className="p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
         <Accordion index={1} title="Model Busana" defaultOpen>
           <ModelSelector
             options={masterOptions.model_thobe}
@@ -192,7 +187,6 @@ export function GarmentBlueprintPanel({
         <Accordion index={9} title="Catatan Desain">
           <DesignNotesField value={notes} onChange={onNotesChange} />
         </Accordion>
-        </div>
       </div>
 
       <SpecDetailModal option={specOption} onClose={() => setSpecOption(null)} />
