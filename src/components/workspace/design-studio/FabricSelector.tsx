@@ -1,6 +1,7 @@
 'use client'
 
 import type { MasterDataOption } from '@/lib/design/masterData'
+import { optionCardTagline, optionCardDescription } from '@/lib/design/masterData'
 import { EmptyOptionsState } from './EmptyOptionsState'
 import { CatalogCard, CatalogGrid, type CatalogCardAvailabilityTone } from './CatalogCard'
 import { formatRupiah } from '@/lib/format/money'
@@ -62,7 +63,8 @@ export function FabricSelector({ options, selected, materialStock, onSelect, onV
           <CatalogCard
             key={option.id}
             name={option.name}
-            description={option.selling_points[0] ?? null}
+            tagline={optionCardTagline(option)}
+            description={optionCardDescription(option)}
             imageUrl={option.photo_url}
             icon="texture"
             selected={selected === option.name}

@@ -21,7 +21,10 @@ export type LayerId =
   | 'embroidery'
   | 'zigzag'
 
-export const LAYER_BY_CATEGORY: Record<MasterDataCategory, LayerId> = {
+// Partial: 'design_look' is a preset/inspiration layer, never a render layer —
+// it has no ai_dna, never reaches the render pipeline, and isKnownCategory()
+// below correctly reports false for it (dirtyLayer/detect.ts then skips it).
+export const LAYER_BY_CATEGORY: Partial<Record<MasterDataCategory, LayerId>> = {
   model_thobe: 'body',
   look_cutting: 'look',
   bahan: 'material',

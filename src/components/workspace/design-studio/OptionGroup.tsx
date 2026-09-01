@@ -1,6 +1,7 @@
 'use client'
 
 import type { MasterDataOption } from '@/lib/design/masterData'
+import { optionCardTagline, optionCardDescription } from '@/lib/design/masterData'
 import { EmptyOptionsState } from './EmptyOptionsState'
 import { CatalogCard, CatalogGrid } from './CatalogCard'
 import { NONE_SELECTION, isNoneSelection } from './types'
@@ -44,7 +45,8 @@ export function OptionGroup({ label, options, selected, onSelect, onViewSpec, al
               <CatalogCard
                 key={option.id}
                 name={option.name}
-                description={option.selling_points[0] ?? null}
+                tagline={optionCardTagline(option)}
+                description={optionCardDescription(option)}
                 imageUrl={option.photo_url}
                 selected={selected === option.name}
                 onSelect={() => onSelect(option.name)}

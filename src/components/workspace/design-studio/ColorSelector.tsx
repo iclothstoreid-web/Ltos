@@ -1,6 +1,7 @@
 'use client'
 
 import type { MasterDataOption } from '@/lib/design/masterData'
+import { optionCardTagline, optionCardDescription } from '@/lib/design/masterData'
 import { EmptyOptionsState } from './EmptyOptionsState'
 import { CatalogCard, CatalogGrid } from './CatalogCard'
 
@@ -37,7 +38,8 @@ export function ColorSelector({ options, selected, onSelect, onViewSpec, colorCo
         <CatalogCard
           key={option.id}
           name={colorCodeByOptionId[option.id] ?? option.name}
-          description={option.selling_points[0] ?? null}
+          tagline={optionCardTagline(option)}
+          description={optionCardDescription(option)}
           swatchColor={option.metadata.hex || '#c4c7c7'}
           selected={selected === option.name}
           onSelect={() => onSelect(option.name)}

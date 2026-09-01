@@ -145,7 +145,12 @@ export interface ComposeAiAssetsInput {
 // catalog-only now, not even described to GPT as text via Recipe Composer,
 // so it must never appear in `excluded` either (that field means "described
 // as text instead of image," which no longer applies to it at all).
-const NON_REFERENCE_CATEGORIES: MasterDataCategory[] = MASTER_DATA_CATEGORIES.filter((c) => c !== 'model_thobe')
+// 'design_look' excluded for the same reason as model_thobe — it is a
+// catalog-only preset layer, never a render component, so it is neither an
+// image reference nor described to GPT as text.
+const NON_REFERENCE_CATEGORIES: MasterDataCategory[] = MASTER_DATA_CATEGORIES.filter(
+  (c) => c !== 'model_thobe' && c !== 'design_look'
+)
 
 // Single 4-condition gate every AI Asset must clear — approved + active +
 // has a Hero Image snapshot + has a valid (non-`empty`) Render Recipe

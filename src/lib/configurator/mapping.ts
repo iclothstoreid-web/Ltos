@@ -5,6 +5,7 @@ import type {
   ConfiguratorOption,
   ConfiguratorOptionsByField,
 } from '@/types/configurator'
+import { fetchActiveDesignLooks, type DesignLook } from '@/lib/design/designLooks'
 
 // Configurator website integration layer — the ONLY place that translates
 // LTOS Design Studio's Product Knowledge Base (design_master_options) into
@@ -61,13 +62,22 @@ function toConfiguratorOption(row: PublicMasterOptionRow): ConfiguratorOption {
 export interface ConfiguratorCatalog {
   fields: ConfiguratorOptionsByField
   accessories: ConfiguratorOption[]
+  // Curated whole-garment presets (Sprint Design Look). Picking one pre-fills
+  // only the components it can prove from its reference photo; every pilihan
+  // stays freely changeable. Empty array when none are active.
+  looks: DesignLook[]
 }
 
 // Fetches the live, active-only Master Data (public-safe columns only) and
 // reshapes it for the configurator. Read-only — safe to call from a Server
 // Component or an API route, anon or authenticated.
 export async function getConfiguratorCatalog(supabase: SupabaseClient): Promise<ConfiguratorCatalog> {
-  const { data, error } = await supabase.rpc('list_active_design_master_options')
+  const [{ data, error }, looks] = await Promise.all([
+    supabase.rpc('list_active_design_master_options'),
+    // Never fail the whole catalog (and the configurator) over the preset
+    // layer — a Look RPC hiccup just means no inspiration grid this load.
+    fetchActiveDesignLooks(supabase).catch(() => [] as DesignLook[]),
+  ])
   if (error) throw error
   // Already ordered (category, sort_order) by the RPC itself.
   const rows = (data ?? []) as PublicMasterOptionRow[]
@@ -81,7 +91,7 @@ export async function getConfiguratorCatalog(supabase: SupabaseClient): Promise<
 
   const accessories = rows.filter((row) => row.category === ACCESSORIES_CATEGORY).map(toConfiguratorOption)
 
-  return { fields, accessories }
+  return { fields, accessories, looks }
 }
 
 export function findOption(options: ConfiguratorOption[], id: string | null): ConfiguratorOption | null {

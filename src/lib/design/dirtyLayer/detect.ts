@@ -20,7 +20,9 @@ function componentsByLayer(components: DnaStateComponent[]): Map<LayerId, string
   const map = new Map<LayerId, string>()
   components.forEach((component) => {
     if (!isKnownCategory(component.category)) return
-    map.set(LAYER_BY_CATEGORY[component.category], component.itemId)
+    const layer = LAYER_BY_CATEGORY[component.category]
+    if (!layer) return
+    map.set(layer, component.itemId)
   })
   return map
 }

@@ -11,7 +11,10 @@ import { configuratorThumb, configuratorThumbSrcSet } from '@/lib/configurator/t
 // gallery_items and only falls back to the old master-data source when the
 // Owner hasn't curated anything yet — so /gallery is never empty during the
 // migration and no existing URL breaks.
-const GALLERY_CATEGORIES: MasterDataCategory[] = ['model_thobe', 'look_cutting']
+// 'design_look' — curated whole-garment inspiration photos (Sprint Design
+// Look). They ARE finished-thobe visuals, so they belong in the gallery
+// inspiration library alongside the base models and cutting styles.
+const GALLERY_CATEGORIES: MasterDataCategory[] = ['model_thobe', 'look_cutting', 'design_look']
 
 export interface GalleryPiece {
   id: string

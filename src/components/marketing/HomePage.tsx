@@ -41,6 +41,8 @@ const jost = Jost({ subsets: ['latin'], weight: ['300', '400', '500', '600'], va
 const PrivateAppointment = dynamic(() => import('./sections/PrivateAppointment').then((m) => m.PrivateAppointment))
 // Sprint Y §Y-2 — Digital Bespoke Tailoring homepage preview.
 const DesignStudioPreview = dynamic(() => import('./sections/DesignStudioPreview').then((m) => m.DesignStudioPreview))
+// Sprint Design Look — curated whole-garment presets, photo strip -> /design-studio.
+const DesignLookTeaser = dynamic(() => import('./sections/DesignLookTeaser').then((m) => m.DesignLookTeaser))
 const BespokeProcessSection = dynamic(() => import('./sections/BespokeProcessSection').then((m) => m.BespokeProcessSection))
 const ConsultationSection = dynamic(() => import('./sections/ConsultationSection').then((m) => m.ConsultationSection))
 const MeasurementSection = dynamic(() => import('./sections/MeasurementSection').then((m) => m.MeasurementSection))
@@ -115,6 +117,9 @@ export async function HomePage() {
         <ConfiguratorPreview />
         <Suspense fallback={null}>
           <DesignStudioPreview />
+        </Suspense>
+        <Suspense fallback={null}>
+          <DesignLookTeaser />
         </Suspense>
         <Suspense fallback={null}>
           <BespokeProcessSection />

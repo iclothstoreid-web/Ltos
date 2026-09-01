@@ -23,6 +23,8 @@ import {
   trackEmbroiderySelected as trackEmbroiderySelectedGa4,
 } from '@/lib/analytics/designStudioAnalytics'
 import { OptionCard } from './OptionCard'
+import { DesignLookGallery } from './DesignLookGallery'
+import { applyLookToConfig, lookMatchesConfig, type DesignLook } from '@/lib/design/designLooks'
 
 const FIELD_TRACKERS: Record<Exclude<ConfiguratorField, 'embroidery' | 'colorId'>, (id: string, name: string) => void> = {
   modelId: trackModelSelected,
@@ -72,6 +74,24 @@ const CATEGORIES: { key: CategoryKey; label: string }[] = [
 
 export function ConfiguratorPanel({ catalog, loading, error, onRetry }: ConfiguratorPanelProps) {
   const [active, setActive] = useState<CategoryKey>('modelId')
+
+  // Design Look (preset/inspiration) — picking one pre-fills only the pilihan
+  // it can prove, then jumps to the Model tab so the visitor sees their
+  // starting point. `appliedLookId` is just the last pick; lookMatchesConfig
+  // below is what actually decides whether the highlight still holds.
+  const config = useConfiguratorStore((s) => s.config)
+  const updateConfig = useConfiguratorStore((s) => s.updateConfig)
+  const [appliedLookId, setAppliedLookId] = useState<string | null>(null)
+
+  const handlePickLook = useCallback(
+    (look: DesignLook) => {
+      if (!catalog) return
+      updateConfig(applyLookToConfig(look, catalog.fields))
+      setAppliedLookId(look.id)
+      setActive('modelId')
+    },
+    [catalog, updateConfig]
+  )
 
   // Primitive selector — re-renders the panel only when the *set* of
   // categories that carry a selection changes (≤7 times a session), not on
@@ -135,8 +155,15 @@ export function ConfiguratorPanel({ catalog, loading, error, onRetry }: Configur
     )
   }
 
+  const activeLookId =
+    appliedLookId && catalog.looks.some((l) => l.id === appliedLookId && lookMatchesConfig(l, catalog.fields, config))
+      ? appliedLookId
+      : null
+
   return (
     <div>
+      <DesignLookGallery looks={catalog.looks} activeLookId={activeLookId} onPick={handlePickLook} />
+
       {/* Category tab bar. Sprint DS-UX-Mobile — below xl (mobile + tablet,
           the only breakpoints that ever mount this inside
           MobileConfiguratorDrawer) it's a fixed 5-col x 2-row grid so all 10

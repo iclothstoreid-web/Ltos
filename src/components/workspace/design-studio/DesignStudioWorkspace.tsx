@@ -12,6 +12,7 @@ import { DesignStudioFooter } from './DesignStudioFooter'
 import { FinalPreviewFooter } from './FinalPreviewFooter'
 import { DEFAULT_SELECTIONS, CATEGORY_BY_FIELD, OPTIONAL_FIELDS, NONE_SELECTION } from './types'
 import type { DesignSelections } from './types'
+import { designLooksFromMasterOptions, applyLookToSelections, type DesignLook } from '@/lib/design/designLooks'
 import { encodeDesignNotes, decodeDesignNotes, hasDesignBlueprint } from './notesCodec'
 import { encodeFabricQuantity, decodeFabricQuantity } from './fabricQuantityCodec'
 import { firstActiveOptionName } from '@/lib/design/masterData'
@@ -100,6 +101,21 @@ export function DesignStudioWorkspace({
   const [selections, setSelections] = useState<DesignSelections>(() =>
     buildInitialSelections(consultation.notes, masterOptions)
   )
+
+  // Design Look (preset/inspiration) layer — parsed from the design_look
+  // master-data category the page already loaded. `appliedLookId` only marks
+  // "this Look was just picked"; it clears the moment any pilihan changes, so
+  // the highlight never lies about the current state.
+  const designLooks = useMemo<DesignLook[]>(
+    () => designLooksFromMasterOptions(masterOptions.design_look ?? []),
+    [masterOptions]
+  )
+  const [appliedLookId, setAppliedLookId] = useState<string | null>(null)
+
+  const handleApplyLook = (look: DesignLook) => {
+    setSelections(prev => applyLookToSelections(look, prev))
+    setAppliedLookId(look.id)
+  }
 
   // Design Studio Phase Detection — 'design' is the exact status
   // record_measurement_decision's valid branch writes (see
@@ -230,6 +246,9 @@ export function DesignStudioWorkspace({
 
   const handleChange = (key: keyof DesignSelections, value: string) => {
     setSelections(prev => ({ ...prev, [key]: value }))
+    // Any manual pilihan change means the design is no longer "the Look as
+    // picked" — drop the highlight (the selections themselves are untouched).
+    setAppliedLookId(null)
   }
 
   async function persist(nextStatus?: 'measurement' | 'review') {
@@ -510,6 +529,9 @@ export function DesignStudioWorkspace({
             onNotesChange={setNotes}
             fabricQuantityMeters={fabricQuantityMeters}
             onFabricQuantityChange={setFabricQuantityMeters}
+            designLooks={designLooks}
+            appliedLookId={appliedLookId}
+            onApplyLook={handleApplyLook}
           />
         )}
         {phase === 'final-preview' && (

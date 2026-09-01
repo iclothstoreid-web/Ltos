@@ -8,6 +8,8 @@ export type CatalogCardAvailabilityTone = 'positive' | 'warning' | 'negative' | 
 
 export interface CatalogCardProps {
   name: string
+  /** Curated one-liner shown directly under the name (from metadata.tagline). */
+  tagline?: string | null
   description?: string | null
   imageUrl?: string | null
   /** Solid-color fill for the image area instead of a photo — Warna
@@ -47,6 +49,7 @@ const AVAILABILITY_TONE_CLASSES: Record<CatalogCardAvailabilityTone, string> = {
 // view; it is never required just to see the image.
 export function CatalogCard({
   name,
+  tagline,
   description,
   imageUrl,
   swatchColor,
@@ -114,7 +117,8 @@ export function CatalogCard({
               <span className="material-symbols-outlined text-[16px] text-[#775a19] shrink-0">check_circle</span>
             )}
           </div>
-          {description && <p className="font-sans text-xs text-[#444748] truncate">{description}</p>}
+          {tagline && <p className="font-sans text-[11px] uppercase tracking-wide text-[#775a19] truncate">{tagline}</p>}
+          {description && <p className="font-sans text-xs text-[#444748] line-clamp-2">{description}</p>}
           {(availabilityLabel || priceLabel) && (
             <div className="flex items-center justify-between gap-2">
               {availabilityLabel && (

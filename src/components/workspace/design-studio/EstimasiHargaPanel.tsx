@@ -22,6 +22,9 @@ const CATEGORY_LABELS: Record<MasterDataCategory, string> = {
   aksesori: 'Kancing',
   bordir: 'Bordir',
   handmade_zigzag: 'Handmade Zig-Zag',
+  // Not a priced pilihan — Design Look is a preset layer, never itemised in
+  // the estimate. Present only to keep this Record total.
+  design_look: 'Design Look',
 }
 
 // Read-only display of the PriceSnapshot buildDesignSpecification() already

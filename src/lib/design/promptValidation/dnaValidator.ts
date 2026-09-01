@@ -29,6 +29,9 @@ export const DNA_REQUIRED_FIELDS_BY_CATEGORY: Record<MasterDataCategory, readonl
   aksesori: ['referenceInstruction'],
   bordir: ['referenceInstruction'],
   handmade_zigzag: ['referenceInstruction'],
+  // Design Look has no AI Design DNA workflow (it is a preset, not a render
+  // component) — this entry only keeps the Record total.
+  design_look: ['referenceInstruction'],
 }
 
 export interface DnaValidatorResult {

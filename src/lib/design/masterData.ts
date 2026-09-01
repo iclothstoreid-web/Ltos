@@ -28,6 +28,13 @@ export const MASTER_DATA_CATEGORIES = [
   'aksesori',
   'bordir',
   'handmade_zigzag',
+  // Design Look — a curated whole-garment PRESET/inspiration, not a base
+  // model. It is the one category that is NOT a Design Studio pilihan field
+  // (see design-studio/types.ts CATEGORY_BY_FIELD, deliberately unchanged):
+  // it has no slot in DesignSelections/DesignConfig. It reuses this table
+  // purely for its catalog shape (name, photo_url, selling_points, metadata,
+  // sort_order, is_active) and admin plumbing. See src/lib/design/designLooks.ts.
+  'design_look',
 ] as const
 
 export type MasterDataCategory = (typeof MASTER_DATA_CATEGORIES)[number]
@@ -44,10 +51,34 @@ export const MASTER_DATA_CATEGORY_LABELS: Record<MasterDataCategory, string> = {
   aksesori: 'Aksesori',
   bordir: 'Bordir',
   handmade_zigzag: 'Handmade Zig-Zag',
+  design_look: 'Design Look',
 }
 
 export function masterDataCategoryLabel(category: MasterDataCategory): string {
   return MASTER_DATA_CATEGORY_LABELS[category]
+}
+
+// ── Catalog card presentation ──────────────────────────────────────────────
+// A short, curated one-liner for a catalog card, from `metadata.tagline`.
+export function optionCardTagline(
+  option: Pick<MasterDataOption, 'metadata'>
+): string | null {
+  return option.metadata?.tagline?.trim() || null
+}
+
+// The description line under the tagline. Guards against the historical bug
+// where a whole multi-paragraph blurb (with "Tagline"/"Deskripsi"/
+// "Keunggulan" section headers) was pasted into selling_points[0] — that
+// must never render on a card. Falls back to nothing rather than a wall of
+// text; the full copy still shows in the Lihat Spesifikasi modal.
+export function optionCardDescription(
+  option: Pick<MasterDataOption, 'selling_points'>
+): string | null {
+  const first = option.selling_points?.[0]?.trim()
+  if (!first) return null
+  if (first.length > 130) return null
+  if (/\b(tagline|deskripsi|keunggulan)\b/i.test(first)) return null
+  return first
 }
 
 // Handmade Zig-Zag identifies items by motif rather than a generic name —
@@ -64,6 +95,7 @@ export const MASTER_DATA_NAME_LABEL: Record<MasterDataCategory, string> = {
   aksesori: 'Nama',
   bordir: 'Nama',
   handmade_zigzag: 'Nama Motif',
+  design_look: 'Nama Design Look',
 }
 
 export interface MasterDataOption {
