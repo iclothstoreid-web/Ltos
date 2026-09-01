@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { PriceSnapshot } from '@/lib/designSpecification/types'
 import { formatRupiah } from '@/lib/format/money'
 import { getOrderInvoice, recordOrderPayment, upsertOrderQuotation } from '@/lib/commercial/client'
+import { uploadPaymentProof, attachPaymentProof, getPaymentProofSignedUrl } from '@/lib/commercial/paymentProof'
 import type { OrderInvoice, PaymentMethod, PaymentType } from '@/lib/commercial/types'
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_TYPE_LABELS } from '@/lib/commercial/types'
 
@@ -13,36 +14,51 @@ interface PaymentSummaryCardProps {
   priceSnapshot: PriceSnapshot | null
 }
 
-// Sprint K Commercial Engine's first real payment-collection surface. On
-// mount, persists the already-computed PriceSnapshot as this Order's
-// quotation (1:1, upsert) — the pricing math itself still lives only in
-// buildDesignSpecification(), never recomputed here. Then reads
-// get_order_invoice() (the Invoice Foundation) for totals/payment history,
-// and lets front-desk staff record a DP/Full/Cicilan payment. Discount/KOL/
-// Owner Override stay Owner OS-only (see OrderDetailModal's Komersial
-// section) — this Fitter-facing card only ever displays them read-only.
+const METHODS: PaymentMethod[] = ['tunai', 'transfer', 'qris']
+// The Fitter only ever records the two the desk actually collects here;
+// Cicilan/Pembayaran Penuh stay valid in the RPC for other flows.
+const PAYMENT_TYPES: PaymentType[] = ['dp', 'pelunasan', 'installment']
+
+const STATUS_TONE: Record<string, string> = {
+  lunas: 'text-[#006c49] bg-[#006c49]/10',
+  dp_diterima: 'text-[#8a5a00] bg-[#8a5a00]/10',
+  belum_dibayar: 'text-[#ba1a1a] bg-[#ba1a1a]/10',
+  belum_ada_harga: 'text-[#444748] bg-[#444748]/10',
+  tidak_ada_tagihan: 'text-[#444748] bg-[#444748]/10',
+}
+
+// Sprint K Commercial Engine's payment-collection surface — Fase 2 reworks
+// the entry UX (TUNAI / TRANSFER / QRIS buttons + DP/Pelunasan + proof
+// upload) on top of the already-complete backend: upsert_order_quotation
+// persists the computed PriceSnapshot, get_order_invoice returns
+// totals/status/history, record_order_payment is idempotent (one intent key
+// per form open) and enforces Commercial Rules, attach_payment_proof links
+// a Transfer/QRIS receipt after the fact.
 export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCardProps) {
   const [supabase] = useState(() => createClient())
   const [invoice, setInvoice] = useState<OrderInvoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [showForm, setShowForm] = useState(false)
+  const [method, setMethod] = useState<PaymentMethod | null>(null)
   const [amount, setAmount] = useState('')
   const [paymentType, setPaymentType] = useState<PaymentType>('dp')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('tunai')
+  const [notes, setNotes] = useState('')
+  const [proofFile, setProofFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
-  // PS-01.6 (Double-Process Protection) — one key per payment *intent*,
-  // generated when the form opens (not per click of Simpan) so a
-  // double-click, a browser retry, or a second tab submitting this same
-  // form all replay onto the same record_order_payment call instead of
-  // creating a second payment row. Cleared after a successful save so the
-  // *next* genuinely new payment (e.g. a second installment) gets its own key.
-  const [paymentIntentKey, setPaymentIntentKey] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement | null>(null)
+
+  // One idempotency key per payment INTENT (form open), replayed across a
+  // double-click / retry / second tab — the RPC returns the same row.
+  const [intentKey, setIntentKey] = useState<string | null>(null)
+
+  async function refresh() {
+    setInvoice(await getOrderInvoice(supabase, orderId))
+  }
 
   useEffect(() => {
     let cancelled = false
-    async function load() {
+    ;(async () => {
       setLoading(true)
       setError(null)
       try {
@@ -57,36 +73,78 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
       } finally {
         if (!cancelled) setLoading(false)
       }
-    }
-    load()
+    })()
     return () => {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId])
 
-  async function handleRecordPayment() {
+  function openForm(m: PaymentMethod) {
+    if (!invoice) return
+    setMethod(m)
+    setError(null)
+    setIntentKey(crypto.randomUUID())
+    setProofFile(null)
+    setNotes('')
+    // Smart defaults: first payment -> DP; anything after -> Pelunasan for
+    // the remaining balance.
+    const firstPayment = invoice.total_paid <= 0
+    setPaymentType(firstPayment ? 'dp' : 'pelunasan')
+    setAmount(firstPayment ? '' : String(Math.max(invoice.balance_due, 0)))
+  }
+
+  function closeForm() {
+    setMethod(null)
+    setIntentKey(null)
+    setProofFile(null)
+  }
+
+  async function confirmPayment() {
+    if (!method || !invoice) return
     const value = Number(amount)
     if (!Number.isFinite(value) || value <= 0) {
-      setError('Jumlah pembayaran tidak valid.')
+      setError('Nominal pembayaran tidak valid.')
       return
     }
     setSaving(true)
     setError(null)
     try {
-      const key = paymentIntentKey ?? globalThis.crypto.randomUUID()
-      if (!paymentIntentKey) setPaymentIntentKey(key)
-      await recordOrderPayment(supabase, { orderId, amount: value, paymentType, paymentMethod, idempotencyKey: key })
-      setInvoice(await getOrderInvoice(supabase, orderId))
+      // Upload proof first (Transfer/QRIS, optional) so a failed upload
+      // stops before any payment is recorded.
+      let proofPath: string | null = null
+      if (proofFile && method !== 'tunai') {
+        proofPath = await uploadPaymentProof(supabase, { orderId, file: proofFile })
+      }
+
+      const key = intentKey ?? crypto.randomUUID()
+      if (!intentKey) setIntentKey(key)
+      const payment = await recordOrderPayment(supabase, {
+        orderId,
+        amount: value,
+        paymentType,
+        paymentMethod: method,
+        notes: notes.trim() || undefined,
+        idempotencyKey: key,
+      })
+
+      if (proofPath) {
+        try {
+          await attachPaymentProof(supabase, payment.id, proofPath)
+        } catch (err) {
+          // Payment is safe; only the receipt link failed to attach.
+          console.error('[order-created] attach proof failed', err)
+        }
+      }
+
+      await refresh()
+      closeForm()
       setAmount('')
-      setShowForm(false)
-      setPaymentIntentKey(null)
     } catch (err) {
       console.error('[order-created] record payment failed', err)
       // Commercial Rules (Minimal DP / Full Payment) reject with a specific,
-      // staff-actionable message — surface it instead of a generic failure.
-      const message = err instanceof Error ? err.message : null
-      setError(message || 'Gagal mencatat pembayaran.')
+      // staff-actionable message — surface it verbatim.
+      setError(err instanceof Error ? err.message : 'Gagal mencatat pembayaran.')
     } finally {
       setSaving(false)
     }
@@ -95,7 +153,7 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
   return (
     <section className="bg-white/70 backdrop-blur-sm border-[0.5px] border-[#c4c7c7]/40 shadow-sm p-4">
       <h3 className="font-sans text-xs text-[#444748] uppercase tracking-widest mb-4 border-b border-[#c4c7c7] pb-2">
-        Ringkasan Pembayaran
+        Pembayaran
       </h3>
 
       {loading && <p className="font-sans text-sm text-[#444748]">Memuat...</p>}
@@ -103,140 +161,136 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
 
       {!loading && invoice && (
         <>
-          <div className="space-y-3 mb-6">
-            {invoice.line_items.length === 0 ? (
-              <div className="flex justify-between font-sans text-sm">
-                <span className="text-[#444748]">Subtotal</span>
-                <span className="text-[#151c27]">Belum dihitung</span>
-              </div>
-            ) : (
-              invoice.line_items.map(line => (
-                <div key={line.optionId} className="flex justify-between font-sans text-sm">
-                  <span className="text-[#444748]">{line.optionName}</span>
-                  <span className="text-[#151c27]">{formatRupiah(line.subtotal)}</span>
-                </div>
-              ))
-            )}
-            {invoice.discount_amount > 0 && (
-              <div className="flex justify-between font-sans text-sm">
-                <span className="text-[#444748]">Diskon</span>
-                <span className="text-[#151c27]">-{formatRupiah(invoice.discount_amount)}</span>
-              </div>
-            )}
-            {invoice.kol_discount_amount > 0 && (
-              <div className="flex justify-between font-sans text-sm">
-                <span className="text-[#444748]">Diskon KOL{invoice.kol_code ? ` (${invoice.kol_code})` : ''}</span>
-                <span className="text-[#151c27]">-{formatRupiah(invoice.kol_discount_amount)}</span>
-              </div>
-            )}
-            {invoice.override_amount != null && (
-              <div className="flex justify-between font-sans text-sm">
-                <span className="text-[#444748]">Override Harga</span>
-                <span className="text-[#151c27]">{formatRupiah(invoice.override_amount)}</span>
-              </div>
-            )}
-            <div className="h-[0.5px] bg-[#747878] border-dashed border-t-[0.5px]" />
-            <div className="flex justify-between items-baseline pt-2">
-              <span className="font-sans text-xs font-bold text-[#151c27]">TOTAL KESELURUHAN</span>
-              <span className="font-fraunces text-lg text-[#151c27]">{formatRupiah(invoice.total)}</span>
-            </div>
-            <div className="flex justify-between font-sans text-xs">
-              <span className="text-[#444748]">Sudah Dibayar</span>
-              <span className="text-[#151c27]">{formatRupiah(invoice.total_paid)}</span>
-            </div>
-            <div className="flex justify-between font-sans text-xs">
-              <span className="text-[#444748]">Sisa Tagihan</span>
-              <span className="text-[#151c27] font-semibold">{formatRupiah(invoice.balance_due)}</span>
-            </div>
+          {/* ── Total / Dibayar / Sisa / Status ─────────────────────────── */}
+          <div className="space-y-1.5 mb-4">
+            <Row label="Total Order" value={invoice.has_quotation ? formatRupiah(invoice.total) : 'Belum dihitung'} bold />
+            <Row label="Sudah Dibayar" value={formatRupiah(invoice.total_paid)} />
+            <Row label="Sisa" value={formatRupiah(invoice.balance_due)} bold />
           </div>
-
-          <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-[18px] text-[#775a19]">
+          <div
+            className={`inline-flex items-center gap-1.5 px-2 py-1 mb-4 font-sans text-[10px] uppercase tracking-wider ${
+              STATUS_TONE[invoice.payment_status] ?? STATUS_TONE.belum_ada_harga
+            }`}
+          >
+            <span className="material-symbols-outlined text-[14px]">
               {invoice.payment_status === 'lunas' ? 'task_alt' : 'pending'}
             </span>
-            <span className="font-sans text-xs uppercase text-[#775a19]">
-              Status: {PAYMENT_STATUS_LABELS[invoice.payment_status]}
-            </span>
+            {PAYMENT_STATUS_LABELS[invoice.payment_status]}
           </div>
 
           {invoice.invoice_notes && (
             <p className="font-sans text-[10px] text-[#444748] italic mb-4">{invoice.invoice_notes}</p>
           )}
 
+          {/* ── Payment history ─────────────────────────────────────────── */}
           {invoice.payments.length > 0 && (
-            <div className="mb-4 space-y-2">
-              <p className="font-sans text-[10px] uppercase text-[#444748]">Riwayat Pembayaran</p>
-              {invoice.payments.map(p => (
-                <div key={p.id} className="flex justify-between font-sans text-xs">
-                  <span className="text-[#444748]">
-                    {PAYMENT_TYPE_LABELS[p.payment_type]}
-                    {p.payment_method ? ` · ${PAYMENT_METHOD_LABELS[p.payment_method]}` : ''}
-                  </span>
-                  <span className="text-[#151c27]">{formatRupiah(p.amount)}</span>
-                </div>
+            <div className="mb-4 space-y-1.5 border-t border-[#c4c7c7]/30 pt-3">
+              <p className="font-sans text-[10px] uppercase text-[#444748]">Riwayat</p>
+              {invoice.payments.map((p) => (
+                <PaymentRow key={p.id} payment={p} />
               ))}
             </div>
           )}
 
-          {invoice.balance_due > 0 && !showForm && (
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="w-full py-2 bg-[#151c27] text-white text-[10px] uppercase tracking-widest hover:bg-[#775a19] transition-colors"
-            >
-              Catat Pembayaran
-            </button>
-          )}
+          {/* ── Collect payment ────────────────────────────────────────── */}
+          {invoice.payment_status === 'tidak_ada_tagihan' ? (
+            <p className="font-sans text-xs text-[#444748]">Order ini tidak memerlukan pembayaran.</p>
+          ) : invoice.payment_status === 'belum_ada_harga' ? (
+            <p className="font-sans text-xs text-[#444748]">Harga belum tersedia — pembayaran belum bisa dicatat.</p>
+          ) : invoice.balance_due <= 0 ? (
+            <p className="font-sans text-xs text-[#006c49]">Pembayaran lunas.</p>
+          ) : !method ? (
+            <div>
+              <p className="font-sans text-[10px] uppercase text-[#444748] mb-2">Catat Pembayaran</p>
+              <div className="grid grid-cols-3 gap-2">
+                {METHODS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => openForm(m)}
+                    className="py-2.5 border border-[#151c27] text-[#151c27] font-sans text-[11px] uppercase tracking-wider hover:bg-[#151c27] hover:text-white transition-colors"
+                  >
+                    {PAYMENT_METHOD_LABELS[m]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2.5 border-t border-[#c4c7c7]/30 pt-3">
+              <div className="flex items-center justify-between">
+                <span className="font-sans text-xs font-semibold text-[#151c27]">
+                  Metode: {PAYMENT_METHOD_LABELS[method]}
+                </span>
+                <button type="button" onClick={closeForm} className="material-symbols-outlined text-[16px] text-[#444748]">
+                  close
+                </button>
+              </div>
 
-          {showForm && (
-            <div className="space-y-2 pt-2 border-t border-[#c4c7c7]/30">
-              <input
-                type="number"
-                min={1}
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                placeholder="Jumlah (Rp)"
-                className="w-full py-2 px-2 border border-[#c4c7c7] text-sm outline-none focus:border-[#775a19]"
-              />
-              <div className="flex gap-2">
+              <label className="block">
+                <span className="font-sans text-[10px] uppercase text-[#444748]">Jenis</span>
                 <select
                   value={paymentType}
-                  onChange={e => setPaymentType(e.target.value as PaymentType)}
-                  className="flex-1 py-2 px-2 border border-[#c4c7c7] text-xs outline-none"
+                  onChange={(e) => setPaymentType(e.target.value as PaymentType)}
+                  className="mt-1 w-full py-2 px-2 border border-[#c4c7c7] text-xs outline-none focus:border-[#775a19]"
                 >
-                  {(Object.keys(PAYMENT_TYPE_LABELS) as PaymentType[]).map(t => (
+                  {PAYMENT_TYPES.map((t) => (
                     <option key={t} value={t}>
                       {PAYMENT_TYPE_LABELS[t]}
                     </option>
                   ))}
                 </select>
-                <select
-                  value={paymentMethod}
-                  onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-                  className="flex-1 py-2 px-2 border border-[#c4c7c7] text-xs outline-none"
-                >
-                  {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map(m => (
-                    <option key={m} value={m}>
-                      {PAYMENT_METHOD_LABELS[m]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2">
+              </label>
+
+              <label className="block">
+                <span className="font-sans text-[10px] uppercase text-[#444748]">Nominal (Rp)</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder={`Sisa: ${formatRupiah(invoice.balance_due)}`}
+                  className="mt-1 w-full py-2 px-2 border border-[#c4c7c7] text-sm outline-none focus:border-[#775a19]"
+                />
+              </label>
+
+              <label className="block">
+                <span className="font-sans text-[10px] uppercase text-[#444748]">Catatan (opsional)</span>
+                <input
+                  type="text"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="mt-1 w-full py-2 px-2 border border-[#c4c7c7] text-sm outline-none focus:border-[#775a19]"
+                />
+              </label>
+
+              {method !== 'tunai' && (
+                <div>
+                  <span className="font-sans text-[10px] uppercase text-[#444748]">Bukti Pembayaran (opsional)</span>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="mt-1 w-full py-2 border border-dashed border-[#747878] font-sans text-xs text-[#444748] hover:border-[#775a19] transition-colors truncate"
+                  >
+                    {proofFile ? proofFile.name : 'Pilih file (JPG / PNG / PDF)'}
+                  </button>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={handleRecordPayment}
+                  onClick={confirmPayment}
                   disabled={saving}
-                  className="flex-1 py-2 bg-[#151c27] text-white text-[10px] uppercase tracking-widest hover:bg-[#775a19] transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-[#151c27] text-white font-sans text-[11px] uppercase tracking-widest hover:bg-[#775a19] transition-colors disabled:opacity-50"
                 >
-                  {saving ? 'Menyimpan...' : 'Simpan'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 py-2 border border-[#747878] text-[10px] uppercase tracking-widest"
-                >
-                  Batal
+                  {saving ? 'Menyimpan...' : 'Konfirmasi Pembayaran'}
                 </button>
               </div>
             </div>
@@ -244,5 +298,46 @@ export function PaymentSummaryCard({ orderId, priceSnapshot }: PaymentSummaryCar
         </>
       )}
     </section>
+  )
+}
+
+function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div className="flex justify-between font-sans text-xs">
+      <span className="text-[#444748]">{label}</span>
+      <span className={bold ? 'text-[#151c27] font-semibold' : 'text-[#151c27]'}>{value}</span>
+    </div>
+  )
+}
+
+function PaymentRow({ payment }: { payment: OrderInvoice['payments'][number] }) {
+  const [busy, setBusy] = useState(false)
+  async function viewProof() {
+    if (!payment.payment_proof_path) return
+    setBusy(true)
+    const url = await getPaymentProofSignedUrl(payment.payment_proof_path)
+    setBusy(false)
+    if (url) window.open(url, '_blank', 'noopener,noreferrer')
+  }
+  return (
+    <div className="flex items-center justify-between gap-2 font-sans text-xs">
+      <span className="text-[#444748] truncate">
+        {PAYMENT_TYPE_LABELS[payment.payment_type]}
+        {payment.payment_method ? ` · ${PAYMENT_METHOD_LABELS[payment.payment_method]}` : ''}
+      </span>
+      <span className="flex items-center gap-2 shrink-0">
+        {payment.payment_proof_path && (
+          <button
+            type="button"
+            onClick={viewProof}
+            disabled={busy}
+            className="text-[10px] uppercase tracking-wider text-[#775a19] hover:underline disabled:opacity-50"
+          >
+            {busy ? '...' : 'Bukti'}
+          </button>
+        )}
+        <span className="text-[#151c27]">{formatRupiah(payment.amount)}</span>
+      </span>
+    </div>
   )
 }

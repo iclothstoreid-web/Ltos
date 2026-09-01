@@ -12,8 +12,7 @@ import { DEFAULT_SELECTIONS } from '@/components/workspace/design-studio/types'
 import { decodeFabricQuantity } from '@/components/workspace/design-studio/fabricQuantityCodec'
 import { createOrderFromConsultation, OrderValidationError } from '@/lib/order/createOrder'
 import { TopNavBar } from './TopNavBar'
-import { CustomerSummaryCard } from './CustomerSummaryCard'
-import { MeasurementSummaryCard } from './MeasurementSummaryCard'
+import { WorkspaceCustomerHeader } from '@/components/workspace/WorkspaceCustomerHeader'
 import { GarmentPreviewSection } from './GarmentPreviewSection'
 import { ConsultationNotesCard } from './ConsultationNotesCard'
 import { PriceSummaryCard } from './PriceSummaryCard'
@@ -341,29 +340,31 @@ export function ConsultationReviewWorkspace({
         </div>
       )}
 
-      <main className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 lg:py-16 flex flex-col md:flex-row gap-8">
-        <aside className="w-full md:w-1/4 flex flex-col gap-8">
-          <CustomerSummaryCard
-            customerName={consultation.customers.name}
-            customerId={consultation.customers.id}
-            isPreferred={consultation.customers.is_preferred_client}
-            sessionNumber={consultation.consultation_number}
-            fitterName={fitterName}
-          />
-          <MeasurementSummaryCard
-            consultationId={consultation.id}
-            filledCount={filledCount}
-            totalCount={totalFields}
-            bodyTags={decodedMeasurement.tags}
-          />
-        </aside>
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pt-8">
+        <WorkspaceCustomerHeader
+          customerName={consultation.customers.name}
+          isPreferred={consultation.customers.is_preferred_client}
+          fitterName={fitterName}
+          identifiers={[
+            { label: 'Customer', value: `#${consultation.customers.id.slice(0, 8).toUpperCase()}` },
+            { label: 'Sesi', value: consultation.consultation_number },
+          ]}
+          measurement={{
+            consultationId: consultation.id,
+            filledCount,
+            totalCount: totalFields,
+            bodyTags: decodedMeasurement.tags,
+          }}
+        />
+      </div>
 
-        <article className="w-full md:w-[45%] flex flex-col gap-8">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 lg:py-10 flex flex-col lg:flex-row gap-8 lg:items-start">
+        <article className="w-full lg:flex-1 flex flex-col gap-8 min-w-0">
           <GarmentPreviewSection consultationId={consultation.id} selections={selections} />
           <ConsultationNotesCard notes={decodedMeasurement.humanNotes} />
         </article>
 
-        <aside className="w-full md:w-[30%] flex flex-col gap-8">
+        <aside className="w-full lg:w-[360px] xl:w-[400px] lg:shrink-0 flex flex-col gap-8">
           <PriceSummaryCard priceSnapshot={liveDesignSpecification?.priceSnapshot ?? null} />
           {saveConflictError && (
             <div className="bg-[#fdecea] border-[0.5px] border-[#c0392b] p-3">

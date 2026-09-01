@@ -18,6 +18,10 @@ export interface OrderPayment {
   recorded_by: string | null
   paid_at: string
   created_at: string
+  // Fase 2 — private-bucket object path for a Transfer/QRIS proof, or null.
+  // View via getPaymentProofSignedUrl(); flows through get_order_invoice's
+  // row_to_json(pay) automatically once the column exists.
+  payment_proof_path: string | null
 }
 
 // Shape returned by get_order_invoice() — the Invoice Foundation.

@@ -51,22 +51,10 @@ export function PriceSummaryCard({ priceSnapshot }: PriceSummaryCardProps) {
         </div>
       </div>
       <div className="mt-6 pt-6 border-t border-[#c4c7c7]/30">
-        <p className="font-sans text-[10px] uppercase text-[#444748] mb-3">
-          Status Pembayaran: <span className="text-[#ba1a1a] font-bold italic">Belum Diterima</span>
+        <p className="font-sans text-[11px] text-[#444748] leading-relaxed">
+          Pembayaran (Tunai / Transfer / QRIS, DP atau pelunasan) dicatat pada layar
+          <span className="font-semibold text-[#151c27]"> Order Berhasil Dibuat</span> setelah pesanan difinalisasi.
         </p>
-        <div className="flex gap-2">
-          {['Tunai', 'Transfer', 'QRIS'].map(method => (
-            <button
-              key={method}
-              type="button"
-              disabled
-              title="Pembayaran tersedia setelah Order dibuat"
-              className="flex-1 py-2 border border-[#747878] text-[10px] uppercase tracking-tighter opacity-50 cursor-not-allowed"
-            >
-              {method}
-            </button>
-          ))}
-        </div>
       </div>
     </section>
   )

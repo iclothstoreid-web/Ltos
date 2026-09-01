@@ -1,6 +1,7 @@
 'use client'
 
 import type { OrderSnapshot } from '@/lib/order/types'
+import { selectionLabel } from '@/lib/design/selectionDisplay'
 
 interface OrderSuccessHeroProps {
   orderNumber: string
@@ -37,7 +38,7 @@ export function OrderSuccessHero({ orderNumber, snapshot }: OrderSuccessHeroProp
             <p className="font-sans text-[10px] text-[#c8c6c5] uppercase tracking-widest mb-1">
               Paspor Busana
             </p>
-            <h4 className="font-fraunces italic text-lg">{snapshot.design.model}</h4>
+            <h4 className="font-fraunces italic text-lg">{selectionLabel(snapshot.design.model, 'Model bebas')}</h4>
           </div>
           <span className="material-symbols-outlined text-[#c8c6c5]">badge</span>
         </div>
@@ -45,7 +46,7 @@ export function OrderSuccessHero({ orderNumber, snapshot }: OrderSuccessHeroProp
           <div>
             <p className="font-sans text-[10px] text-[#c8c6c5] uppercase">Bahan</p>
             <p className="font-sans text-sm">
-              {snapshot.design.fabric} · {snapshot.design.color}
+              {selectionLabel(snapshot.design.fabric)} · {selectionLabel(snapshot.design.color)}
             </p>
           </div>
           <div>

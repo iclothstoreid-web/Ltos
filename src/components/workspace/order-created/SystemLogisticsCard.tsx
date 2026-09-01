@@ -73,11 +73,11 @@ export function SystemLogisticsCard({ orderId, orderNumber }: SystemLogisticsCar
                      font-sans text-xs uppercase tracking-widest hover:bg-[#151c27] hover:text-white transition-colors"
         >
           <span className="material-symbols-outlined text-[16px]">print</span>
-          Cetak QR
+          Cetak Lembar Produksi
         </button>
 
         <p className="text-[10px] text-[#444748] mt-2">
-          QR resmi untuk ditempel Fitter pada hanger / order fisik.
+          1 halaman A4: detail teknis final + QR resmi untuk ditempel pada hanger / order fisik.
         </p>
       </div>
     </section>

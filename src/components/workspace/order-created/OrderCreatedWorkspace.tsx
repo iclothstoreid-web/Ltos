@@ -4,7 +4,7 @@ import type { Order } from '@/types'
 import type { OrderSnapshot } from '@/lib/order/types'
 import type { CommunicationMessage } from '@/lib/communication/types'
 import { TopNavBar } from './TopNavBar'
-import { CustomerOrderCard } from './CustomerOrderCard'
+import { WorkspaceCustomerHeader } from '@/components/workspace/WorkspaceCustomerHeader'
 import { PaymentSummaryCard } from './PaymentSummaryCard'
 import { OrderSuccessHero } from './OrderSuccessHero'
 import { CustomerJourneyShareActions } from './CustomerJourneyShareActions'
@@ -14,6 +14,7 @@ import { SystemLogisticsCard } from './SystemLogisticsCard'
 import { OrderCommunicationPanel } from './OrderCommunicationPanel'
 import { OrderCreatedFooter } from './OrderCreatedFooter'
 import { TransactionGarmentsPanel } from './TransactionGarmentsPanel'
+import { OrderProductionPrintSheet } from './OrderProductionPrintSheet'
 
 interface OrderCreatedWorkspaceProps {
   order: Order
@@ -41,18 +42,20 @@ export function OrderCreatedWorkspace({
     <div className="min-h-screen bg-[#FDFCF8] font-sans text-[#151c27] pb-32">
       <TopNavBar fitterInitial={fitterName.charAt(0).toUpperCase()} />
 
-      <main className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 lg:py-16 grid grid-cols-1 md:grid-cols-12 gap-8">
-        <aside className="md:col-span-3 flex flex-col gap-8">
-          <CustomerOrderCard
-            customerName={snapshot.customer.name}
-            customerId={snapshot.customer.id}
-            isPreferred={snapshot.customer.isPreferredClient}
-            orderNumber={order.order_number}
-          />
-          <PaymentSummaryCard orderId={order.id} priceSnapshot={snapshot.designSpecification?.priceSnapshot ?? null} />
-        </aside>
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 pt-8">
+        <WorkspaceCustomerHeader
+          customerName={snapshot.customer.name}
+          isPreferred={snapshot.customer.isPreferredClient}
+          fitterName={fitterName}
+          identifiers={[
+            { label: 'Customer', value: `#${snapshot.customer.id.slice(0, 8).toUpperCase()}` },
+            { label: 'Order', value: order.order_number },
+          ]}
+        />
+      </div>
 
-        <div className="md:col-span-5 flex flex-col gap-8">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-16 py-8 lg:py-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:items-start">
+        <div className="lg:col-span-7 flex flex-col gap-8 min-w-0">
           <OrderSuccessHero orderNumber={order.order_number} snapshot={snapshot} />
           <CustomerJourneyShareActions
             customerToken={order.customer_token}
@@ -62,7 +65,8 @@ export function OrderCreatedWorkspace({
           />
         </div>
 
-        <aside className="md:col-span-4 flex flex-col gap-8">
+        <aside className="lg:col-span-5 flex flex-col gap-8">
+          <PaymentSummaryCard orderId={order.id} priceSnapshot={snapshot.designSpecification?.priceSnapshot ?? null} />
           <TechnicalDetailsCard design={snapshot.design} />
           <ProductionJourneyTimeline events={timelineEvents} />
           <SystemLogisticsCard orderId={order.id} orderNumber={order.order_number} />
@@ -86,6 +90,15 @@ export function OrderCreatedWorkspace({
       </section>
 
       <OrderCreatedFooter orderNumber={order.order_number} />
+
+      {/* Print-only — portals to <body>; `Cetak Lembar Produksi` in
+          SystemLogisticsCard fires window.print() and only this renders. */}
+      <OrderProductionPrintSheet
+        orderId={order.id}
+        orderNumber={order.order_number}
+        customerName={snapshot.customer.name}
+        design={snapshot.design}
+      />
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import type { DesignSelections } from '@/components/workspace/design-studio/types'
+import { isEmptySelection } from '@/lib/design/selectionDisplay'
 
 interface GarmentPreviewSectionProps {
   consultationId: string
@@ -23,7 +24,7 @@ export function GarmentPreviewSection({ consultationId, selections }: GarmentPre
     selections.pocket,
     selections.plaket,
     selections.button,
-  ]
+  ].filter(tag => !isEmptySelection(tag))
 
   return (
     <section className="relative bg-white shadow-sm min-h-[500px] flex flex-col items-center justify-center overflow-hidden border-[0.5px] border-[#c4c7c7] p-8">

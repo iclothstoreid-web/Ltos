@@ -138,3 +138,96 @@
     width: 100%;
   }
 }
+
+/* ── Order Production Sheet (Fitter "Cetak Lembar Produksi") ──────────────
+   The old `visibility:hidden` isolation above leaves the hidden boxes in
+   layout flow, so a tall workspace still printed ~5 mostly-blank pages.
+   OrderProductionPrintSheet instead portals its content to <body> as
+   `.ltos-print-portal`; here we `display:none` every OTHER body child so
+   nothing else contributes any page height at all. Result: exactly 1 A4
+   page. */
+.ltos-print-portal {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+  body > *:not(.ltos-print-portal) {
+    display: none !important;
+  }
+  .ltos-print-portal {
+    display: block !important;
+    visibility: visible !important;
+  }
+  .ltos-print-portal * {
+    visibility: visible !important;
+  }
+}
+
+.ltos-print-sheet {
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #111;
+  max-width: 180mm;
+}
+.ltos-print-sheet .ps-brand {
+  font-size: 22pt;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-align: center;
+  padding-bottom: 8mm;
+  border-bottom: 2px solid #111;
+  margin-bottom: 8mm;
+}
+.ltos-print-sheet .ps-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12mm;
+  margin-bottom: 8mm;
+}
+.ltos-print-sheet .ps-k {
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #555;
+}
+.ltos-print-sheet .ps-v {
+  font-size: 11pt;
+}
+.ltos-print-sheet .ps-v-lg {
+  font-size: 14pt;
+  font-weight: 700;
+}
+.ltos-print-sheet .ps-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10mm;
+}
+.ltos-print-sheet .ps-table td {
+  border-bottom: 1px solid #ccc;
+  padding: 3mm 0;
+  vertical-align: baseline;
+}
+.ltos-print-sheet .ps-td-k {
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #555;
+  width: 38%;
+}
+.ltos-print-sheet .ps-td-v {
+  font-size: 12pt;
+  font-weight: 600;
+}
+.ltos-print-sheet .ps-qr {
+  text-align: center;
+  margin-top: 6mm;
+}
+.ltos-print-sheet .ps-qr-label {
+  margin-top: 4mm;
+  font-size: 12pt;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
