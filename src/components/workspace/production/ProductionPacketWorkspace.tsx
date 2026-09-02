@@ -535,13 +535,17 @@ export function ProductionPacketWorkspace({
                       <button
                         type="button"
                         onClick={() => setShowCompletionScan(true)}
-                        disabled={evidenceUploading}
+                        disabled={evidenceUploading || (requiresEvidence && !evidenceUrl)}
                         className="w-full flex items-center justify-center gap-2 bg-on-surface text-white
                                    font-hanken font-semibold py-3.5 rounded-2xl hover:bg-amber-mid
                                    transition-colors disabled:opacity-40"
                       >
                         <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
-                        {evidenceUploading ? 'Mengunggah Foto...' : 'Scan QR Penyelesaian'}
+                        {evidenceUploading
+                          ? 'Mengunggah Foto...'
+                          : requiresEvidence && !evidenceUrl
+                            ? 'Unggah Bukti Foto Dulu'
+                            : 'Scan QR Penyelesaian'}
                       </button>
                     </>
                   ) : (
@@ -565,7 +569,7 @@ export function ProductionPacketWorkspace({
                   )
                 ) : (
                   <>
-                    {requiresEvidence && !usesCustomPanelShell && (
+                    {requiresEvidence && (!usesCustomPanelShell || !evidenceUrl) && (
                       <EvidenceUploader
                         supabase={supabase}
                         orderId={orderId}
