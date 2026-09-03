@@ -66,77 +66,97 @@ alter table public.ai_sales_conversations enable row level security;
 alter table public.ai_sales_messages enable row level security;
 alter table public.ai_sales_actions enable row level security;
 
+-- Explicit Data API privileges. Anonymous/public clients must never be able to
+-- read or write sales chat payloads. Authenticated access is still constrained
+-- by the Owner/Admin RLS policies below. service_role/secret server access is
+-- reserved for the verified provider webhook.
+revoke all on table public.ai_sales_conversations from anon;
+revoke all on table public.ai_sales_messages from anon;
+revoke all on table public.ai_sales_actions from anon;
+
+grant select, insert, update, delete on table public.ai_sales_conversations to authenticated;
+grant select, insert, update, delete on table public.ai_sales_messages to authenticated;
+grant select, insert, update, delete on table public.ai_sales_actions to authenticated;
+grant all on table public.ai_sales_conversations to service_role;
+grant all on table public.ai_sales_messages to service_role;
+grant all on table public.ai_sales_actions to service_role;
+
 -- Owner/Admin can review and operate the CRM from LTOS. Provider webhook
--- writes use the server-only service-role client and therefore do not require
--- an anon policy. No direct public/anon access is granted to chat payloads.
+-- writes use a separate server-only secret/service-role client and bypass RLS.
 create policy "Owner can read AI sales conversations"
   on public.ai_sales_conversations for select
+  to authenticated
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   );
 
 create policy "Owner can manage AI sales conversations"
   on public.ai_sales_conversations for all
+  to authenticated
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   )
   with check (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   );
 
 create policy "Owner can read AI sales messages"
   on public.ai_sales_messages for select
+  to authenticated
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   );
 
 create policy "Owner can manage AI sales messages"
   on public.ai_sales_messages for all
+  to authenticated
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   )
   with check (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   );
 
 create policy "Owner can read AI sales actions"
   on public.ai_sales_actions for select
+  to authenticated
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   );
 
 create policy "Owner can manage AI sales actions"
   on public.ai_sales_actions for all
+  to authenticated
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   )
   with check (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = any (array['admin', 'owner'])
+      where p.id = (select auth.uid()) and p.role = any (array['admin', 'owner'])
     )
   );
