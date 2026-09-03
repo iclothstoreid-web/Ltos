@@ -4,9 +4,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 let cachedAdminClient: SupabaseClient | null = null
 
 /**
- * Server-only service-role client for trusted machine-to-machine flows such as
- * provider webhooks. Never import this from a Client Component and never expose
- * SUPABASE_SERVICE_ROLE_KEY through a NEXT_PUBLIC_* variable.
+ * Server-only privileged client for trusted machine-to-machine flows such as
+ * provider webhooks. Prefer Supabase's current secret key; the legacy
+ * service-role key remains supported for this existing project.
+ * Never expose either key through a NEXT_PUBLIC_* variable.
  */
 export function createAdminClient(): SupabaseClient {
   if (typeof window !== 'undefined') {
@@ -16,13 +17,15 @@ export function createAdminClient(): SupabaseClient {
   if (cachedAdminClient) return cachedAdminClient
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!url || !serviceRoleKey) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variable.')
+  if (!url || !secretKey) {
+    throw new Error(
+      'Missing NEXT_PUBLIC_SUPABASE_URL or server Supabase secret (SUPABASE_SECRET_KEY / SUPABASE_SERVICE_ROLE_KEY).'
+    )
   }
 
-  cachedAdminClient = createClient(url, serviceRoleKey, {
+  cachedAdminClient = createClient(url, secretKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
