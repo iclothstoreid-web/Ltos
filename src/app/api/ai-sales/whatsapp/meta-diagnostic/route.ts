@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     const [waba, subscribedApps, phone, phoneNumbers, subscriptions] = await Promise.all([
       graph(`${base}/${WABA_ID}?fields=id,name`, accessToken),
       graph(`${base}/${WABA_ID}/subscribed_apps`, accessToken),
-      graph(`${base}/${phoneNumberId}?fields=id,display_phone_number,verified_name,quality_rating,platform_type,throughput`, accessToken),
-      graph(`${base}/${WABA_ID}/phone_numbers?fields=id,display_phone_number,verified_name,status,quality_rating,platform_type`, accessToken),
+      graph(`${base}/${phoneNumberId}?fields=id,display_phone_number,verified_name,quality_rating,platform_type,throughput,is_on_biz_app,account_mode`, accessToken),
+      graph(`${base}/${WABA_ID}/phone_numbers?fields=id,display_phone_number,verified_name,status,quality_rating,platform_type,is_on_biz_app,account_mode`, accessToken),
       graph(`${base}/${APP_ID}/subscriptions`, appToken),
     ])
 
