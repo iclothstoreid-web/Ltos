@@ -7,7 +7,7 @@ import type { AiSalesKnowledge } from './types'
 export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<AiSalesKnowledge> {
   const [masterOptions, fabricResult, commercialRules] = await Promise.all([
     fetchActiveMasterOptions(supabase),
-    supabase.rpc('get_public_fabric_catalog', { p_limit: 96, p_offset: 0 }),
+    supabase.rpc('list_fabric_catalog'),
     getCommercialRules(supabase),
   ])
 
@@ -27,7 +27,7 @@ export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<Ai
     category: row.category ? String(row.category) : null,
     color: row.color ? String(row.color) : null,
     composition: row.composition ? String(row.composition) : null,
-    gsm: typeof row.gsm === 'number' ? row.gsm : row.gsm ? Number(row.gsm) : null,
+    gsm: typeof row.weight_gsm === 'number' ? row.weight_gsm : row.weight_gsm ? Number(row.weight_gsm) : null,
     highlight: row.highlight ? String(row.highlight) : null,
   }))
 
