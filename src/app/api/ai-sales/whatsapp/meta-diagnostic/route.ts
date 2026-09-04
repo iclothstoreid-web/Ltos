@@ -27,8 +27,60 @@ function authorized(request: NextRequest) {
   return request.nextUrl.searchParams.get('key') === SETUP_KEY
 }
 
+async function ensureCoexistenceWebhookFields() {
+  const version = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
+  const appSecret = requiredEnv('WHATSAPP_APP_SECRET')
+  const verifyToken = requiredEnv('WHATSAPP_VERIFY_TOKEN')
+  const base = `https://graph.facebook.com/${version}`
+  const appToken = `${APP_ID}|${appSecret}`
+
+  const existing = await graph(`${base}/${APP_ID}/subscriptions`, appToken)
+  if (!existing.ok) return { ok: false, step: 'read_subscriptions', existing }
+
+  const subscription = Array.isArray(existing.data?.data)
+    ? existing.data.data.find((item: { object?: string }) => item?.object === 'whatsapp_business_account')
+    : undefined
+
+  const currentFields = Array.isArray(subscription?.fields)
+    ? subscription.fields.map((field: { name?: string }) => field?.name).filter(Boolean)
+    : []
+
+  const requiredFields = ['messages', 'history', 'smb_app_state_sync', 'smb_message_echoes']
+  const fields = Array.from(new Set([...currentFields, ...requiredFields]))
+
+  const body = new URLSearchParams({
+    object: 'whatsapp_business_account',
+    callback_url: CALLBACK_URL,
+    fields: fields.join(','),
+    verify_token: verifyToken,
+    include_values: 'true',
+  })
+
+  const response = await fetch(`${base}/${APP_ID}/subscriptions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${appToken}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body,
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+
+  return { ok: response.ok, status: response.status, fields, data }
+}
+
 export async function GET(request: NextRequest) {
   if (!authorized(request)) return new NextResponse('Not found', { status: 404 })
+
+  if (request.nextUrl.searchParams.get('action') === 'coexistence-fields') {
+    try {
+      const result = await ensureCoexistenceWebhookFields()
+      return NextResponse.json(result, { status: result.ok ? 200 : 502 })
+    } catch (error) {
+      return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
+    }
+  }
 
   try {
     const version = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
@@ -47,55 +99,6 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({ version, waba, subscribedApps, phone, phoneNumbers, subscriptions })
-  } catch (error) {
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
-  }
-}
-
-export async function POST(request: NextRequest) {
-  if (!authorized(request)) return new NextResponse('Not found', { status: 404 })
-
-  try {
-    const version = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
-    const appSecret = requiredEnv('WHATSAPP_APP_SECRET')
-    const verifyToken = requiredEnv('WHATSAPP_VERIFY_TOKEN')
-    const base = `https://graph.facebook.com/${version}`
-    const appToken = `${APP_ID}|${appSecret}`
-
-    const existing = await graph(`${base}/${APP_ID}/subscriptions`, appToken)
-    if (!existing.ok) return NextResponse.json({ ok: false, step: 'read_subscriptions', existing }, { status: 502 })
-
-    const subscription = Array.isArray(existing.data?.data)
-      ? existing.data.data.find((item: { object?: string }) => item?.object === 'whatsapp_business_account')
-      : undefined
-
-    const currentFields = Array.isArray(subscription?.fields)
-      ? subscription.fields.map((field: { name?: string }) => field?.name).filter(Boolean)
-      : []
-
-    const requiredFields = ['messages', 'history', 'smb_app_state_sync', 'smb_message_echoes']
-    const fields = Array.from(new Set([...currentFields, ...requiredFields]))
-
-    const body = new URLSearchParams({
-      object: 'whatsapp_business_account',
-      callback_url: CALLBACK_URL,
-      fields: fields.join(','),
-      verify_token: verifyToken,
-      include_values: 'true',
-    })
-
-    const response = await fetch(`${base}/${APP_ID}/subscriptions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${appToken}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body,
-      cache: 'no-store',
-    })
-    const data = await response.json().catch(() => ({}))
-
-    return NextResponse.json({ ok: response.ok, status: response.status, fields, data }, { status: response.ok ? 200 : 502 })
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
