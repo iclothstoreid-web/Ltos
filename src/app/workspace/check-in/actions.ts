@@ -116,7 +116,7 @@ export async function getConsultationHistory(
 
   const { data, error } = await supabase
     .from('consultations')
-    .select('id, consultation_number, status, notes, completed_at, created_at')
+    .select('id, consultation_number, status, notes, completed_at, created_at, updated_at, customer_consultation_token')
     .eq('customer_id', customerId)
     .order('created_at', { ascending: false })
     .limit(limit)
