@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { BarChart3, Boxes, LayoutDashboard, Newspaper, Route, Ruler, ScanLine, Sparkles, Users } from 'lucide-react'
+import { BarChart3, Bot, Boxes, LayoutDashboard, Newspaper, Route, Ruler, ScanLine, Sparkles, Users } from 'lucide-react'
 
 export interface LauncherTileConfig {
   name: string
@@ -20,89 +20,76 @@ export interface LauncherTileConfig {
   color: string
 }
 
-// The 8 tiles from the App Launcher brief, mapped to the routes that
-// genuinely exist today (verified against src/middleware.ts's ROUTE_RULES
-// and each destination page/layout — no new pages were created for this).
-//
-// Customer, Design Studio, and Fitter all resolve to the same URL
-// (/workspace/check-in) on purpose: Design Studio and Measurement only ever
-// exist at a [consultationId]-scoped route (src/app/workspace/design-studio/
-// [consultationId]/page.tsx, src/app/workspace/measurement/[consultationId]
-// /page.tsx) — Check-In's customer-search view is the one real front door
-// into either. Kept as 3 distinct tiles (not merged) per product decision,
-// differentiated by name/icon/description/color only.
-//
-// Production points at /production as-is — that route is QR-scan-only
-// ("no order list here" per its own file header), so the description says
-// exactly that rather than implying a browsable order list.
-//
-// Customer Journey points at /owner/communications — the closest real match
-// for progress/updates/delivery (per-order production stage + customer
-// messages); there is no dedicated internal "journey" page today.
+// Owner OS launcher tiles mapped only to routes that genuinely exist.
 export const LAUNCHER_TILES: LauncherTileConfig[] = [
   {
     name: 'Command Center',
     description: 'KPI, bottleneck, agenda, keputusan hari ini',
     href: '/command-center',
     icon: LayoutDashboard,
-    color: '#0B1628', // Midnight Navy — existing Owner OS primary
+    color: '#0B1628',
   },
   {
     name: 'Customer',
     description: 'Cari pelanggan, riwayat konsultasi',
     href: '/workspace/check-in',
     icon: Users,
-    color: '#A15C38', // muted terracotta
+    color: '#A15C38',
+  },
+  {
+    name: 'AI Sales',
+    description: 'WhatsApp, lead, closing, human handoff',
+    href: '/owner/ai-sales',
+    icon: Bot,
+    color: '#284B43',
   },
   {
     name: 'Design Studio',
     description: 'Mulai dari pelanggan untuk membuka desain',
     href: '/workspace/check-in',
     icon: Sparkles,
-    color: '#B98900', // Brass — existing Owner OS amber-mid
+    color: '#B98900',
   },
   {
     name: 'Fitter',
     description: 'Check-in, ukur, profil tubuh',
     href: '/workspace/check-in',
     icon: Ruler,
-    color: '#005645', // Deep Forest / Loden Green
+    color: '#005645',
   },
   {
     name: 'Inventory',
     description: 'Material, stok, pergerakan',
     href: '/inventory',
     icon: Boxes,
-    color: '#6A4A34', // Walnut Brown — existing luxury-navy value
+    color: '#6A4A34',
   },
   {
     name: 'Production',
     description: 'Pindai order untuk membuka paket produksi',
     href: '/production',
     icon: ScanLine,
-    color: '#221814', // Deep Espresso — existing luxury-black value
+    color: '#221814',
   },
   {
     name: 'Customer Journey',
     description: 'Progres pesanan & komunikasi pelanggan',
     href: '/owner/communications',
     icon: Route,
-    color: '#3E5568', // muted dusty slate blue
+    color: '#3E5568',
   },
   {
     name: 'Analytics',
     description: 'Performa, funnel, wawasan bisnis',
     href: '/owner/analytics',
     icon: BarChart3,
-    color: '#7A3540', // muted deep wine
+    color: '#7A3540',
   },
   {
-    // Sprint DS-UX Scope B — Owner OS -> Content: Media Library, Journal
-    // articles, Gallery, Homepage image slots for the public website.
     name: 'Content',
     description: 'Media, artikel Journal, galeri, gambar homepage',
     href: '/owner/content',
     icon: Newspaper,
-    color: '#4A5C3A', // muted sage — a new deep/desaturated tone in range
+    color: '#4A5C3A',
   },
 ]
