@@ -77,6 +77,11 @@ export interface CreateConsultationResult {
   error: string | null
   consultationId: string | null
   consultationNumber: string | null
+  // Customer Self-Service Consultation Link — minted automatically by the
+  // DB (consultations.customer_consultation_token's column default, see
+  // migration 20260913000000_customer_consultation_self_service.sql), never
+  // generated here. Null only if the insert itself failed (success: false).
+  customerConsultationToken: string | null
 }
 
 export interface CreateCustomerResult {

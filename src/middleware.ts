@@ -58,7 +58,7 @@ const PUBLIC_PATHS = [
 // see the comment above), the customer-facing /login entry, and
 // /access-denied (a middleware rewrite target — routing it back through
 // next-intl would be redundant and risks a rewrite/redirect loop).
-const NO_LOCALE_PREFIXES = ['/owner', '/command-center', '/workspace', '/fitter', '/inventory', '/production', '/journey', '/login', '/access-denied']
+const NO_LOCALE_PREFIXES = ['/owner', '/command-center', '/workspace', '/fitter', '/inventory', '/production', '/journey', '/customer-consultation', '/login', '/access-denied']
 
 function isNoLocalePath(pathname: string): boolean {
   return NO_LOCALE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
