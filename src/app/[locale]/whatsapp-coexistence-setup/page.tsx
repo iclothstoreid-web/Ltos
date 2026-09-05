@@ -17,7 +17,8 @@ declare global {
 }
 
 const APP_ID = '1608994384229587'
-const CONFIG_ID = '1822339008751268'\nconst OAUTH_URL = `https://www.facebook.com/v26.0/dialog/oauth?client_id=${APP_ID}&config_id=${CONFIG_ID}&response_type=code&override_default_response_type=true&redirect_uri=${encodeURIComponent('https://localtailor.id/whatsapp-coexistence-setup')}&extras=${encodeURIComponent(JSON.stringify({ setup: {}, featureType: 'whatsapp_business_app_onboarding', sessionInfoVersion: '3' }))}`
+const CONFIG_ID = '1822339008751268'
+const OAUTH_URL = `https://www.facebook.com/v26.0/dialog/oauth?client_id=${APP_ID}&config_id=${CONFIG_ID}&response_type=code&override_default_response_type=true&redirect_uri=${encodeURIComponent('https://localtailor.id/whatsapp-coexistence-setup')}&extras=${encodeURIComponent(JSON.stringify({ setup: {}, featureType: 'whatsapp_business_app_onboarding', sessionInfoVersion: '3' }))}`
 
 type SignupResult = {
   event?: string
