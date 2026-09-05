@@ -58,6 +58,13 @@ export interface Consultation {
   // Design Studio can use it as the optimistic-lock comparison value. See
   // src/lib/consultation/notesSave.ts.
   updated_at: string
+  // Customer Self-Service Consultation Link — surfaced here so
+  // ConsultationHistory can offer "Buka Link Customer" on a past/active
+  // consultation, not just on the just-created success screen
+  // (CustomerLinkCard). Null on a terminal consultation predating this
+  // feature that was never backfilled (see migration
+  // 20260913000000_customer_consultation_self_service.sql).
+  customer_consultation_token: string | null
 }
 
 export interface RecentConsultation {
