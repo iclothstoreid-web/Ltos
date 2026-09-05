@@ -57,6 +57,8 @@ export default function CheckInPageClient({
     consultationId: string
     consultationNumber: string
     customerName: string
+    customerPhone: string | null
+    customerConsultationToken: string | null
   } | null>(null)
 
   // "Resume, Don't Recreate" gate — a customer with an unfinished
@@ -113,7 +115,7 @@ export default function CheckInPageClient({
     setCreating(true)
     setError(null)
 
-    const { success, error: createError, consultationId, consultationNumber } =
+    const { success, error: createError, consultationId, consultationNumber, customerConsultationToken } =
       await createConsultationSession(selectedCustomer.id, fitter.id)
 
     if (!success || !consultationId || !consultationNumber) {
@@ -126,6 +128,8 @@ export default function CheckInPageClient({
       consultationId,
       consultationNumber,
       customerName: selectedCustomer.name,
+      customerPhone: selectedCustomer.phone,
+      customerConsultationToken,
     })
     setView('success')
     setCreating(false)
@@ -228,6 +232,8 @@ export default function CheckInPageClient({
                   consultationId={successData.consultationId}
                   consultationNumber={successData.consultationNumber}
                   customerName={successData.customerName}
+                  customerPhone={successData.customerPhone}
+                  customerConsultationToken={successData.customerConsultationToken}
                   onBackToSearch={handleBackToSearch}
                 />
               )}

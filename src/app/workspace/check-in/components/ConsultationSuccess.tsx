@@ -1,11 +1,14 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { CustomerLinkCard } from './CustomerLinkCard'
 
 interface ConsultationSuccessProps {
   consultationId: string
   consultationNumber: string
   customerName: string
+  customerPhone: string | null
+  customerConsultationToken: string | null
   onBackToSearch: () => void
   children?: ReactNode
 }
@@ -17,6 +20,8 @@ export function ConsultationSuccess({
   consultationId,
   consultationNumber,
   customerName,
+  customerPhone,
+  customerConsultationToken,
   onBackToSearch,
 }: ConsultationSuccessProps) {
   return (
@@ -38,6 +43,14 @@ export function ConsultationSuccess({
         <p className="font-sans text-xs text-[#775a19]/80 mt-4">ID</p>
         <p className="font-mono text-xs text-[#444748] mt-1 break-all">{consultationId}</p>
       </div>
+
+      {customerConsultationToken && (
+        <CustomerLinkCard
+          customerConsultationToken={customerConsultationToken}
+          customerName={customerName}
+          customerPhone={customerPhone}
+        />
+      )}
 
       <button
         onClick={onBackToSearch}
