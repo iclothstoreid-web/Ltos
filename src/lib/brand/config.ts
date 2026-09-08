@@ -7,10 +7,10 @@ import type { BrandConfig } from './types'
 // is Local Tailor. This object is the one source of truth for Local
 // Tailor's public identity and asset paths.
 //
-// Assets live under public/brand/local-tailor/ + the file-based Next.js
-// icon convention (src/app/icon.svg / favicon.ico / apple-icon.png — the
-// text-free monogram). The PWA manifest is the conventional
-// public/manifest.json ("Local Tailor", "…handcrafted in Bandung").
+// Assets live under public/brand/local-tailor/. The search favicon uses a
+// versioned URL so Google is forced to fetch the Local Tailor mark instead
+// of reusing the old Tarda favicon cache. The PWA manifest is the
+// conventional public/manifest.json ("Local Tailor", "…handcrafted in Bandung").
 export const LOCAL_TAILOR_CONFIG: BrandConfig = {
   id: 'local-tailor',
   name: 'Local Tailor',
@@ -21,7 +21,7 @@ export const LOCAL_TAILOR_CONFIG: BrandConfig = {
   assets: {
     logoHorizontal: '/brand/local-tailor/horizontal.svg',
     logoMark: '/brand/local-tailor/mark.svg',
-    favicon: '/icon.svg',
+    favicon: '/brand/local-tailor/search-favicon-20260908.svg',
     ogImage: '/brand/local-tailor/horizontal-tagline.svg',
     manifest: '/manifest.json',
   },
