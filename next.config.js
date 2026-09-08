@@ -70,6 +70,19 @@ const nextConfig = {
       },
     ],
   },
+  // Google and browsers still probe the conventional /favicon.ico URL even
+  // though LTOS advertises a versioned SVG favicon in Metadata. There is no
+  // physical favicon.ico in public/app, so that probe previously fell into
+  // Next's app rendering path and returned HTTP 500. Keep one canonical icon
+  // asset and internally serve it for the legacy URL as well.
+  async rewrites() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/brand/local-tailor/search-favicon-20260908.svg',
+      },
+    ]
+  },
   async redirects() {
     return buildRenameRedirects()
   },
