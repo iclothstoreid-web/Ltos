@@ -4,7 +4,7 @@ import { getProductionPacket, getCachedProductionRules, getCachedReturnRules } f
 import { getCurrentStageRecord } from '@/lib/production/stageConfig'
 import { getCustomerPhotoAndReferencesForOrder } from '@/lib/production/customerNotes'
 import { timedQuery } from '@/lib/production/perfInstrumentation'
-import { ProductionPacketWorkspace } from '@/components/workspace/production/ProductionPacketWorkspace'
+import { ProductionMobileWorkspace } from '@/components/workspace/production/ProductionMobileWorkspace'
 import { ProductionAccessGate } from '@/components/workspace/production/ProductionAccessGate'
 import { ProductionCommunicationBoundary } from '@/components/workspace/production/ProductionCommunicationBoundary'
 import { CustomerReferenceBoundary } from '@/components/workspace/production/CustomerReferenceBoundary'
@@ -45,18 +45,8 @@ export default async function ProductionPacketPage({ params }: Props) {
   const customerNotesPromise = timedQuery('customerNotes (critical, shared)', () =>
     getCustomerPhotoAndReferencesForOrder(supabase, params.orderId)
   )
-  // Nothing below ever awaits this promise on the "order not found" path
-  // (see the `packet ?` gate a few lines down) — attach a silent handler so
-  // a network-level failure there can't surface as an unhandled rejection.
   customerNotesPromise.catch(() => {})
 
-  // Request Flow Optimization (STEP 3) — productionRules/returnRules don't
-  // depend on the packet, so they're fetched alongside it instead of after.
-  // Cache Strategy (STEP 5.2, confirmed still correct in Sprint N5's audit)
-  // — both are relatively static, admin-configured rules (RLS `using
-  // (true)`, no per-user variation), cached 60s via unstable_cache instead
-  // of hitting Postgres on every single kiosk scan. Never a candidate for
-  // this page's own caching change since it was already done.
   const [packet, productionRules, returnRules] = await Promise.all([
     timedQuery('packet (critical)', () => getProductionPacket(supabase, params.orderId)),
     timedQuery('productionRules (critical, cached 60s)', () => getCachedProductionRules()),
@@ -66,17 +56,10 @@ export default async function ProductionPacketPage({ params }: Props) {
     ? getCurrentStageRecord(packet.stage_records)?.status === 'in_progress'
     : false
 
-  // HeroCard needs a customer photo on first paint, so this one field stays
-  // on the critical path — same as Sprint N4, just parallel now instead of
-  // sequential (see customerNotesPromise above).
   const { customerPhotoUrl } = packet
     ? await customerNotesPromise
     : { customerPhotoUrl: null }
 
-  // Same derivation ProductionPacketWorkspace always used (largest Packing
-  // attempt's video_url off stage_records) — re-read here, not a new query,
-  // so CustomerReferenceBoundary can render Media Produksi without waiting
-  // on ProductionPacketWorkspace's client-side render first.
   const packingVideoUrl = packet
     ? [...packet.stage_records]
         .filter(r => r.stage === 'packing')
@@ -92,7 +75,7 @@ export default async function ProductionPacketPage({ params }: Props) {
           </p>
         </div>
       ) : (
-        <ProductionPacketWorkspace
+        <ProductionMobileWorkspace
           initialPacket={packet}
           orderId={params.orderId}
           customerPhotoUrl={customerPhotoUrl}
