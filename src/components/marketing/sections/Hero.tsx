@@ -225,7 +225,9 @@ export function Hero() {
               </svg>
               <p className="font-handwritten leading-tight text-luxury-gold">
                 <span className="block text-lg sm:text-xl">{t('priceCallout.eyebrow')}</span>
-                <span className="block text-2xl font-semibold sm:text-3xl">{t('priceCallout.price')}</span>
+                <span className="block text-2xl font-bold tracking-tight [text-shadow:0_1px_10px_rgba(0,0,0,0.45)] sm:text-3xl">
+                  {t('priceCallout.price')}
+                </span>
               </p>
             </motion.div>
           </div>
