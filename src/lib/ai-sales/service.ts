@@ -15,6 +15,10 @@ import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, Wha
 
 const HUMAN_FALLBACK = 'Pesannya sudah kami terima. Saya teruskan ke tim Local Tailor supaya bisa dibantu dengan tepat ya.'
 
+function isWhatsAppAutoReplyEnabled(): boolean {
+  return process.env.WHATSAPP_AI_AUTOREPLY_ENABLED === 'true'
+}
+
 function mergeContext(
   conversation: AiSalesConversation,
   customerPatch: AiSalesCustomerPatch,
@@ -94,6 +98,11 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // Meta retries webhook deliveries. The provider message id is the hard
   // idempotency boundary: never run AI twice or send two replies for one input.
   if (!inserted) return
+
+  // Keep the webhook healthy and continue storing inbound messages while the
+  // WhatsApp app review is in progress, but never call the AI or send an
+  // automatic WhatsApp reply unless production explicitly enables it.
+  if (!isWhatsAppAutoReplyEnabled()) return
 
   if (conversation.mode === 'human') return
 
