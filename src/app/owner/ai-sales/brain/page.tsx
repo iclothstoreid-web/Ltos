@@ -168,19 +168,22 @@ export default async function AiSalesBrainPage() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            ['Live Business Facts', String(facts.filter(item => item.is_active).length), Database],
-            ['Brain Aktif', String(activeBrain), Brain],
-            ['Training Examples', String(activeExamples), BookOpen],
-            ['Percakapan WhatsApp', String(conversationCountResult.count ?? 0), MessageSquareText],
-          ].map(([label, value, Icon]) => (
-            <div key={String(label)} className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{String(label)}</div>
-                <Icon className="h-4 w-4 text-slate-400" />
+            { label: 'Live Business Facts', value: facts.filter(item => item.is_active).length, icon: Database },
+            { label: 'Brain Aktif', value: activeBrain, icon: Brain },
+            { label: 'Training Examples', value: activeExamples, icon: BookOpen },
+            { label: 'Percakapan WhatsApp', value: conversationCountResult.count ?? 0, icon: MessageSquareText },
+          ].map(stat => {
+            const Icon = stat.icon
+            return (
+              <div key={stat.label} className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{stat.label}</div>
+                  <Icon className="h-4 w-4 text-slate-400" />
+                </div>
+                <div className="mt-3 text-3xl font-semibold">{stat.value}</div>
               </div>
-              <div className="mt-3 text-3xl font-semibold">{String(value)}</div>
-            </div>
-          ))}
+            )
+          })}
         </section>
 
         <section className="rounded-2xl border border-black/10 bg-white shadow-sm">
