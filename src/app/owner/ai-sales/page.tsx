@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Bot, ChevronLeft, MessageCircle, UserRound } from 'lucide-react'
+import { Bot, Brain, ChevronLeft, MessageCircle, UserRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { sendAiSalesHumanReply, setAiSalesMode } from './actions'
 
@@ -92,9 +92,18 @@ export default async function AiSalesInboxPage({
               <p className="text-sm text-slate-500">WhatsApp → AI → Closing → Order Intent LTOS</p>
             </div>
           </div>
-          <div className="text-right text-xs text-slate-500">
-            <div>{profile.name || 'Owner'}</div>
-            <div>{conversations?.length ?? 0} percakapan</div>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/owner/ai-sales/brain"
+              className="flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold hover:bg-black/[0.025]"
+            >
+              <Brain className="h-4 w-4" />
+              Brain & Training
+            </Link>
+            <div className="text-right text-xs text-slate-500">
+              <div>{profile.name || 'Owner'}</div>
+              <div>{conversations?.length ?? 0} percakapan</div>
+            </div>
           </div>
         </div>
       </header>
