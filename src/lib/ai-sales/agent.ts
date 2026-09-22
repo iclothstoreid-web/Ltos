@@ -37,7 +37,10 @@ function parseDecision(raw: string, currentStage: AiSalesStage): AiSalesDecision
   }
 }
 
-function compactKnowledge(knowledge: AiSalesKnowledge) {
+function compactKnowledge(knowledge: AiSalesKnowledge, currentStage: AiSalesStage) {
+  const stageBrain = knowledge.brainEntries.filter(entry => !entry.stage || entry.stage === currentStage)
+  const stageExamples = knowledge.trainingExamples.filter(example => !example.stageBefore || example.stageBefore === currentStage)
+
   return {
     // Prices here are component/master-option values used by LTOS Price Snapshot,
     // NOT permission for the model to invent or sum a final quote.
@@ -45,8 +48,8 @@ function compactKnowledge(knowledge: AiSalesKnowledge) {
     available_fabrics: knowledge.fabrics.slice(0, 96),
     commercial_rules: knowledge.commercialRules,
     live_business_facts: knowledge.businessFacts.slice(0, 80),
-    sales_brain: knowledge.brainEntries.slice(0, 100),
-    training_examples: knowledge.trainingExamples.slice(0, 40),
+    sales_brain: stageBrain.slice(0, 60),
+    training_examples: stageExamples.slice(0, 24),
   }
 }
 
