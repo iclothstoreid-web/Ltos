@@ -129,7 +129,7 @@ Return ONE valid JSON object only, with exactly this shape:
 
 CURRENT_STAGE: ${params.currentStage}
 CONTEXT: ${JSON.stringify(params.context)}
-KNOWLEDGE: ${JSON.stringify(compactKnowledge(params.knowledge))}`
+KNOWLEDGE: ${JSON.stringify(compactKnowledge(params.knowledge, params.currentStage))}`
 
   const completion = await client.chat.completions.create({
     model,
