@@ -66,20 +66,29 @@ const CASES: Array<{
 ]
 
 export async function GET(request: Request) {
-  if (process.env.VERCEL_ENV !== 'preview') {
-    return new NextResponse('Not found', { status: 404 })
-  }
-
-
   try {
     const url = new URL(request.url)
+    const supabase = createAdminClient()
+
+    if (process.env.VERCEL_ENV !== 'preview') {
+      const providedToken = url.searchParams.get('token')
+      const { data: tokenSetting, error: tokenError } = await supabase
+        .from('ai_sales_runtime_settings')
+        .select('text_value')
+        .eq('key', 'internal_eval_token')
+        .maybeSingle()
+
+      if (tokenError || !providedToken || providedToken !== tokenSetting?.text_value) {
+        return new NextResponse('Not found', { status: 404 })
+      }
+    }
+
     const requestedId = url.searchParams.get('case') || CASES[0].id
     const testCase = CASES.find(item => item.id === requestedId)
     if (!testCase) {
       return NextResponse.json({ error: 'Unknown case', cases: CASES.map(item => item.id) }, { status: 400 })
     }
 
-    const supabase = createAdminClient()
     const knowledge = await loadAiSalesKnowledge(supabase)
     const history: AiSalesMessage[] = [
       {
