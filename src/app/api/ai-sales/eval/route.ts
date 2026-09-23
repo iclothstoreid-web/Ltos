@@ -70,11 +70,12 @@ export async function GET() {
     return new NextResponse('Not found', { status: 404 })
   }
 
-  const supabase = createAdminClient()
-  const knowledge = await loadAiSalesKnowledge(supabase)
-  const results = []
+  try {
+    const supabase = createAdminClient()
+    const knowledge = await loadAiSalesKnowledge(supabase)
+    const results = []
 
-  for (const testCase of CASES) {
+    for (const testCase of CASES) {
     const history: AiSalesMessage[] = [
       {
         conversation_id: '00000000-0000-0000-0000-000000000000',
@@ -102,13 +103,25 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({
-    model: process.env.AI_SALES_MODEL || null,
-    counts: {
-      facts: knowledge.businessFacts.length,
-      brain: knowledge.brainEntries.length,
-      examples: knowledge.trainingExamples.length,
-    },
-    results,
-  })
+    return NextResponse.json({
+      model: process.env.AI_SALES_MODEL || null,
+      counts: {
+        facts: knowledge.businessFacts.length,
+        brain: knowledge.brainEntries.length,
+        examples: knowledge.trainingExamples.length,
+      },
+      results,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        fatal: error instanceof Error ? error.message : String(error),
+        hasOpenAIKey: Boolean(process.env.OPENAI_API_KEY),
+        model: process.env.AI_SALES_MODEL || null,
+        hasSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+        hasServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      },
+      { status: 500 }
+    )
+  }
 }
