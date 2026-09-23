@@ -20,6 +20,7 @@ import {
   deleteTrainingExample,
   reviewAiSalesMessage,
   saveBusinessFact,
+  setAutoReplyEnabled,
   toggleBrainEntry,
   toggleBusinessFact,
   toggleTrainingExample,
@@ -80,6 +81,7 @@ export default async function AiSalesBrainPage() {
     messagesResult,
     reviewsResult,
     conversationCountResult,
+    runtimeSettingResult,
   ] = await Promise.all([
     loadAiSalesKnowledge(supabase),
     supabase
@@ -107,6 +109,11 @@ export default async function AiSalesBrainPage() {
       .limit(20),
     supabase.from('ai_sales_message_reviews').select('message_id, verdict, corrected_reply, notes, updated_at'),
     supabase.from('ai_sales_conversations').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('ai_sales_runtime_settings')
+      .select('bool_value, updated_at')
+      .eq('key', 'whatsapp_auto_reply_enabled')
+      .maybeSingle(),
   ])
 
   const queryError =
@@ -115,7 +122,8 @@ export default async function AiSalesBrainPage() {
     examplesResult.error ||
     messagesResult.error ||
     reviewsResult.error ||
-    conversationCountResult.error
+    conversationCountResult.error ||
+    runtimeSettingResult.error
   if (queryError) throw queryError
 
   const facts = factsResult.data ?? []
@@ -124,7 +132,7 @@ export default async function AiSalesBrainPage() {
   const reviews = new Map((reviewsResult.data ?? []).map(review => [review.message_id, review]))
   const activeBrain = brainEntries.filter(item => item.is_active).length
   const activeExamples = examples.filter(item => item.is_active).length
-  const autoReplyEnabled = process.env.WHATSAPP_AI_AUTOREPLY_ENABLED === 'true'
+  const autoReplyEnabled = runtimeSettingResult.data?.bool_value === true
 
   return (
     <main className="min-h-screen bg-[#F5F2EC] text-slate-900">
@@ -141,7 +149,7 @@ export default async function AiSalesBrainPage() {
           </div>
           <div className="text-right text-xs text-slate-500">
             <div>{profile.name || 'Owner'}</div>
-            <div>{autoReplyEnabled ? 'Auto-reply aktif' : 'Auto-reply OFF selama review Meta'}</div>
+            <div>{autoReplyEnabled ? 'Auto-reply aktif' : 'Auto-reply OFF'}</div>
           </div>
         </div>
       </header>
@@ -154,15 +162,26 @@ export default async function AiSalesBrainPage() {
         >
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-5 w-5" />
-            <div>
+            <div className="flex-1">
               <div className="font-semibold">
                 {autoReplyEnabled ? 'WhatsApp AI Auto-reply aktif' : 'WhatsApp AI Auto-reply sedang dimatikan'}
               </div>
               <p className="mt-1 text-sm leading-relaxed text-slate-700">
-                Brain tetap bisa dibangun dan diedit. Pesan WhatsApp tetap masuk ke LTOS, tetapi OpenAI tidak akan
-                membalas otomatis sampai production diaktifkan kembali.
+                {autoReplyEnabled
+                  ? 'Pesan inbound akan diproses OpenAI menggunakan Brain + data live LTOS. Handoff tetap berlaku untuk kasus berisiko.'
+                  : 'Pesan WhatsApp tetap masuk ke LTOS, tetapi OpenAI tidak mengirim balasan otomatis.'}
               </p>
             </div>
+            <form action={setAutoReplyEnabled}>
+              <input type="hidden" name="enabled" value={autoReplyEnabled ? 'false' : 'true'} />
+              <button
+                className={`rounded-lg px-4 py-2 text-sm font-semibold text-white ${
+                  autoReplyEnabled ? 'bg-red-700 hover:bg-red-800' : 'bg-emerald-700 hover:bg-emerald-800'
+                }`}
+              >
+                {autoReplyEnabled ? 'Matikan Auto-reply' : 'Aktifkan Auto-reply'}
+              </button>
+            </form>
           </div>
         </section>
 
