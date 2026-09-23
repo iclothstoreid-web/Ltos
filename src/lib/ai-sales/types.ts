@@ -89,6 +89,43 @@ export interface AiSalesKnowledgeOption {
   sellingPoints: string[]
 }
 
+export interface AiSalesBusinessFact {
+  key: string
+  category: 'commercial' | 'service' | 'payment' | 'location' | 'policy' | 'other'
+  label: string
+  value: string
+  notes: string | null
+}
+
+export interface AiSalesBrainEntry {
+  category:
+    | 'identity'
+    | 'style'
+    | 'playbook'
+    | 'closing'
+    | 'follow_up'
+    | 'objection'
+    | 'invoice'
+    | 'after_sales'
+    | 'guardrail'
+  title: string
+  content: string
+  stage: AiSalesStage | null
+  tags: string[]
+  priority: number
+}
+
+export interface AiSalesTrainingExample {
+  stageBefore: AiSalesStage | null
+  stageAfter: AiSalesStage | null
+  situation: string
+  customerMessage: string | null
+  idealReply: string
+  rationale: string | null
+  outcome: string
+  priority: number
+}
+
 export interface AiSalesKnowledge {
   options: AiSalesKnowledgeOption[]
   fabrics: Array<{
@@ -103,4 +140,7 @@ export interface AiSalesKnowledge {
     minDpPercent: number | null
     fullPaymentOnly: boolean | null
   }
+  businessFacts: AiSalesBusinessFact[]
+  brainEntries: AiSalesBrainEntry[]
+  trainingExamples: AiSalesTrainingExample[]
 }

@@ -15,8 +15,19 @@ import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, Wha
 
 const HUMAN_FALLBACK = 'Pesannya sudah kami terima. Saya teruskan ke tim Local Tailor supaya bisa dibantu dengan tepat ya.'
 
-function isWhatsAppAutoReplyEnabled(): boolean {
-  return process.env.WHATSAPP_AI_AUTOREPLY_ENABLED === 'true'
+async function isWhatsAppAutoReplyEnabled(
+  supabase: ReturnType<typeof createAdminClient>
+): Promise<boolean> {
+  if (process.env.WHATSAPP_AI_FORCE_DISABLED === 'true') return false
+
+  const { data, error } = await supabase
+    .from('ai_sales_runtime_settings')
+    .select('bool_value')
+    .eq('key', 'whatsapp_auto_reply_enabled')
+    .maybeSingle()
+
+  if (error) return false
+  return data?.bool_value === true
 }
 
 function mergeContext(
@@ -102,7 +113,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // Keep the webhook healthy and continue storing inbound messages while the
   // WhatsApp app review is in progress, but never call the AI or send an
   // automatic WhatsApp reply unless production explicitly enables it.
-  if (!isWhatsAppAutoReplyEnabled()) return
+  if (!(await isWhatsAppAutoReplyEnabled(supabase))) return
 
   if (conversation.mode === 'human') return
 
