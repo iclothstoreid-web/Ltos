@@ -65,17 +65,22 @@ const CASES: Array<{
   },
 ]
 
-export async function GET() {
+export async function GET(request: Request) {
   if (process.env.VERCEL_ENV !== 'preview') {
     return new NextResponse('Not found', { status: 404 })
   }
 
+
   try {
+    const url = new URL(request.url)
+    const requestedId = url.searchParams.get('case') || CASES[0].id
+    const testCase = CASES.find(item => item.id === requestedId)
+    if (!testCase) {
+      return NextResponse.json({ error: 'Unknown case', cases: CASES.map(item => item.id) }, { status: 400 })
+    }
+
     const supabase = createAdminClient()
     const knowledge = await loadAiSalesKnowledge(supabase)
-    const results = []
-
-    for (const testCase of CASES) {
     const history: AiSalesMessage[] = [
       {
         conversation_id: '00000000-0000-0000-0000-000000000000',
@@ -87,21 +92,12 @@ export async function GET() {
       },
     ]
 
-    try {
-      const decision = await decideAiSalesReply({
-        currentStage: testCase.stage,
-        context: testCase.context ?? {},
-        history,
-        knowledge,
-      })
-      results.push({ ...testCase, decision })
-    } catch (error) {
-      results.push({
-        ...testCase,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }
+    const decision = await decideAiSalesReply({
+      currentStage: testCase.stage,
+      context: testCase.context ?? {},
+      history,
+      knowledge,
+    })
 
     return NextResponse.json({
       model: process.env.AI_SALES_MODEL || null,
@@ -110,7 +106,8 @@ export async function GET() {
         brain: knowledge.brainEntries.length,
         examples: knowledge.trainingExamples.length,
       },
-      results,
+      testCase,
+      decision,
     })
   } catch (error) {
     return NextResponse.json(
@@ -119,7 +116,7 @@ export async function GET() {
         hasOpenAIKey: Boolean(process.env.OPENAI_API_KEY),
         model: process.env.AI_SALES_MODEL || null,
         hasSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-        hasServiceKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+        hasServiceKey: Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY),
       },
       { status: 500 }
     )
