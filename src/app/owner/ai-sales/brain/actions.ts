@@ -291,3 +291,24 @@ export async function reviewAiSalesMessage(formData: FormData) {
 
   revalidatePath(BRAIN_PATH)
 }
+
+
+export async function setAutoReplyEnabled(formData: FormData) {
+  const enabled = cleanText(formData.get('enabled'), 8) === 'true'
+  const { supabase, user } = await requireOwner()
+
+  const { error } = await supabase
+    .from('ai_sales_runtime_settings')
+    .upsert(
+      {
+        key: 'whatsapp_auto_reply_enabled',
+        bool_value: enabled,
+        updated_by: user.id,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'key' }
+    )
+
+  if (error) throw error
+  revalidatePath(BRAIN_PATH)
+}
