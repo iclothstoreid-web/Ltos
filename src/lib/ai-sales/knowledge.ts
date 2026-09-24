@@ -38,7 +38,7 @@ export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<Ai
       .select('stage_before, stage_after, situation, customer_message, ideal_reply, rationale, outcome, priority')
       .eq('is_active', true)
       .order('priority', { ascending: false })
-      .limit(60),
+      .limit(200),
   ])
 
   if (fabricResult.error) throw fabricResult.error
