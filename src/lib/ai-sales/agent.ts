@@ -112,7 +112,7 @@ function retrievalTerms(text: string): string[] {
       text
         .toLowerCase()
         .normalize('NFKD')
-        .replace(/[^\p{L}\p{N}]+/gu, ' ')
+        .replace(/[^a-z0-9]+/g, ' ')
         .split(/\s+/)
         .map(term => term.trim())
         .filter(term => term.length > 2 && !RETRIEVAL_STOPWORDS.has(term))
