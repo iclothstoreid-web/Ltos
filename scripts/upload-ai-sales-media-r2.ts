@@ -245,7 +245,7 @@ async function uploadR2(params: {
       'x-amz-content-sha256': payloadHash,
       'x-amz-date': amzDate,
     },
-    body: params.body,
+    body: new Uint8Array(params.body),
   })
 
   if (!response.ok) {
