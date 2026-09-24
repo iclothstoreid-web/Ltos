@@ -13,7 +13,7 @@ import {
 import { sendWhatsAppText } from './whatsapp'
 import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, WhatsAppInboundMessage } from './types'
 
-const HUMAN_FALLBACK = 'Pesannya sudah kami terima. Saya teruskan ke tim Local Tailor supaya bisa dibantu dengan tepat ya.'
+const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
 
 async function isWhatsAppAutoReplyEnabled(
   supabase: ReturnType<typeof createAdminClient>
