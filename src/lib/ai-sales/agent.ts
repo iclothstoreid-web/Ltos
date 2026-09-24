@@ -99,9 +99,80 @@ function parseDecision(raw: string, currentStage: AiSalesStage): AiSalesDecision
   }
 }
 
-function compactKnowledge(knowledge: AiSalesKnowledge, currentStage: AiSalesStage) {
-  const stageBrain = knowledge.brainEntries.filter(entry => !entry.stage || entry.stage === currentStage)
-  const stageExamples = knowledge.trainingExamples.filter(example => !example.stageBefore || example.stageBefore === currentStage)
+const RETRIEVAL_STOPWORDS = new Set([
+  'yang', 'dan', 'atau', 'untuk', 'dari', 'dengan', 'saya', 'aku', 'ana', 'kami', 'kita',
+  'ini', 'itu', 'ada', 'bisa', 'mau', 'ingin', 'jadi', 'sudah', 'belum', 'kalau', 'kalo',
+  'gimana', 'bagaimana', 'berapa', 'lebih', 'juga', 'aja', 'saja', 'nya', 'kang', 'pak',
+  'kak', 'bang', 'bro', 'mas',
+])
+
+function retrievalTerms(text: string): string[] {
+  return Array.from(
+    new Set(
+      text
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .split(/\s+/)
+        .map(term => term.trim())
+        .filter(term => term.length > 2 && !RETRIEVAL_STOPWORDS.has(term))
+    )
+  )
+}
+
+function lexicalRelevance(text: string, terms: string[]): number {
+  if (!terms.length) return 0
+  const corpus = text.toLowerCase()
+  return terms.reduce((score, term) => score + (corpus.includes(term) ? 1 : 0), 0)
+}
+
+function compactKnowledge(
+  knowledge: AiSalesKnowledge,
+  currentStage: AiSalesStage,
+  history: AiSalesMessage[]
+) {
+  const recentCustomerContext = history
+    .filter(message => message.role === 'customer' && message.text_content)
+    .slice(-8)
+    .map(message => message.text_content)
+    .join(' ')
+  const terms = retrievalTerms(recentCustomerContext)
+
+  // Every curated Brain entry and training example loaded from LTOS is a
+  // retrieval candidate. We send the most relevant subset per turn instead of
+  // blindly taking the first rows, so the uploaded WhatsApp library actually
+  // influences the reply when its situation matches the current customer.
+  const stageBrain = knowledge.brainEntries
+    .filter(entry => !entry.stage || entry.stage === currentStage)
+    .map(entry => ({
+      entry,
+      score:
+        lexicalRelevance(
+          [entry.title, entry.content, ...(entry.tags ?? [])].join(' '),
+          terms
+        ) * 20 +
+        entry.priority +
+        (['identity', 'style', 'guardrail'].includes(entry.category) ? 25 : 0),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 45)
+    .map(item => item.entry)
+
+  const stageExamples = knowledge.trainingExamples
+    .filter(example => !example.stageBefore || example.stageBefore === currentStage)
+    .map(example => ({
+      example,
+      score:
+        lexicalRelevance(
+          [example.situation, example.customerMessage ?? '', example.rationale ?? ''].join(' '),
+          terms
+        ) * 25 +
+        example.priority +
+        (example.stageBefore === currentStage ? 15 : 0),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 24)
+    .map(item => item.example)
 
   return {
     // Prices here are component/master-option values used by LTOS Price Snapshot,
@@ -110,8 +181,8 @@ function compactKnowledge(knowledge: AiSalesKnowledge, currentStage: AiSalesStag
     available_fabrics: knowledge.fabrics.slice(0, 96),
     commercial_rules: knowledge.commercialRules,
     live_business_facts: knowledge.businessFacts.slice(0, 80),
-    sales_brain: stageBrain.slice(0, 60),
-    training_examples: stageExamples.slice(0, 24),
+    sales_brain: stageBrain,
+    training_examples: stageExamples,
   }
 }
 
@@ -247,7 +318,7 @@ function applyDeterministicGuardrails(
   ) {
     forceHandoff(
       'commercial_fact_missing',
-      'Siap. Untuk nominal DP, rekening, COD, atau diskon saya tidak akan menebak. Saya cek data pembayaran/promo yang aktif di LTOS dan saya teruskan ke admin supaya informasinya tepat.'
+      'Siap. Untuk nominal DP, rekening, COD, atau diskon saya cek dulu data yang aktif biar nggak salah ya. Kalau memang butuh approval, saya teruskan ke admin.'
     )
   }
 
@@ -260,7 +331,7 @@ function applyDeterministicGuardrails(
       next = {
         ...next,
         reply:
-          'Bisa, Kang. Supaya warna yang saya kirim benar-benar tersedia, bahan yang dimaksud yang mana dulu? Setelah bahannya jelas, saya ambil warna aktifnya dari katalog LTOS.',
+          'Bisa, Kang. Bahan yang dimaksud yang mana dulu? Biar saya kirim warna yang memang tersedia untuk bahan itu, bukan asal pilihan.',
         shouldHandoff: false,
         handoffReason: null,
         nextAction: 'continue',
@@ -278,7 +349,7 @@ function applyDeterministicGuardrails(
       if (colors.length) {
         next = {
           ...next,
-          reply: `Untuk ${fabricName}, warna yang tercatat aktif di LTOS: ${colors.join(', ')}. Kang paling condong ke warna gelap atau terang?`,
+          reply: `Untuk ${fabricName}, warna yang tersedia: ${colors.join(', ')}. Kang paling condong ke warna gelap atau terang?`,
           shouldHandoff: false,
           handoffReason: null,
           nextAction: 'continue',
@@ -286,7 +357,7 @@ function applyDeterministicGuardrails(
       } else {
         forceHandoff(
           'fabric_color_unavailable',
-          `Saya belum menemukan data warna aktif yang terverifikasi untuk ${fabricName}. Saya cek dulu ke katalog/admin supaya tidak kasih pilihan yang ternyata tidak tersedia.`
+          `Untuk ${fabricName}, saya belum dapat daftar warna yang terverifikasi. Saya cek dulu ya supaya nggak kasih pilihan yang ternyata nggak tersedia.`
         )
       }
     }
@@ -309,7 +380,7 @@ function applyDeterministicGuardrails(
       }
       next = {
         ...next,
-        reply: `Siap. Status order yang tercatat di LTOS saat ini ${statusLabel[normalized] ?? `adalah ${orderStatus}`}.`,
+        reply: `Siap. Status pesanan saat ini ${statusLabel[normalized] ?? `adalah ${orderStatus}`}.`,
         shouldHandoff: false,
         handoffReason: null,
         nextAction: 'continue',
@@ -327,7 +398,7 @@ function applyDeterministicGuardrails(
   if (untrustedMoney || untrustedAccount) {
     forceHandoff(
       'unverified_commercial_value',
-      'Untuk nominal atau detail pembayaran pastinya saya cek data aktif LTOS dulu ya. Saya tidak akan menyebut angka/rekening sebelum datanya terverifikasi.'
+      'Untuk nominal atau detail pembayarannya saya cek dulu yang aktif ya, biar nggak salah kasih angka atau rekening.'
     )
   }
 
@@ -359,13 +430,20 @@ Move the customer one natural step closer to a valid decision/order while protec
 
 LANGUAGE AND SALES STYLE
 - Reply in natural Indonesian unless the customer clearly uses another language.
-- Be concise, warm, professional, human-sounding, and adaptive to the customer's writing style.
+- Sound like an exceptional human WhatsApp sales consultant: relaxed, attentive, sharp, warm, and commercially effective. Never sound like a template, call center, FAQ, or chatbot.
+- Usually write 1–4 short sentences. Match the customer's pace: short/direct customer → short/direct reply; detailed customer → enough detail to make a decision.
+- Mirror the customer's level of formality, familiar address terms, light emoji usage, and natural vocabulary without caricaturing them. If they use "ana/antum", Sunda words, English, Pak/Kang/Kak/Bang, adapt naturally.
+- Answer the customer's actual question first. Then move only ONE useful step forward.
+- Avoid stiff corporate phrases such as "Tentu", "Kami menyediakan berbagai pilihan", "Sesuai kebutuhan Anda", or "Untuk informasi lebih lanjut" unless the customer's own tone is that formal.
+- Never dump a catalog when one recommendation or one question will reduce uncertainty.
+- Read HISTORY for the customer's observable communication and buying behavior: direct vs exploratory, price-focused vs quality-focused, experienced vs first-time, ready-to-buy vs still browsing. Adapt the amount of explanation and next step. Do not infer sensitive personal traits.
+- A broad Meta-ad opener such as asking for "info lebih lengkap" must receive useful value immediately from LIVE_BUSINESS_FACTS/catalog (for example the verified starting price and what can be customized when available), then one easy question. Do not respond with only a vague discovery question.
 - Use Pak/Kang/Kak only when it fits the conversation.
 - Ask at most one high-value question at a time.
 - Do not repeat facts or options the customer already understood.
-- Do not pressure, spam, or pretend to be a human employee.
-- SALES_BRAIN below is behavioral guidance. Prefer higher-priority entries and stage-relevant entries.
-- TRAINING_EXAMPLES are patterns for tone and next-step selection. They are NOT commercial truth and must not be copied mechanically.
+- Persuade by clarity, relevance, trust, proof, and reducing friction. Never deceive, fabricate scarcity, fake urgency, or pressure the customer.
+- SALES_BRAIN is the Local Tailor behavioral playbook. Prefer higher-priority and stage-relevant entries.
+- TRAINING_EXAMPLES are curated from real Local Tailor WhatsApp conversations and owner corrections. Treat them as the PRIMARY reference for cadence, wording style, objection handling, and next-step selection when relevant. They are NOT commercial truth and must not be copied mechanically.
 
 SOURCE-OF-TRUTH RULES — HARD
 - LIVE_BUSINESS_FACTS, COMMERCIAL_RULES, catalog data, customer context, and authoritative LTOS records are the only business-fact sources.
@@ -412,7 +490,7 @@ Return ONE valid JSON object only, with exactly this shape:
 
 CURRENT_STAGE: ${params.currentStage}
 CONTEXT: ${JSON.stringify(params.context)}
-KNOWLEDGE: ${JSON.stringify(compactKnowledge(params.knowledge, params.currentStage))}`
+KNOWLEDGE: ${JSON.stringify(compactKnowledge(params.knowledge, params.currentStage, params.history))}`
 
   const completion = await client.chat.completions.create({
     model,
