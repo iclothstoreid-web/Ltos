@@ -35,17 +35,27 @@ const CASES: Array<{ id: string; stage: AiSalesStage; customer: string }> = [
 ]
 
 export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const supabase = createAdminClient()
+
   if (process.env.VERCEL_ENV !== 'preview') {
-    return new NextResponse('Not found', { status: 404 })
+    const providedToken = url.searchParams.get('token')
+    const { data: tokenSetting, error: tokenError } = await supabase
+      .from('ai_sales_runtime_settings')
+      .select('text_value')
+      .eq('key', 'internal_eval_token')
+      .maybeSingle()
+
+    if (tokenError || !providedToken || providedToken !== tokenSetting?.text_value) {
+      return new NextResponse('Not found', { status: 404 })
+    }
   }
 
-  const url = new URL(request.url)
   const requestedId = url.searchParams.get('case') || CASES[0].id
   const testCase = CASES.find(item => item.id === requestedId)
   if (!testCase) return NextResponse.json({ error: 'Unknown case' }, { status: 400 })
 
   try {
-    const supabase = createAdminClient()
     const knowledge = await loadAiSalesKnowledge(supabase)
     const history: AiSalesMessage[] = [{
       conversation_id: '00000000-0000-0000-0000-000000000000',
