@@ -215,6 +215,71 @@ function getBusinessFactValue(knowledge: AiSalesKnowledge, key: string): string 
   return fact?.value?.trim() || null
 }
 
+function parseNamedPriceFact(value: string): { name: string; price: string } | null {
+  const priceMatch = value.match(/Rp\s*[0-9.]+/i)
+  if (!priceMatch) return null
+
+  const price = priceMatch[0].replace(/\s+/g, '')
+  const name = value
+    .slice(0, priceMatch.index ?? value.length)
+    .replace(/[—–-]+\s*$/, '')
+    .trim()
+
+  if (!name) return null
+  return { name, price }
+}
+
+function preferredAddress(raw: string): string {
+  if (/\bkang(?:bro)?\b/i.test(raw)) return 'Kang'
+  if (/\bbang\b/i.test(raw)) return 'Bang'
+  if (/\bkak\b/i.test(raw)) return 'Kak'
+  if (/\bpak\b/i.test(raw)) return 'Pak'
+  if (/\bmas\b/i.test(raw)) return 'Mas'
+  return 'Kang'
+}
+
+function buildBroadInfoDecision(params: {
+  currentStage: AiSalesStage
+  context: Record<string, unknown>
+  history: AiSalesMessage[]
+  knowledge: AiSalesKnowledge
+}): AiSalesDecision | null {
+  if (params.currentStage !== 'new') return null
+
+  const raw = latestCustomerText(params.history).trim()
+  const broadInfoRequest =
+    /(minta|mohon|boleh|bisa).*info.*(custom|thobe|jubah)|(info|informasi).*(custom|thobe|jubah)|(custom|thobe|jubah).*info/i.test(raw)
+
+  if (!broadInfoRequest) return null
+
+  const entry = getBusinessFactValue(params.knowledge, 'entry_offer_basic_twill')
+  const premium = getBusinessFactValue(params.knowledge, 'premium_offer_wool_cashmere')
+  const entryOffer = entry ? parseNamedPriceFact(entry) : null
+  const premiumOffer = premium ? parseNamedPriceFact(premium) : null
+
+  if (!entryOffer || !premiumOffer) return null
+
+  const address = preferredAddress(raw)
+  const greeted = /(assalamu|assalamualaikum|السلام عليكم)/i.test(raw)
+  const greeting = greeted ? 'Waalaikumsalam. ' : ''
+
+  const reply =
+    `${greeting}Bismillaah, siap ${address} 🙏\n\n` +
+    `Untuk custom thobe mulai dari ${entryOffer.price} untuk bahan ${entryOffer.name}. ` +
+    `Kalau mau yang lebih premium, ringan, adem dan jatuhnya lebih elegan, ada ${premiumOffer.name} di ${premiumOffer.price}.\n\n` +
+    `Model, warna dan detailnya bisa custom sesuai selera ${address}. Kalau sudah ada referensi boleh langsung kirim fotonya, kalau belum nanti saya bantu pilihkan yang paling cocok 😊`
+
+  return {
+    reply,
+    stage: 'qualified',
+    shouldHandoff: false,
+    handoffReason: null,
+    customerPatch: {},
+    nextAction: 'continue',
+    orderIntent: null,
+  }
+}
+
 function buildDirectSizeDecision(params: {
   currentStage: AiSalesStage
   context: Record<string, unknown>
@@ -504,6 +569,9 @@ export async function decideAiSalesReply(params: {
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
 }): Promise<AiSalesDecision> {
+  const broadInfoDecision = buildBroadInfoDecision(params)
+  if (broadInfoDecision) return broadInfoDecision
+
   const directSizeDecision = buildDirectSizeDecision(params)
   if (directSizeDecision) return directSizeDecision
 
@@ -523,6 +591,7 @@ export async function decideAiSalesReply(params: {
 
 PRIMARY GOAL
 Move the customer one natural step closer to a valid decision/order while protecting trust. Do not behave like a questionnaire and do not reopen choices that the customer has already fixed.
+Commercially, act like an elite consultative closer: understand what the customer values, reduce uncertainty, make the better-value option easy to desire, and keep the conversation comfortable enough that the customer wants to continue.
 
 LANGUAGE AND SALES STYLE
 - Reply in natural Indonesian unless the customer clearly uses another language.
@@ -533,7 +602,10 @@ LANGUAGE AND SALES STYLE
 - Avoid stiff corporate phrases such as "Tentu", "Kami menyediakan berbagai pilihan", "Sesuai kebutuhan Anda", or "Untuk informasi lebih lanjut" unless the customer's own tone is that formal.
 - Never dump a catalog when one recommendation or one question will reduce uncertainty.
 - Read HISTORY for the customer's observable communication and buying behavior: direct vs exploratory, price-focused vs quality-focused, experienced vs first-time, ready-to-buy vs still browsing. Adapt the amount of explanation and next step. Do not infer sensitive personal traits.
-- A broad Meta-ad opener such as asking for "info lebih lengkap" must receive useful value immediately from LIVE_BUSINESS_FACTS/catalog (for example the verified starting price and what can be customized when available), then one easy question. Do not respond with only a vague discovery question.
+- A broad Meta-ad opener such as asking for "info lebih lengkap" must receive useful value immediately. Present the verified entry offer first as an accessible trust anchor, then the verified premium offer with its concrete benefits. The premium option should feel like the recommended upgrade, not a forced upsell.
+- For customers who signal comfort, fabric quality, elegance, formal use, frequent wear, or low price sensitivity, confidently steer toward the premium option by explaining the relevant value difference. If the customer is clearly price-sensitive, keep the entry option comfortable and valid.
+- Never devalue the entry product, manipulate with fear, or invent superiority. Premium persuasion must come from verified product benefits, fit to the customer's needs, trust, and a clear comparison.
+- After the first value-rich answer, use one low-friction next step: invite a reference photo or offer to help choose. Do not turn the first reply into an interrogation.
 - Use Pak/Kang/Kak only when it fits the conversation.
 - Ask at most one high-value question at a time.
 - Do not repeat facts or options the customer already understood.
