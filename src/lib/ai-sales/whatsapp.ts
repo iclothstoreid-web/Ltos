@@ -103,3 +103,42 @@ export async function sendWhatsAppText(to: string, body: string): Promise<string
   const id = Array.isArray(data.messages) ? data.messages[0]?.id : null
   return typeof id === 'string' ? id : null
 }
+
+
+export async function sendWhatsAppImage(
+  to: string,
+  imageUrl: string,
+  caption?: string
+): Promise<string | null> {
+  const accessToken = requiredEnv('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = requiredEnv('WHATSAPP_PHONE_NUMBER_ID')
+  const graphVersion = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
+
+  const image: Record<string, string> = { link: imageUrl }
+  if (caption?.trim()) image.caption = caption.trim()
+
+  const response = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      type: 'image',
+      image,
+    }),
+    cache: 'no-store',
+  })
+
+  const data = (await response.json().catch(() => ({}))) as Record<string, any>
+  if (!response.ok) {
+    const providerMessage = data?.error?.message ? `: ${String(data.error.message)}` : ''
+    throw new Error(`WhatsApp image send failed (${response.status})${providerMessage}`)
+  }
+
+  const id = Array.isArray(data.messages) ? data.messages[0]?.id : null
+  return typeof id === 'string' ? id : null
+}
