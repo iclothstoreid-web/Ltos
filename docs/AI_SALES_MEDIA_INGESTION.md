@@ -80,7 +80,7 @@ Every uploaded image must create one row in `public.ai_sales_media_assets`:
 - `asset_key`: unique stable id, e.g. `model.saudi.clean.white.01`
 - `category`
 - `title`
-- `image_url`: public URL from Supabase bucket `ai-sales-media`
+- `image_url`: public HTTPS URL from Cloudflare R2
 - `caption`: short WhatsApp-ready caption
 - `tags`
 - `trigger_terms`
@@ -107,8 +107,13 @@ Do not claim a property that has not been approved as a business fact.
 
 ## Upload destination
 
-Supabase Storage bucket:
-`ai-sales-media`
+Primary binary storage: Cloudflare R2.
+
+Recommended bucket:
+`local-tailor-ai-sales-media`
+
+Supabase stores metadata only in `public.ai_sales_media_assets`.
+The older Supabase bucket `ai-sales-media` is not the preferred target for new uploads.
 
 Recommended object path:
 `<category>/<subgroup>/<filename>`
@@ -126,3 +131,6 @@ The sequence is:
 `value-rich reply -> relevant visual proof -> one easy next decision`
 
 Never flood the customer with all available images.
+
+
+See `docs/AI_SALES_MEDIA_R2.md` for the secure R2 upload workflow and environment variables.
