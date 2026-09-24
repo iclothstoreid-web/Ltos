@@ -210,6 +210,77 @@ function getContextString(context: Record<string, unknown>, key: string): string
   return null
 }
 
+function getBusinessFactValue(knowledge: AiSalesKnowledge, key: string): string | null {
+  const fact = knowledge.businessFacts.find(item => item.key === key)
+  return fact?.value?.trim() || null
+}
+
+function buildDirectSizeDecision(params: {
+  currentStage: AiSalesStage
+  context: Record<string, unknown>
+  history: AiSalesMessage[]
+  knowledge: AiSalesKnowledge
+}): AiSalesDecision | null {
+  const raw = latestCustomerText(params.history).trim()
+  const match = raw.match(/^(?:ukuran|size)?\s*(xs|s|m|l|xl|xxl|xxxl|xxxxl|\d{2}(?:\/\d{2})?)\s*[.!?]?$/i)
+  if (!match) return null
+
+  const sizeLabel = match[1].toUpperCase()
+  const city = getContextString(params.context, 'city')
+  const inBandung = city ? /bandung/i.test(city) : false
+
+  let reply =
+    `Siap Kang. ${sizeLabel} kita jadikan referensi awal ya, tapi ukuran akhirnya tetap custom sebelum produksi. `
+
+  if (city && inBandung) {
+    reply +=
+      'Karena Kang di area Bandung, paling enak ukur langsung di studio/showroom Local Tailor supaya fitting-nya kita cek langsung.'
+  } else if (city) {
+    reply +=
+      `Karena Kang di ${city}, bisa fitting online lewat video call atau pakai thobe yang ukurannya sudah nyaman sebagai acuan.`
+  } else {
+    reply +=
+      'Kalau di area Bandung bisa ukur langsung di studio/showroom. Kalau di luar Bandung, bisa fitting online lewat video call atau pakai thobe yang ukurannya sudah nyaman sebagai acuan. Kang domisilinya di Bandung atau luar Bandung?'
+  }
+
+  return {
+    reply,
+    stage: params.currentStage === 'new' ? 'qualified' : params.currentStage,
+    shouldHandoff: false,
+    handoffReason: null,
+    customerPatch: { notes: `Ready-made size reference: ${sizeLabel}` },
+    nextAction: 'continue',
+    orderIntent: null,
+  }
+}
+
+function findUnsupportedNamedModel(
+  reply: string,
+  knowledge: AiSalesKnowledge,
+  customerText: string
+): string | null {
+  if (!/\bmodel\b/i.test(reply)) return null
+
+  const trusted = [
+    ...knowledge.options.map(option => option.name),
+    ...knowledge.businessFacts.map(fact => fact.value),
+    customerText,
+  ]
+    .join(' ')
+    .toLowerCase()
+
+  const cue = /\b(?:seperti|model(?:nya)?(?:\s+yang)?(?:\s+bernama)?)\s+([A-Z][A-Za-z'-]{2,})(?:\s+atau\s+([A-Z][A-Za-z'-]{2,}))?/g
+  let match: RegExpExecArray | null
+
+  while ((match = cue.exec(reply))) {
+    for (const candidate of [match[1], match[2]].filter(Boolean) as string[]) {
+      if (!trusted.includes(candidate.toLowerCase())) return candidate
+    }
+  }
+
+  return null
+}
+
 function hasBusinessFact(knowledge: AiSalesKnowledge, pattern: RegExp): boolean {
   return knowledge.businessFacts.some(fact =>
     pattern.test(`${fact.key} ${fact.label} ${fact.value} ${fact.notes ?? ''}`.toLowerCase())
@@ -388,6 +459,28 @@ function applyDeterministicGuardrails(
     }
   }
 
+  const unsupportedModel = findUnsupportedNamedModel(next.reply, params.knowledge, rawMessage)
+  if (unsupportedModel) {
+    const modelFamilies = getBusinessFactValue(params.knowledge, 'sales_model_families')
+    const customParts = getBusinessFactValue(params.knowledge, 'sales_custom_parts')
+
+    if (modelFamilies) {
+      next = {
+        ...next,
+        reply: `Kalau untuk model, pilihan utamanya ${modelFamilies}. Setelah pilih arah modelnya, ${customParts ? customParts.toLowerCase() : 'detailnya'} bisa kita custom satu-satu sesuai selera Kang.`,
+        shouldHandoff: false,
+        handoffReason: null,
+        nextAction: 'continue',
+        orderIntent: null,
+      }
+    } else {
+      forceHandoff(
+        'unverified_model_name',
+        'Saya cek dulu pilihan model yang aktif ya, biar nggak kasih nama model yang ternyata tidak tersedia.'
+      )
+    }
+  }
+
   const trustedCorpus = trustedCommercialCorpus(params.knowledge, params.context)
   const trustedDigits = normalizeDigits(trustedCorpus)
   const untrustedMoney = extractRupiahAmounts(next.reply).find(amount => !trustedDigits.includes(amount))
@@ -411,6 +504,9 @@ export async function decideAiSalesReply(params: {
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
 }): Promise<AiSalesDecision> {
+  const directSizeDecision = buildDirectSizeDecision(params)
+  if (directSizeDecision) return directSizeDecision
+
   const model = process.env.AI_SALES_MODEL
   if (!model) throw new Error('Missing AI_SALES_MODEL environment variable.')
 
@@ -448,6 +544,9 @@ LANGUAGE AND SALES STYLE
 SOURCE-OF-TRUTH RULES — HARD
 - LIVE_BUSINESS_FACTS, COMMERCIAL_RULES, catalog data, customer context, and authoritative LTOS records are the only business-fact sources.
 - Product/model/material facts may only come from KNOWLEDGE below or facts already supplied by the customer/context.
+- NEVER invent or improvise a named model, collar, cuff, placket, pocket, cutting, fabric, or color. A named option must exactly exist in catalog_options or LIVE_BUSINESS_FACTS. Do not create poetic/marketing names.
+- If the customer mentions a ready-made size label such as M/L/XL/XXL or a numeric size, treat it only as a reference. Local Tailor sizing remains custom: before production, measure the customer in Bandung studio/showroom or use remote fitting by video call/reference thobe outside Bandung.
+- When discussing broad model direction, prefer the verified sales-facing model families from LIVE_BUSINESS_FACTS.
 - NEVER invent price, discount, promo, stock, SLA, completion date, payment account, payment status, material property, model, or availability.
 - catalog_options.price is a COMPONENT value from LTOS Price Snapshot, not automatically a final garment price. NEVER add/sum component prices yourself and NEVER present one component price as a final garment quote.
 - You may state an explicit live "starting price" or other commercial fact only when it exists in LIVE_BUSINESS_FACTS, and must preserve its meaning (for example, a starting price is not a final quote).
@@ -492,16 +591,29 @@ CURRENT_STAGE: ${params.currentStage}
 CONTEXT: ${JSON.stringify(params.context)}
 KNOWLEDGE: ${JSON.stringify(compactKnowledge(params.knowledge, params.currentStage, params.history))}`
 
-  const completion = await client.chat.completions.create({
-    model,
-    messages: [{ role: 'system', content: system }, ...history],
-    response_format: { type: 'json_object' },
-    max_completion_tokens: 900,
-  })
+  let lastError = 'AI Sales returned no content.'
 
-  const content = completion.choices[0]?.message?.content
-  if (!content) throw new Error('AI Sales returned no content.')
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const completion = await client.chat.completions.create({
+      model,
+      messages: [{ role: 'system', content: system }, ...history],
+      response_format: { type: 'json_object' },
+      max_completion_tokens: 1800,
+    })
 
-  const parsed = parseDecision(content, params.currentStage)
-  return applyDeterministicGuardrails(parsed, params)
+    const content = completion.choices[0]?.message?.content
+    if (!content) {
+      lastError = `AI Sales returned no content (finish_reason=${completion.choices[0]?.finish_reason ?? 'unknown'}).`
+      continue
+    }
+
+    try {
+      const parsed = parseDecision(content, params.currentStage)
+      return applyDeterministicGuardrails(parsed, params)
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error)
+    }
+  }
+
+  throw new Error(lastError)
 }
