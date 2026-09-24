@@ -117,6 +117,11 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
 
   if (conversation.mode === 'human') return
 
+  // Reactions and stickers are conversational acknowledgements, not reasons to
+  // disable the AI thread or send a robotic fallback. Store them, then wait for
+  // the customer's next meaningful message.
+  if (['reaction', 'sticker'].includes(message.type)) return
+
   if (!message.text || !['text', 'interactive'].includes(message.type)) {
     await handoffUnsupportedMessage(conversation, message)
     return
