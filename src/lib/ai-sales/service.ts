@@ -2,6 +2,7 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { decideAiSalesReply } from './agent'
 import { loadAiSalesKnowledge } from './knowledge'
+import { selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
 import {
   appendInboundMessage,
   appendOutboundMessage,
@@ -10,7 +11,7 @@ import {
   listRecentMessages,
   updateConversationState,
 } from './repository'
-import { sendWhatsAppText } from './whatsapp'
+import { sendWhatsAppImage, sendWhatsAppText } from './whatsapp'
 import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, WhatsAppInboundMessage } from './types'
 
 const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
@@ -61,6 +62,30 @@ async function sendAndPersist(
     provider_message_id: providerMessageId,
     message_type: 'text',
     text_content: body,
+    delivery_status: 'sent',
+  })
+}
+
+async function sendImageAndPersist(
+  conversationId: string,
+  to: string,
+  asset: AiSalesMediaAsset
+): Promise<void> {
+  const supabase = createAdminClient()
+  const providerMessageId = await sendWhatsAppImage(to, asset.imageUrl, asset.caption)
+  await appendOutboundMessage(supabase, {
+    conversation_id: conversationId,
+    direction: 'outbound',
+    role: 'assistant',
+    provider_message_id: providerMessageId,
+    message_type: 'image',
+    text_content: asset.caption || asset.title,
+    raw_payload: {
+      asset_key: asset.assetKey,
+      category: asset.category,
+      image_url: asset.imageUrl,
+      title: asset.title,
+    },
     delivery_status: 'sent',
   })
 }
@@ -173,6 +198,51 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
 
     try {
       await sendAndPersist(conversation.id, message.from, decision.reply)
+
+      if (!handoff) {
+        try {
+          const mediaAssets = await selectAiSalesMediaAssets(supabase, {
+            customerText: message.text,
+            currentStage: conversation.stage,
+          })
+
+          for (const asset of mediaAssets) {
+            try {
+              await sendImageAndPersist(conversation.id, message.from, asset)
+              await createSalesAction(
+                supabase,
+                conversation.id,
+                'media_sent',
+                {
+                  assetKey: asset.assetKey,
+                  category: asset.category,
+                  title: asset.title,
+                },
+                'executed'
+              )
+            } catch (mediaSendError) {
+              await createSalesAction(
+                supabase,
+                conversation.id,
+                'media_send_failed',
+                {
+                  assetKey: asset.assetKey,
+                  reason: mediaSendError instanceof Error ? mediaSendError.message : String(mediaSendError),
+                },
+                'failed'
+              )
+            }
+          }
+        } catch (mediaSelectError) {
+          await createSalesAction(
+            supabase,
+            conversation.id,
+            'media_select_failed',
+            { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
+            'failed'
+          )
+        }
+      }
     } catch (sendError) {
       await updateConversationState(supabase, conversation.id, {
         mode: 'human',
