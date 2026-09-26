@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Bot, Brain, ChevronLeft, MessageCircle, UserRound } from 'lucide-react'
+import { Bot, Brain, ChevronLeft, Download, MessageCircle, UserRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { sendAiSalesHumanReply, setAiSalesMode } from './actions'
 
@@ -93,6 +93,13 @@ export default async function AiSalesInboxPage({
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <a
+              href="/api/owner/ai-sales/customers"
+              className="flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold hover:bg-black/[0.025]"
+            >
+              <Download className="h-4 w-4" />
+              Customer Database
+            </a>
             <Link
               href="/owner/ai-sales/brain"
               className="flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold hover:bg-black/[0.025]"
