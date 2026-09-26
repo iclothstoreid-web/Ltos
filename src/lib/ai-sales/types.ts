@@ -40,6 +40,16 @@ export interface WhatsAppInboundMessage {
   timestamp: string | null
   type: string
   text: string
+  profileName: string | null
+  rawPayload: Record<string, unknown>
+}
+
+export interface WhatsAppStatusUpdate {
+  providerMessageId: string
+  recipientId: string | null
+  status: 'sent' | 'delivered' | 'read' | 'failed' | 'deleted' | string
+  timestamp: string | null
+  errors: Array<Record<string, unknown>>
   rawPayload: Record<string, unknown>
 }
 
