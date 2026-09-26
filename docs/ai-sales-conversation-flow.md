@@ -23,6 +23,8 @@ Audit 26 September 2026. Sumber: 20 ekspor chat WhatsApp yang diberikan owner; c
 
 ## Nada yang terbukti bekerja
 
+- Bukti dari feedback owner 26 September: seorang customer memuji jahitan rapi dan ukuran pas; customer lain menyatakan hasilnya bagus, dan seorang customer merencanakan order berikutnya. Ini boleh dijelaskan sebagai pengalaman beberapa customer, tanpa nama, kutipan langsung, atau janji hasil semua order. Owner menyatakan artisan khusus menangani kualitas pengerjaan; hindari klaim sertifikasi atau pengakuan eksternal yang belum tercatat.
+
 - Customer bertubuh besar khawatir bagian perut: “Kita ukur bagian dada dan perut terpisah, lalu atur ruang geraknya supaya tetap rapi dan nyaman. Tidak perlu menebak dari tinggi dan berat saja.” Ini menanggapi rasa khawatir tanpa menilai tubuhnya.
 - Customer untuk akad: “Untuk akad, kita cari tampilan yang tenang dan pas di badan, jadi Bapak nyaman bergerak dan merasa cocok dengan pilihan sendiri. Bapak lebih suka arah Saudi yang clean atau sudah punya foto acuan?” Jangan menganggap semua pembeli menginginkan kesan mencolok.
 - Customer punya thobe lama yang nyaman: “Bagus, itu bisa jadi acuan. Kita pertahankan bagian yang sudah pas, lalu koreksi bagian yang selama ini kurang nyaman.” Hindari menjelekkan produk atau merek sebelumnya.
@@ -36,5 +38,14 @@ Audit 26 September 2026. Sumber: 20 ekspor chat WhatsApp yang diberikan owner; c
 - Foto model utuh Saudi/Qatary/Dubai digunakan setelah customer meminta model tertentu. Jika meminta model lain, ajak custom per bagian mulai dari kerah dan tampilkan satu kerah yang terverifikasi.
 - Aktivasi dilakukan setelah pembuka lima gambar, deduplikasi, dan pencocokan konteks berjalan di runtime. Jangan mengaktifkan seluruh 137 aset sekaligus; review caption, metadata, dan fakta produk per kelompok.
 - Follow-up berdasarkan waktu harus menghormati permintaan waktu customer, jam wajar, status human takeover, dan jendela layanan Meta. Di luar 24 jam sejak pesan terakhir customer, perlu template WhatsApp yang telah disetujui sebelum pengiriman otomatis. Jangan mengejar customer tanpa batas; simpan konteks agar percakapan bisa dilanjutkan ketika ia membalas.
+
+## Rancangan follow-up yang siap diimplementasikan
+
+1. Saat customer berhenti menjawab, simpan `last_inbound_at`, pilihan terkunci, pertanyaan terakhir yang belum dijawab, preferensi waktu, serta pemilik thread AI/human. Jangan jadwalkan bila customer meminta berhenti, menunda sampai tanggal tertentu, sedang komplain, atau sudah masuk DP/order.
+2. Pada lead yang sudah menerima jawaban dan tetap diam, tawarkan satu bantuan yang sesuai keputusan terakhir setelah sekitar 3 jam pada jam lokal 09.00–20.00. Jangan mengulang katalog atau lima foto pembuka. Jika ada jawaban, batalkan semua follow-up lama dan lanjutkan dari konteks baru.
+3. Jika masih belum menjawab, paling banyak satu pengingat tambahan keesokan hari. Dalam jendela 24 jam sejak pesan terakhir customer boleh berupa pesan bebas yang relevan; setelahnya hanya template marketing yang sudah berstatus APPROVED dan sesuai izin komunikasi customer. Template harus mengundang balasan; AI baru melanjutkan percakapan bebas ketika customer membalas.
+4. Hindari duplikasi dengan kunci unik per percakapan + langkah follow-up. Periksa kembali pesan terbaru, mode human, status order, permintaan berhenti, dan batas 24 jam tepat sebelum mengirim. Catat hasil dan hentikan setelah dua percobaan tanpa respons.
+
+Pengirim otomatis belum dipasang di runtime. Diperlukan scheduler, penyimpanan jadwal dan idempotensi, serta template Meta yang disetujui sebelum follow-up lintas 24 jam diaktifkan.
 - Handler `smb_message_echoes` sekarang disiapkan untuk mencatat pesan admin WhatsApp Business App dan mengalihkan thread ke human. Pastikan field webhook tersebut benar-benar subscribed di Meta; tanpa event itu, balasan manual tetap tidak terlihat AI. Setelah admin selesai, aktifkan AI kembali secara sadar dari dashboard owner.
 - Beberapa ekspor chat menyebut 6–7 hari; fakta LTOS saat audit adalah estimasi 8–9 hari. Contoh chat melatih gaya, bukan sumber harga, SLA, stok, promo, atau status order.
