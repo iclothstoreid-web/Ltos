@@ -222,11 +222,11 @@ function getBusinessFactValue(knowledge: AiSalesKnowledge, key: string): string 
 
 function asksForShowroomAddress(raw: string): boolean {
   const text = raw.trim()
-  return (
-    /^(?:alamat|lokasi|showroom)(?:\s+local\s+tailor)?(?:nya)?\s*[?.!]*$/i.test(text) ||
-    /(?:alamat|lokasi|showroom)(?:nya)?\s*(?:di\s*mana|dimana|dmn|mana)\b/i.test(text) ||
-    /(?:di\s*mana|dimana|dmn)\s+(?:alamat|lokasi|showroom)\b/i.test(text)
-  )
+  if (/^(?:alamat|lokasi|showroom)(?:\s+local\s+tailor)?(?:nya)?\s*[?.!]*$/i.test(text)) return true
+
+  const mentionsPlace = /\b(?:alamat|lokasi|showroom)(?:nya)?\b/i.test(text)
+  const asksWhere = /\b(?:di\s*mana|dimana|dmn|mana)\b/i.test(text)
+  return mentionsPlace && asksWhere
 }
 
 function buildDirectShowroomAddressDecision(params: {
