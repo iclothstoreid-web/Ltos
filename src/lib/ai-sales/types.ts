@@ -43,12 +43,25 @@ export interface WhatsAppInboundMessage {
   rawPayload: Record<string, unknown>
 }
 
+export interface WhatsAppMessageEcho {
+  providerMessageId: string
+  to: string
+  type: string
+  text: string
+  rawPayload: Record<string, unknown>
+}
+
 export interface AiSalesCustomerPatch {
   name?: string
   phone?: string
   city?: string
   eventDate?: string
   budget?: string
+  occasion?: string
+  fitConcern?: string
+  cutting?: string
+  referenceGarment?: string
+  fittingPreference?: string
   model?: string
   fabric?: string
   color?: string

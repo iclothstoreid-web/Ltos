@@ -1,6 +1,6 @@
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'crypto'
-import type { WhatsAppInboundMessage } from './types'
+import type { WhatsAppInboundMessage, WhatsAppMessageEcho } from './types'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -73,6 +73,36 @@ export function parseWhatsAppInboundMessages(payload: unknown): WhatsAppInboundM
   return results
 }
 
+export function parseWhatsAppMessageEchoes(payload: unknown): WhatsAppMessageEcho[] {
+  if (!payload || typeof payload !== 'object') return []
+  const root = payload as Record<string, any>
+  const results: WhatsAppMessageEcho[] = []
+
+  for (const entry of Array.isArray(root.entry) ? root.entry : []) {
+    for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
+      if (change?.field !== 'smb_message_echoes') continue
+      const echoes = Array.isArray(change?.value?.message_echoes) ? change.value.message_echoes : []
+      for (const echo of echoes) {
+        if (typeof echo?.id !== 'string' || typeof echo?.to !== 'string') continue
+        const type = typeof echo.type === 'string' ? echo.type : 'unknown'
+        const text = type === 'text' && typeof echo.text?.body === 'string'
+          ? echo.text.body.trim()
+          : type === 'image' && typeof echo.image?.caption === 'string'
+            ? echo.image.caption.trim()
+            : ''
+        results.push({
+          providerMessageId: echo.id,
+          to: echo.to,
+          type,
+          text,
+          rawPayload: echo as Record<string, unknown>,
+        })
+      }
+    }
+  }
+  return results
+}
+
 export async function sendWhatsAppText(to: string, body: string): Promise<string | null> {
   const accessToken = requiredEnv('WHATSAPP_ACCESS_TOKEN')
   const phoneNumberId = requiredEnv('WHATSAPP_PHONE_NUMBER_ID')
@@ -139,6 +169,32 @@ export async function sendWhatsAppImage(
     throw new Error(`WhatsApp image send failed (${response.status})${providerMessage}`)
   }
 
+  const id = Array.isArray(data.messages) ? data.messages[0]?.id : null
+  return typeof id === 'string' ? id : null
+}
+
+export async function sendWhatsAppTemplate(
+  to: string,
+  name: string,
+  languageCode: string
+): Promise<string | null> {
+  const accessToken = requiredEnv('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = requiredEnv('WHATSAPP_PHONE_NUMBER_ID')
+  const graphVersion = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
+  const response = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'template',
+      template: { name, language: { code: languageCode } },
+    }),
+    cache: 'no-store',
+  })
+  const data = (await response.json().catch(() => ({}))) as Record<string, any>
+  if (!response.ok) {
+    const providerMessage = data?.error?.message ? `: ${String(data.error.message)}` : ''
+    throw new Error(`WhatsApp template send failed (${response.status})${providerMessage}`)
+  }
   const id = Array.isArray(data.messages) ? data.messages[0]?.id : null
   return typeof id === 'string' ? id : null
 }

@@ -2,19 +2,47 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { decideAiSalesReply } from './agent'
 import { loadAiSalesKnowledge } from './knowledge'
+import { cancelPendingFollowUps, scheduleFirstFollowUp } from './follow-up'
 import { selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
 import {
   appendInboundMessage,
   appendOutboundMessage,
   createSalesAction,
   getOrCreateConversation,
+  isConversationAi,
   listRecentMessages,
+  listSentMediaAssetKeys,
   updateConversationState,
+  updateConversationStateIfAi,
 } from './repository'
 import { sendWhatsAppImage, sendWhatsAppText } from './whatsapp'
-import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, WhatsAppInboundMessage } from './types'
+import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, WhatsAppInboundMessage, WhatsAppMessageEcho } from './types'
 
 const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
+
+export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Promise<void> {
+  const supabase = createAdminClient()
+  const conversation = await getOrCreateConversation(supabase, echo.to)
+  const { error } = await supabase.from('ai_sales_messages').insert({
+    conversation_id: conversation.id,
+    direction: 'outbound',
+    role: 'human',
+    provider_message_id: echo.providerMessageId,
+    message_type: echo.type,
+    text_content: echo.text || null,
+    raw_payload: echo.rawPayload,
+    delivery_status: 'sent',
+  })
+  if (error?.code === '23505') return
+  if (error) throw error
+
+  await updateConversationState(supabase, conversation.id, {
+    mode: 'human',
+    handoffReason: 'whatsapp_business_app_reply',
+  })
+  await createSalesAction(supabase, conversation.id, 'human_takeover',
+    { source: 'whatsapp_business_app', providerMessageId: echo.providerMessageId }, 'executed')
+}
 
 async function isWhatsAppAutoReplyEnabled(
   supabase: ReturnType<typeof createAdminClient>
@@ -135,6 +163,9 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // idempotency boundary: never run AI twice or send two replies for one input.
   if (!inserted) return
 
+  // A new customer turn makes every pending reminder about the previous turn stale.
+  await cancelPendingFollowUps(supabase, conversation.id)
+
   // Keep the webhook healthy and continue storing inbound messages while the
   // WhatsApp app review is in progress, but never call the AI or send an
   // automatic WhatsApp reply unless production explicitly enables it.
@@ -168,13 +199,14 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     const nextContext = mergeContext(conversation, decision.customerPatch, decision.orderIntent)
     const handoff = decision.shouldHandoff || decision.nextAction === 'handoff'
 
-    await updateConversationState(supabase, conversation.id, {
+    const stillAi = await updateConversationStateIfAi(supabase, conversation.id, {
       stage: decision.stage,
       mode: handoff ? 'human' : 'ai',
       handoffReason: handoff ? decision.handoffReason ?? 'ai_requested_handoff' : null,
       customerName: decision.customerPatch.name ?? conversation.customer_name,
       context: nextContext,
     })
+    if (!stillAi) return
 
     if (decision.nextAction === 'collect_order_intent' && decision.orderIntent) {
       await createSalesAction(
@@ -197,16 +229,25 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     }
 
     try {
+      // A reply sent from the WhatsApp Business App may have taken over while
+      // the AI was composing its response. Do not speak over the human seller.
+      if (!handoff && !(await isConversationAi(supabase, conversation.id))) return
       await sendAndPersist(conversation.id, message.from, decision.reply)
 
       if (!handoff) {
         try {
+          const sentAssetKeys = await listSentMediaAssetKeys(supabase, conversation.id)
           const mediaAssets = await selectAiSalesMediaAssets(supabase, {
             customerText: message.text,
             currentStage: conversation.stage,
+            sentAssetKeys,
+            lead: nextContext.lead && typeof nextContext.lead === 'object'
+              ? nextContext.lead as Record<string, unknown>
+              : {},
           })
 
           for (const asset of mediaAssets) {
+            if (!(await isConversationAi(supabase, conversation.id))) break
             try {
               await sendImageAndPersist(conversation.id, message.from, asset)
               await createSalesAction(
@@ -241,6 +282,13 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
             { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
             'failed'
           )
+        }
+        try {
+          await scheduleFirstFollowUp(supabase, conversation.id, message.text)
+        } catch (followUpError) {
+          await createSalesAction(supabase, conversation.id, 'follow_up_schedule_failed', {
+            reason: followUpError instanceof Error ? followUpError.message : String(followUpError),
+          }, 'failed')
         }
       }
     } catch (sendError) {

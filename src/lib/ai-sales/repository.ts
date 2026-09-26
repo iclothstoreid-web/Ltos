@@ -66,13 +66,30 @@ export async function listRecentMessages(
 ): Promise<AiSalesMessage[]> {
   const { data, error } = await supabase
     .from('ai_sales_messages')
-    .select('id, conversation_id, direction, role, provider_message_id, message_type, text_content, delivery_status, created_at')
+    .select('id, conversation_id, direction, role, provider_message_id, message_type, text_content, raw_payload, delivery_status, created_at')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
     .limit(limit)
 
   if (error) throw error
   return ((data ?? []) as AiSalesMessage[]).reverse()
+}
+
+export async function listSentMediaAssetKeys(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('ai_sales_messages')
+    .select('raw_payload')
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'outbound')
+    .eq('message_type', 'image')
+
+  if (error) throw error
+  return (data ?? [])
+    .map(row => row.raw_payload?.asset_key)
+    .filter((key): key is string => typeof key === 'string')
 }
 
 export async function updateConversationState(
@@ -95,6 +112,45 @@ export async function updateConversationState(
 
   const { error } = await supabase.from('ai_sales_conversations').update(patch).eq('id', conversationId)
   if (error) throw error
+}
+
+export async function updateConversationStateIfAi(
+  supabase: SupabaseClient,
+  conversationId: string,
+  params: {
+    stage: AiSalesStage
+    mode: 'ai' | 'human'
+    handoffReason: string | null
+    customerName: string | null
+    context: Record<string, unknown>
+  }
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('ai_sales_conversations')
+    .update({
+      stage: params.stage,
+      mode: params.mode,
+      handoff_reason: params.handoffReason,
+      customer_name: params.customerName,
+      context: params.context,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', conversationId)
+    .eq('mode', 'ai')
+    .select('id')
+    .maybeSingle()
+  if (error) throw error
+  return Boolean(data)
+}
+
+export async function isConversationAi(supabase: SupabaseClient, conversationId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('ai_sales_conversations')
+    .select('mode')
+    .eq('id', conversationId)
+    .single()
+  if (error) throw error
+  return data.mode === 'ai'
 }
 
 export async function createSalesAction(

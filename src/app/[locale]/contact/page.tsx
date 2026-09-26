@@ -59,7 +59,7 @@ export default function ContactPage() {
               <p className="font-luxury-sans text-xs uppercase tracking-[0.3em] text-luxury-gold">Contact</p>
               <h1 className="mt-6 font-fraunces text-4xl leading-[1.1] text-luxury-ivory sm:text-5xl">Hubungi Local Tailor</h1>
               <p className="mx-auto mt-6 max-w-xl font-luxury-sans text-base text-luxury-taupe md:text-lg">
-                Konsultasi, pengukuran, dan produksi berlangsung di workshop kami di Bandung — hubungi kami via WhatsApp untuk memulai.
+                Showroom dan workshop kami berada di Jalan Gamelan No.10, Turangga, Buahbatu, Kota Bandung. Customer luar kota tetap bisa konsultasi dan fitting online via WhatsApp.
               </p>
             </Reveal>
             <Breadcrumbs items={BREADCRUMB_ITEMS} />

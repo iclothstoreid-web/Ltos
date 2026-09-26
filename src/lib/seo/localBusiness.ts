@@ -34,6 +34,7 @@ export function buildLocationLocalBusinessSchema(city: CityConfig): JsonLdSchema
     telephone: `+${CITY_BUSINESS.whatsappInternational}`,
     address: {
       '@type': 'PostalAddress',
+      streetAddress: CITY_BUSINESS.streetAddress,
       addressLocality: CITY_BUSINESS.addressLocality,
       addressRegion: CITY_BUSINESS.addressRegion,
       addressCountry: CITY_BUSINESS.addressCountry,
@@ -76,6 +77,7 @@ export function buildLocationsHubLocalBusinessSchema(cities: CityConfig[]): Json
     telephone: `+${CITY_BUSINESS.whatsappInternational}`,
     address: {
       '@type': 'PostalAddress',
+      streetAddress: CITY_BUSINESS.streetAddress,
       addressLocality: CITY_BUSINESS.addressLocality,
       addressRegion: CITY_BUSINESS.addressRegion,
       addressCountry: CITY_BUSINESS.addressCountry,
