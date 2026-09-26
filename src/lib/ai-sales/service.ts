@@ -12,19 +12,97 @@ import {
   isConversationAi,
   listRecentMessages,
   listSentMediaAssetKeys,
+  resolveAiSalesCustomerContact,
   updateConversationState,
   updateConversationStateIfAi,
+  updateOutboundDeliveryStatus,
 } from './repository'
-import { sendWhatsAppImage, sendWhatsAppText } from './whatsapp'
-import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, WhatsAppInboundMessage, WhatsAppMessageEcho } from './types'
+import { sendWhatsAppImage, sendWhatsAppText, setWhatsAppReadAndTyping } from './whatsapp'
+import type {
+  AiSalesConversation,
+  AiSalesCustomerPatch,
+  AiSalesOrderIntent,
+  WhatsAppInboundMessage,
+  WhatsAppMessageEcho,
+  WhatsAppStatusUpdate,
+} from './types'
 
 const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
+
+const REOPEN_GREETING_MS = 12 * 60 * 60 * 1000
+
+function cleanCustomerName(value: string | null): string | null {
+  const cleaned = value?.trim().replace(/^~+/, '').replace(/\s+/g, ' ')
+  if (!cleaned) return null
+  return cleaned.slice(0, 80)
+}
+
+function shouldGreetByName(previousInboundAt: string | null): boolean {
+  if (!previousInboundAt) return true
+  const previous = new Date(previousInboundAt).getTime()
+  return Number.isFinite(previous) && Date.now() - previous >= REOPEN_GREETING_MS
+}
+
+function personalizeFirstReply(
+  reply: string,
+  displayName: string | null,
+  isExistingCustomer: boolean,
+  greet: boolean
+): string {
+  const name = cleanCustomerName(displayName)
+  if (!name || !greet) return reply
+
+  const firstName = name.split(' ')[0]
+  if (reply.toLowerCase().includes(firstName.toLowerCase())) return reply
+
+  const cleanedReply = reply
+    .replace(/^bismillaah,?\s*siap(?:\s+(?:kang|kak|pak|mas|bro))?\s*[🙏🙂😊]*\s*/i, '')
+    .trim()
+
+  const greeting = isExistingCustomer
+    ? `Assalamu'alaikum ${name}, senang bisa bantu lagi 🙏`
+    : `Bismillaah, siap ${name} 🙏`
+
+  return cleanedReply ? `${greeting}\n\n${cleanedReply}` : greeting
+}
+
+function humanReplyDelayMs(text: string, providerMessageId: string): number {
+  const variation = [...providerMessageId].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 900
+  return Math.min(4300, 1700 + variation + Math.floor(text.length * 3.2))
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+export async function processWhatsAppStatusUpdate(status: WhatsAppStatusUpdate): Promise<void> {
+  const supabase = createAdminClient()
+  const { conversationId } = await updateOutboundDeliveryStatus(
+    supabase,
+    status.providerMessageId,
+    status.status
+  )
+
+  if (status.status === 'failed' && conversationId) {
+    await createSalesAction(
+      supabase,
+      conversationId,
+      'whatsapp_delivery_failed',
+      {
+        providerMessageId: status.providerMessageId,
+        recipientId: status.recipientId,
+        errors: status.errors,
+      },
+      'failed'
+    )
+  }
+}
 
 export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Promise<void> {
   const supabase = createAdminClient()
   const conversation = await getOrCreateConversation(supabase, echo.to)
   const { error } = await supabase.from('ai_sales_messages').insert({
-    conversation_id: conversation.id,
+    conversation_id: activeConversation.id,
     direction: 'outbound',
     role: 'human',
     provider_message_id: echo.providerMessageId,
@@ -36,11 +114,11 @@ export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Pro
   if (error?.code === '23505') return
   if (error) throw error
 
-  await updateConversationState(supabase, conversation.id, {
+  await updateConversationState(supabase, activeConversation.id, {
     mode: 'human',
     handoffReason: 'whatsapp_business_app_reply',
   })
-  await createSalesAction(supabase, conversation.id, 'human_takeover',
+  await createSalesAction(supabase, activeConversation.id, 'human_takeover',
     { source: 'whatsapp_business_app', providerMessageId: echo.providerMessageId }, 'executed')
 }
 
@@ -125,18 +203,18 @@ async function handoffUnsupportedMessage(
   const supabase = createAdminClient()
   const reason = `unsupported_whatsapp_message:${message.type}`
 
-  await updateConversationState(supabase, conversation.id, {
+  await updateConversationState(supabase, activeConversation.id, {
     mode: 'human',
     handoffReason: reason,
   })
-  await createSalesAction(supabase, conversation.id, 'handoff', { reason, messageType: message.type }, 'executed')
+  await createSalesAction(supabase, activeConversation.id, 'handoff', { reason, messageType: message.type }, 'executed')
 
   try {
-    await sendAndPersist(conversation.id, message.from, HUMAN_FALLBACK)
+    await sendAndPersist(activeConversation.id, message.from, HUMAN_FALLBACK)
   } catch (error) {
     await createSalesAction(
       supabase,
-      conversation.id,
+      activeConversation.id,
       'outbound_send_failed',
       { reason: error instanceof Error ? error.message : String(error) },
       'failed'
@@ -147,15 +225,51 @@ async function handoffUnsupportedMessage(
 export async function processWhatsAppInbound(message: WhatsAppInboundMessage): Promise<void> {
   const supabase = createAdminClient()
   const conversation = await getOrCreateConversation(supabase, message.from)
+  const previousInboundAt = conversation.last_inbound_at
+
+  const identity = await resolveAiSalesCustomerContact(
+    supabase,
+    message.from,
+    message.profileName
+  ).catch(() => null)
+
+  const identityContext: Record<string, unknown> = {
+    ...conversation.context,
+    customerIdentity: {
+      displayName: identity?.displayName ?? activeConversation.customer_name ?? message.profileName ?? null,
+      whatsappProfileName: identity?.whatsappProfileName ?? message.profileName ?? null,
+      isExistingCustomer: identity?.isExistingCustomer ?? false,
+      orderCount: identity?.orderCount ?? 0,
+    },
+  }
+
+  if (identity) {
+    await updateConversationState(supabase, activeConversation.id, {
+      customerId: identity.customerId,
+      customerName: identity.displayName,
+      context: identityContext,
+    })
+  }
+
+  const activeConversation: AiSalesConversation = {
+    ...conversation,
+    customer_id: identity?.customerId ?? conversation.customer_id,
+    customer_name: identity?.displayName ?? activeConversation.customer_name ?? message.profileName ?? null,
+    customer_phone: identity?.phoneE164 ?? conversation.customer_phone ?? message.from,
+    context: identityContext,
+  }
 
   const inserted = await appendInboundMessage(supabase, {
-    conversation_id: conversation.id,
+    conversation_id: activeConversation.id,
     direction: 'inbound',
     role: 'customer',
     provider_message_id: message.providerMessageId,
     message_type: message.type,
     text_content: message.text || null,
-    raw_payload: message.rawPayload,
+    raw_payload: {
+      ...message.rawPayload,
+      whatsapp_profile_name: message.profileName,
+    },
     delivery_status: 'received',
   })
 
@@ -164,14 +278,29 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   if (!inserted) return
 
   // A new customer turn makes every pending reminder about the previous turn stale.
-  await cancelPendingFollowUps(supabase, conversation.id)
+  await cancelPendingFollowUps(supabase, activeConversation.id)
 
-  // Keep the webhook healthy and continue storing inbound messages while the
-  // WhatsApp app review is in progress, but never call the AI or send an
-  // automatic WhatsApp reply unless production explicitly enables it.
-  if (!(await isWhatsAppAutoReplyEnabled(supabase))) return
+  const autoReplyEnabled = await isWhatsAppAutoReplyEnabled(supabase)
+  const willAutoReply = autoReplyEnabled && activeConversation.mode === 'ai'
 
-  if (conversation.mode === 'human') return
+  // Customer immediately sees blue ticks. When AI is going to reply, WhatsApp
+  // also shows the native typing indicator while we compose the answer.
+  try {
+    await setWhatsAppReadAndTyping(message.providerMessageId, willAutoReply)
+  } catch (presenceError) {
+    await createSalesAction(
+      supabase,
+      activeConversation.id,
+      'whatsapp_presence_failed',
+      { reason: presenceError instanceof Error ? presenceError.message : String(presenceError) },
+      'failed'
+    )
+  }
+
+  // Keep storing/reading inbound messages even when automatic replies are off.
+  if (!autoReplyEnabled) return
+
+  if (activeConversation.mode === 'human') return
 
   // Reactions and stickers are conversational acknowledgements, not reasons to
   // disable the AI thread or send a robotic fallback. Store them, then wait for
@@ -179,31 +308,31 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   if (['reaction', 'sticker'].includes(message.type)) return
 
   if (!message.text || !['text', 'interactive'].includes(message.type)) {
-    await handoffUnsupportedMessage(conversation, message)
+    await handoffUnsupportedMessage(activeConversation, message)
     return
   }
 
   try {
     const [history, knowledge] = await Promise.all([
-      listRecentMessages(supabase, conversation.id),
+      listRecentMessages(supabase, activeConversation.id),
       loadAiSalesKnowledge(supabase),
     ])
 
     const decision = await decideAiSalesReply({
-      currentStage: conversation.stage,
-      context: conversation.context,
+      currentStage: activeConversation.stage,
+      context: activeConversation.context,
       history,
       knowledge,
     })
 
-    const nextContext = mergeContext(conversation, decision.customerPatch, decision.orderIntent)
+    const nextContext = mergeContext(activeConversation, decision.customerPatch, decision.orderIntent)
     const handoff = decision.shouldHandoff || decision.nextAction === 'handoff'
 
-    const stillAi = await updateConversationStateIfAi(supabase, conversation.id, {
+    const stillAi = await updateConversationStateIfAi(supabase, activeConversation.id, {
       stage: decision.stage,
       mode: handoff ? 'human' : 'ai',
       handoffReason: handoff ? decision.handoffReason ?? 'ai_requested_handoff' : null,
-      customerName: decision.customerPatch.name ?? conversation.customer_name,
+      customerName: decision.customerPatch.name ?? activeConversation.customer_name,
       context: nextContext,
     })
     if (!stillAi) return
@@ -211,7 +340,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     if (decision.nextAction === 'collect_order_intent' && decision.orderIntent) {
       await createSalesAction(
         supabase,
-        conversation.id,
+        activeConversation.id,
         'order_intent',
         decision.orderIntent as Record<string, unknown>,
         'proposed'
@@ -221,7 +350,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     if (handoff) {
       await createSalesAction(
         supabase,
-        conversation.id,
+        activeConversation.id,
         'handoff',
         { reason: decision.handoffReason ?? 'ai_requested_handoff' },
         'executed'
@@ -231,15 +360,23 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     try {
       // A reply sent from the WhatsApp Business App may have taken over while
       // the AI was composing its response. Do not speak over the human seller.
-      if (!handoff && !(await isConversationAi(supabase, conversation.id))) return
-      await sendAndPersist(conversation.id, message.from, decision.reply)
+      if (!handoff && !(await isConversationAi(supabase, activeConversation.id))) return
+
+      const reply = personalizeFirstReply(
+        decision.reply,
+        activeConversation.customer_name,
+        identity?.isExistingCustomer ?? false,
+        shouldGreetByName(previousInboundAt)
+      )
+      await wait(humanReplyDelayMs(reply, message.providerMessageId))
+      await sendAndPersist(activeConversation.id, message.from, reply)
 
       if (!handoff) {
         try {
-          const sentAssetKeys = await listSentMediaAssetKeys(supabase, conversation.id)
+          const sentAssetKeys = await listSentMediaAssetKeys(supabase, activeConversation.id)
           const mediaAssets = await selectAiSalesMediaAssets(supabase, {
             customerText: message.text,
-            currentStage: conversation.stage,
+            currentStage: activeConversation.stage,
             sentAssetKeys,
             lead: nextContext.lead && typeof nextContext.lead === 'object'
               ? nextContext.lead as Record<string, unknown>
@@ -247,12 +384,12 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
           })
 
           for (const asset of mediaAssets) {
-            if (!(await isConversationAi(supabase, conversation.id))) break
+            if (!(await isConversationAi(supabase, activeConversation.id))) break
             try {
-              await sendImageAndPersist(conversation.id, message.from, asset)
+              await sendImageAndPersist(activeConversation.id, message.from, asset)
               await createSalesAction(
                 supabase,
-                conversation.id,
+                activeConversation.id,
                 'media_sent',
                 {
                   assetKey: asset.assetKey,
@@ -264,7 +401,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
             } catch (mediaSendError) {
               await createSalesAction(
                 supabase,
-                conversation.id,
+                activeConversation.id,
                 'media_send_failed',
                 {
                   assetKey: asset.assetKey,
@@ -277,28 +414,28 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
         } catch (mediaSelectError) {
           await createSalesAction(
             supabase,
-            conversation.id,
+            activeConversation.id,
             'media_select_failed',
             { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
             'failed'
           )
         }
         try {
-          await scheduleFirstFollowUp(supabase, conversation.id, message.text)
+          await scheduleFirstFollowUp(supabase, activeConversation.id, message.text)
         } catch (followUpError) {
-          await createSalesAction(supabase, conversation.id, 'follow_up_schedule_failed', {
+          await createSalesAction(supabase, activeConversation.id, 'follow_up_schedule_failed', {
             reason: followUpError instanceof Error ? followUpError.message : String(followUpError),
           }, 'failed')
         }
       }
     } catch (sendError) {
-      await updateConversationState(supabase, conversation.id, {
+      await updateConversationState(supabase, activeConversation.id, {
         mode: 'human',
         handoffReason: 'outbound_send_failed',
       })
       await createSalesAction(
         supabase,
-        conversation.id,
+        activeConversation.id,
         'outbound_send_failed',
         { reason: sendError instanceof Error ? sendError.message : String(sendError) },
         'failed'
@@ -306,18 +443,18 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
-    await updateConversationState(supabase, conversation.id, {
+    await updateConversationState(supabase, activeConversation.id, {
       mode: 'human',
       handoffReason: 'agent_runtime_error',
     })
-    await createSalesAction(supabase, conversation.id, 'agent_runtime_error', { reason }, 'failed')
+    await createSalesAction(supabase, activeConversation.id, 'agent_runtime_error', { reason }, 'failed')
 
     try {
-      await sendAndPersist(conversation.id, message.from, HUMAN_FALLBACK)
+      await sendAndPersist(activeConversation.id, message.from, HUMAN_FALLBACK)
     } catch (sendError) {
       await createSalesAction(
         supabase,
-        conversation.id,
+        activeConversation.id,
         'outbound_send_failed',
         { reason: sendError instanceof Error ? sendError.message : String(sendError) },
         'failed'
