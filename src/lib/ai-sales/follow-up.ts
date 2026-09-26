@@ -34,16 +34,16 @@ export function serviceWindowOpen(inboundAt: string, now: number): boolean {
 export function buildFollowUpText(context: Record<string, unknown>, step: 1 | 2): string {
   const lead = context.lead && typeof context.lead === 'object'
     ? context.lead as Record<string, unknown> : {}
-  if (step === 2) return 'Kang, pilihan thobe custom yang kemarin masih saya catat. Kalau ingin lanjut, tinggal balas di sini ya, nanti saya bantu dari titik terakhir.'
+  if (step === 2) return 'Kang, yang kemarin masih saya simpan ya. Kalau mau lanjut, tinggal chat aja — nggak perlu mulai dari awal.'
   if (lead.fittingPreference) return 'Kang, pilihan thobe dan cara fitting yang tadi kita bahas sudah tercatat. Ada detail yang ingin dipastikan sebelum saya bantu lanjut ke invoice?'
   if (lead.model && lead.fabric) return 'Kang, arah model dan bahannya sudah kita dapat. Kalau berkenan, saya bantu pilih detail kerah yang paling pas supaya desainnya makin jelas ya?'
   if (lead.model) return 'Kang, model yang tadi kita bahas sudah jadi arah awal yang bagus. Mau saya bantu pilih bahan yang nyaman untuk pemakaiannya?'
   if (lead.occasion) return 'Kang, untuk kebutuhan yang tadi Kang ceritakan, saya bisa bantu pilih model yang paling sesuai. Sudah ada referensi yang disukai?'
-  return 'Kang, kalau masih ingin lihat pilihan thobe customnya, saya bantu pelan-pelan ya. Biasanya akan dipakai untuk ibadah sehari-hari atau ada acara khusus?'
+  return 'Kang, tadi sempat lihat custom thobenya ya. Kalau masih ada yang bikin ragu, bilang aja — saya bantu cek satu-satu.'
 }
 
 export function shouldPauseFollowUp(text: string): boolean {
-  return /(jangan (?:chat|hubungi|follow)|stop|unsubscribe|tidak (?:jadi|tertarik)|nggak (?:jadi|tertarik)|belum (?:siap|ada dana|mampu)|nanti (?:saya|ana|aku) kabari|saya kabari|hubungi lagi (?:bulan|minggu|tanggal)|awal bulan depan)/i.test(text)
+  return /(jangan (?:chat|hubungi|follow)|stop|unsubscribe|tidak (?:jadi|tertarik)|nggak (?:jadi|tertarik)|gak (?:jadi|tertarik)|belum (?:siap|ada dana|mampu|dulu)|nanti (?:(?:saya|ana|aku) )?(?:kabari|kabarin|dikabari|dikabarin)|(?:saya|ana|aku) kabari|hubungi lagi (?:bulan|minggu|tanggal)|awal bulan depan|lagi (?:di )?luar kota|masih (?:di )?luar kota|besok[- ]?besok|bsk2)/i.test(text)
 }
 
 async function enabled(supabase: SupabaseClient): Promise<boolean> {
