@@ -8,14 +8,40 @@ import {
   appendOutboundMessage,
   createSalesAction,
   getOrCreateConversation,
+  isConversationAi,
   listRecentMessages,
   listSentMediaAssetKeys,
   updateConversationState,
+  updateConversationStateIfAi,
 } from './repository'
 import { sendWhatsAppImage, sendWhatsAppText } from './whatsapp'
-import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, WhatsAppInboundMessage } from './types'
+import type { AiSalesConversation, AiSalesCustomerPatch, AiSalesOrderIntent, WhatsAppInboundMessage, WhatsAppMessageEcho } from './types'
 
 const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
+
+export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Promise<void> {
+  const supabase = createAdminClient()
+  const conversation = await getOrCreateConversation(supabase, echo.to)
+  const { error } = await supabase.from('ai_sales_messages').insert({
+    conversation_id: conversation.id,
+    direction: 'outbound',
+    role: 'human',
+    provider_message_id: echo.providerMessageId,
+    message_type: echo.type,
+    text_content: echo.text || null,
+    raw_payload: echo.rawPayload,
+    delivery_status: 'sent',
+  })
+  if (error?.code === '23505') return
+  if (error) throw error
+
+  await updateConversationState(supabase, conversation.id, {
+    mode: 'human',
+    handoffReason: 'whatsapp_business_app_reply',
+  })
+  await createSalesAction(supabase, conversation.id, 'human_takeover',
+    { source: 'whatsapp_business_app', providerMessageId: echo.providerMessageId }, 'executed')
+}
 
 async function isWhatsAppAutoReplyEnabled(
   supabase: ReturnType<typeof createAdminClient>
@@ -169,13 +195,14 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     const nextContext = mergeContext(conversation, decision.customerPatch, decision.orderIntent)
     const handoff = decision.shouldHandoff || decision.nextAction === 'handoff'
 
-    await updateConversationState(supabase, conversation.id, {
+    const stillAi = await updateConversationStateIfAi(supabase, conversation.id, {
       stage: decision.stage,
       mode: handoff ? 'human' : 'ai',
       handoffReason: handoff ? decision.handoffReason ?? 'ai_requested_handoff' : null,
       customerName: decision.customerPatch.name ?? conversation.customer_name,
       context: nextContext,
     })
+    if (!stillAi) return
 
     if (decision.nextAction === 'collect_order_intent' && decision.orderIntent) {
       await createSalesAction(
@@ -198,6 +225,9 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     }
 
     try {
+      // A reply sent from the WhatsApp Business App may have taken over while
+      // the AI was composing its response. Do not speak over the human seller.
+      if (!handoff && !(await isConversationAi(supabase, conversation.id))) return
       await sendAndPersist(conversation.id, message.from, decision.reply)
 
       if (!handoff) {

@@ -1,6 +1,6 @@
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'crypto'
-import type { WhatsAppInboundMessage } from './types'
+import type { WhatsAppInboundMessage, WhatsAppMessageEcho } from './types'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -70,6 +70,36 @@ export function parseWhatsAppInboundMessages(payload: unknown): WhatsAppInboundM
     }
   }
 
+  return results
+}
+
+export function parseWhatsAppMessageEchoes(payload: unknown): WhatsAppMessageEcho[] {
+  if (!payload || typeof payload !== 'object') return []
+  const root = payload as Record<string, any>
+  const results: WhatsAppMessageEcho[] = []
+
+  for (const entry of Array.isArray(root.entry) ? root.entry : []) {
+    for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
+      if (change?.field !== 'smb_message_echoes') continue
+      const echoes = Array.isArray(change?.value?.message_echoes) ? change.value.message_echoes : []
+      for (const echo of echoes) {
+        if (typeof echo?.id !== 'string' || typeof echo?.to !== 'string') continue
+        const type = typeof echo.type === 'string' ? echo.type : 'unknown'
+        const text = type === 'text' && typeof echo.text?.body === 'string'
+          ? echo.text.body.trim()
+          : type === 'image' && typeof echo.image?.caption === 'string'
+            ? echo.image.caption.trim()
+            : ''
+        results.push({
+          providerMessageId: echo.id,
+          to: echo.to,
+          type,
+          text,
+          rawPayload: echo as Record<string, unknown>,
+        })
+      }
+    }
+  }
   return results
 }
 

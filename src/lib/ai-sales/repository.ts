@@ -114,6 +114,45 @@ export async function updateConversationState(
   if (error) throw error
 }
 
+export async function updateConversationStateIfAi(
+  supabase: SupabaseClient,
+  conversationId: string,
+  params: {
+    stage: AiSalesStage
+    mode: 'ai' | 'human'
+    handoffReason: string | null
+    customerName: string | null
+    context: Record<string, unknown>
+  }
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('ai_sales_conversations')
+    .update({
+      stage: params.stage,
+      mode: params.mode,
+      handoff_reason: params.handoffReason,
+      customer_name: params.customerName,
+      context: params.context,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', conversationId)
+    .eq('mode', 'ai')
+    .select('id')
+    .maybeSingle()
+  if (error) throw error
+  return Boolean(data)
+}
+
+export async function isConversationAi(supabase: SupabaseClient, conversationId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('ai_sales_conversations')
+    .select('mode')
+    .eq('id', conversationId)
+    .single()
+  if (error) throw error
+  return data.mode === 'ai'
+}
+
 export async function createSalesAction(
   supabase: SupabaseClient,
   conversationId: string,

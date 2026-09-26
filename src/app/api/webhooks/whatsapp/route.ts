@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { processWhatsAppInbound } from '@/lib/ai-sales/service'
+import { processWhatsAppInbound, processWhatsAppMessageEcho } from '@/lib/ai-sales/service'
 import {
   parseWhatsAppInboundMessages,
+  parseWhatsAppMessageEchoes,
   verifyWhatsAppChallenge,
   verifyWhatsAppSignature,
 } from '@/lib/ai-sales/whatsapp'
@@ -30,7 +31,12 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = JSON.parse(rawBody) as unknown
+    const echoes = parseWhatsAppMessageEchoes(payload)
     const messages = parseWhatsAppInboundMessages(payload)
+
+    for (const echo of echoes) {
+      await processWhatsAppMessageEcho(echo)
+    }
 
     // Process sequentially so multiple messages from the same customer in one
     // provider batch preserve their natural order. Provider-message idempotency
