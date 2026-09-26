@@ -45,7 +45,7 @@ function isBroadInfoRequest(text: string): boolean {
 }
 
 function asksForVisual(text: string): boolean {
-  return /(foto|photo|gambar|contoh|visual|lihat|tunjuk|kirim.*(model|bahan|warna|kerah|saku|manset|plaket)|(?:bahan|warna|model)\s+lain)/i.test(text)
+  return /(foto|photo|gambar|contoh|visual|lihat|tunjuk|kirim.*(model|bahan|warna|kerah|saku|manset|plaket)|(?:bahan|warna|model)\s+lain|warna\s+(?:navy|charcoal|putih|hitam|hijau|green|coklat|maroon)|bahan\s+(?:basic|premium|wool|cashmere|twill))/i.test(text)
 }
 
 function detectedCategories(text: string): AiSalesMediaCategory[] {
@@ -171,7 +171,8 @@ export async function selectAiSalesMediaAssets(
   }
 
   if (params.currentStage === 'new' && isBroadInfoRequest(customerText) &&
-      !/(?:bahan|kain|warna|colour|color|model)\s+(?:lain|beda)/i.test(customerText)) {
+      !/(?:bahan|kain|warna|colour|color|model)\s+(?:lain|beda)/i.test(customerText) &&
+      !/(saudi|qatary|emirates|dubai|navy|charcoal|putih|hitam|hijau|coklat|maroon|basic|premium|wool|cashmere|twill)/i.test(customerText)) {
     return starterPack(assets, customerText)
   }
 
@@ -189,10 +190,17 @@ export async function selectAiSalesMediaAssets(
     normalize(params.customerText).includes(name)
   )
   const desiredModel = mentionedModels[0] ?? leadModel
-  const mentionedColors = ['white', 'putih', 'black', 'hitam', 'charcoal', 'navy', 'grey', 'abu', 'coklat bata']
+  const mentionedColors = ['white', 'putih', 'black', 'hitam', 'charcoal', 'navy', 'grey', 'abu', 'coklat bata', 'coklat', 'green', 'hijau', 'maroon']
     .filter(name => normalize(params.customerText).includes(name))
   const desiredColors = mentionedColors.length ? mentionedColors :
     typeof params.lead?.color === 'string' ? [normalize(params.lead.color)] : []
+  const requestedFabric = /(?:basic|twill)/i.test(customerText)
+    ? 'basic twill stretch'
+    : /(?:premium|wool|wol|cashmere)/i.test(customerText)
+      ? 'premium wool blend cashmere italy'
+      : typeof params.lead?.fabric === 'string' ? normalize(params.lead.fabric) : ''
+  if (categories.includes('fabric') && /(?:dior|gianluca|lorenzo|mark|fiacinito|sharkskin)/i.test(customerText) &&
+      !/(?:basic|twill|premium|wool|wol|cashmere)/i.test(customerText)) return []
 
   // A model photo has no verified fabric identity. Never imply a material
   // from a model photograph when the customer asks for that combination.
@@ -211,10 +219,12 @@ export async function selectAiSalesMediaAssets(
   return assets
     .filter(asset => {
       if (asset.category === 'model' && desiredModel && normalize(asset.modelFamily ?? '') !== desiredModel) return false
+      if (asset.category === 'fabric' && requestedFabric && normalize(asset.fabricName ?? '') !== requestedFabric) return false
       if (asset.colorName && desiredColors.length &&
           !desiredColors.some(color => normalize(asset.colorName ?? '') === color ||
             (color === 'putih' && normalize(asset.colorName ?? '') === 'white') ||
-            (color === 'hitam' && normalize(asset.colorName ?? '') === 'black'))) return false
+            (color === 'hitam' && ['black', 'hitam'].includes(normalize(asset.colorName ?? ''))) ||
+            (color === 'hijau' && normalize(asset.colorName ?? '') === 'green'))) return false
       return true
     })
     .map(asset => ({

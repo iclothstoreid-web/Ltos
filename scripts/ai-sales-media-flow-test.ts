@@ -12,6 +12,7 @@ const rows = [
   { asset_key: 'fabric.premium_wool_blend_cashmere_italy.001', category: 'fabric', title: 'Premium Wool Blend Cashmere Italy', image_url: 'https://example.com/premium.webp', caption: 'Contoh premium', tags: ['premium'], trigger_terms: ['premium wool blend cashmere italy'], fabric_name: 'Premium Wool Blend Cashmere Italy', is_starter: false, priority: 80 },
   { asset_key: 'color_reference.charcoal.001', category: 'color_reference', title: 'Referensi Charcoal', image_url: 'https://example.com/charcoal.webp', caption: 'Referensi Charcoal', tags: ['charcoal'], trigger_terms: ['warna'], color_name: 'charcoal', is_starter: false, priority: 80 },
   { asset_key: 'color_reference.navy.001', category: 'color_reference', title: 'Referensi Navy', image_url: 'https://example.com/navy.webp', caption: 'Referensi Navy', tags: ['navy'], trigger_terms: ['warna'], color_name: 'navy', is_starter: false, priority: 70 },
+  { asset_key: 'color_reference.green.001', category: 'color_reference', title: 'Referensi Hijau', image_url: 'https://example.com/green.webp', caption: 'Referensi Hijau', tags: ['green'], trigger_terms: ['warna'], color_name: 'green', is_starter: false, priority: 60 },
 ]
 
 const supabase = {
@@ -40,7 +41,10 @@ async function main() {
   assert.deepEqual((await select('Ada bahan lain?', { fabric: 'Basic Twill Stretch' })).map(a => a.assetKey), ['fabric.premium_wool_blend_cashmere_italy.001'])
   assert.deepEqual((await select('Ada warna lain?', { color: 'charcoal' })).map(a => a.assetKey), ['color_reference.navy.001'])
   assert.deepEqual((await select('Bisa kirim foto kerah Haybah?')).map(a => a.assetKey), ['collar.haybah.001'])
-  process.stdout.write('AI Sales media flow: 11 scenarios passed.\n')
+  assert.deepEqual((await select('Ada contoh bahan premium?')).map(a => a.assetKey), ['fabric.premium_wool_blend_cashmere_italy.001'])
+  assert.deepEqual((await select('Boleh lihat warna hijau?')).map(a => a.assetKey), ['color_reference.green.001'])
+  assert.deepEqual((await select('Boleh lihat contoh bahan Dior?')), [])
+  process.stdout.write('AI Sales media flow: 14 scenarios passed.\n')
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1 })
