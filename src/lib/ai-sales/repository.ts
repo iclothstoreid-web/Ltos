@@ -59,6 +59,24 @@ export async function appendOutboundMessage(
   if (updateError) throw updateError
 }
 
+export async function isLatestInboundMessage(
+  supabase: SupabaseClient,
+  conversationId: string,
+  providerMessageId: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('ai_sales_messages')
+    .select('provider_message_id')
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'inbound')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+  return data?.provider_message_id === providerMessageId
+}
+
 export async function listRecentMessages(
   supabase: SupabaseClient,
   conversationId: string,
