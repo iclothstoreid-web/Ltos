@@ -40,6 +40,7 @@ export interface WhatsAppInboundMessage {
   timestamp: string | null
   type: string
   text: string
+  profileName?: string | null
   rawPayload: Record<string, unknown>
 }
 
