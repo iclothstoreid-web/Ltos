@@ -93,7 +93,7 @@ function personalizeFirstReply(
   const addressedName = respectfulCustomerName(name)
   const cleanedReply = reply
     .replace(
-      /^(?:assalamu['’]?alaikum|bismillaah),?\s*(?:siap|halo|hai|senang bisa bantu lagi)?(?:\s+(?:kangbro|kang|kak|pak|bapak|mas|bang|bro|ustadz|ustad))?(?:\s+[\p{L}.'’ -]{1,80})?\s*[🙏🙂😊!,.]*\s*/iu,
+      /^(?:assalamu['’]?alaikum|bismillaah),?\s*(?:siap|halo|hai|senang bisa bantu lagi)?(?:\s+(?:kangbro|kang|kak|pak|bapak|mas|bang|bro|ustadz|ustad))?(?:\s+[A-Za-zÀ-ÖØ-öø-ÿ.'’ -]{1,80})?\s*[🙏🙂😊!,.]*\s*/i,
       ''
     )
     .trim()
