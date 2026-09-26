@@ -4,6 +4,7 @@ import { selectAiSalesMediaAssets } from '../src/lib/ai-sales/media'
 
 const rows = [
   { asset_key: 'model_detail.collar_zigzag_white.001', category: 'model_detail', title: 'Detail jahitan putih', image_url: 'https://example.com/detail.webp', caption: 'Detail jahitan', tags: ['detail'], trigger_terms: ['jahitan'], model_family: null, color_name: 'white', source_folder: 'Kirim pertama', is_starter: true, starter_rank: 1, priority: 80 },
+  ...[2, 3, 4, 5, 6].map(rank => ({ asset_key: `model_detail.starter.${rank}`, category: 'model_detail', title: `Detail jahitan ${rank}`, image_url: `https://example.com/detail-${rank}.webp`, caption: 'Detail jahitan', tags: ['detail'], trigger_terms: ['jahitan'], model_family: null, color_name: null, source_folder: 'Kirim pertama', is_starter: true, starter_rank: rank, priority: 80 })),
   { asset_key: 'model.saudi.white', category: 'model', title: 'Saudi putih', image_url: 'https://example.com/saudi.webp', caption: 'Contoh Saudi', tags: ['saudi'], trigger_terms: ['saudi'], model_family: 'Saudi', color_name: 'white', source_folder: 'Kirim Model/Saudi', is_starter: false, starter_rank: null, priority: 80 },
   { asset_key: 'model.qatary.grey', category: 'model', title: 'Qatary grey', image_url: 'https://example.com/qatary.webp', caption: 'Contoh Qatary', tags: ['qatary'], trigger_terms: ['qatary'], model_family: 'Qatary', color_name: 'grey', is_starter: false, starter_rank: null, priority: 90 },
   { asset_key: 'collar.haybah.001', category: 'collar', title: 'Haybah Collar', image_url: 'https://example.com/haybah.webp', caption: 'Detail Haybah', tags: ['haybah'], trigger_terms: ['kerah'], model_family: null, color_name: null, is_starter: false, starter_rank: null, priority: 80 },
@@ -30,8 +31,10 @@ async function select(customerText: string, lead: Record<string, unknown> = {}, 
 }
 
 async function main() {
-  assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya?')).map(a => a.assetKey), ['model_detail.collar_zigzag_white.001'])
-  assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya? Alamatnya di mana?')).map(a => a.assetKey), ['model_detail.collar_zigzag_white.001'])
+  const opening = ['model_detail.collar_zigzag_white.001', ...[2, 3, 4, 5].map(rank => `model_detail.starter.${rank}`)]
+  assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya?')).map(a => a.assetKey), opening)
+  assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya? Alamatnya di mana?')).map(a => a.assetKey), opening)
+  assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya?', {}, opening)).map(a => a.assetKey), [])
   assert.deepEqual(await select('Berapa harga model Saudi?'), [])
   assert.deepEqual((await select('Boleh lihat contoh model Qatary?')).map(a => a.assetKey), ['model.qatary.grey'])
   assert.deepEqual((await select('Boleh lihat contoh fotonya?', { model: 'Qatary' })).map(a => a.assetKey), ['model.qatary.grey'])
@@ -44,7 +47,7 @@ async function main() {
   assert.deepEqual((await select('Ada contoh bahan premium?')).map(a => a.assetKey), ['fabric.premium_wool_blend_cashmere_italy.001'])
   assert.deepEqual((await select('Boleh lihat warna hijau?')).map(a => a.assetKey), ['color_reference.green.001'])
   assert.deepEqual((await select('Boleh lihat contoh bahan Dior?')), [])
-  process.stdout.write('AI Sales media flow: 14 scenarios passed.\n')
+  process.stdout.write('AI Sales media flow: 15 scenarios passed.\n')
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1 })

@@ -243,6 +243,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
           })
 
           for (const asset of mediaAssets) {
+            if (!(await isConversationAi(supabase, conversation.id))) break
             try {
               await sendImageAndPersist(conversation.id, message.from, asset)
               await createSalesAction(

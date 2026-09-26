@@ -102,7 +102,9 @@ function starterPack(assets: AiSalesMediaAsset[], customerText: string): AiSales
         b.priority - a.priority
     )
 
-  return starters.slice(0, 1)
+  // Owner-approved opening sequence: five close-ups of actual workmanship.
+  // Subsequent turns use a single relevant image and never resend a key.
+  return starters.slice(0, 5)
 }
 
 export async function selectAiSalesMediaAssets(
@@ -170,7 +172,7 @@ export async function selectAiSalesMediaAssets(
     return fabric ? [fabric] : []
   }
 
-  if (params.currentStage === 'new' && isBroadInfoRequest(customerText) &&
+  if (params.currentStage === 'new' && !params.sentAssetKeys?.length && isBroadInfoRequest(customerText) &&
       !/(?:bahan|kain|warna|colour|color|model)\s+(?:lain|beda)/i.test(customerText) &&
       !/(saudi|qatary|emirates|dubai|navy|charcoal|putih|hitam|hijau|coklat|maroon|basic|premium|wool|cashmere|twill)/i.test(customerText)) {
     return starterPack(assets, customerText)
@@ -183,7 +185,7 @@ export async function selectAiSalesMediaAssets(
   const leadModel = typeof params.lead?.model === 'string' ? normalize(params.lead.model) : ''
   const categories = detectedCategories(params.customerText)
   if (!categories.length) {
-    if (!leadModel) return starterPack(assets, customerText)
+    if (!leadModel) return starterPack(assets, customerText).slice(0, 1)
     categories.push('model')
   }
   const mentionedModels = ['saudi', 'qatary', 'emirates dubai'].filter(name =>
@@ -205,7 +207,7 @@ export async function selectAiSalesMediaAssets(
   // A model photo has no verified fabric identity. Never imply a material
   // from a model photograph when the customer asks for that combination.
   if (categories.includes('model') && categories.includes('fabric')) return []
-  if (categories.includes('model') && !desiredModel) return starterPack(assets, customerText)
+  if (categories.includes('model') && !desiredModel) return starterPack(assets, customerText).slice(0, 1)
 
   if (asksDifferentColor) {
     const currentColor = normalize(String(params.lead?.color ?? ''))

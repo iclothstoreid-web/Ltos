@@ -7,12 +7,12 @@ Audit 26 September 2026. Sumber: 20 ekspor chat WhatsApp yang diberikan owner; c
 1. Jawab pertanyaan terbaru dahulu. Jika customer menempel pertanyaan pada pembuka iklan, jangan kirim pembuka generik lagi.
 2. Akui kebutuhan spesifik dalam satu kalimat. Hubungkan rekomendasi dengan pemakaian dan kenyamanan yang ia sebut, bukan rasa takut atau klaim bahwa produk jadi selalu buruk.
 3. Beri satu rekomendasi atau keputusan kecil. Setelah suatu pilihan disetujui, simpan dan lanjutkan; jangan kembali menawarkan semua opsi.
-4. Pakai foto untuk menjawab kebutuhan visual yang jelas, paling banyak satu foto per giliran. Foto model tidak membuktikan jenis kain, stok warna, atau hasil akhir pesanan.
+4. Pada pembuka permintaan info umum, kirim lima foto berbeda dari folder “Kirim pertama” sesudah jawaban teks, lalu satu pertanyaan ringan. Jangan mengulang foto yang sudah dikirim. Setelah pembuka, paling banyak satu foto relevan per giliran. Foto model tidak membuktikan jenis kain, stok warna, atau hasil akhir pesanan.
 5. Bawa ke fitting setelah arah model, bahan, dan detail utama cukup jelas. Bawa ke invoice setelah spesifikasi dan metode ukuran disetujui. Konfirmasi DP/order hanya dari status LTOS.
 
 | Tahap | Sinyal customer | Respons yang membantu | Langkah berikutnya | Visual |
 | --- | --- | --- | --- | --- |
-| New | Minta info umum | Beri harga mulai dan perbedaan manfaat bahan yang terverifikasi secara singkat; tawarkan bantuan memilih | Tanyakan pemakaian atau undang foto referensi, satu saja | Satu contoh model utuh yang jelas sebagai inspirasi, bila starter terverifikasi |
+| New | Minta info umum | Jawab pertanyaan terbaru, beri penawaran terverifikasi secara singkat; tawarkan bantuan memilih | Tanyakan pemakaian atau undang foto referensi, satu saja | Lima detail jahitan berbeda dari “Kirim pertama”, tanpa mengklaim bahan atau desain final |
 | Interest | Tanya foto, model, bahan | Tunjukkan satu contoh sesuai pertanyaan; jelaskan bahwa detail bisa disesuaikan | Pilih arah model atau kebutuhan kain | Model atau sampel kain yang metadata-nya cocok |
 | Discovery | Menyebut akad, ibadah, acara, fit lama, budget | Pantulkan tujuan dan titik tidak nyaman; sarankan bentuk/fit sesuai kebutuhan nyata | Kunci satu pilihan yang paling relevan | Detail hanya bila membantu pilihan itu |
 | Recommendation | Sudah memilih bahan atau warna | Jelaskan alasan pilihan itu cocok, tanpa menjamin tampilan atau rasa percaya diri | Kunci model atau detail berikutnya | Satu referensi spesifik, bukan katalog |
@@ -32,8 +32,9 @@ Audit 26 September 2026. Sumber: 20 ekspor chat WhatsApp yang diberikan owner; c
 ## Bukti audit dan batas aktivasi
 
 - 137 aset R2 tercatat, 0 aktif, 0 starter, dan belum ada kiriman gambar AI tercatat.
-- Folder “Kirim pertama” menghasilkan 7 foto detail jahitan di database. Owner menegaskan foto detail ini terbukti meningkatkan minat dan harus menjadi visual pembuka. Tampilkan satu yang paling relevan, kemudian tunggu permintaan gambar lain. Kandidat ke-8 di manifest belum ada dalam hasil query folder tersebut.
+- Folder “Kirim pertama” menghasilkan 7 foto detail jahitan di database. Owner menegaskan visual ini meningkatkan minat dan meminta 5 foto pertama. Pilih lima teratas menurut konteks/ranking, lalu tunggu permintaan gambar lain. Kandidat ke-8 di manifest belum ada dalam hasil query folder tersebut.
 - Foto model utuh Saudi/Qatary/Dubai digunakan setelah customer meminta model tertentu. Jika meminta model lain, ajak custom per bagian mulai dari kerah dan tampilkan satu kerah yang terverifikasi.
-- Aktivasi dilakukan setelah pembatasan satu gambar, deduplikasi, dan pencocokan konteks berjalan di runtime. Jangan mengaktifkan seluruh 137 aset sekaligus; review caption, metadata, dan fakta produk per kelompok.
+- Aktivasi dilakukan setelah pembuka lima gambar, deduplikasi, dan pencocokan konteks berjalan di runtime. Jangan mengaktifkan seluruh 137 aset sekaligus; review caption, metadata, dan fakta produk per kelompok.
+- Follow-up berdasarkan waktu harus menghormati permintaan waktu customer, jam wajar, status human takeover, dan jendela layanan Meta. Di luar 24 jam sejak pesan terakhir customer, perlu template WhatsApp yang telah disetujui sebelum pengiriman otomatis. Jangan mengejar customer tanpa batas; simpan konteks agar percakapan bisa dilanjutkan ketika ia membalas.
 - Handler `smb_message_echoes` sekarang disiapkan untuk mencatat pesan admin WhatsApp Business App dan mengalihkan thread ke human. Pastikan field webhook tersebut benar-benar subscribed di Meta; tanpa event itu, balasan manual tetap tidak terlihat AI. Setelah admin selesai, aktifkan AI kembali secara sadar dari dashboard owner.
 - Beberapa ekspor chat menyebut 6–7 hari; fakta LTOS saat audit adalah estimasi 8–9 hari. Contoh chat melatih gaya, bukan sumber harga, SLA, stok, promo, atau status order.
