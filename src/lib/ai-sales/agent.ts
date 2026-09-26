@@ -220,6 +220,47 @@ function getBusinessFactValue(knowledge: AiSalesKnowledge, key: string): string 
   return fact?.value?.trim() || null
 }
 
+function asksForShowroomAddress(raw: string): boolean {
+  const text = raw.trim()
+  return (
+    /^(?:alamat|lokasi|showroom)(?:\s+local\s+tailor)?(?:nya)?\s*[?.!]*$/i.test(text) ||
+    /(?:alamat|lokasi|showroom)(?:nya)?\s*(?:di\s*mana|dimana|dmn|mana)\b/i.test(text) ||
+    /(?:di\s*mana|dimana|dmn)\s+(?:alamat|lokasi|showroom)\b/i.test(text)
+  )
+}
+
+function buildDirectShowroomAddressDecision(params: {
+  currentStage: AiSalesStage
+  history: AiSalesMessage[]
+  knowledge: AiSalesKnowledge
+}): AiSalesDecision | null {
+  const raw = latestCustomerText(params.history)
+  if (!asksForShowroomAddress(raw)) return null
+
+  const address = getBusinessFactValue(params.knowledge, 'showroom_address')
+  if (!address) {
+    return {
+      reply: 'Saya cek dulu alamat showroom yang aktif ya, biar tidak salah arah.',
+      stage: params.currentStage,
+      shouldHandoff: true,
+      handoffReason: 'showroom_address_missing',
+      customerPatch: {},
+      nextAction: 'handoff',
+      orderIntent: null,
+    }
+  }
+
+  return {
+    reply: `Local Tailor ada di ${address}. Kalau mau datang, saya bantu atur jadwal kunjungannya ya.`,
+    stage: params.currentStage,
+    shouldHandoff: false,
+    handoffReason: null,
+    customerPatch: {},
+    nextAction: 'continue',
+    orderIntent: null,
+  }
+}
+
 function buildDirectSizeDecision(params: {
   currentStage: AiSalesStage
   context: Record<string, unknown>
@@ -509,6 +550,9 @@ export async function decideAiSalesReply(params: {
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
 }): Promise<AiSalesDecision> {
+  const directShowroomAddressDecision = buildDirectShowroomAddressDecision(params)
+  if (directShowroomAddressDecision) return directShowroomAddressDecision
+
   const directSizeDecision = buildDirectSizeDecision(params)
   if (directSizeDecision) return directSizeDecision
 
