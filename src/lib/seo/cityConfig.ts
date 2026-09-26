@@ -24,9 +24,7 @@ import { FABRIC_SITE_ORIGIN } from '@/lib/materials/seo'
 // a single-line fix instead of a repository-wide find/replace.
 export const CITY_SITE_ORIGIN = FABRIC_SITE_ORIGIN
 
-// Public business location. The previous street address and coordinates
-// are deliberately not reused for Bandung, because doing so would create a
-// fabricated precise location in structured data. Every other city in
+// Owner-confirmed showroom address, 26 September 2026. Every other city in
 // CITY_CONFIGS is a service-area landing page, never a fabricated branch.
 //
 // Brand & Location Correction — brand identity is Local Tailor and the
@@ -38,7 +36,7 @@ export const CITY_SITE_ORIGIN = FABRIC_SITE_ORIGIN
 // was supplied, and this correction does not fabricate one.
 export const CITY_BUSINESS = {
   name: 'Local Tailor Bandung',
-  streetAddress: 'Bandung, Jawa Barat, Indonesia',
+  streetAddress: 'Jl. Gamelan No. 10, Turangga, Buahbatu, Kota Bandung, Jawa Barat',
   addressLocality: 'Bandung',
   addressRegion: 'Jawa Barat',
   postalCode: '',
@@ -48,8 +46,7 @@ export const CITY_BUSINESS = {
   whatsappInternational: '6285173334251',
 } as const
 
-// A street-level address and geocode have not been supplied for Bandung.
-// Map links use a city-level search only, and no coordinates are emitted.
+// Map links use the owner-confirmed street address; no coordinates are inferred.
 export const CITY_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CITY_BUSINESS.streetAddress)}`
 
 export interface CityFaqItem {

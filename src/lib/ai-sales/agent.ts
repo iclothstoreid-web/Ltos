@@ -215,6 +215,28 @@ function getBusinessFactValue(knowledge: AiSalesKnowledge, key: string): string 
   return fact?.value?.trim() || null
 }
 
+function buildDirectAddressDecision(params: {
+  currentStage: AiSalesStage
+  history: AiSalesMessage[]
+  knowledge: AiSalesKnowledge
+}): AiSalesDecision | null {
+  const text = latestCustomerText(params.history)
+  if (!/(alamat|lokasi (?:showroom|studio|toko)|(?:showroom|studio|toko) (?:di mana|dimana)|(?:share|kirim).*(?:maps|lokasi))/i.test(text)) return null
+
+  const address = getBusinessFactValue(params.knowledge, 'showroom_address')
+  return {
+    reply: address
+      ? `Showroom Local Tailor di ${address}, Kang. Kalau mau mampir, kira-kira kapan? Saya bantu konfirmasi waktu kunjungannya ya.`
+      : 'Alamat lengkap showroom saya cek dulu ya, Kang, supaya tidak salah arah. Saya teruskan ke admin.',
+    stage: params.currentStage,
+    shouldHandoff: !address,
+    handoffReason: address ? null : 'showroom_address_missing',
+    customerPatch: {},
+    nextAction: address ? 'continue' : 'handoff',
+    orderIntent: null,
+  }
+}
+
 function parseNamedPriceFact(value: string): { name: string; price: string } | null {
   const priceMatch = value.match(/Rp\s*[0-9.]+/i)
   if (!priceMatch) return null
@@ -569,6 +591,8 @@ export async function decideAiSalesReply(params: {
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
 }): Promise<AiSalesDecision> {
+  const directAddressDecision = buildDirectAddressDecision(params)
+  if (directAddressDecision) return directAddressDecision
   const broadInfoDecision = buildBroadInfoDecision(params)
   if (broadInfoDecision) return broadInfoDecision
 
