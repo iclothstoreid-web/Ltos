@@ -126,7 +126,7 @@ begin
     now(),
     now()
   )
-  on conflict (phone_e164) do update
+  on conflict on constraint ai_sales_customer_contacts_pkey do update
   set display_name = coalesce(v_customer_name, v_profile_name, public.ai_sales_customer_contacts.display_name),
       whatsapp_profile_name = coalesce(v_profile_name, public.ai_sales_customer_contacts.whatsapp_profile_name),
       customer_id = coalesce(v_customer_id, public.ai_sales_customer_contacts.customer_id),
