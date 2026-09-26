@@ -1,5 +1,6 @@
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'crypto'
+import sharp from 'sharp'
 import type { WhatsAppInboundMessage, WhatsAppMessageEcho } from './types'
 
 function requiredEnv(name: string): string {
@@ -135,6 +136,80 @@ export async function sendWhatsAppText(to: string, body: string): Promise<string
 }
 
 
+const WHATSAPP_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+
+async function uploadWhatsAppImageMedia(
+  accessToken: string,
+  phoneNumberId: string,
+  graphVersion: string,
+  imageUrl: string
+): Promise<string> {
+  const source = await fetch(imageUrl, { cache: 'no-store' })
+  if (!source.ok) {
+    throw new Error(`WhatsApp image source fetch failed (${source.status})`)
+  }
+
+  const sourceMime = (source.headers.get('content-type') ?? '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase()
+  let bytes = Buffer.from(await source.arrayBuffer())
+  let mime = sourceMime
+  let filename = mime === 'image/png' ? 'local-tailor.png' : 'local-tailor.jpg'
+
+  // WhatsApp image messages accept JPEG/PNG only. R2 stores our optimized
+  // sales library as WebP, so convert unsupported formats before upload.
+  if (!['image/jpeg', 'image/png'].includes(mime) || bytes.byteLength > WHATSAPP_IMAGE_MAX_BYTES) {
+    bytes = await sharp(bytes)
+      .rotate()
+      .resize({ width: 1600, height: 2200, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 88, mozjpeg: true })
+      .toBuffer()
+    mime = 'image/jpeg'
+    filename = 'local-tailor.jpg'
+  }
+
+  if (bytes.byteLength > WHATSAPP_IMAGE_MAX_BYTES) {
+    bytes = await sharp(bytes)
+      .jpeg({ quality: 76, mozjpeg: true })
+      .toBuffer()
+  }
+
+  if (bytes.byteLength > WHATSAPP_IMAGE_MAX_BYTES) {
+    throw new Error('WhatsApp image exceeds 5 MB after conversion')
+  }
+
+  const form = new FormData()
+  form.append('messaging_product', 'whatsapp')
+  form.append(
+    'file',
+    new Blob([new Uint8Array(bytes)], { type: mime }),
+    filename
+  )
+
+  const upload = await fetch(
+    `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/media`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: form,
+      cache: 'no-store',
+    }
+  )
+
+  const uploadData = (await upload.json().catch(() => ({}))) as Record<string, any>
+  if (!upload.ok) {
+    const providerMessage = uploadData?.error?.message
+      ? `: ${String(uploadData.error.message)}`
+      : ''
+    throw new Error(`WhatsApp image upload failed (${upload.status})${providerMessage}`)
+  }
+
+  const mediaId = typeof uploadData.id === 'string' ? uploadData.id : null
+  if (!mediaId) throw new Error('WhatsApp image upload returned no media id')
+  return mediaId
+}
+
 export async function sendWhatsAppImage(
   to: string,
   imageUrl: string,
@@ -143,8 +218,14 @@ export async function sendWhatsAppImage(
   const accessToken = requiredEnv('WHATSAPP_ACCESS_TOKEN')
   const phoneNumberId = requiredEnv('WHATSAPP_PHONE_NUMBER_ID')
   const graphVersion = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
+  const mediaId = await uploadWhatsAppImageMedia(
+    accessToken,
+    phoneNumberId,
+    graphVersion,
+    imageUrl
+  )
 
-  const image: Record<string, string> = { link: imageUrl }
+  const image: Record<string, string> = { id: mediaId }
   if (caption?.trim()) image.caption = caption.trim()
 
   const response = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
