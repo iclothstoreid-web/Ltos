@@ -1,7 +1,7 @@
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'crypto'
 import sharp from 'sharp'
-import type { WhatsAppInboundMessage, WhatsAppMessageEcho } from './types'
+import type { WhatsAppInboundMessage, WhatsAppMessageEcho, WhatsAppStatusUpdate } from './types'
 
 function requiredEnv(name: string): string {
   const value = process.env[name]
@@ -45,6 +45,14 @@ export function parseWhatsAppInboundMessages(payload: unknown): WhatsAppInboundM
 
   for (const entry of Array.isArray(root.entry) ? root.entry : []) {
     for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
+      const contacts = Array.isArray(change?.value?.contacts) ? change.value.contacts : []
+      const profileNameByWaId = new Map<string, string>()
+      for (const contact of contacts) {
+        const waId = typeof contact?.wa_id === 'string' ? contact.wa_id : null
+        const name = typeof contact?.profile?.name === 'string' ? contact.profile.name.trim() : ''
+        if (waId && name) profileNameByWaId.set(waId, name)
+      }
+
       const messages = Array.isArray(change?.value?.messages) ? change.value.messages : []
       for (const message of messages) {
         const id = typeof message?.id === 'string' ? message.id : null
@@ -65,7 +73,33 @@ export function parseWhatsAppInboundMessages(payload: unknown): WhatsAppInboundM
           timestamp: typeof message.timestamp === 'string' ? message.timestamp : null,
           type,
           text,
+          profileName: profileNameByWaId.get(from) ?? null,
           rawPayload: message as Record<string, unknown>,
+        })
+      }
+    }
+  }
+
+  return results
+}
+
+export function parseWhatsAppStatusUpdates(payload: unknown): WhatsAppStatusUpdate[] {
+  if (!payload || typeof payload !== 'object') return []
+  const root = payload as Record<string, any>
+  const results: WhatsAppStatusUpdate[] = []
+
+  for (const entry of Array.isArray(root.entry) ? root.entry : []) {
+    for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
+      const statuses = Array.isArray(change?.value?.statuses) ? change.value.statuses : []
+      for (const status of statuses) {
+        if (typeof status?.id !== 'string' || typeof status?.status !== 'string') continue
+        results.push({
+          providerMessageId: status.id,
+          recipientId: typeof status.recipient_id === 'string' ? status.recipient_id : null,
+          status: status.status,
+          timestamp: typeof status.timestamp === 'string' ? status.timestamp : null,
+          errors: Array.isArray(status.errors) ? status.errors : [],
+          rawPayload: status as Record<string, unknown>,
         })
       }
     }
@@ -102,6 +136,45 @@ export function parseWhatsAppMessageEchoes(payload: unknown): WhatsAppMessageEch
     }
   }
   return results
+}
+
+export async function setWhatsAppReadAndTyping(
+  providerMessageId: string,
+  typing = true
+): Promise<boolean> {
+  const accessToken = requiredEnv('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = requiredEnv('WHATSAPP_PHONE_NUMBER_ID')
+  const graphVersion = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
+
+  const body: Record<string, unknown> = {
+    messaging_product: 'whatsapp',
+    status: 'read',
+    message_id: providerMessageId,
+  }
+  if (typing) {
+    body.typing_indicator = { type: 'text' }
+  }
+
+  const response = await fetch(
+    `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    }
+  )
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as Record<string, any>
+    const providerMessage = data?.error?.message ? `: ${String(data.error.message)}` : ''
+    throw new Error(`WhatsApp read/typing failed (${response.status})${providerMessage}`)
+  }
+
+  return true
 }
 
 export async function sendWhatsAppText(to: string, body: string): Promise<string | null> {

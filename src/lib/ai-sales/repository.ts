@@ -99,6 +99,7 @@ export async function updateConversationState(
     stage?: AiSalesStage
     mode?: 'ai' | 'human'
     handoffReason?: string | null
+    customerId?: string | null
     customerName?: string | null
     context?: Record<string, unknown>
   }
@@ -107,6 +108,7 @@ export async function updateConversationState(
   if (params.stage !== undefined) patch.stage = params.stage
   if (params.mode !== undefined) patch.mode = params.mode
   if (params.handoffReason !== undefined) patch.handoff_reason = params.handoffReason
+  if (params.customerId !== undefined) patch.customer_id = params.customerId
   if (params.customerName !== undefined) patch.customer_name = params.customerName
   if (params.context !== undefined) patch.context = params.context
 
@@ -151,6 +153,55 @@ export async function isConversationAi(supabase: SupabaseClient, conversationId:
     .single()
   if (error) throw error
   return data.mode === 'ai'
+}
+
+export interface AiSalesResolvedContact {
+  phoneE164: string
+  displayName: string | null
+  whatsappProfileName: string | null
+  customerId: string | null
+  isExistingCustomer: boolean
+  orderCount: number
+}
+
+export async function resolveAiSalesCustomerContact(
+  supabase: SupabaseClient,
+  phone: string,
+  whatsappProfileName: string | null
+): Promise<AiSalesResolvedContact | null> {
+  const { data, error } = await supabase.rpc('ai_sales_resolve_customer_contact', {
+    p_phone: phone,
+    p_whatsapp_profile_name: whatsappProfileName,
+  })
+  if (error) throw error
+
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) return null
+  return {
+    phoneE164: String(row.phone_e164),
+    displayName: typeof row.display_name === 'string' ? row.display_name : null,
+    whatsappProfileName:
+      typeof row.whatsapp_profile_name === 'string' ? row.whatsapp_profile_name : null,
+    customerId: typeof row.customer_id === 'string' ? row.customer_id : null,
+    isExistingCustomer: row.is_existing_customer === true,
+    orderCount: Number(row.order_count ?? 0),
+  }
+}
+
+export async function updateOutboundDeliveryStatus(
+  supabase: SupabaseClient,
+  providerMessageId: string,
+  deliveryStatus: string
+): Promise<{ conversationId: string | null }> {
+  const { data, error } = await supabase
+    .from('ai_sales_messages')
+    .update({ delivery_status: deliveryStatus })
+    .eq('provider_message_id', providerMessageId)
+    .select('conversation_id')
+    .maybeSingle()
+
+  if (error) throw error
+  return { conversationId: data?.conversation_id ?? null }
 }
 
 export async function createSalesAction(
