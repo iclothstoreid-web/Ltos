@@ -346,7 +346,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // Human WhatsApp conversations often arrive as 2–3 short messages in a burst.
   // Wait briefly so the newest message can absorb the whole turn. If a newer
   // inbound arrived, this handler stays silent and lets that newer turn answer once.
-  await wait(2200)
+  await wait(3500)
   if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) {
     return
   }
