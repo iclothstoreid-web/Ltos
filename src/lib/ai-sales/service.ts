@@ -2,6 +2,7 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { decideAiSalesReply } from './agent'
 import { loadAiSalesKnowledge } from './knowledge'
+import { cancelPendingFollowUps, scheduleFirstFollowUp } from './follow-up'
 import { selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
 import {
   appendInboundMessage,
@@ -162,6 +163,9 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // idempotency boundary: never run AI twice or send two replies for one input.
   if (!inserted) return
 
+  // A new customer turn makes every pending reminder about the previous turn stale.
+  await cancelPendingFollowUps(supabase, conversation.id)
+
   // Keep the webhook healthy and continue storing inbound messages while the
   // WhatsApp app review is in progress, but never call the AI or send an
   // automatic WhatsApp reply unless production explicitly enables it.
@@ -278,6 +282,13 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
             { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
             'failed'
           )
+        }
+        try {
+          await scheduleFirstFollowUp(supabase, conversation.id, message.text)
+        } catch (followUpError) {
+          await createSalesAction(supabase, conversation.id, 'follow_up_schedule_failed', {
+            reason: followUpError instanceof Error ? followUpError.message : String(followUpError),
+          }, 'failed')
         }
       }
     } catch (sendError) {

@@ -172,3 +172,29 @@ export async function sendWhatsAppImage(
   const id = Array.isArray(data.messages) ? data.messages[0]?.id : null
   return typeof id === 'string' ? id : null
 }
+
+export async function sendWhatsAppTemplate(
+  to: string,
+  name: string,
+  languageCode: string
+): Promise<string | null> {
+  const accessToken = requiredEnv('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = requiredEnv('WHATSAPP_PHONE_NUMBER_ID')
+  const graphVersion = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
+  const response = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'template',
+      template: { name, language: { code: languageCode } },
+    }),
+    cache: 'no-store',
+  })
+  const data = (await response.json().catch(() => ({}))) as Record<string, any>
+  if (!response.ok) {
+    const providerMessage = data?.error?.message ? `: ${String(data.error.message)}` : ''
+    throw new Error(`WhatsApp template send failed (${response.status})${providerMessage}`)
+  }
+  const id = Array.isArray(data.messages) ? data.messages[0]?.id : null
+  return typeof id === 'string' ? id : null
+}
