@@ -33,6 +33,11 @@ function sanitizeCustomerPatch(value: unknown): AiSalesCustomerPatch {
     'city',
     'eventDate',
     'budget',
+    'occasion',
+    'fitConcern',
+    'cutting',
+    'referenceGarment',
+    'fittingPreference',
     'model',
     'fabric',
     'color',
@@ -213,71 +218,6 @@ function getContextString(context: Record<string, unknown>, key: string): string
 function getBusinessFactValue(knowledge: AiSalesKnowledge, key: string): string | null {
   const fact = knowledge.businessFacts.find(item => item.key === key)
   return fact?.value?.trim() || null
-}
-
-function parseNamedPriceFact(value: string): { name: string; price: string } | null {
-  const priceMatch = value.match(/Rp\s*[0-9.]+/i)
-  if (!priceMatch) return null
-
-  const price = priceMatch[0].replace(/\s+/g, '')
-  const name = value
-    .slice(0, priceMatch.index ?? value.length)
-    .replace(/[—–-]+\s*$/, '')
-    .trim()
-
-  if (!name) return null
-  return { name, price }
-}
-
-function preferredAddress(raw: string): string {
-  if (/\bkang(?:bro)?\b/i.test(raw)) return 'Kang'
-  if (/\bbang\b/i.test(raw)) return 'Bang'
-  if (/\bkak\b/i.test(raw)) return 'Kak'
-  if (/\bpak\b/i.test(raw)) return 'Pak'
-  if (/\bmas\b/i.test(raw)) return 'Mas'
-  return 'Kang'
-}
-
-function buildBroadInfoDecision(params: {
-  currentStage: AiSalesStage
-  context: Record<string, unknown>
-  history: AiSalesMessage[]
-  knowledge: AiSalesKnowledge
-}): AiSalesDecision | null {
-  if (params.currentStage !== 'new') return null
-
-  const raw = latestCustomerText(params.history).trim()
-  const broadInfoRequest =
-    /(minta|mohon|boleh|bisa).*info.*(custom|thobe|jubah)|(info|informasi).*(custom|thobe|jubah)|(custom|thobe|jubah).*info/i.test(raw)
-
-  if (!broadInfoRequest) return null
-
-  const entry = getBusinessFactValue(params.knowledge, 'entry_offer_basic_twill')
-  const premium = getBusinessFactValue(params.knowledge, 'premium_offer_wool_cashmere')
-  const entryOffer = entry ? parseNamedPriceFact(entry) : null
-  const premiumOffer = premium ? parseNamedPriceFact(premium) : null
-
-  if (!entryOffer || !premiumOffer) return null
-
-  const address = preferredAddress(raw)
-  const greeted = /(assalamu|assalamualaikum|السلام عليكم)/i.test(raw)
-  const greeting = greeted ? 'Waalaikumsalam. ' : ''
-
-  const reply =
-    `${greeting}Bismillaah, siap ${address} 🙏\n\n` +
-    `Untuk custom thobe mulai dari ${entryOffer.price} untuk bahan ${entryOffer.name}. ` +
-    `Kalau mau yang lebih premium, ringan, adem dan jatuhnya lebih elegan, ada ${premiumOffer.name} di ${premiumOffer.price}.\n\n` +
-    `Model, warna dan detailnya bisa custom sesuai selera ${address}. Kalau sudah ada referensi boleh langsung kirim fotonya, kalau belum nanti saya bantu pilihkan yang paling cocok 😊`
-
-  return {
-    reply,
-    stage: 'qualified',
-    shouldHandoff: false,
-    handoffReason: null,
-    customerPatch: {},
-    nextAction: 'continue',
-    orderIntent: null,
-  }
 }
 
 function buildDirectSizeDecision(params: {
@@ -569,9 +509,6 @@ export async function decideAiSalesReply(params: {
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
 }): Promise<AiSalesDecision> {
-  const broadInfoDecision = buildBroadInfoDecision(params)
-  if (broadInfoDecision) return broadInfoDecision
-
   const directSizeDecision = buildDirectSizeDecision(params)
   if (directSizeDecision) return directSizeDecision
 
@@ -603,6 +540,15 @@ LANGUAGE AND SALES STYLE
 - Never dump a catalog when one recommendation or one question will reduce uncertainty.
 - Read HISTORY for the customer's observable communication and buying behavior: direct vs exploratory, price-focused vs quality-focused, experienced vs first-time, ready-to-buy vs still browsing. Adapt the amount of explanation and next step. Do not infer sensitive personal traits.
 - A broad Meta-ad opener such as asking for "info lebih lengkap" must receive useful value immediately. Present the verified entry offer first as an accessible trust anchor, then the verified premium offer with its concrete benefits. The premium option should feel like the recommended upgrade, not a forced upsell.
+- That ad opener may be followed by the customer's own question in the same message or subsequent messages. Answer the newest specific question first; do not repeat the generic opener or welcome message. Vary the wording naturally, but keep verified prices exact.
+- Learn the customer's occasion and desired feeling from what they actually say. For ibadah, prioritize comfort, movement, and a neat fit; for formal events or akad, discuss a composed look and their preferred details. Connect the benefit of custom fit and chosen fabric to that occasion, without promising that the garment will transform their identity or guarantee confidence.
+- When a customer mentions a fit problem with a ready-made garment, acknowledge that exact discomfort and explain how measurement and fit choices can address it. Do not claim that all mass-produced thobes have poor materials, sewing, or service, and never disparage another brand.
+- Validate a choice with a concrete reason tied to their stated need. Say what is already agreed, then suggest the smallest useful next decision. Once model, fabric, color, or detail is chosen, do not reopen it unless the customer changes direction.
+- Visuals are sent by LTOS separately. Do not promise that you sent a photo, claim a pictured fabric/model is identical to an order, or ask a question in the text that the following image caption contradicts.
+- For an open first enquiry, explain the verified offer briefly, then invite one easy choice. LTOS will show one close-up of actual workmanship from the "Kirim pertama" folder; the photo demonstrates construction, not a specific fabric or the customer's final design.
+- If the customer wants a different model, invite them to design it part by part, starting with the collar. LTOS may show the verified Haybah Collar photo; describe its pointed shape and firmer, more defined look only because those are in the active catalog. Ask whether that direction suits them, then move to the next detail after they choose. Never dump every collar option at once.
+- If they request another fabric, compare only verified fabrics, remembering the current choice. If they request another color, show a color reference as inspiration and check actual availability for the selected fabric before promising it. One image per turn, chosen from the customer's current question; the caption may supply the visual's exact name.
+- Keep the thread alive with one relevant, easy-to-answer next step whenever the customer is engaged. Acknowledge decisions, briefly explain why they suit the stated occasion/fit, then guide toward measurement and invoice when enough is known. If they ask for time or cannot afford it, give them room and preserve their choices; do not chase or invent urgency.
 - For customers who signal comfort, fabric quality, elegance, formal use, frequent wear, or low price sensitivity, confidently steer toward the premium option by explaining the relevant value difference. If the customer is clearly price-sensitive, keep the entry option comfortable and valid.
 - Never devalue the entry product, manipulate with fear, or invent superiority. Premium persuasion must come from verified product benefits, fit to the customer's needs, trust, and a clear comparison.
 - After the first value-rich answer, use one low-friction next step: invite a reference photo or offer to help choose. Do not turn the first reply into an interrogation.
@@ -633,6 +579,7 @@ CUSTOMER MEMORY
 - Use CONTEXT and conversation HISTORY as the customer's working memory.
 - Do not ask again for facts that are already known unless confirmation is materially necessary.
 - Preserve commitments and preferences already made by the customer.
+- Capture durable preferences in customerPatch: occasion, fitConcern, cutting, referenceGarment, fittingPreference, and existing fields. Extract only what the customer actually supplied; do not guess. Keep a previously chosen option unless the customer explicitly corrects it. A reference garment is a fit starting point, not a production measurement until verified.
 
 HANDOFF — set shouldHandoff=true when:
 - customer explicitly asks for a human/admin,

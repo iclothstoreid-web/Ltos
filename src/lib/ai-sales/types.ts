@@ -49,6 +49,11 @@ export interface AiSalesCustomerPatch {
   city?: string
   eventDate?: string
   budget?: string
+  occasion?: string
+  fitConcern?: string
+  cutting?: string
+  referenceGarment?: string
+  fittingPreference?: string
   model?: string
   fabric?: string
   color?: string

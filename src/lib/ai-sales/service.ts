@@ -9,6 +9,7 @@ import {
   createSalesAction,
   getOrCreateConversation,
   listRecentMessages,
+  listSentMediaAssetKeys,
   updateConversationState,
 } from './repository'
 import { sendWhatsAppImage, sendWhatsAppText } from './whatsapp'
@@ -201,9 +202,14 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
 
       if (!handoff) {
         try {
+          const sentAssetKeys = await listSentMediaAssetKeys(supabase, conversation.id)
           const mediaAssets = await selectAiSalesMediaAssets(supabase, {
             customerText: message.text,
             currentStage: conversation.stage,
+            sentAssetKeys,
+            lead: nextContext.lead && typeof nextContext.lead === 'object'
+              ? nextContext.lead as Record<string, unknown>
+              : {},
           })
 
           for (const asset of mediaAssets) {

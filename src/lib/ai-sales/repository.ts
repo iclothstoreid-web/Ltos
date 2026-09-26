@@ -66,13 +66,30 @@ export async function listRecentMessages(
 ): Promise<AiSalesMessage[]> {
   const { data, error } = await supabase
     .from('ai_sales_messages')
-    .select('id, conversation_id, direction, role, provider_message_id, message_type, text_content, delivery_status, created_at')
+    .select('id, conversation_id, direction, role, provider_message_id, message_type, text_content, raw_payload, delivery_status, created_at')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
     .limit(limit)
 
   if (error) throw error
   return ((data ?? []) as AiSalesMessage[]).reverse()
+}
+
+export async function listSentMediaAssetKeys(
+  supabase: SupabaseClient,
+  conversationId: string
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('ai_sales_messages')
+    .select('raw_payload')
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'outbound')
+    .eq('message_type', 'image')
+
+  if (error) throw error
+  return (data ?? [])
+    .map(row => row.raw_payload?.asset_key)
+    .filter((key): key is string => typeof key === 'string')
 }
 
 export async function updateConversationState(
