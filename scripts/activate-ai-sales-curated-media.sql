@@ -21,14 +21,7 @@ set is_active = true,
       when 'model_detail.hijau_c2.003' then 6
       when 'model_detail.hijau_c3.004' then 7
     end,
-    caption = case asset_key
-      when 'model_detail.collar_zigzag_white.001' then 'Detail kerah dan jahitan thobe custom Local Tailor.'
-      when 'model_detail.awal_2.001' then 'Detail potongan dan jahitan dari dekat.'
-      when 'model_detail.awal.001' then 'Aksen jahitan yang bisa disesuaikan dengan selera.'
-      when 'model_detail.navy_c5.006' then 'Contoh detail jahitan pada referensi navy.'
-      when 'model_detail.brown_c4.003' then 'Contoh detail jahitan pada referensi coklat.'
-      else 'Contoh detail thobe custom Local Tailor.'
-    end,
+    caption = '',
     color_name = case asset_key
       when 'model_detail.collar_zigzag_white.001' then 'white'
       when 'model_detail.navy_c5.006' then 'navy'

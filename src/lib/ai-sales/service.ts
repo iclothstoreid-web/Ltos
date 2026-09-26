@@ -29,6 +29,7 @@ import type {
 } from './types'
 
 const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
+const STARTER_MEDIA_HOOK = 'Nah, biasanya dari detail begini customer mulai kebayang thobe yang dia mau. Ada yang paling kena di selera Kang?'
 
 const REOPEN_GREETING_MS = 12 * 60 * 60 * 1000
 
@@ -176,22 +177,25 @@ async function sendAndPersist(
 async function sendImageAndPersist(
   conversationId: string,
   to: string,
-  asset: AiSalesMediaAsset
+  asset: AiSalesMediaAsset,
+  captionOverride?: string
 ): Promise<void> {
   const supabase = createAdminClient()
-  const providerMessageId = await sendWhatsAppImage(to, asset.imageUrl, asset.caption)
+  const caption = captionOverride === undefined ? asset.caption : captionOverride
+  const providerMessageId = await sendWhatsAppImage(to, asset.imageUrl, caption)
   await appendOutboundMessage(supabase, {
     conversation_id: conversationId,
     direction: 'outbound',
     role: 'assistant',
     provider_message_id: providerMessageId,
     message_type: 'image',
-    text_content: asset.caption || asset.title,
+    text_content: caption || asset.title,
     raw_payload: {
       asset_key: asset.assetKey,
       category: asset.category,
       image_url: asset.imageUrl,
       title: asset.title,
+      customer_caption: caption || null,
     },
     delivery_status: 'sent',
   })
@@ -400,10 +404,20 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
               : {},
           })
 
+          const isStarterSequence =
+            mediaAssets.length > 1 && mediaAssets.every(asset => asset.isStarter)
+          let sentMediaCount = 0
+
           for (const asset of mediaAssets) {
             if (!(await isConversationAi(supabase, activeConversation.id))) break
             try {
-              await sendImageAndPersist(activeConversation.id, message.from, asset)
+              await sendImageAndPersist(
+                activeConversation.id,
+                message.from,
+                asset,
+                isStarterSequence ? '' : undefined
+              )
+              sentMediaCount += 1
               await createSalesAction(
                 supabase,
                 activeConversation.id,
@@ -412,6 +426,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
                   assetKey: asset.assetKey,
                   category: asset.category,
                   title: asset.title,
+                  starterSequence: isStarterSequence,
                 },
                 'executed'
               )
@@ -427,6 +442,16 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
                 'failed'
               )
             }
+          }
+
+          if (
+            isStarterSequence &&
+            sentMediaCount >= 3 &&
+            (await isConversationAi(supabase, activeConversation.id)) &&
+            (await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))
+          ) {
+            await wait(650)
+            await sendAndPersist(activeConversation.id, message.from, STARTER_MEDIA_HOOK)
           }
         } catch (mediaSelectError) {
           await createSalesAction(
