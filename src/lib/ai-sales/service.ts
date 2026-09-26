@@ -10,6 +10,7 @@ import {
   createSalesAction,
   getOrCreateConversation,
   isConversationAi,
+  isLatestInboundMessage,
   listRecentMessages,
   listSentMediaAssetKeys,
   resolveAiSalesCustomerContact,
@@ -302,6 +303,14 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
 
   if (activeConversation.mode === 'human') return
 
+  // Human WhatsApp conversations often arrive as 2–3 short messages in a burst.
+  // Wait briefly so the newest message can absorb the whole turn. If a newer
+  // inbound arrived, this handler stays silent and lets that newer turn answer once.
+  await wait(2200)
+  if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) {
+    return
+  }
+
   // Reactions and stickers are conversational acknowledgements, not reasons to
   // disable the AI thread or send a robotic fallback. Store them, then wait for
   // the customer's next meaningful message.
@@ -369,6 +378,14 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
         shouldGreetByName(previousInboundAt)
       )
       await wait(humanReplyDelayMs(reply, message.providerMessageId))
+
+      // The customer may add one more message while the reply is being composed.
+      // Never send an answer to an already-superseded turn.
+      if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) {
+        return
+      }
+      if (!handoff && !(await isConversationAi(supabase, activeConversation.id))) return
+
       await sendAndPersist(activeConversation.id, message.from, reply)
 
       if (!handoff) {
