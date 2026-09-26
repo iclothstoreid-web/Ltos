@@ -102,7 +102,7 @@ export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Pro
   const supabase = createAdminClient()
   const conversation = await getOrCreateConversation(supabase, echo.to)
   const { error } = await supabase.from('ai_sales_messages').insert({
-    conversation_id: activeConversation.id,
+    conversation_id: conversation.id,
     direction: 'outbound',
     role: 'human',
     provider_message_id: echo.providerMessageId,
@@ -114,11 +114,11 @@ export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Pro
   if (error?.code === '23505') return
   if (error) throw error
 
-  await updateConversationState(supabase, activeConversation.id, {
+  await updateConversationState(supabase, conversation.id, {
     mode: 'human',
     handoffReason: 'whatsapp_business_app_reply',
   })
-  await createSalesAction(supabase, activeConversation.id, 'human_takeover',
+  await createSalesAction(supabase, conversation.id, 'human_takeover',
     { source: 'whatsapp_business_app', providerMessageId: echo.providerMessageId }, 'executed')
 }
 
@@ -203,18 +203,18 @@ async function handoffUnsupportedMessage(
   const supabase = createAdminClient()
   const reason = `unsupported_whatsapp_message:${message.type}`
 
-  await updateConversationState(supabase, activeConversation.id, {
+  await updateConversationState(supabase, conversation.id, {
     mode: 'human',
     handoffReason: reason,
   })
-  await createSalesAction(supabase, activeConversation.id, 'handoff', { reason, messageType: message.type }, 'executed')
+  await createSalesAction(supabase, conversation.id, 'handoff', { reason, messageType: message.type }, 'executed')
 
   try {
-    await sendAndPersist(activeConversation.id, message.from, HUMAN_FALLBACK)
+    await sendAndPersist(conversation.id, message.from, HUMAN_FALLBACK)
   } catch (error) {
     await createSalesAction(
       supabase,
-      activeConversation.id,
+      conversation.id,
       'outbound_send_failed',
       { reason: error instanceof Error ? error.message : String(error) },
       'failed'
@@ -236,7 +236,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   const identityContext: Record<string, unknown> = {
     ...conversation.context,
     customerIdentity: {
-      displayName: identity?.displayName ?? activeConversation.customer_name ?? message.profileName ?? null,
+      displayName: identity?.displayName ?? conversation.customer_name ?? message.profileName ?? null,
       whatsappProfileName: identity?.whatsappProfileName ?? message.profileName ?? null,
       isExistingCustomer: identity?.isExistingCustomer ?? false,
       orderCount: identity?.orderCount ?? 0,
@@ -244,7 +244,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   }
 
   if (identity) {
-    await updateConversationState(supabase, activeConversation.id, {
+    await updateConversationState(supabase, conversation.id, {
       customerId: identity.customerId,
       customerName: identity.displayName,
       context: identityContext,
@@ -254,7 +254,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   const activeConversation: AiSalesConversation = {
     ...conversation,
     customer_id: identity?.customerId ?? conversation.customer_id,
-    customer_name: identity?.displayName ?? activeConversation.customer_name ?? message.profileName ?? null,
+    customer_name: identity?.displayName ?? conversation.customer_name ?? message.profileName ?? null,
     customer_phone: identity?.phoneE164 ?? conversation.customer_phone ?? message.from,
     context: identityContext,
   }
