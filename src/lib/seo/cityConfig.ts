@@ -38,7 +38,7 @@ export const CITY_SITE_ORIGIN = FABRIC_SITE_ORIGIN
 // was supplied, and this correction does not fabricate one.
 export const CITY_BUSINESS = {
   name: 'Local Tailor Bandung',
-  streetAddress: 'Bandung, Jawa Barat, Indonesia',
+  streetAddress: 'Jalan Gamelan No.10, Turangga, Buahbatu, Kota Bandung',
   addressLocality: 'Bandung',
   addressRegion: 'Jawa Barat',
   postalCode: '',
@@ -48,8 +48,8 @@ export const CITY_BUSINESS = {
   whatsappInternational: '6285173334251',
 } as const
 
-// A street-level address and geocode have not been supplied for Bandung.
-// Map links use a city-level search only, and no coordinates are emitted.
+// The owner-confirmed street address is the single public NAP source for Bandung.
+// No coordinates are emitted until a verified geocode is supplied.
 export const CITY_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CITY_BUSINESS.streetAddress)}`
 
 export interface CityFaqItem {
@@ -97,8 +97,8 @@ export interface CityConfig {
 }
 
 // Shared FAQ base — the remote-consultation operating model is genuinely
-// identical for every non-Bandung city (same WhatsApp booking, same
-// Bandung-based fitter measurement, same nationwide shipping), so these
+// identical for every non-Bandung city (same WhatsApp booking, remote
+// measurement options, same nationwide shipping), so these
 // answers are reused as true facts, not padded into artificial city-by-city
 // variation. Each city's real differentiation lives in hero/description/
 // localContext/services below, per this sprint's own "no copy-paste,
@@ -112,7 +112,7 @@ const REMOTE_CONSULTATION_FAQ: CityFaqItem[] = [
   {
     question: 'Bagaimana proses pengukuran jika saya di luar Bandung?',
     answer:
-      'Pengukuran final untuk produksi tetap dilakukan langsung oleh fitter kami di workshop Bandung untuk memastikan Digital Body Profile Anda akurat — konsultasi dan koordinasi jadwal dilakukan via WhatsApp terlebih dahulu.',
+      'Tidak wajib datang ke Bandung. Untuk luar kota, pengukuran bisa dilakukan melalui Fitting Online via video call, memakai thobe yang sudah nyaman sebagai reference garment, atau ukur sendiri dengan panduan. Home Visit tersedia untuk pesanan minimum 3 pcs sesuai area dan jadwal.',
   },
   {
     question: 'Apakah thobe custom bisa dikirim ke luar Bandung?',
@@ -151,21 +151,21 @@ const BANDUNG: CityConfig = {
     keywordPhrases: ['tailor bandung', 'penjahit bandung', 'bespoke tailor bandung', 'custom baju koko bandung', 'jahit thobe bandung'],
   },
   description:
-    'Local Tailor Bandung berlokasi di Bandung — sebagai tailor Bandung dan penjahit Bandung yang berfokus penuh pada bespoke tailoring, kami tidak menjual thobe atau baju koko siap pakai. Setiap pesanan dimulai dari konsultasi, dilanjutkan pengukuran langsung oleh fitter kami, lalu pola personal diformulasikan khusus untuk tubuh Anda sebelum kain dipotong. Sebagai tailor pria Bandung yang melayani kebutuhan formal, pernikahan, hingga umrah, workshop kami menjadi satu-satunya tempat konsultasi, pengukuran, dan produksi berlangsung — bukan sekadar showroom penjualan.',
-  trustStatement: 'Satu-satunya lokasi fisik Local Tailor — konsultasi, pengukuran, dan produksi berlangsung di workshop yang sama di Bandung.',
+    'Local Tailor Bandung berlokasi di Jalan Gamelan No.10, Turangga, Buahbatu, Kota Bandung. Kami berfokus pada bespoke tailoring dan tidak menjual thobe atau baju koko siap pakai. Setiap pesanan dimulai dari konsultasi dan pengukuran yang disesuaikan dengan kebutuhan customer, lalu pola personal diformulasikan khusus sebelum kain dipotong. Showroom, pengukuran langsung, dan produksi tersedia di workshop Bandung; customer luar kota tetap dapat dilayani melalui metode fitting jarak jauh.',
+  trustStatement: 'Lokasi fisik Local Tailor berada di Jalan Gamelan No.10, Turangga, Buahbatu, Kota Bandung; konsultasi dan fitting jarak jauh tetap tersedia untuk customer luar kota.',
   keywordPrimary: 'tailor bandung',
   keywordSecondary: ['penjahit bandung', 'tailor pria bandung', 'bespoke tailor bandung', 'jahit koko bandung', 'jahit thobe bandung'],
   localContext: ['Bandung', 'Dago', 'Setiabudi', 'Ciumbuleuit', 'Lembang', 'Cimahi', 'Pasteur', 'Antapani'],
   services: [
     { title: 'Konsultasi Tatap Muka', description: 'Diskusi langsung di workshop Bandung — model, bahan, dan detail konstruksi.' },
     { title: 'Custom Thobe & Baju Koko', description: 'Pilih Model, Kerah, Manset, Material, dan Warna, lalu lihat estimasi harga langsung.' },
-    { title: 'Pengukuran Digital Body Profile', description: 'Diukur langsung oleh fitter, tersimpan untuk pemesanan berikutnya.' },
+    { title: 'Pengukuran Digital Body Profile', description: 'Ukuran dicatat dan dapat digunakan sebagai referensi untuk pemesanan berikutnya.' },
     { title: 'Bespoke Tailoring Penuh', description: 'Pola personal, produksi, dan quality control seluruhnya di satu workshop.' },
   ],
   faq: [
     {
       question: 'Di mana lokasi tailor Bandung Local Tailor?',
-      answer: 'Workshop dan showroom kami berada di Bandung, Jawa Barat.',
+      answer: 'Workshop dan showroom kami berada di Jalan Gamelan No.10, Turangga, Buahbatu, Kota Bandung.',
     },
     {
       question: 'Apakah saya bisa datang langsung tanpa janji temu?',
@@ -180,12 +180,12 @@ const BANDUNG: CityConfig = {
       answer: 'Ya. Sebagai bespoke tailor Bandung, kami mengerjakan custom baju koko dan thobe dengan proses pola personal yang sama.',
     },
     {
-      question: 'Apakah klien dari luar Bandung, seperti Dago atau Setiabudi, bisa konsultasi di sini?',
+      question: 'Apakah klien dari area Bandung seperti Dago atau Setiabudi bisa konsultasi di sini?',
       answer: 'Tentu — workshop kami di Bandung menerima klien dari seluruh area Bandung dan sekitarnya, termasuk Dago, Setiabudi, Ciumbuleuit, dan Antapani.',
     },
     {
       question: 'Apakah Local Tailor melayani klien dari Lembang atau Cimahi?',
-      answer: 'Ya, klien dari Lembang, Cimahi, dan Pasteur biasa datang ke workshop kami di Bandung untuk konsultasi dan pengukuran.',
+      answer: 'Ya, klien dari Lembang, Cimahi, dan Pasteur bisa datang ke workshop kami di Bandung untuk konsultasi dan pengukuran.',
     },
     {
       question: 'Apa bedanya tailor Bandung ini dengan penjahit biasa?',
@@ -193,7 +193,7 @@ const BANDUNG: CityConfig = {
     },
     {
       question: 'Apakah ada parkir di sekitar workshop Bandung?',
-      answer: 'Bandung berada di kawasan yang mudah diakses kendaraan pribadi — koordinasi lokasi lebih detail akan diberikan saat booking appointment via WhatsApp.',
+      answer: 'Untuk informasi akses dan parkir terbaru di Jalan Gamelan No.10, silakan konfirmasi saat booking appointment via WhatsApp.',
     },
     {
       question: 'Bagaimana cara booking konsultasi di tailor Bandung ini?',
@@ -229,7 +229,7 @@ const JAKARTA: CityConfig = {
   hero: {
     eyebrow: 'Bespoke Thobe untuk Profesional Jakarta',
     headline: 'Custom Thobe Jakarta — Bespoke Tailoring untuk Jadwal Padat Profesional',
-    subheadline: 'Konsultasi via WhatsApp yang menyesuaikan jadwal kerja Anda di SCBD, Sudirman, atau Kuningan — pengukuran dan produksi tetap di workshop Bandung.',
+    subheadline: 'Konsultasi via WhatsApp yang menyesuaikan jadwal kerja Anda di SCBD, Sudirman, atau Kuningan — fitting jarak jauh tersedia tanpa wajib datang ke Bandung.',
     keywordPhrases: ['custom thobe jakarta', 'bespoke tailor jakarta', 'jahit koko jakarta'],
   },
   description:
@@ -350,7 +350,7 @@ const SURABAYA: CityConfig = {
     keywordPhrases: ['custom thobe surabaya', 'bespoke tailor surabaya', 'jahit thobe surabaya'],
   },
   description:
-    'Sebagai kota terbesar di Jawa Timur, Surabaya punya tradisi pernikahan dan acara formal tersendiri, dan klien kami dari kawasan Pakuwon, Citraland, hingga Darmo umumnya mencari thobe custom untuk momen tersebut — bukan sekadar busana sehari-hari. Konsultasi awal via WhatsApp membantu menentukan potongan dan material yang sesuai dengan gaya formalwear yang diinginkan, baik untuk akad, resepsi, maupun acara keagamaan lain, sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan. Jarak antar kota bukan hambatan karena setiap tahap — dari konsultasi hingga pengiriman — sudah dirancang untuk klien luar Bandung.',
+    'Sebagai kota terbesar di Jawa Timur, Surabaya punya tradisi pernikahan dan acara formal tersendiri, dan klien kami dari kawasan Pakuwon, Citraland, hingga Darmo umumnya mencari thobe custom untuk momen tersebut — bukan sekadar busana sehari-hari. Konsultasi awal via WhatsApp membantu menentukan potongan dan material yang sesuai; pengukuran dapat dilanjutkan melalui Fitting Online, pakaian acuan, atau ukur sendiri dengan panduan. Jarak antar kota bukan hambatan karena alur konsultasi hingga pengiriman memang tersedia untuk customer luar Bandung.',
   trustStatement: 'Dipercaya klien di Surabaya — dari Pakuwon hingga Darmo — untuk pernikahan dan formalwear bespoke.',
   keywordPrimary: 'custom thobe surabaya',
   keywordSecondary: ['bespoke tailor surabaya', 'jahit thobe surabaya', 'thobe pernikahan surabaya'],
@@ -358,7 +358,7 @@ const SURABAYA: CityConfig = {
   services: [
     { title: 'Konsultasi Formalwear via WhatsApp', description: 'Menentukan potongan dan material untuk akad, resepsi, atau acara keagamaan.' },
     { title: 'Thobe Pernikahan Custom', description: 'Dirancang khusus untuk momen formal, bukan busana harian.' },
-    { title: 'Pengukuran Dijadwalkan', description: 'Fitter kami di Bandung mengonfirmasi ukuran final sebelum produksi.' },
+    { title: 'Pengukuran Jarak Jauh', description: 'Pilih Fitting Online, pakaian acuan, atau ukur sendiri dengan panduan sebelum produksi.' },
     { title: 'Pengiriman ke Surabaya', description: 'Garmen selesai dikirim ke Pakuwon, Citraland, Darmo, dan sekitarnya.' },
   ],
   faq: [...REMOTE_CONSULTATION_FAQ, REVIEW_FAQ_ITEM],
@@ -389,7 +389,7 @@ const BOGOR: CityConfig = {
     keywordPhrases: ['custom thobe bogor', 'jahit thobe bogor', 'bespoke tailor bogor'],
   },
   description:
-    'Bogor dikenal sebagai kota dengan udara lebih sejuk dibanding Jakarta, dan banyak klien kami dari kawasan ini serta sekitar Sentul dan Puncak memesan thobe custom menjelang akhir pekan keluarga atau acara formal yang tidak terburu-buru. Konsultasi via WhatsApp membantu menentukan material yang tetap nyaman meski suhu lebih rendah dari kota-kota pesisir, sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan. Jarak yang relatif dekat ke Bandung juga membuat sebagian klien Bogor memilih datang langsung ke workshop saat momen tersebut memungkinkan.',
+    'Bogor dikenal sebagai kota dengan udara lebih sejuk dibanding Jakarta, dan banyak klien kami dari kawasan ini serta sekitar Sentul dan Puncak memesan thobe custom menjelang akhir pekan keluarga atau acara formal. Konsultasi via WhatsApp membantu menentukan material dan metode pengukuran yang sesuai; customer dapat memilih fitting jarak jauh atau datang ke workshop Bandung bila lebih nyaman.',
   trustStatement: 'Dipercaya keluarga di Bogor — dari kawasan kota hingga Sentul dan Puncak — untuk akhir pekan dan acara formal keluarga.',
   keywordPrimary: 'custom thobe bogor',
   keywordSecondary: ['jahit thobe bogor', 'bespoke tailor bogor', 'penjahit thobe bogor'],
@@ -429,7 +429,7 @@ const DEPOK: CityConfig = {
     keywordPhrases: ['custom thobe depok', 'jahit thobe depok', 'bespoke tailor depok'],
   },
   description:
-    'Sebagai kota yang berbatasan langsung dengan Jakarta dan dikenal sebagai lokasi Universitas Indonesia, klien kami dari Depok — terutama sekitar Margonda — sering kali adalah profesional muda atau keluarga baru yang memesan thobe custom pertama mereka untuk acara formal, kajian, atau ibadah Jumat. Konsultasi via WhatsApp membantu menjelaskan proses bespoke secara jelas bagi klien yang baru pertama kali memesan busana custom, sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan.',
+    'Sebagai kota yang berbatasan langsung dengan Jakarta dan dikenal sebagai lokasi Universitas Indonesia, klien kami dari Depok — terutama sekitar Margonda — sering kali adalah profesional muda atau keluarga baru yang memesan thobe custom pertama mereka untuk acara formal, kajian, atau ibadah Jumat. Konsultasi via WhatsApp membantu menjelaskan proses bespoke secara jelas, lalu pengukuran dapat dilakukan melalui Fitting Online, pakaian acuan, atau ukur sendiri dengan panduan.',
   trustStatement: 'Dipercaya profesional muda dan keluarga di Depok — dari Margonda hingga sekitar UI — untuk thobe custom pertama mereka.',
   keywordPrimary: 'custom thobe depok',
   keywordSecondary: ['jahit thobe depok', 'bespoke tailor depok', 'tailor pria depok'],
@@ -469,7 +469,7 @@ const YOGYAKARTA: CityConfig = {
     keywordPhrases: ['custom thobe yogyakarta', 'jahit thobe yogyakarta', 'bespoke tailor yogyakarta'],
   },
   description:
-    'Yogyakarta dikenal sebagai kota pelajar dengan populasi akademisi dan mahasiswa yang besar, sekaligus kota dengan tradisi berbusana formal yang kuat untuk acara keagamaan dan seremonial. Klien kami dari Yogyakarta umumnya memesan thobe custom untuk kajian, acara kampus formal, atau ibadah — mencari busana yang tetap terlihat rapi dan personal, bukan sekadar seragam. Konsultasi via WhatsApp membantu menentukan model dan material yang sesuai sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan.',
+    'Yogyakarta dikenal sebagai kota pelajar dengan populasi akademisi dan mahasiswa yang besar, sekaligus kota dengan tradisi berbusana formal yang kuat untuk acara keagamaan dan seremonial. Klien kami dari Yogyakarta umumnya memesan thobe custom untuk kajian, acara kampus formal, atau ibadah — mencari busana yang tetap terlihat rapi dan personal, bukan sekadar seragam. Konsultasi via WhatsApp membantu menentukan model dan material, lalu pengukuran dapat dilakukan melalui metode fitting jarak jauh yang sesuai.',
   trustStatement: 'Dipercaya klien di Yogyakarta — dari komunitas akademisi hingga keluarga — untuk acara formal dan keagamaan.',
   keywordPrimary: 'custom thobe yogyakarta',
   keywordSecondary: ['jahit thobe yogyakarta', 'bespoke tailor yogyakarta', 'tailor pria yogyakarta'],
@@ -508,7 +508,7 @@ const SEMARANG: CityConfig = {
     keywordPhrases: ['custom thobe semarang', 'jahit thobe semarang', 'bespoke tailor semarang'],
   },
   description:
-    'Sebagai ibu kota Jawa Tengah dan kota pelabuhan dengan iklim pesisir yang cenderung lembap, klien kami di Semarang umumnya adalah profesional yang membutuhkan thobe formal untuk acara kantor maupun ibadah, dengan pertimbangan material yang tetap nyaman di cuaca panas dan lembap. Konsultasi via WhatsApp membantu menentukan pilihan bahan yang breathable sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan, dan garmen selesai dikirim langsung ke alamat Anda di Semarang.',
+    'Sebagai ibu kota Jawa Tengah dan kota pelabuhan dengan iklim pesisir yang cenderung lembap, klien kami di Semarang umumnya adalah profesional yang membutuhkan thobe formal untuk acara kantor maupun ibadah, dengan pertimbangan material yang tetap nyaman di cuaca panas dan lembap. Konsultasi via WhatsApp membantu menentukan pilihan bahan dan metode pengukuran jarak jauh sebelum produksi, lalu garmen selesai dikirim ke alamat customer.',
   trustStatement: 'Dipercaya profesional di Semarang untuk busana formal bespoke yang sesuai dengan iklim pesisir Jawa Tengah.',
   keywordPrimary: 'custom thobe semarang',
   keywordSecondary: ['jahit thobe semarang', 'bespoke tailor semarang', 'tailor pria semarang'],
@@ -547,7 +547,7 @@ const MEDAN: CityConfig = {
     keywordPhrases: ['custom thobe medan', 'jahit thobe medan', 'bespoke tailor medan'],
   },
   description:
-    'Sebagai kota terbesar di Sumatra dan pusat bisnis utama di wilayah tersebut, Medan memiliki komunitas Muslim yang besar dengan kebutuhan busana formal untuk acara bisnis, keagamaan, maupun keluarga. Klien kami dari Medan umumnya mencari thobe custom untuk kajian, acara formal, atau ibadah Jumat, dengan material yang nyaman untuk iklim tropis Sumatra. Konsultasi via WhatsApp membantu menentukan pilihan model dan bahan sebelum jadwal pengukuran final oleh fitter kami di Bandung ditentukan.',
+    'Sebagai kota terbesar di Sumatra dan pusat bisnis utama di wilayah tersebut, Medan memiliki komunitas Muslim yang besar dengan kebutuhan busana formal untuk acara bisnis, keagamaan, maupun keluarga. Klien kami dari Medan umumnya mencari thobe custom untuk kajian, acara formal, atau ibadah Jumat, dengan material yang nyaman untuk iklim tropis Sumatra. Konsultasi via WhatsApp membantu menentukan pilihan model dan bahan, lalu pengukuran dapat dilakukan melalui Fitting Online, pakaian acuan, atau ukur sendiri dengan panduan.',
   trustStatement: 'Dipercaya klien di Medan — kota terbesar di Sumatra — untuk busana formal dan keagamaan bespoke.',
   keywordPrimary: 'custom thobe medan',
   keywordSecondary: ['jahit thobe medan', 'bespoke tailor medan', 'tailor pria medan'],
