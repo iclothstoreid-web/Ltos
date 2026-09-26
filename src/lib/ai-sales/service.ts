@@ -346,17 +346,27 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // Human WhatsApp conversations often arrive as 2–3 short messages in a burst.
   // Wait briefly so the newest message can absorb the whole turn. If a newer
   // inbound arrived, this handler stays silent and lets that newer turn answer once.
-  await wait(3500)
+  // Customers often send a photo first and type their question seconds later.
+  // Give image-only turns a longer window, without switching the chat to human mode.
+  await wait(message.type === 'image' ? 13000 : 3500)
   if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) {
     return
   }
 
-  // Reactions and stickers are conversational acknowledgements, not reasons to
-  // disable the AI thread or send a robotic fallback. Store them, then wait for
-  // the customer's next meaningful message.
+  // Reactions and stickers are acknowledgements; an image alone needs a short,
+  // useful clarifier. Do not claim to recognize fabric or price from its pixels.
   if (['reaction', 'sticker'].includes(message.type)) return
 
-  if (!message.text || !['text', 'interactive'].includes(message.type)) {
+  if (message.type === 'image' && !message.text) {
+    await sendAndPersist(
+      activeConversation.id,
+      message.from,
+      'Fotonya sudah masuk, Kang 🙏 Kang mau tanya soal model, bahan, atau harganya?'
+    )
+    return
+  }
+
+  if (!message.text || !['text', 'interactive', 'image'].includes(message.type)) {
     await handoffUnsupportedMessage(activeConversation, message)
     return
   }
