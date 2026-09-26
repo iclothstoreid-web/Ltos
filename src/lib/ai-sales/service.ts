@@ -45,6 +45,40 @@ function shouldGreetByName(previousInboundAt: string | null): boolean {
   return Number.isFinite(previous) && Date.now() - previous >= REOPEN_GREETING_MS
 }
 
+function hasRespectfulTitle(name: string): boolean {
+  return /^(?:kangbro|kang|pak|bapak|mas|bang|kak|ustadz|ustad|haji|h\.)\b/i.test(name)
+}
+
+function respectfulCustomerName(name: string): string {
+  return hasRespectfulTitle(name) ? name : 'Kang ' + name
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^$()|[\]\\]/g, '\\$&')
+}
+
+function preventBareNameAddress(reply: string, displayName: string | null): string {
+  const name = cleanCustomerName(displayName)
+  if (!name || hasRespectfulTitle(name)) return reply
+
+  const escaped = escapeRegExp(name)
+  const patterns = [
+    new RegExp('^(\\s*)' + escaped + '(?=[,!?.\\s]|$)', 'i'),
+    new RegExp(
+      '((?:sama-sama|siap|baik|halo|hai|terima kasih|makasih|bismillaah,?\\s*siap|assalamu[\'’]?alaikum)\\s*,?\\s*)' +
+        escaped +
+        '(?=[,!?.\\s]|$)',
+      'i'
+    ),
+  ]
+
+  let next = reply
+  for (const pattern of patterns) {
+    next = next.replace(pattern, (_match, prefix: string) => prefix + 'Kang ' + name)
+  }
+  return next
+}
+
 function personalizeFirstReply(
   reply: string,
   displayName: string | null,
@@ -52,22 +86,24 @@ function personalizeFirstReply(
   greet: boolean
 ): string {
   const name = cleanCustomerName(displayName)
-  if (!name || !greet) return reply
+  if (!name) return reply
 
-  const firstName = name.split(' ')[0]
-  if (reply.toLowerCase().includes(firstName.toLowerCase())) return reply
+  if (!greet) return preventBareNameAddress(reply, name)
 
+  const addressedName = respectfulCustomerName(name)
   const cleanedReply = reply
-    .replace(/^bismillaah,?\s*siap(?:\s+(?:kang|kak|pak|mas|bro))?\s*[🙏🙂😊]*\s*/i, '')
+    .replace(
+      /^(?:assalamu['’]?alaikum|bismillaah),?\s*(?:siap|halo|hai|senang bisa bantu lagi)?(?:\s+(?:kangbro|kang|kak|pak|bapak|mas|bang|bro|ustadz|ustad))?(?:\s+[\p{L}.'’ -]{1,80})?\s*[🙏🙂😊!,.]*\s*/iu,
+      ''
+    )
     .trim()
 
   const greeting = isExistingCustomer
-    ? `Assalamu'alaikum ${name}, senang bisa bantu lagi 🙏`
-    : `Bismillaah, siap ${name} 🙏`
+    ? "Assalamu'alaikum " + addressedName + ', senang bisa bantu lagi 🙏'
+    : 'Bismillaah, siap ' + addressedName + ' 🙏'
 
-  return cleanedReply ? `${greeting}\n\n${cleanedReply}` : greeting
+  return cleanedReply ? greeting + '\n\n' + cleanedReply : greeting
 }
-
 function humanReplyDelayMs(text: string, providerMessageId: string): number {
   const variation = providerMessageId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 900
   return Math.min(4300, 1700 + variation + Math.floor(text.length * 3.2))
