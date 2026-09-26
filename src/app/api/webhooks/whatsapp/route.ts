@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { processWhatsAppInbound, processWhatsAppMessageEcho } from '@/lib/ai-sales/service'
+import { processWhatsAppInbound, processWhatsAppMessageEcho, processWhatsAppStatusUpdate } from '@/lib/ai-sales/service'
 import {
   parseWhatsAppInboundMessages,
   parseWhatsAppMessageEchoes,
+  parseWhatsAppStatusUpdates,
   verifyWhatsAppChallenge,
   verifyWhatsAppSignature,
 } from '@/lib/ai-sales/whatsapp'
@@ -31,8 +32,13 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = JSON.parse(rawBody) as unknown
+    const statuses = parseWhatsAppStatusUpdates(payload)
     const echoes = parseWhatsAppMessageEchoes(payload)
     const messages = parseWhatsAppInboundMessages(payload)
+
+    for (const status of statuses) {
+      await processWhatsAppStatusUpdate(status)
+    }
 
     for (const echo of echoes) {
       await processWhatsAppMessageEcho(echo)
