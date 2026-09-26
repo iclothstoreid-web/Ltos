@@ -45,6 +45,14 @@ export function parseWhatsAppInboundMessages(payload: unknown): WhatsAppInboundM
 
   for (const entry of Array.isArray(root.entry) ? root.entry : []) {
     for (const change of Array.isArray(entry?.changes) ? entry.changes : []) {
+      const contacts = Array.isArray(change?.value?.contacts) ? change.value.contacts : []
+      const profileNameByWaId = new Map<string, string>()
+      for (const contact of contacts) {
+        const waId = typeof contact?.wa_id === 'string' ? contact.wa_id : null
+        const name = typeof contact?.profile?.name === 'string' ? contact.profile.name.trim() : ''
+        if (waId && name) profileNameByWaId.set(waId, name)
+      }
+
       const messages = Array.isArray(change?.value?.messages) ? change.value.messages : []
       for (const message of messages) {
         const id = typeof message?.id === 'string' ? message.id : null
@@ -65,6 +73,7 @@ export function parseWhatsAppInboundMessages(payload: unknown): WhatsAppInboundM
           timestamp: typeof message.timestamp === 'string' ? message.timestamp : null,
           type,
           text,
+          profileName: profileNameByWaId.get(from) ?? null,
           rawPayload: message as Record<string, unknown>,
         })
       }
@@ -102,6 +111,41 @@ export function parseWhatsAppMessageEchoes(payload: unknown): WhatsAppMessageEch
     }
   }
   return results
+}
+
+export async function setWhatsAppReadAndTyping(
+  providerMessageId: string,
+  typing = true
+): Promise<void> {
+  const accessToken = requiredEnv('WHATSAPP_ACCESS_TOKEN')
+  const phoneNumberId = requiredEnv('WHATSAPP_PHONE_NUMBER_ID')
+  const graphVersion = requiredEnv('WHATSAPP_GRAPH_API_VERSION')
+
+  const body: Record<string, unknown> = {
+    messaging_product: 'whatsapp',
+    status: 'read',
+    message_id: providerMessageId,
+  }
+  if (typing) body.typing_indicator = { type: 'text' }
+
+  const response = await fetch(
+    `https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    }
+  )
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as Record<string, any>
+    const providerMessage = data?.error?.message ? `: ${String(data.error.message)}` : ''
+    throw new Error(`WhatsApp read/typing failed (${response.status})${providerMessage}`)
+  }
 }
 
 export async function sendWhatsAppText(to: string, body: string): Promise<string | null> {
