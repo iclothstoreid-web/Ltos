@@ -224,7 +224,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   } catch (presenceError) {
     await createSalesAction(
       supabase,
-      activeConversation.id,
+      conversation.id,
       'whatsapp_presence_failed',
       { reason: presenceError instanceof Error ? presenceError.message : String(presenceError) },
       'failed'
@@ -253,7 +253,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   }
 
   if (identity) {
-    await updateConversationState(supabase, activeConversation.id, {
+    await updateConversationState(supabase, conversation.id, {
       customerId: identity.customerId,
       customerName: identity.displayName,
       context: identityContext,
@@ -396,7 +396,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
         try {
           await scheduleFirstFollowUp(supabase, activeConversation.id, message.text)
         } catch (followUpError) {
-          await createSalesAction(supabase, conversation.id, 'follow_up_schedule_failed', {
+          await createSalesAction(supabase, activeConversation.id, 'follow_up_schedule_failed', {
             reason: followUpError instanceof Error ? followUpError.message : String(followUpError),
           }, 'failed')
         }
