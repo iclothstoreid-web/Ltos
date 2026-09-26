@@ -261,6 +261,39 @@ function buildDirectShowroomAddressDecision(params: {
   }
 }
 
+function buildDirectPhotoPriceDecision(params: {
+  currentStage: AiSalesStage
+  history: AiSalesMessage[]
+  knowledge: AiSalesKnowledge
+}): AiSalesDecision | null {
+  const raw = latestCustomerText(params.history).trim()
+  // A short "yg ini brp" after a photo asks about its price, not an approved
+  // final quote for a particular fabric. Answer with verified material tiers.
+  if (!/^(?:(?:yang|yg)\s+)?(?:ini|itu)\s+(?:brp|berapa|harga(?:nya)?(?:\s+berapa)?)(?:\s+ya)?[?!.]*$/i.test(raw)) {
+    return null
+  }
+
+  const keys = [
+    'entry_offer_basic_softwill',
+    'premium_offer_wool_cashmere',
+    'exclusive_offer_wool_cashmere',
+    'luxury_offer_pure_wool',
+  ]
+  const tiers = keys.map(key => getBusinessFactValue(params.knowledge, key))
+  const pricingPolicy = getBusinessFactValue(params.knowledge, 'custom_model_pricing_policy')
+  if (tiers.some(value => !value) || !pricingPolicy) return null
+
+  return {
+    reply: `Kalau yang Kang maksud foto tadi, harga custom mengikuti bahan, bukan modelnya 🙏\n\n${tiers.join('\n')}\n\nKang paling tertarik bahan yang mana untuk model ini?`,
+    stage: params.currentStage === 'new' ? 'qualified' : params.currentStage,
+    shouldHandoff: false,
+    handoffReason: null,
+    customerPatch: {},
+    nextAction: 'continue',
+    orderIntent: null,
+  }
+}
+
 function buildDirectSizeDecision(params: {
   currentStage: AiSalesStage
   context: Record<string, unknown>
@@ -553,6 +586,9 @@ export async function decideAiSalesReply(params: {
   const directShowroomAddressDecision = buildDirectShowroomAddressDecision(params)
   if (directShowroomAddressDecision) return directShowroomAddressDecision
 
+  const directPhotoPriceDecision = buildDirectPhotoPriceDecision(params)
+  if (directPhotoPriceDecision) return directPhotoPriceDecision
+
   const directSizeDecision = buildDirectSizeDecision(params)
   if (directSizeDecision) return directSizeDecision
 
@@ -602,7 +638,7 @@ LANGUAGE AND SALES STYLE
 - When LIVE_BUSINESS_FACTS includes owner-verified craftsmanship and customer feedback, use that evidence selectively. Say that some customers praised the neat stitching and comfortable fit or returned for another order; do not imply every customer gave the same review, quote a named customer without permission, or promise every garment will fit perfectly. Only describe artisan specialization if the corresponding live fact is active. Never claim external skill recognition or certification without a verified fact.
 - When a customer mentions a fit problem with a ready-made garment, acknowledge that exact discomfort and explain how measurement and fit choices can address it. Do not claim that all mass-produced thobes have poor materials, sewing, or service, and never disparage another brand.
 - Validate a choice with a concrete reason tied to their stated need. Say what is already agreed, then suggest the smallest useful next decision. Once model, fabric, color, or detail is chosen, do not reopen it unless the customer changes direction.
-- Visuals are sent by LTOS separately. Do not promise that you sent a photo, claim a pictured fabric/model is identical to an order, or ask a question in the text that the following image caption contradicts.
+- Visuals are sent by LTOS separately. A customer image in HISTORY is metadata/caption only: you cannot see its pixels. If they ask the price of a photo without a verified fabric, explain that the model can be custom and price follows the selected fabric; offer only current LIVE_BUSINESS_FACTS prices. Do not promise that you sent a photo, claim a pictured fabric/model is identical to an order, or ask a question in the text that the following image caption contradicts.
 - For the opening visual sequence, do NOT narrate every photo and do NOT produce a list of technical descriptions. Let the images create desire first. LTOS sends the starter photos clean and follows them with one short conversational hook.
 - A visual sequence is a selling moment, not a catalog. Avoid phrases like "detail potongan", "contoh jahitan navy", "referensi coklat" repeated photo by photo unless the customer explicitly asks what a specific image shows.
 - For an open first enquiry, answer any specific question first and introduce the verified offer briefly. LTOS will show five distinct close-ups of actual workmanship from the "Kirim pertama" folder. Give the customer space to see them, then ask one relaxed question about where they plan to wear the thobe or the look they have in mind. The photos demonstrate construction, not a specific fabric or the customer's final design.

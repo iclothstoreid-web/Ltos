@@ -65,7 +65,9 @@ export function parseWhatsAppInboundMessages(payload: unknown): WhatsAppInboundM
             ? message.text.body.trim()
             : type === 'interactive'
               ? interactiveText(message)?.trim() ?? ''
-              : ''
+              : type === 'image' && typeof message.image?.caption === 'string'
+                ? message.image.caption.trim()
+                : ''
 
         results.push({
           providerMessageId: id,
