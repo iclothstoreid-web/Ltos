@@ -67,7 +67,7 @@ function personalizeFirstReply(
 }
 
 function humanReplyDelayMs(text: string, providerMessageId: string): number {
-  const variation = [...providerMessageId].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 900
+  const variation = providerMessageId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 900
   return Math.min(4300, 1700 + variation + Math.floor(text.length * 3.2))
 }
 
