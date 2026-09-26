@@ -34,7 +34,7 @@ import {
   personSchema,
   articleSchema,
 } from '../src/lib/seo/schema'
-import { CITY_CONFIGS } from '../src/lib/seo/cityConfig'
+import { CITY_BUSINESS, CITY_CONFIGS } from '../src/lib/seo/cityConfig'
 import { buildLocationLocalBusinessSchema, buildLocationsHubLocalBusinessSchema } from '../src/lib/seo/localBusiness'
 
 const APP_DIR = path.join(__dirname, '..', 'src', 'app')
@@ -146,6 +146,13 @@ function validateRealCitySchema() {
     const localBusiness = buildLocationLocalBusinessSchema(city)
     const emptiesLb = findEmptyFields(localBusiness, `localBusiness(${city.slug})`)
     check(`/locations/${city.slug} — Tailor schema has no empty fields`, emptiesLb.length === 0, emptiesLb.join(', '))
+
+    const address = localBusiness.address as Record<string, unknown>
+    check(
+      `/locations/${city.slug} — Tailor schema uses verified Bandung street address`,
+      address.streetAddress === CITY_BUSINESS.streetAddress,
+      String(address.streetAddress ?? '')
+    )
 
     const faq = faqSchema(city.faq)
     const emptiesFaq = faq ? findEmptyFields(faq, `faq(${city.slug})`) : []
