@@ -45,8 +45,10 @@ export async function composeContextualFollowUp(
       max_completion_tokens: 220,
     })
     const parsed = JSON.parse(response.choices[0]?.message?.content ?? '{}') as { reply?: unknown }
-    const reply = typeof parsed.reply === 'string' ? parsed.reply.trim() : ''
-    if (!reply || reply.length > 450 || /(?:Rp\s*[\d.,]+|rekening|stok (?:ready|tersedia)|pasti selesai)/i.test(reply)) return fallback
+    if (typeof parsed.reply !== 'string') return fallback
+    const reply = parsed.reply.trim()
+    if (!reply) return ''
+    if (reply.length > 450 || /(?:Rp\s*[\d.,]+|rekening|stok (?:ready|tersedia)|pasti selesai)/i.test(reply)) return fallback
     return reply
   } catch {
     return fallback
