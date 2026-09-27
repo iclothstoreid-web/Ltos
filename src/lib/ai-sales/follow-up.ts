@@ -170,6 +170,7 @@ export async function runDueFollowUps(): Promise<{ claimed: number; errors: numb
       .in('key', ['whatsapp_auto_reply_enabled', 'whatsapp_follow_up_enabled'])
     console.warn('AI Sales follow-up disabled', {
       forceDisabled: process.env.WHATSAPP_AI_FORCE_DISABLED === 'true',
+      supabaseHost: process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).host : 'missing',
       settings,
     })
     return { claimed: 0, errors: 0 }
