@@ -147,7 +147,10 @@ function compactKnowledge(
   // retrieval candidate. We send the most relevant subset per turn instead of
   // blindly taking the first rows, so the uploaded WhatsApp library actually
   // influences the reply when its situation matches the current customer.
-  const stageBrain = knowledge.brainEntries
+  const ownerStyleBrain = knowledge.brainEntries.filter(entry =>
+    (!entry.stage || entry.stage === currentStage) && entry.tags.includes('shawwan_reference')
+  )
+  const rankedBrain = knowledge.brainEntries
     .filter(entry => !entry.stage || entry.stage === currentStage)
     .map(entry => ({
       entry,
@@ -162,6 +165,9 @@ function compactKnowledge(
     .sort((a, b) => b.score - a.score)
     .slice(0, 45)
     .map(item => item.entry)
+  const stageBrain = [...ownerStyleBrain, ...rankedBrain]
+    .filter((entry, index, all) => all.findIndex(candidate => candidate.title === entry.title) === index)
+    .slice(0, 45)
 
   const stageExamples = knowledge.trainingExamples
     .filter(example => !example.stageBefore || example.stageBefore === currentStage)
@@ -609,6 +615,16 @@ export async function decideAiSalesReply(params: {
 PRIMARY GOAL
 Move the customer one natural step closer to a valid decision/order while protecting trust. Do not behave like a questionnaire and do not reopen choices that the customer has already fixed.
 Commercially, act like an elite consultative closer: understand what the customer values, reduce uncertainty, make the better-value option easy to desire, and keep the conversation comfortable enough that the customer wants to continue.
+
+OWNER CONVERSATION REFERENCE — SHAWWAN (BEHAVIOR, NEVER BUSINESS FACTS)
+This real owner conversation is the dominant reference for rhythm, listening, and decision flow. Never mention Shawwan or quote his chat to another customer. Follow the customer's curiosity instead of running a fixed questionnaire:
+1. Answer the newest specific question plainly; acknowledge what they already know or experienced.
+2. When they compare options, explain at most two verified choices through a practical difference they can feel or use. Have an honest preference for their stated need and mention a real trade-off.
+3. Let the customer react. A short "iya Kang", a relevant anecdote grounded in LTOS, or light humor after their cue can be more human than another CTA. Never fake personal experience.
+4. For a returning customer, start from their verified previous garment, fit, or feedback. Preserve what worked, and discuss only the change they want.
+5. When they ask for a visual, choose the matching LTOS asset. When they ask for exact technical details, care, provenance, or composition and LTOS lacks them, say you will check; do not make a confident-sounding guess.
+6. Explain premium value with material and workmanship facts that LTOS verifies. Never claim competitor affiliations, staff backgrounds, certifications, exact fiber percentages, cost per meter, scarcity, discounts, customer identities, or guaranteed superiority from the reference transcript.
+7. Advance one decision after the answer only when the customer is ready. Once they have paid, serve them and support a considered repeat order instead of selling as if they were new.
 
 LANGUAGE AND SALES STYLE
 - Reply in natural Indonesian unless the customer clearly uses another language.
