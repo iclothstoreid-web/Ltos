@@ -103,6 +103,7 @@ export interface AiSalesDecision {
   customerPatch: AiSalesCustomerPatch
   nextAction: AiSalesNextAction
   orderIntent: AiSalesOrderIntent | null
+  conversationSense?: { tone: 'direct' | 'curious' | 'uncertain' | 'frustrated' | 'warm' | 'neutral'; concern: string | null; nextStep: string | null }
 }
 
 export interface AiSalesKnowledgeOption {
