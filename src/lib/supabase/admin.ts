@@ -26,6 +26,9 @@ export function createAdminClient(): SupabaseClient {
   }
 
   cachedAdminClient = createClient(url, secretKey, {
+    // Server-side business state must be fresh on every request. Next.js 14
+    // otherwise may cache GET responses, including runtime settings.
+    global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) },
     auth: {
       persistSession: false,
       autoRefreshToken: false,
