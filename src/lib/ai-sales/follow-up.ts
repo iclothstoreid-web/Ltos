@@ -139,6 +139,10 @@ async function processJob(supabase: SupabaseClient, job: FollowUpJob): Promise<v
   const body = windowOpen
     ? await composeContextualFollowUp(conversation, recent ?? [], job.step, fallback)
     : fallback
+  if (windowOpen && !body) {
+    await markJob(supabase, job.id, 'skipped', 'conversation_pause')
+    return
+  }
   try {
     const providerMessageId = windowOpen
       ? await sendWhatsAppText(conversation.external_contact_id, body)
