@@ -2,6 +2,7 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { decideAiSalesReply } from './agent'
 import { loadAiSalesKnowledge } from './knowledge'
+import { recordConversationLearningSignal } from './learning'
 import { cancelPendingFollowUps, scheduleFirstFollowUp } from './follow-up'
 import { selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
 import {
@@ -178,7 +179,8 @@ async function isWhatsAppAutoReplyEnabled(
 function mergeContext(
   conversation: AiSalesConversation,
   customerPatch: AiSalesCustomerPatch,
-  orderIntent: AiSalesOrderIntent | null
+  orderIntent: AiSalesOrderIntent | null,
+  conversationSense?: { tone: string; concern: string | null; nextStep: string | null }
 ): Record<string, unknown> {
   const currentLead =
     conversation.context.lead && typeof conversation.context.lead === 'object'
@@ -189,6 +191,7 @@ function mergeContext(
     ...conversation.context,
     lead: { ...currentLead, ...customerPatch },
     ...(orderIntent ? { orderIntent } : {}),
+    ...(conversationSense ? { conversationSense } : {}),
   }
 }
 
@@ -318,6 +321,15 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // idempotency boundary: never run AI twice or send two replies for one input.
   if (!inserted) return
 
+  // Store an outcome signal for owner review, never as automatic training truth.
+  if (message.text) {
+    const { data: inbound } = await supabase.from('ai_sales_messages')
+      .select('id').eq('provider_message_id', message.providerMessageId).maybeSingle()
+    if (inbound?.id) {
+      await recordConversationLearningSignal(supabase, activeConversation.id, inbound.id, message.text)
+    }
+  }
+
   // A new customer turn makes every pending reminder about the previous turn stale.
   await cancelPendingFollowUps(supabase, activeConversation.id)
 
@@ -384,7 +396,7 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
       knowledge,
     })
 
-    const nextContext = mergeContext(activeConversation, decision.customerPatch, decision.orderIntent)
+    const nextContext = mergeContext(activeConversation, decision.customerPatch, decision.orderIntent, decision.conversationSense)
     const handoff = decision.shouldHandoff || decision.nextAction === 'handoff'
 
     const stillAi = await updateConversationStateIfAi(supabase, activeConversation.id, {

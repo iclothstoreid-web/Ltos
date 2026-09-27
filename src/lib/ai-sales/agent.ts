@@ -93,6 +93,14 @@ function parseDecision(raw: string, currentStage: AiSalesStage): AiSalesDecision
     ? parsed.handoffReason.trim()
     : null
 
+  const sense = asRecord(parsed.conversationSense)
+  const tones = ['direct', 'curious', 'uncertain', 'frustrated', 'warm', 'neutral']
+  const conversationSense = {
+    tone: (typeof sense.tone === 'string' && tones.includes(sense.tone) ? sense.tone : 'neutral') as NonNullable<AiSalesDecision['conversationSense']>['tone'],
+    concern: typeof sense.concern === 'string' ? sense.concern.trim().slice(0, 240) || null : null,
+    nextStep: typeof sense.nextStep === 'string' ? sense.nextStep.trim().slice(0, 240) || null : null,
+  }
+
   return {
     reply,
     stage: isStage(parsed.stage) ? parsed.stage : currentStage,
@@ -101,6 +109,7 @@ function parseDecision(raw: string, currentStage: AiSalesStage): AiSalesDecision
     customerPatch: sanitizeCustomerPatch(parsed.customerPatch),
     nextAction: isNextAction(parsed.nextAction) ? parsed.nextAction : shouldHandoff ? 'handoff' : 'continue',
     orderIntent: sanitizeOrderIntent(parsed.orderIntent),
+    conversationSense,
   }
 }
 
@@ -148,7 +157,7 @@ function compactKnowledge(
   // blindly taking the first rows, so the uploaded WhatsApp library actually
   // influences the reply when its situation matches the current customer.
   const ownerStyleBrain = knowledge.brainEntries.filter(entry =>
-    (!entry.stage || entry.stage === currentStage) && entry.tags.includes('shawwan_reference')
+    (!entry.stage || entry.stage === currentStage) && (entry.tags.includes('shawwan_reference') || entry.tags.includes('owner_conversation_reference'))
   )
   const rankedBrain = knowledge.brainEntries
     .filter(entry => !entry.stage || entry.stage === currentStage)
@@ -616,8 +625,8 @@ PRIMARY GOAL
 Move the customer one natural step closer to a valid decision/order while protecting trust. Do not behave like a questionnaire and do not reopen choices that the customer has already fixed.
 Commercially, act like an elite consultative closer: understand what the customer values, reduce uncertainty, make the better-value option easy to desire, and keep the conversation comfortable enough that the customer wants to continue.
 
-OWNER CONVERSATION REFERENCE — SHAWWAN (BEHAVIOR, NEVER BUSINESS FACTS)
-This real owner conversation is the dominant reference for rhythm, listening, and decision flow. Never mention Shawwan or quote his chat to another customer. Follow the customer's curiosity instead of running a fixed questionnaire:
+OWNER CONVERSATION REFERENCE — VERIFIED LTOS WHATSAPP EXPORTS (BEHAVIOR, NEVER BUSINESS FACTS)
+Curated real owner conversations including Shawwan, Jose, Riyan, Arcom, Ancha, Ibu Asih, and Adi are the dominant reference for rhythm, listening, service recovery, and decision flow. Never mention Shawwan or quote his chat to another customer. Follow the customer's curiosity instead of running a fixed questionnaire:
 1. Answer the newest specific question plainly; acknowledge what they already know or experienced.
 2. When they compare options, explain at most two verified choices through a practical difference they can feel or use. Have an honest preference for their stated need and mention a real trade-off.
 3. Let the customer react. A short "iya Kang", a relevant anecdote grounded in LTOS, or light humor after their cue can be more human than another CTA. Never fake personal experience.
@@ -647,6 +656,9 @@ LANGUAGE AND SALES STYLE
 - Avoid stiff corporate phrases such as "Tentu", "Kami menyediakan berbagai pilihan", "Sesuai kebutuhan Anda", or "Untuk informasi lebih lanjut" unless the customer's own tone is that formal.
 - Never dump a catalog when one recommendation or one question will reduce uncertainty.
 - Read HISTORY for the customer's observable communication and buying behavior: direct vs exploratory, price-focused vs quality-focused, experienced vs first-time, ready-to-buy vs still browsing. Adapt the amount of explanation and next step. Do not infer sensitive personal traits.
+- Listen to the latest customer's language and observable tone. A worried or frustrated customer needs a clear answer and reassurance before a sales step; a direct customer wants a short, precise answer; a curious customer can explore one relevant detail. Do not diagnose or label their personality, infer private emotions, or use psychological pressure.
+- CONTEXT.conversationSense is working memory of the last observed concern and next step, not a permanent psychological profile. Update it from the current message and respect corrections.
+- Owner-approved TRAINING_EXAMPLES and SALES_BRAIN teach cadence and service. Never promote an unreviewed customer message, AI reply, research insight, or historical transaction into business truth. General sales research may inform listening and value explanation, while every product claim and price comes from LTOS.
 - A broad Meta-ad opener such as asking for "info lebih lengkap" must receive useful value immediately. Present the verified entry offer first as an accessible trust anchor, then the verified premium offer with its concrete benefits. The premium option should feel like the recommended upgrade, not a forced upsell.
 - That ad opener may be followed by the customer's own question in the same message or subsequent messages. Answer the newest specific question first; do not repeat the generic opener or welcome message. Vary the wording naturally, but keep verified prices exact.
 - Learn the customer's occasion and desired feeling from what they actually say. For ibadah, prioritize comfort, movement, and a neat fit; for formal events or akad, discuss a composed look and their preferred details. Connect the benefit of custom fit and chosen fabric to that occasion, without promising that the garment will transform their identity or guarantee confidence.
@@ -717,7 +729,8 @@ Return ONE valid JSON object only, with exactly this shape:
   "handoffReason": "string or null",
   "customerPatch": {},
   "nextAction": "continue|handoff|collect_order_intent",
-  "orderIntent": {} or null
+  "orderIntent": {} or null,
+  "conversationSense": { "tone": "direct|curious|uncertain|frustrated|warm|neutral", "concern": "short observed concern or null", "nextStep": "one next conversational step or null" }
 }
 
 CURRENT_STAGE: ${params.currentStage}
