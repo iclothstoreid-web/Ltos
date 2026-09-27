@@ -164,8 +164,21 @@ async function processJob(supabase: SupabaseClient, job: FollowUpJob): Promise<v
 
 export async function runDueFollowUps(): Promise<{ claimed: number; errors: number }> {
   const supabase = createAdminClient()
-  if (!(await enabled(supabase))) return { claimed: 0, errors: 0 }
+  if (!(await enabled(supabase))) {
+    const { data: settings } = await supabase.from('ai_sales_runtime_settings')
+      .select('key, bool_value')
+      .in('key', ['whatsapp_auto_reply_enabled', 'whatsapp_follow_up_enabled'])
+    console.warn('AI Sales follow-up disabled', {
+      forceDisabled: process.env.WHATSAPP_AI_FORCE_DISABLED === 'true',
+      settings,
+    })
+    return { claimed: 0, errors: 0 }
+  }
+  const { count: dueCount } = await supabase.from('ai_sales_follow_up_jobs')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'queued').lte('due_at', new Date().toISOString())
   const { data, error } = await supabase.rpc('ai_sales_claim_due_follow_ups', { p_limit: 20 })
+  if (!data?.length && dueCount) console.error('AI Sales follow-up claim mismatch', { dueCount })
   if (error) throw error
   let errors = 0
   for (const job of (data ?? []) as FollowUpJob[]) {
