@@ -37,7 +37,7 @@ export function buildFollowUpText(context: Record<string, unknown>, step: 1 | 2)
     ? context.lead as Record<string, unknown> : {}
   if (step === 2) return 'Pilihan yang kemarin tetap saya catat. Kalau ingin lanjut, saya bantu dari bagian terakhir yang kita bahas ya.'
   if (lead.fittingPreference) return 'Pilihan desain dan fitting sudah kita catat. Ada satu detail yang ingin dipastikan sebelum lanjut?'
-  if (lead.pocket && lead.placket && lead.cuff) return 'Saku, plaket, dan lengan pilihan tadi sudah saya catat. Kerahnya mau tetap mengikuti referensi yang dipilih?'
+  if (lead.pocket && lead.placket && lead.cuff) return 'Saku, plaket, dan lengan pilihan tadi sudah saya catat. Kerahnya sudah ada arah yang disukai?'
   if (lead.model && lead.fabric) return 'Arah model dan bahannya sudah kita dapat. Mau saya bantu tentukan satu detail kerah yang paling cocok?'
   if (lead.model) return 'Model yang tadi disukai sudah saya catat. Mau lanjut pilih bahan yang nyaman untuk pemakaiannya?'
   if (lead.occasion) return 'Untuk kebutuhan yang tadi diceritakan, saya bisa bantu pilih satu arah model. Ada referensi yang paling disukai?'
