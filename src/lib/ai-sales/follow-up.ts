@@ -1,6 +1,7 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { composeContextualFollowUp } from './follow-up-compose'
 import { appendOutboundMessage, createSalesAction } from './repository'
 import { sendWhatsAppTemplate, sendWhatsAppText } from './whatsapp'
 import type { AiSalesConversation } from './types'
@@ -34,12 +35,13 @@ export function serviceWindowOpen(inboundAt: string, now: number): boolean {
 export function buildFollowUpText(context: Record<string, unknown>, step: 1 | 2): string {
   const lead = context.lead && typeof context.lead === 'object'
     ? context.lead as Record<string, unknown> : {}
-  if (step === 2) return 'Kang, yang kemarin masih saya simpan ya. Kalau mau lanjut, tinggal chat aja — nggak perlu mulai dari awal.'
-  if (lead.fittingPreference) return 'Kang, pilihan thobe dan cara fitting yang tadi kita bahas sudah tercatat. Ada detail yang ingin dipastikan sebelum saya bantu lanjut ke invoice?'
-  if (lead.model && lead.fabric) return 'Kang, arah model dan bahannya sudah kita dapat. Kalau berkenan, saya bantu pilih detail kerah yang paling pas supaya desainnya makin jelas ya?'
-  if (lead.model) return 'Kang, model yang tadi kita bahas sudah jadi arah awal yang bagus. Mau saya bantu pilih bahan yang nyaman untuk pemakaiannya?'
-  if (lead.occasion) return 'Kang, untuk kebutuhan yang tadi Kang ceritakan, saya bisa bantu pilih model yang paling sesuai. Sudah ada referensi yang disukai?'
-  return 'Kang, tadi sempat lihat custom thobenya ya. Kalau masih ada yang bikin ragu, bilang aja — saya bantu cek satu-satu.'
+  if (step === 2) return 'Pilihan yang kemarin tetap saya catat. Kalau ingin lanjut, saya bantu dari bagian terakhir yang kita bahas ya.'
+  if (lead.fittingPreference) return 'Pilihan desain dan fitting sudah kita catat. Ada satu detail yang ingin dipastikan sebelum lanjut?'
+  if (lead.pocket && lead.placket && lead.cuff) return 'Saku, plaket, dan lengan pilihan tadi sudah saya catat. Kerahnya sudah ada arah yang disukai?'
+  if (lead.model && lead.fabric) return 'Arah model dan bahannya sudah kita dapat. Mau saya bantu tentukan satu detail kerah yang paling cocok?'
+  if (lead.model) return 'Model yang tadi disukai sudah saya catat. Mau lanjut pilih bahan yang nyaman untuk pemakaiannya?'
+  if (lead.occasion) return 'Untuk kebutuhan yang tadi diceritakan, saya bisa bantu pilih satu arah model. Ada referensi yang paling disukai?'
+  return 'Kalau masih mempertimbangkan thobe customnya, saya bisa bantu dari pertanyaan terakhir tadi. Bagian mana yang ingin dilihat lebih dekat?'
 }
 
 export function shouldPauseFollowUp(text: string): boolean {
@@ -133,7 +135,14 @@ async function processJob(supabase: SupabaseClient, job: FollowUpJob): Promise<v
     return
   }
 
-  const body = buildFollowUpText(conversation.context, job.step)
+  const fallback = buildFollowUpText(conversation.context, job.step)
+  const body = windowOpen
+    ? await composeContextualFollowUp(conversation, recent ?? [], job.step, fallback)
+    : fallback
+  if (windowOpen && !body) {
+    await markJob(supabase, job.id, 'skipped', 'conversation_pause')
+    return
+  }
   try {
     const providerMessageId = windowOpen
       ? await sendWhatsAppText(conversation.external_contact_id, body)
@@ -163,22 +172,8 @@ async function processJob(supabase: SupabaseClient, job: FollowUpJob): Promise<v
 
 export async function runDueFollowUps(): Promise<{ claimed: number; errors: number }> {
   const supabase = createAdminClient()
-  if (!(await enabled(supabase))) {
-    const { data: settings } = await supabase.from('ai_sales_runtime_settings')
-      .select('key, bool_value')
-      .in('key', ['whatsapp_auto_reply_enabled', 'whatsapp_follow_up_enabled'])
-    console.warn('AI Sales follow-up disabled', {
-      forceDisabled: process.env.WHATSAPP_AI_FORCE_DISABLED === 'true',
-      supabaseHost: process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).host : 'missing',
-      settings,
-    })
-    return { claimed: 0, errors: 0 }
-  }
-  const { count: dueCount } = await supabase.from('ai_sales_follow_up_jobs')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'queued').lte('due_at', new Date().toISOString())
-  const { data, error } = await supabase.rpc('ai_sales_claim_due_follow_ups', { p_limit: 20 })
-  if (!data?.length && dueCount) console.error('AI Sales follow-up claim mismatch', { dueCount })
+  if (!(await enabled(supabase))) return { claimed: 0, errors: 0 }
+  const { data, error } = await supabase.rpc('ai_sales_claim_due_follow_ups', { p_limit: 8 })
   if (error) throw error
   let errors = 0
   for (const job of (data ?? []) as FollowUpJob[]) {
