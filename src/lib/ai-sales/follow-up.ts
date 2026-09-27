@@ -48,12 +48,11 @@ export function shouldPauseFollowUp(text: string): boolean {
 
 async function enabled(supabase: SupabaseClient): Promise<boolean> {
   if (process.env.WHATSAPP_AI_FORCE_DISABLED === 'true') return false
-  const { data, error } = await supabase.from('ai_sales_runtime_settings')
-    .select('key, bool_value')
-    .in('key', ['whatsapp_auto_reply_enabled', 'whatsapp_follow_up_enabled'])
+  // RPC is a POST and reads both runtime switches in one fresh DB snapshot.
+  // GET reads were observed stale in the production Next.js runtime.
+  const { data, error } = await supabase.rpc('ai_sales_follow_up_runtime_enabled')
   if (error) throw error
-  return ['whatsapp_auto_reply_enabled', 'whatsapp_follow_up_enabled']
-    .every(key => data?.some(row => row.key === key && row.bool_value === true))
+  return data === true
 }
 
 export async function cancelPendingFollowUps(supabase: SupabaseClient, conversationId: string): Promise<void> {
