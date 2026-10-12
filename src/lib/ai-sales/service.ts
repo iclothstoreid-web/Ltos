@@ -444,10 +444,11 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   if (['reaction', 'sticker'].includes(message.type)) return
 
   if (message.type === 'image' && !message.text) {
+    const address = handoffAddress(currentPreferredAddress(activeConversation.context))
     await sendAndPersist(
       activeConversation.id,
       message.from,
-      'Fotonya sudah masuk, Kang 🙏 Kang mau tanya soal model, bahan, atau harganya?'
+      `Fotonya sudah masuk, ${address} 🙏 Mau tanya soal model, bahan, atau harganya?`
     )
     return
   }
