@@ -274,7 +274,7 @@ export async function processWhatsAppStatusUpdate(status: WhatsAppStatusUpdate):
 export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Promise<void> {
   const supabase = createAdminClient()
   const conversation = await getOrCreateConversation(supabase, echo.to)
-  const { error } = await supabase.from('ai_sales_messages').insert({
+  const { data: humanMessage, error } = await supabase.from('ai_sales_messages').insert({
     conversation_id: conversation.id,
     direction: 'outbound',
     role: 'human',
@@ -283,9 +283,18 @@ export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Pro
     text_content: echo.text || null,
     raw_payload: echo.rawPayload,
     delivery_status: 'sent',
-  })
+  }).select('id, created_at').single()
   if (error?.code === '23505') return
   if (error) throw error
+
+  if (echo.text && humanMessage?.created_at) {
+    await captureHumanCorrectionCandidate(
+      supabase,
+      conversation.id,
+      echo.text,
+      humanMessage.created_at
+    ).catch(() => undefined)
+  }
 
   await updateConversationState(supabase, conversation.id, {
     mode: 'human',
