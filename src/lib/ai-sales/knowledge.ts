@@ -17,7 +17,7 @@ function sanitizeOwnerExampleText(value: unknown): string {
     .replace(/\b(?:\+?62|0)[0-9\s-]{8,16}\b/g, '[nomor]')
     .replace(/\b(?:rekening|rek|account)\s*[:.-]?\s*\d{6,20}\b/gi, '[rekening]')
     .replace(/\bRp\.?\s*[0-9][0-9.,\s]*(?:jt|juta|rb|ribu|k)?\b/gi, '[harga]')
-    .replace(/\b(?:Pak|Bapak|Kang|Kak|Mas|Bang|Ustadz|Ustad)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ.'’-]{1,40}\b/g, '$1')
+    .replace(/\b(Pak|Bapak|Kang|Kak|Mas|Bang|Ustadz|Ustad)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ.'’-]{1,40}\b/g, '$1')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 900)
