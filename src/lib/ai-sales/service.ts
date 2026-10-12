@@ -197,6 +197,57 @@ function plannedMediaForAgent(assets: AiSalesMediaAsset[]) {
   }))
 }
 
+async function captureHumanCorrectionCandidate(
+  supabase: ReturnType<typeof createAdminClient>,
+  conversationId: string,
+  humanText: string,
+  humanCreatedAt: string
+): Promise<void> {
+  const text = humanText.trim()
+  if (text.length < 8) return
+
+  const { data: previousAssistant } = await supabase
+    .from('ai_sales_messages')
+    .select('id, created_at')
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'outbound')
+    .eq('role', 'assistant')
+    .lt('created_at', humanCreatedAt)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const { data: latestInbound } = await supabase
+    .from('ai_sales_messages')
+    .select('created_at')
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'inbound')
+    .lt('created_at', humanCreatedAt)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!previousAssistant?.id || !previousAssistant.created_at || !latestInbound?.created_at) return
+
+  const humanAt = new Date(humanCreatedAt).getTime()
+  const assistantAt = new Date(previousAssistant.created_at).getTime()
+  const inboundAt = new Date(latestInbound.created_at).getTime()
+  if (![humanAt, assistantAt, inboundAt].every(Number.isFinite)) return
+  if (assistantAt < inboundAt || humanAt - assistantAt > 15 * 60 * 1000) return
+
+  await supabase.from('ai_sales_message_reviews').upsert(
+    {
+      message_id: previousAssistant.id,
+      verdict: 'candidate',
+      corrected_reply: text,
+      notes: 'Auto-captured human takeover candidate. Owner review required before training.',
+      reviewed_by: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'message_id' }
+  )
+}
+
 export async function processWhatsAppStatusUpdate(status: WhatsAppStatusUpdate): Promise<void> {
   const supabase = createAdminClient()
   const { conversationId } = await updateOutboundDeliveryStatus(
