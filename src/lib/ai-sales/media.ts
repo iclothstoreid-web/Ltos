@@ -255,6 +255,9 @@ export async function selectAiSalesMediaAssets(
     desiredColors.push(normalize(params.lead.color))
   }
 
+  let categories = detectedCategories(customerText)
+  if (!categories.length) categories = [leadModel ? 'model' : 'model']
+
   const exactFabricMention = assets
     .map(asset => asset.fabricName)
     .filter((value): value is string => Boolean(value))
@@ -302,9 +305,6 @@ export async function selectAiSalesMediaAssets(
       .sort((a, b) => lexicalScore(b, customerText) - lexicalScore(a, customerText) || b.priority - a.priority)
       .slice(0, wantsMultipleVisuals(customerText) ? 3 : 1)
   }
-
-  let categories = detectedCategories(customerText)
-  if (!categories.length) categories = [leadModel ? 'model' : 'model']
 
   // "contoh model/bahan" can legitimately need two separate proofs. Send each as
   // a separate reference instead of returning nothing and leaving the agent to promise a photo.
