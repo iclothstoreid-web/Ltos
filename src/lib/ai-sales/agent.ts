@@ -27,7 +27,7 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function sanitizeCustomerPatch(value: unknown): AiSalesCustomerPatch {
   const source = asRecord(value)
-  const keys: Array<keyof AiSalesCustomerPatch> = [
+  const keys: Array<Exclude<keyof AiSalesCustomerPatch, 'preferredAddress'>> = [
     'name',
     'phone',
     'city',
