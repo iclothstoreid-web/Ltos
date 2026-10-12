@@ -243,6 +243,15 @@ function getBusinessFactValue(knowledge: AiSalesKnowledge, key: string): string 
   return fact?.value?.trim() || null
 }
 
+function getPreferredAddress(context: Record<string, unknown>): string {
+  const lead = asRecord(context.lead)
+  const value = lead.preferredAddress
+  return typeof value === 'string' &&
+    ['Pak', 'Bapak', 'Kang', 'Kak', 'Mas', 'Bang', 'Ustadz'].includes(value)
+    ? value
+    : 'Kang'
+}
+
 function asksForShowroomAddress(raw: string): boolean {
   const text = raw.trim()
   if (/^(?:alamat|lokasi|showroom)(?:\s+local\s+tailor)?(?:nya)?\s*[?.!]*$/i.test(text)) return true
@@ -254,6 +263,7 @@ function asksForShowroomAddress(raw: string): boolean {
 
 function buildDirectShowroomAddressDecision(params: {
   currentStage: AiSalesStage
+  context: Record<string, unknown>
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
 }): AiSalesDecision | null {
@@ -273,8 +283,9 @@ function buildDirectShowroomAddressDecision(params: {
     }
   }
 
+  const salutation = getPreferredAddress(params.context)
   return {
-    reply: `Siap Kang. Showroom kita di ${address} 🙏`,
+    reply: `Siap ${salutation}. Showroom kita di ${address} 🙏`,
     stage: params.currentStage,
     shouldHandoff: false,
     handoffReason: null,
@@ -286,6 +297,7 @@ function buildDirectShowroomAddressDecision(params: {
 
 function buildDirectPhotoPriceDecision(params: {
   currentStage: AiSalesStage
+  context: Record<string, unknown>
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
 }): AiSalesDecision | null {
@@ -306,8 +318,9 @@ function buildDirectPhotoPriceDecision(params: {
   const pricingPolicy = getBusinessFactValue(params.knowledge, 'custom_model_pricing_policy')
   if (tiers.some(value => !value) || !pricingPolicy) return null
 
+  const salutation = getPreferredAddress(params.context)
   return {
-    reply: `Kalau yang Kang maksud foto tadi, harga custom mengikuti bahan, bukan modelnya 🙏\n\n${tiers.join('\n')}\n\nKang paling tertarik bahan yang mana untuk model ini?`,
+    reply: `Kalau yang ${salutation} maksud foto tadi, harga custom mengikuti bahan, bukan modelnya 🙏\n\n${tiers.join('\n')}\n\nPaling tertarik bahan yang mana untuk model ini?`,
     stage: params.currentStage === 'new' ? 'qualified' : params.currentStage,
     shouldHandoff: false,
     handoffReason: null,
@@ -331,8 +344,9 @@ function buildDirectSizeDecision(params: {
   const city = getContextString(params.context, 'city')
   const inBandung = city ? /bandung/i.test(city) : false
 
+  const salutation = getPreferredAddress(params.context)
   let reply =
-    `Siap Kang. ${sizeLabel} kita jadikan referensi awal ya, tapi ukuran akhirnya tetap custom sebelum produksi. `
+    `Siap ${salutation}. ${sizeLabel} kita jadikan referensi awal ya, tapi ukuran akhirnya tetap custom sebelum produksi. `
 
   if (city && inBandung) {
     reply +=
@@ -342,7 +356,7 @@ function buildDirectSizeDecision(params: {
       `Karena Kang di ${city}, bisa fitting online lewat video call atau pakai thobe yang ukurannya sudah nyaman sebagai acuan.`
   } else {
     reply +=
-      'Kalau di area Bandung bisa ukur langsung di studio/showroom. Kalau di luar Bandung, bisa fitting online lewat video call atau pakai thobe yang ukurannya sudah nyaman sebagai acuan. Kang domisilinya di Bandung atau luar Bandung?'
+      'Kalau di area Bandung bisa ukur langsung di studio/showroom. Kalau di luar Bandung, bisa fitting online lewat video call atau pakai thobe yang ukurannya sudah nyaman sebagai acuan. Domisilinya di Bandung atau luar Bandung?'
   }
 
   return {
