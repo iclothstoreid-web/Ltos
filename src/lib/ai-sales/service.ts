@@ -458,19 +458,159 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   }
 
   try {
-    const [history, knowledge] = await Promise.all([
-      listRecentMessages(supabase, activeConversation.id),
+    const [history, knowledge, sentAssetKeys] = await Promise.all([
+      listRecentMessages(supabase, activeConversation.id, 32),
       loadAiSalesKnowledge(supabase),
+      listSentMediaAssetKeys(supabase, activeConversation.id),
     ])
+
+    const customerTurnText = latestCustomerTurnText(history) || message.text
+    const existingAddress = currentPreferredAddress(activeConversation.context)
+    const preferredAddress = inferPreferredAddress(customerTurnText, existingAddress)
+    const existingLead =
+      activeConversation.context.lead && typeof activeConversation.context.lead === 'object'
+        ? activeConversation.context.lead as Record<string, unknown>
+        : {}
+    const workingContext: Record<string, unknown> = {
+      ...activeConversation.context,
+      lead: {
+        ...existingLead,
+        ...(preferredAddress ? { preferredAddress } : {}),
+      },
+    }
+    const workingConversation: AiSalesConversation = {
+      ...activeConversation,
+      context: workingContext,
+    }
+    const address = handoffAddress(preferredAddress)
+
+    // Explicit requests for a person, or clear "this bot is looping" feedback,
+    // are deterministic handoffs. Do not ask the model whether it should keep talking.
+    if (asksForHumanSeller(customerTurnText) || isConversationLoopFrustration(customerTurnText)) {
+      const reason = asksForHumanSeller(customerTurnText)
+        ? 'customer_requested_human'
+        : 'conversation_loop_frustration'
+      await updateConversationState(supabase, activeConversation.id, {
+        mode: 'human',
+        handoffReason: reason,
+        context: workingContext,
+      })
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'handoff',
+        { reason, customerTurnText },
+        'executed'
+      )
+      await sendAndPersist(
+        activeConversation.id,
+        message.from,
+        `Siap ${address} 🙏 Saya sambungkan ke admin ya. Biar lanjutannya langsung ditangani orang dan nggak muter lagi.`
+      )
+      return
+    }
+
+    // Women's garments are not yet represented by a verified LTOS visual/product
+    // library. Handle the thobe context honestly, then give the couple request to a human.
+    if (asksUnsupportedWomensGarment(customerTurnText)) {
+      const reason = 'womens_garment_requires_human'
+      await updateConversationState(supabase, activeConversation.id, {
+        mode: 'human',
+        handoffReason: reason,
+        context: workingContext,
+      })
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'handoff',
+        { reason, customerTurnText },
+        'executed'
+      )
+      await sendAndPersist(
+        activeConversation.id,
+        message.from,
+        `Siap ${address} 🙏 Untuk thobe-nya bisa kami bantu di sini. Untuk abaya/gamis wanitanya saya sambungkan ke admin supaya referensi dan arahnya benar, nggak saya tebak-tebak.`
+      )
+      return
+    }
+
+    const visualRequested = isAiSalesVisualRequest(customerTurnText)
+    let mediaAssets: AiSalesMediaAsset[] = []
+    try {
+      mediaAssets = await selectAiSalesMediaAssets(supabase, {
+        customerText: customerTurnText,
+        currentStage: activeConversation.stage,
+        sentAssetKeys,
+        lead: workingContext.lead && typeof workingContext.lead === 'object'
+          ? workingContext.lead as Record<string, unknown>
+          : {},
+      })
+    } catch (mediaSelectError) {
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'media_select_failed',
+        { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
+        'failed'
+      )
+      if (visualRequested) {
+        await updateConversationState(supabase, activeConversation.id, {
+          mode: 'human',
+          handoffReason: 'visual_selection_failed',
+          context: workingContext,
+        })
+        await sendAndPersist(
+          activeConversation.id,
+          message.from,
+          `Sebentar ya ${address} 🙏 Referensi gambarnya lagi nggak kebaca dengan benar. Saya sambungkan ke admin biar dikirim yang tepat.`
+        )
+        return
+      }
+    }
+
+    // A visual request must result in a real selected asset or an honest handoff.
+    // The AI is never allowed to promise an image that the execution layer cannot send.
+    if (visualRequested && mediaAssets.length === 0) {
+      const reason = 'verified_visual_not_available'
+      await updateConversationState(supabase, activeConversation.id, {
+        mode: 'human',
+        handoffReason: reason,
+        context: workingContext,
+      })
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'handoff',
+        { reason, customerTurnText },
+        'executed'
+      )
+      await sendAndPersist(
+        activeConversation.id,
+        message.from,
+        `Siap ${address} 🙏 Untuk referensi yang persis itu belum ada di library gambar yang sudah terverifikasi. Saya sambungkan ke admin biar dikirim visual yang benar, bukan asal gambar.`
+      )
+      return
+    }
 
     const decision = await decideAiSalesReply({
       currentStage: activeConversation.stage,
-      context: activeConversation.context,
+      context: workingContext,
       history,
       knowledge,
+      visualRequested,
+      plannedMedia: plannedMediaForAgent(mediaAssets),
     })
 
-    const nextContext = mergeContext(activeConversation, decision.customerPatch, decision.orderIntent, decision.conversationSense)
+    if (preferredAddress && !decision.customerPatch.preferredAddress) {
+      decision.customerPatch.preferredAddress = preferredAddress
+    }
+
+    const nextContext = mergeContext(
+      workingConversation,
+      decision.customerPatch,
+      decision.orderIntent,
+      decision.conversationSense
+    )
     const handoff = decision.shouldHandoff || decision.nextAction === 'handoff'
 
     const stillAi = await updateConversationStateIfAi(supabase, activeConversation.id, {
@@ -503,99 +643,119 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     }
 
     try {
-      // A reply sent from the WhatsApp Business App may have taken over while
-      // the AI was composing its response. Do not speak over the human seller.
       if (!handoff && !(await isConversationAi(supabase, activeConversation.id))) return
 
+      const nextAddress = currentPreferredAddress(nextContext)
       const reply = personalizeFirstReply(
         decision.reply,
         activeConversation.customer_name,
         identity?.isExistingCustomer ?? false,
-        shouldGreetByName(previousInboundAt)
+        shouldGreetByName(previousInboundAt),
+        nextAddress
       )
-      await wait(humanReplyDelayMs(reply, message.providerMessageId))
+      const isStarterSequence =
+        mediaAssets.length > 1 && mediaAssets.every(asset => asset.isStarter)
+      let sentMediaCount = 0
 
-      // The customer may add one more message while the reply is being composed.
-      // Never send an answer to an already-superseded turn.
-      if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) {
-        return
+      const sendSelectedMedia = async (): Promise<number> => {
+        let count = 0
+        for (const asset of mediaAssets) {
+          if (!(await isConversationAi(supabase, activeConversation.id))) break
+          if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) break
+          try {
+            await sendImageAndPersist(
+              activeConversation.id,
+              message.from,
+              asset,
+              isStarterSequence ? '' : undefined
+            )
+            count += 1
+            await createSalesAction(
+              supabase,
+              activeConversation.id,
+              'media_sent',
+              {
+                assetKey: asset.assetKey,
+                category: asset.category,
+                title: asset.title,
+                starterSequence: isStarterSequence,
+                visualRequested,
+              },
+              'executed'
+            )
+          } catch (mediaSendError) {
+            await createSalesAction(
+              supabase,
+              activeConversation.id,
+              'media_send_failed',
+              {
+                assetKey: asset.assetKey,
+                reason: mediaSendError instanceof Error ? mediaSendError.message : String(mediaSendError),
+              },
+              'failed'
+            )
+          }
+        }
+        return count
       }
+
+      await wait(humanReplyDelayMs(reply, message.providerMessageId))
+      if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) return
       if (!handoff && !(await isConversationAi(supabase, activeConversation.id))) return
 
-      await sendAndPersist(activeConversation.id, message.from, reply)
-
-      if (!handoff) {
-        try {
-          const sentAssetKeys = await listSentMediaAssetKeys(supabase, activeConversation.id)
-          const mediaAssets = await selectAiSalesMediaAssets(supabase, {
-            customerText: message.text,
-            currentStage: activeConversation.stage,
-            sentAssetKeys,
-            lead: nextContext.lead && typeof nextContext.lead === 'object'
-              ? nextContext.lead as Record<string, unknown>
-              : {},
+      // Explicit image requests are action-first: deliver the real visual before
+      // the text reply. This makes "lihat contoh" behave like a human salesperson,
+      // not a bot promising a future attachment.
+      if (visualRequested && !handoff) {
+        sentMediaCount = await sendSelectedMedia()
+        if (sentMediaCount === 0) {
+          await updateConversationState(supabase, activeConversation.id, {
+            mode: 'human',
+            handoffReason: 'visual_delivery_failed',
+            context: nextContext,
           })
-
-          const isStarterSequence =
-            mediaAssets.length > 1 && mediaAssets.every(asset => asset.isStarter)
-          let sentMediaCount = 0
-
-          for (const asset of mediaAssets) {
-            if (!(await isConversationAi(supabase, activeConversation.id))) break
-            try {
-              await sendImageAndPersist(
-                activeConversation.id,
-                message.from,
-                asset,
-                isStarterSequence ? '' : undefined
-              )
-              sentMediaCount += 1
-              await createSalesAction(
-                supabase,
-                activeConversation.id,
-                'media_sent',
-                {
-                  assetKey: asset.assetKey,
-                  category: asset.category,
-                  title: asset.title,
-                  starterSequence: isStarterSequence,
-                },
-                'executed'
-              )
-            } catch (mediaSendError) {
-              await createSalesAction(
-                supabase,
-                activeConversation.id,
-                'media_send_failed',
-                {
-                  assetKey: asset.assetKey,
-                  reason: mediaSendError instanceof Error ? mediaSendError.message : String(mediaSendError),
-                },
-                'failed'
-              )
-            }
-          }
-
-          if (
-            isStarterSequence &&
-            sentMediaCount >= 3 &&
-            (await isConversationAi(supabase, activeConversation.id)) &&
-            (await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))
-          ) {
-            await wait(650)
-            await sendAndPersist(activeConversation.id, message.from, STARTER_MEDIA_HOOK)
-          }
-        } catch (mediaSelectError) {
           await createSalesAction(
             supabase,
             activeConversation.id,
-            'media_select_failed',
-            { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
-            'failed'
+            'handoff',
+            { reason: 'visual_delivery_failed' },
+            'executed'
           )
+          await sendAndPersist(
+            activeConversation.id,
+            message.from,
+            `Maaf ${handoffAddress(nextAddress)} 🙏 Gambarnya gagal terkirim. Saya sambungkan ke admin biar langsung dikirim manual.`
+          )
+          return
         }
+        await wait(350)
+        if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) return
+        await sendAndPersist(activeConversation.id, message.from, reply)
+      } else {
+        await sendAndPersist(activeConversation.id, message.from, reply)
+        if (!handoff && mediaAssets.length) {
+          sentMediaCount = await sendSelectedMedia()
+        }
+      }
+
+      if (
+        !visualRequested &&
+        isStarterSequence &&
+        sentMediaCount >= 3 &&
+        (await isConversationAi(supabase, activeConversation.id)) &&
+        (await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))
+      ) {
+        await wait(650)
+        await sendAndPersist(
+          activeConversation.id,
+          message.from,
+          STARTER_MEDIA_HOOK.replace(/Kang/g, handoffAddress(nextAddress))
+        )
+      }
+
+      if (!handoff) {
         try {
-          await scheduleFirstFollowUp(supabase, activeConversation.id, message.text)
+          await scheduleFirstFollowUp(supabase, activeConversation.id, customerTurnText)
         } catch (followUpError) {
           await createSalesAction(supabase, activeConversation.id, 'follow_up_schedule_failed', {
             reason: followUpError instanceof Error ? followUpError.message : String(followUpError),
