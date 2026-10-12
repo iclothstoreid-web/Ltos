@@ -23,6 +23,7 @@ import { sendWhatsAppImage, sendWhatsAppText, setWhatsAppReadAndTyping } from '.
 import type {
   AiSalesConversation,
   AiSalesCustomerPatch,
+  AiSalesMessage,
   AiSalesOrderIntent,
   WhatsAppInboundMessage,
   WhatsAppMessageEcho,
