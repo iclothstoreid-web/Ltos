@@ -87,6 +87,13 @@ function preventBareNameAddress(
   return next
 }
 
+function alignPreferredAddress(reply: string, preferredAddress?: PreferredAddress | null): string {
+  if (!preferredAddress || preferredAddress === 'Kang') return reply
+  return reply
+    .replace(/\bKangBro\b/gi, preferredAddress)
+    .replace(/\bKang\b/gi, preferredAddress)
+}
+
 function personalizeFirstReply(
   reply: string,
   displayName: string | null,
@@ -94,13 +101,14 @@ function personalizeFirstReply(
   greet: boolean,
   preferredAddress?: PreferredAddress | null
 ): string {
+  const alignedReply = alignPreferredAddress(reply, preferredAddress)
   const name = cleanCustomerName(displayName)
-  if (!name) return reply
+  if (!name) return alignedReply
 
-  if (!greet) return preventBareNameAddress(reply, name, preferredAddress)
+  if (!greet) return preventBareNameAddress(alignedReply, name, preferredAddress)
 
   const addressedName = respectfulCustomerName(name, preferredAddress)
-  const cleanedReply = reply
+  const cleanedReply = alignedReply
     .replace(
       /^(?:assalamu['’]?alaikum|bismillaah),?\s*(?:siap|halo|hai|senang bisa bantu lagi)?(?:\s+(?:kangbro|kang|kak|pak|bapak|mas|bang|bro|ustadz|ustad))?(?:\s+[A-Za-zÀ-ÖØ-öø-ÿ.'’ -]{1,80})?\s*[🙏🙂😊!,.]*\s*/i,
       ''
