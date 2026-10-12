@@ -4,7 +4,7 @@ import { decideAiSalesReply } from './agent'
 import { loadAiSalesKnowledge } from './knowledge'
 import { recordConversationLearningSignal } from './learning'
 import { cancelPendingFollowUps, scheduleFirstFollowUp } from './follow-up'
-import { selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
+import { isAiSalesVisualRequest, selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
 import {
   appendInboundMessage,
   appendOutboundMessage,
@@ -23,13 +23,14 @@ import { sendWhatsAppImage, sendWhatsAppText, setWhatsAppReadAndTyping } from '.
 import type {
   AiSalesConversation,
   AiSalesCustomerPatch,
+  AiSalesMessage,
   AiSalesOrderIntent,
   WhatsAppInboundMessage,
   WhatsAppMessageEcho,
   WhatsAppStatusUpdate,
 } from './types'
 
-const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
+const HUMAN_FALLBACK = 'Siap, sebentar ya 🙏 Saya sambungkan ke admin biar lanjutannya langsung ditangani.'
 const STARTER_MEDIA_HOOK = 'Nah, biasanya dari detail begini customer mulai kebayang thobe yang dia mau. Ada yang paling kena di selera Kang?'
 
 const REOPEN_GREETING_MS = 12 * 60 * 60 * 1000
@@ -50,15 +51,21 @@ function hasRespectfulTitle(name: string): boolean {
   return /^(?:kangbro|kang|pak|bapak|mas|bang|kak|ustadz|ustad|haji|h\.)\b/i.test(name)
 }
 
-function respectfulCustomerName(name: string): string {
-  return hasRespectfulTitle(name) ? name : 'Kang ' + name
+type PreferredAddress = NonNullable<AiSalesCustomerPatch['preferredAddress']>
+
+function respectfulCustomerName(name: string, preferredAddress?: PreferredAddress | null): string {
+  return hasRespectfulTitle(name) ? name : (preferredAddress ?? 'Kang') + ' ' + name
 }
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^$()|[\]\\]/g, '\\$&')
 }
 
-function preventBareNameAddress(reply: string, displayName: string | null): string {
+function preventBareNameAddress(
+  reply: string,
+  displayName: string | null,
+  preferredAddress?: PreferredAddress | null
+): string {
   const name = cleanCustomerName(displayName)
   if (!name || hasRespectfulTitle(name)) return reply
 
@@ -75,24 +82,33 @@ function preventBareNameAddress(reply: string, displayName: string | null): stri
 
   let next = reply
   for (const pattern of patterns) {
-    next = next.replace(pattern, (_match, prefix: string) => prefix + 'Kang ' + name)
+    next = next.replace(pattern, (_match, prefix: string) => prefix + (preferredAddress ?? 'Kang') + ' ' + name)
   }
   return next
+}
+
+function alignPreferredAddress(reply: string, preferredAddress?: PreferredAddress | null): string {
+  if (!preferredAddress || preferredAddress === 'Kang') return reply
+  return reply
+    .replace(/\bKangBro\b/gi, preferredAddress)
+    .replace(/\bKang\b/gi, preferredAddress)
 }
 
 function personalizeFirstReply(
   reply: string,
   displayName: string | null,
   isExistingCustomer: boolean,
-  greet: boolean
+  greet: boolean,
+  preferredAddress?: PreferredAddress | null
 ): string {
+  const alignedReply = alignPreferredAddress(reply, preferredAddress)
   const name = cleanCustomerName(displayName)
-  if (!name) return reply
+  if (!name) return alignedReply
 
-  if (!greet) return preventBareNameAddress(reply, name)
+  if (!greet) return preventBareNameAddress(alignedReply, name, preferredAddress)
 
-  const addressedName = respectfulCustomerName(name)
-  const cleanedReply = reply
+  const addressedName = respectfulCustomerName(name, preferredAddress)
+  const cleanedReply = alignedReply
     .replace(
       /^(?:assalamu['’]?alaikum|bismillaah),?\s*(?:siap|halo|hai|senang bisa bantu lagi)?(?:\s+(?:kangbro|kang|kak|pak|bapak|mas|bang|bro|ustadz|ustad))?(?:\s+[A-Za-zÀ-ÖØ-öø-ÿ.'’ -]{1,80})?\s*[🙏🙂😊!,.]*\s*/i,
       ''
@@ -112,6 +128,124 @@ function humanReplyDelayMs(text: string, providerMessageId: string): number {
 
 function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function latestCustomerTurnText(history: AiSalesMessage[]): string {
+  const turn: string[] = []
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const message = history[index]
+    if (message.role !== 'customer') break
+    if (message.text_content?.trim()) turn.unshift(message.text_content.trim())
+  }
+  return turn.join('\n').trim()
+}
+
+function currentPreferredAddress(context: Record<string, unknown>): PreferredAddress | null {
+  const lead = context.lead && typeof context.lead === 'object'
+    ? context.lead as Record<string, unknown>
+    : {}
+  const value = lead.preferredAddress
+  return typeof value === 'string' &&
+    ['Pak', 'Bapak', 'Kang', 'Kak', 'Mas', 'Bang', 'Ustadz'].includes(value)
+    ? value as PreferredAddress
+    : null
+}
+
+function inferPreferredAddress(text: string, existing: PreferredAddress | null): PreferredAddress | null {
+  if (/\b(?:saya|aku|ana)\s+(?:akhwat|perempuan|wanita)\b/i.test(text)) return 'Kak'
+  const requested = text.match(/\b(?:panggil|sapaan|sebut)\s+(?:saya|aku|ana)?\s*(pak|bapak|kang|kak|mas|bang|ustadz)\b/i)?.[1]
+  if (requested) {
+    const normalized: Record<string, PreferredAddress> = {
+      pak: 'Pak',
+      bapak: 'Bapak',
+      kang: 'Kang',
+      kak: 'Kak',
+      mas: 'Mas',
+      bang: 'Bang',
+      ustadz: 'Ustadz',
+    }
+    return normalized[requested.toLowerCase()] ?? existing
+  }
+  return existing
+}
+
+function asksForHumanSeller(text: string): boolean {
+  return /(?:minta|mau|ingin|boleh|bisa).{0,24}(?:admin|orang(?:nya)?|manusia|sales(?:nya)?|cs\b)|(?:admin|orang(?:nya)?|manusia|sales(?:nya)?).{0,24}(?:dong|aja|saja|langsung|tolong)|bukan\s+(?:bot|ai)|ngobrol\s+(?:sama|dengan)\s+(?:admin|orang|manusia)/i.test(text)
+}
+
+function isConversationLoopFrustration(text: string): boolean {
+  return /(?:pusing|cape|capek|muter|berputar|ngulang|ulang terus|kok gak nyambung|kok nggak nyambung|tidak nyambung|nggak nyambung)/i.test(text)
+}
+
+function asksUnsupportedWomensGarment(text: string): boolean {
+  return /(?:abaya|gamis\s*(?:wanita|akhwat)|dress\s*wanita|baju\s*wanita|women'?s?\s*(?:dress|abaya|garment))/i.test(text)
+}
+
+function handoffAddress(preferredAddress: PreferredAddress | null): string {
+  return preferredAddress ?? 'Kak'
+}
+
+function plannedMediaForAgent(assets: AiSalesMediaAsset[]) {
+  return assets.map(asset => ({
+    assetKey: asset.assetKey,
+    category: asset.category,
+    title: asset.title,
+    modelFamily: asset.modelFamily,
+    fabricName: asset.fabricName,
+    colorName: asset.colorName,
+    partName: asset.partName,
+  }))
+}
+
+async function captureHumanCorrectionCandidate(
+  supabase: ReturnType<typeof createAdminClient>,
+  conversationId: string,
+  humanText: string,
+  humanCreatedAt: string
+): Promise<void> {
+  const text = humanText.trim()
+  if (text.length < 8) return
+
+  const { data: previousAssistant } = await supabase
+    .from('ai_sales_messages')
+    .select('id, created_at')
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'outbound')
+    .eq('role', 'assistant')
+    .lt('created_at', humanCreatedAt)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const { data: latestInbound } = await supabase
+    .from('ai_sales_messages')
+    .select('created_at')
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'inbound')
+    .lt('created_at', humanCreatedAt)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!previousAssistant?.id || !previousAssistant.created_at || !latestInbound?.created_at) return
+
+  const humanAt = new Date(humanCreatedAt).getTime()
+  const assistantAt = new Date(previousAssistant.created_at).getTime()
+  const inboundAt = new Date(latestInbound.created_at).getTime()
+  if (![humanAt, assistantAt, inboundAt].every(Number.isFinite)) return
+  if (assistantAt < inboundAt || humanAt - assistantAt > 15 * 60 * 1000) return
+
+  await supabase.from('ai_sales_message_reviews').upsert(
+    {
+      message_id: previousAssistant.id,
+      verdict: 'candidate',
+      corrected_reply: text,
+      notes: 'Auto-captured human takeover candidate. Owner review required before training.',
+      reviewed_by: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'message_id' }
+  )
 }
 
 export async function processWhatsAppStatusUpdate(status: WhatsAppStatusUpdate): Promise<void> {
@@ -140,7 +274,7 @@ export async function processWhatsAppStatusUpdate(status: WhatsAppStatusUpdate):
 export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Promise<void> {
   const supabase = createAdminClient()
   const conversation = await getOrCreateConversation(supabase, echo.to)
-  const { error } = await supabase.from('ai_sales_messages').insert({
+  const { data: humanMessage, error } = await supabase.from('ai_sales_messages').insert({
     conversation_id: conversation.id,
     direction: 'outbound',
     role: 'human',
@@ -149,9 +283,18 @@ export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Pro
     text_content: echo.text || null,
     raw_payload: echo.rawPayload,
     delivery_status: 'sent',
-  })
+  }).select('id, created_at').single()
   if (error?.code === '23505') return
   if (error) throw error
+
+  if (echo.text && humanMessage?.created_at) {
+    await captureHumanCorrectionCandidate(
+      supabase,
+      conversation.id,
+      echo.text,
+      humanMessage.created_at
+    ).catch(() => undefined)
+  }
 
   await updateConversationState(supabase, conversation.id, {
     mode: 'human',
@@ -370,10 +513,11 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   if (['reaction', 'sticker'].includes(message.type)) return
 
   if (message.type === 'image' && !message.text) {
+    const address = handoffAddress(currentPreferredAddress(activeConversation.context))
     await sendAndPersist(
       activeConversation.id,
       message.from,
-      'Fotonya sudah masuk, Kang 🙏 Kang mau tanya soal model, bahan, atau harganya?'
+      `Fotonya sudah masuk, ${address} 🙏 Mau tanya soal model, bahan, atau harganya?`
     )
     return
   }
@@ -384,19 +528,159 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   }
 
   try {
-    const [history, knowledge] = await Promise.all([
-      listRecentMessages(supabase, activeConversation.id),
+    const [history, knowledge, sentAssetKeys] = await Promise.all([
+      listRecentMessages(supabase, activeConversation.id, 32),
       loadAiSalesKnowledge(supabase),
+      listSentMediaAssetKeys(supabase, activeConversation.id),
     ])
+
+    const customerTurnText = latestCustomerTurnText(history) || message.text
+    const existingAddress = currentPreferredAddress(activeConversation.context)
+    const preferredAddress = inferPreferredAddress(customerTurnText, existingAddress)
+    const existingLead =
+      activeConversation.context.lead && typeof activeConversation.context.lead === 'object'
+        ? activeConversation.context.lead as Record<string, unknown>
+        : {}
+    const workingContext: Record<string, unknown> = {
+      ...activeConversation.context,
+      lead: {
+        ...existingLead,
+        ...(preferredAddress ? { preferredAddress } : {}),
+      },
+    }
+    const workingConversation: AiSalesConversation = {
+      ...activeConversation,
+      context: workingContext,
+    }
+    const address = handoffAddress(preferredAddress)
+
+    // Explicit requests for a person, or clear "this bot is looping" feedback,
+    // are deterministic handoffs. Do not ask the model whether it should keep talking.
+    if (asksForHumanSeller(customerTurnText) || isConversationLoopFrustration(customerTurnText)) {
+      const reason = asksForHumanSeller(customerTurnText)
+        ? 'customer_requested_human'
+        : 'conversation_loop_frustration'
+      await updateConversationState(supabase, activeConversation.id, {
+        mode: 'human',
+        handoffReason: reason,
+        context: workingContext,
+      })
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'handoff',
+        { reason, customerTurnText },
+        'executed'
+      )
+      await sendAndPersist(
+        activeConversation.id,
+        message.from,
+        `Siap ${address} 🙏 Saya sambungkan ke admin ya. Biar lanjutannya langsung ditangani orang dan nggak muter lagi.`
+      )
+      return
+    }
+
+    // Women's garments are not yet represented by a verified LTOS visual/product
+    // library. Handle the thobe context honestly, then give the couple request to a human.
+    if (asksUnsupportedWomensGarment(customerTurnText)) {
+      const reason = 'womens_garment_requires_human'
+      await updateConversationState(supabase, activeConversation.id, {
+        mode: 'human',
+        handoffReason: reason,
+        context: workingContext,
+      })
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'handoff',
+        { reason, customerTurnText },
+        'executed'
+      )
+      await sendAndPersist(
+        activeConversation.id,
+        message.from,
+        `Siap ${address} 🙏 Untuk thobe-nya bisa kami bantu di sini. Untuk abaya/gamis wanitanya saya sambungkan ke admin supaya referensi dan arahnya benar, nggak saya tebak-tebak.`
+      )
+      return
+    }
+
+    const visualRequested = isAiSalesVisualRequest(customerTurnText)
+    let mediaAssets: AiSalesMediaAsset[] = []
+    try {
+      mediaAssets = await selectAiSalesMediaAssets(supabase, {
+        customerText: customerTurnText,
+        currentStage: activeConversation.stage,
+        sentAssetKeys,
+        lead: workingContext.lead && typeof workingContext.lead === 'object'
+          ? workingContext.lead as Record<string, unknown>
+          : {},
+      })
+    } catch (mediaSelectError) {
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'media_select_failed',
+        { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
+        'failed'
+      )
+      if (visualRequested) {
+        await updateConversationState(supabase, activeConversation.id, {
+          mode: 'human',
+          handoffReason: 'visual_selection_failed',
+          context: workingContext,
+        })
+        await sendAndPersist(
+          activeConversation.id,
+          message.from,
+          `Sebentar ya ${address} 🙏 Referensi gambarnya lagi nggak kebaca dengan benar. Saya sambungkan ke admin biar dikirim yang tepat.`
+        )
+        return
+      }
+    }
+
+    // A visual request must result in a real selected asset or an honest handoff.
+    // The AI is never allowed to promise an image that the execution layer cannot send.
+    if (visualRequested && mediaAssets.length === 0) {
+      const reason = 'verified_visual_not_available'
+      await updateConversationState(supabase, activeConversation.id, {
+        mode: 'human',
+        handoffReason: reason,
+        context: workingContext,
+      })
+      await createSalesAction(
+        supabase,
+        activeConversation.id,
+        'handoff',
+        { reason, customerTurnText },
+        'executed'
+      )
+      await sendAndPersist(
+        activeConversation.id,
+        message.from,
+        `Siap ${address} 🙏 Untuk referensi yang persis itu belum ada di library gambar yang sudah terverifikasi. Saya sambungkan ke admin biar dikirim visual yang benar, bukan asal gambar.`
+      )
+      return
+    }
 
     const decision = await decideAiSalesReply({
       currentStage: activeConversation.stage,
-      context: activeConversation.context,
+      context: workingContext,
       history,
       knowledge,
+      visualRequested,
+      plannedMedia: plannedMediaForAgent(mediaAssets),
     })
 
-    const nextContext = mergeContext(activeConversation, decision.customerPatch, decision.orderIntent, decision.conversationSense)
+    if (preferredAddress && !decision.customerPatch.preferredAddress) {
+      decision.customerPatch.preferredAddress = preferredAddress
+    }
+
+    const nextContext = mergeContext(
+      workingConversation,
+      decision.customerPatch,
+      decision.orderIntent,
+      decision.conversationSense
+    )
     const handoff = decision.shouldHandoff || decision.nextAction === 'handoff'
 
     const stillAi = await updateConversationStateIfAi(supabase, activeConversation.id, {
@@ -429,99 +713,119 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
     }
 
     try {
-      // A reply sent from the WhatsApp Business App may have taken over while
-      // the AI was composing its response. Do not speak over the human seller.
       if (!handoff && !(await isConversationAi(supabase, activeConversation.id))) return
 
+      const nextAddress = currentPreferredAddress(nextContext)
       const reply = personalizeFirstReply(
         decision.reply,
         activeConversation.customer_name,
         identity?.isExistingCustomer ?? false,
-        shouldGreetByName(previousInboundAt)
+        shouldGreetByName(previousInboundAt),
+        nextAddress
       )
-      await wait(humanReplyDelayMs(reply, message.providerMessageId))
+      const isStarterSequence =
+        mediaAssets.length > 1 && mediaAssets.every(asset => asset.isStarter)
+      let sentMediaCount = 0
 
-      // The customer may add one more message while the reply is being composed.
-      // Never send an answer to an already-superseded turn.
-      if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) {
-        return
+      const sendSelectedMedia = async (): Promise<number> => {
+        let count = 0
+        for (const asset of mediaAssets) {
+          if (!(await isConversationAi(supabase, activeConversation.id))) break
+          if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) break
+          try {
+            await sendImageAndPersist(
+              activeConversation.id,
+              message.from,
+              asset,
+              isStarterSequence ? '' : undefined
+            )
+            count += 1
+            await createSalesAction(
+              supabase,
+              activeConversation.id,
+              'media_sent',
+              {
+                assetKey: asset.assetKey,
+                category: asset.category,
+                title: asset.title,
+                starterSequence: isStarterSequence,
+                visualRequested,
+              },
+              'executed'
+            )
+          } catch (mediaSendError) {
+            await createSalesAction(
+              supabase,
+              activeConversation.id,
+              'media_send_failed',
+              {
+                assetKey: asset.assetKey,
+                reason: mediaSendError instanceof Error ? mediaSendError.message : String(mediaSendError),
+              },
+              'failed'
+            )
+          }
+        }
+        return count
       }
+
+      await wait(humanReplyDelayMs(reply, message.providerMessageId))
+      if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) return
       if (!handoff && !(await isConversationAi(supabase, activeConversation.id))) return
 
-      await sendAndPersist(activeConversation.id, message.from, reply)
-
-      if (!handoff) {
-        try {
-          const sentAssetKeys = await listSentMediaAssetKeys(supabase, activeConversation.id)
-          const mediaAssets = await selectAiSalesMediaAssets(supabase, {
-            customerText: message.text,
-            currentStage: activeConversation.stage,
-            sentAssetKeys,
-            lead: nextContext.lead && typeof nextContext.lead === 'object'
-              ? nextContext.lead as Record<string, unknown>
-              : {},
+      // Explicit image requests are action-first: deliver the real visual before
+      // the text reply. This makes "lihat contoh" behave like a human salesperson,
+      // not a bot promising a future attachment.
+      if (visualRequested && !handoff) {
+        sentMediaCount = await sendSelectedMedia()
+        if (sentMediaCount === 0) {
+          await updateConversationState(supabase, activeConversation.id, {
+            mode: 'human',
+            handoffReason: 'visual_delivery_failed',
+            context: nextContext,
           })
-
-          const isStarterSequence =
-            mediaAssets.length > 1 && mediaAssets.every(asset => asset.isStarter)
-          let sentMediaCount = 0
-
-          for (const asset of mediaAssets) {
-            if (!(await isConversationAi(supabase, activeConversation.id))) break
-            try {
-              await sendImageAndPersist(
-                activeConversation.id,
-                message.from,
-                asset,
-                isStarterSequence ? '' : undefined
-              )
-              sentMediaCount += 1
-              await createSalesAction(
-                supabase,
-                activeConversation.id,
-                'media_sent',
-                {
-                  assetKey: asset.assetKey,
-                  category: asset.category,
-                  title: asset.title,
-                  starterSequence: isStarterSequence,
-                },
-                'executed'
-              )
-            } catch (mediaSendError) {
-              await createSalesAction(
-                supabase,
-                activeConversation.id,
-                'media_send_failed',
-                {
-                  assetKey: asset.assetKey,
-                  reason: mediaSendError instanceof Error ? mediaSendError.message : String(mediaSendError),
-                },
-                'failed'
-              )
-            }
-          }
-
-          if (
-            isStarterSequence &&
-            sentMediaCount >= 3 &&
-            (await isConversationAi(supabase, activeConversation.id)) &&
-            (await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))
-          ) {
-            await wait(650)
-            await sendAndPersist(activeConversation.id, message.from, STARTER_MEDIA_HOOK)
-          }
-        } catch (mediaSelectError) {
           await createSalesAction(
             supabase,
             activeConversation.id,
-            'media_select_failed',
-            { reason: mediaSelectError instanceof Error ? mediaSelectError.message : String(mediaSelectError) },
-            'failed'
+            'handoff',
+            { reason: 'visual_delivery_failed' },
+            'executed'
           )
+          await sendAndPersist(
+            activeConversation.id,
+            message.from,
+            `Maaf ${handoffAddress(nextAddress)} 🙏 Gambarnya gagal terkirim. Saya sambungkan ke admin biar langsung dikirim manual.`
+          )
+          return
         }
+        await wait(350)
+        if (!(await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))) return
+        await sendAndPersist(activeConversation.id, message.from, reply)
+      } else {
+        await sendAndPersist(activeConversation.id, message.from, reply)
+        if (!handoff && mediaAssets.length) {
+          sentMediaCount = await sendSelectedMedia()
+        }
+      }
+
+      if (
+        !visualRequested &&
+        isStarterSequence &&
+        sentMediaCount >= 3 &&
+        (await isConversationAi(supabase, activeConversation.id)) &&
+        (await isLatestInboundMessage(supabase, activeConversation.id, message.providerMessageId))
+      ) {
+        await wait(650)
+        await sendAndPersist(
+          activeConversation.id,
+          message.from,
+          STARTER_MEDIA_HOOK.replace(/Kang/g, handoffAddress(nextAddress))
+        )
+      }
+
+      if (!handoff) {
         try {
-          await scheduleFirstFollowUp(supabase, activeConversation.id, message.text)
+          await scheduleFirstFollowUp(supabase, activeConversation.id, customerTurnText)
         } catch (followUpError) {
           await createSalesAction(supabase, activeConversation.id, 'follow_up_schedule_failed', {
             reason: followUpError instanceof Error ? followUpError.message : String(followUpError),

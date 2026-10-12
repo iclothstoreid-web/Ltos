@@ -9,6 +9,20 @@ import type {
   AiSalesTrainingExample,
 } from './types'
 
+function sanitizeOwnerExampleText(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  return value
+    .replace(/https?:\/\/\S+/gi, '[link]')
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[email]')
+    .replace(/\b(?:\+?62|0)[0-9\s-]{8,16}\b/g, '[nomor]')
+    .replace(/\b(?:rekening|rek|account)\s*[:.-]?\s*\d{6,20}\b/gi, '[rekening]')
+    .replace(/\bRp\.?\s*[0-9][0-9.,\s]*(?:jt|juta|rb|ribu|k)?\b/gi, '[harga]')
+    .replace(/\b(Pak|Bapak|Kang|Kak|Mas|Bang|Ustadz|Ustad)\s+[A-Z][A-Za-zÀ-ÖØ-öø-ÿ.'’-]{1,40}\b/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 900)
+}
+
 export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<AiSalesKnowledge> {
   const [
     masterOptions,
@@ -17,6 +31,7 @@ export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<Ai
     businessFactsResult,
     brainEntriesResult,
     trainingExamplesResult,
+    ownerExamplesResult,
   ] = await Promise.all([
     fetchActiveMasterOptions(supabase),
     supabase.rpc('list_fabric_catalog'),
@@ -39,6 +54,11 @@ export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<Ai
       .eq('is_active', true)
       .order('priority', { ascending: false })
       .limit(200),
+    supabase
+      .from('ai_sales_owner_learning_examples')
+      .select('customer_message, ideal_reply, customer_reaction, outcome, priority, created_at')
+      .order('created_at', { ascending: false })
+      .limit(300),
   ])
 
   if (fabricResult.error) throw fabricResult.error
@@ -92,6 +112,31 @@ export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<Ai
     priority: Number(row.priority ?? 50),
   }))
 
+  // Dynamic owner examples teach rhythm and next-step selection from real WhatsApp
+  // outcomes. They are sanitized and deliberately carry no business-fact authority.
+  const ownerExamples: AiSalesTrainingExample[] = ownerExamplesResult.error
+    ? []
+    : ((ownerExamplesResult.data ?? []) as Array<Record<string, unknown>>)
+        .map(row => {
+          const customerMessage = sanitizeOwnerExampleText(row.customer_message)
+          const idealReply = sanitizeOwnerExampleText(row.ideal_reply)
+          const customerReaction = sanitizeOwnerExampleText(row.customer_reaction)
+          return {
+            stageBefore: null,
+            stageAfter: null,
+            situation: customerReaction
+              ? `Owner WhatsApp reply followed by customer reaction: ${customerReaction}`
+              : 'Owner WhatsApp reply followed by continued customer engagement.',
+            customerMessage: customerMessage || null,
+            idealReply,
+            rationale: 'Behavior/cadence reference from an owner reply; not a source of prices, stock, payment details, or product truth.',
+            outcome: String(row.outcome ?? 'unknown'),
+            priority: Math.min(94, Math.max(60, Number(row.priority ?? 72))),
+          } as AiSalesTrainingExample
+        })
+        .filter(example => example.customerMessage && example.idealReply)
+        .slice(0, 120)
+
   return {
     options,
     fabrics,
@@ -101,6 +146,6 @@ export async function loadAiSalesKnowledge(supabase: SupabaseClient): Promise<Ai
     },
     businessFacts,
     brainEntries,
-    trainingExamples,
+    trainingExamples: [...trainingExamples, ...ownerExamples],
   }
 }

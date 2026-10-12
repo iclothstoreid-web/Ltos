@@ -1,0 +1,24 @@
+name: AI Sales regression
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/ai-sales/**'
+      - 'scripts/ai-sales-*.ts'
+      - 'supabase/migrations/*ai_sales*.sql'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  ai-sales:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ai-sales:test

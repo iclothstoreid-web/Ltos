@@ -31,7 +31,7 @@ async function select(customerText: string, lead: Record<string, unknown> = {}, 
 }
 
 async function main() {
-  const opening = ['model_detail.collar_zigzag_white.001', ...[2, 3, 4, 5].map(rank => `model_detail.starter.${rank}`)]
+  const opening = ['model_detail.collar_zigzag_white.001', ...[2, 3].map(rank => `model_detail.starter.${rank}`)]
   assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya?')).map(a => a.assetKey), opening)
   assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya? Alamatnya di mana?')).map(a => a.assetKey), opening)
   assert.deepEqual((await select('KangBro, bisa minta info lebih lengkap untuk custom thobenya?', {}, opening)).map(a => a.assetKey), [])
@@ -39,15 +39,17 @@ async function main() {
   assert.deepEqual((await select('Boleh lihat contoh model Qatary?')).map(a => a.assetKey), ['model.qatary.grey'])
   assert.deepEqual((await select('Boleh lihat contoh fotonya?', { model: 'Qatary' })).map(a => a.assetKey), ['model.qatary.grey'])
   assert.deepEqual((await select('Boleh lihat contoh model Qatary?', {}, ['model.qatary.grey'])), [])
-  assert.deepEqual(await select('Ada contoh model wool blend?'), [])
-  assert.deepEqual((await select('Mau model lain')).map(a => a.assetKey), ['collar.haybah.001'])
+  assert.deepEqual((await select('Ada contoh model wool blend?')).map(a => a.assetKey), ['model.qatary.grey', 'fabric.premium_wool_blend_cashmere_italy.001'])
+  assert.deepEqual((await select('Mau model lain')).map(a => a.assetKey), ['model.qatary.grey'])
   assert.deepEqual((await select('Ada bahan lain?', { fabric: 'Basic Twill Stretch' })).map(a => a.assetKey), ['fabric.premium_wool_blend_cashmere_italy.001'])
   assert.deepEqual((await select('Ada warna lain?', { color: 'charcoal' })).map(a => a.assetKey), ['color_reference.navy.001'])
   assert.deepEqual((await select('Bisa kirim foto kerah Haybah?')).map(a => a.assetKey), ['collar.haybah.001'])
   assert.deepEqual((await select('Ada contoh bahan premium?')).map(a => a.assetKey), ['fabric.premium_wool_blend_cashmere_italy.001'])
   assert.deepEqual((await select('Boleh lihat warna hijau?')).map(a => a.assetKey), ['color_reference.green.001'])
   assert.deepEqual((await select('Boleh lihat contoh bahan Dior?')), [])
-  process.stdout.write('AI Sales media flow: 15 scenarios passed.\n')
+  assert.deepEqual((await select('Boleh lihat beberapa pilihan model?')).map(a => a.assetKey), ['model.qatary.grey', 'model.saudi.white'])
+  assert.deepEqual(await select('Boleh lihat contoh abaya wanita?'), [])
+  process.stdout.write('AI Sales media flow: 17 scenarios passed.\\n')
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1 })

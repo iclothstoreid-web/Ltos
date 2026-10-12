@@ -10,7 +10,8 @@
     "render:test": "tsx scripts/render-test-runner.ts",
     "seo:validate": "tsx scripts/seo-validate.ts",
     "brand:check": "tsx scripts/brand-isolation-check.ts",
-    "ai-sales:media:r2": "tsx scripts/upload-ai-sales-media-r2.ts"
+    "ai-sales:media:r2": "tsx scripts/upload-ai-sales-media-r2.ts",
+    "ai-sales:test": "node --conditions=react-server --import tsx scripts/ai-sales-media-flow-test.ts && node --conditions=react-server --import tsx scripts/ai-sales-whatsapp-echo-test.ts && node --conditions=react-server --import tsx scripts/ai-sales-follow-up-test.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

@@ -106,7 +106,7 @@ export default async function AiSalesBrainPage() {
       .eq('role', 'assistant')
       .not('text_content', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(20),
+      .limit(50),
     supabase.from('ai_sales_message_reviews').select('message_id, verdict, corrected_reply, notes, updated_at'),
     supabase.from('ai_sales_conversations').select('*', { count: 'exact', head: true }),
     supabase
@@ -496,9 +496,17 @@ export default async function AiSalesBrainPage() {
                       <span>{formatTime(message.created_at)}</span>
                       {review && (
                         <span className={`rounded-full px-2 py-0.5 font-semibold ${
-                          review.verdict === 'good' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          review.verdict === 'good'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : review.verdict === 'candidate'
+                              ? 'bg-sky-100 text-sky-800'
+                              : 'bg-amber-100 text-amber-800'
                         }`}>
-                          {review.verdict === 'good' ? 'Bagus' : 'Perlu perbaikan'}
+                          {review.verdict === 'good'
+                            ? 'Bagus'
+                            : review.verdict === 'candidate'
+                              ? 'Kandidat koreksi'
+                              : 'Perlu perbaikan'}
                         </span>
                       )}
                     </div>
@@ -524,13 +532,13 @@ export default async function AiSalesBrainPage() {
                         name="correctedReply"
                         rows={3}
                         placeholder="Tulis versi yang seharusnya..."
-                        defaultValue={review?.verdict === 'needs_fix' ? review.corrected_reply ?? '' : ''}
+                        defaultValue={review?.verdict === 'needs_fix' || review?.verdict === 'candidate' ? review.corrected_reply ?? '' : ''}
                         className={FIELD}
                       />
                       <input
                         name="notes"
                         placeholder="Kenapa perlu diperbaiki"
-                        defaultValue={review?.verdict === 'needs_fix' ? review.notes ?? '' : ''}
+                        defaultValue={review?.verdict === 'needs_fix' || review?.verdict === 'candidate' ? review.notes ?? '' : ''}
                         className={FIELD}
                       />
                       <button className="rounded-lg bg-amber-800 px-3 py-2 text-xs font-semibold text-white">
