@@ -255,13 +255,23 @@ export async function selectAiSalesMediaAssets(
     desiredColors.push(normalize(params.lead.color))
   }
 
-  const requestedFabric = /(?:basic|twill)/i.test(customerText)
-    ? 'basic twill stretch'
-    : /(?:premium|wool|wol|cashmere)/i.test(customerText)
-      ? 'premium wool blend cashmere italy'
-      : typeof params.lead?.fabric === 'string'
-        ? normalize(params.lead.fabric)
-        : ''
+  const exactFabricMention = assets
+    .map(asset => asset.fabricName)
+    .filter((value): value is string => Boolean(value))
+    .map(value => normalize(value))
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .find(value => normalizedText.includes(value))
+
+  const requestedFabric = exactFabricMention
+    ? exactFabricMention
+    : /(?:basic|twill)/i.test(customerText)
+      ? 'basic twill stretch'
+      : /(?:premium|wool|wol|cashmere)/i.test(customerText)
+        ? 'premium wool blend cashmere italy'
+        : typeof params.lead?.fabric === 'string'
+          ? normalize(params.lead.fabric)
+          : ''
 
   if (asksDifferentModel) {
     const options = pickByCategory(assets, 'model', customerText, {
