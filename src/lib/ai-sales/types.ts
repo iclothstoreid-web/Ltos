@@ -80,6 +80,7 @@ export interface AiSalesCustomerPatch {
   placket?: string
   pocket?: string
   notes?: string
+  preferredAddress?: 'Pak' | 'Bapak' | 'Kang' | 'Kak' | 'Mas' | 'Bang' | 'Ustadz'
 }
 
 export interface AiSalesOrderIntent {
