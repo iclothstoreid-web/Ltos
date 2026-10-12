@@ -29,7 +29,7 @@ import type {
   WhatsAppStatusUpdate,
 } from './types'
 
-const HUMAN_FALLBACK = 'Siap, sebentar ya. Saya cek dulu biar nggak salah kasih info.'
+const HUMAN_FALLBACK = 'Siap, sebentar ya 🙏 Saya sambungkan ke admin biar lanjutannya langsung ditangani.'
 const STARTER_MEDIA_HOOK = 'Nah, biasanya dari detail begini customer mulai kebayang thobe yang dia mau. Ada yang paling kena di selera Kang?'
 
 const REOPEN_GREETING_MS = 12 * 60 * 60 * 1000
