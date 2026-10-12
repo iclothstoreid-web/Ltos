@@ -4,7 +4,7 @@ import { decideAiSalesReply } from './agent'
 import { loadAiSalesKnowledge } from './knowledge'
 import { recordConversationLearningSignal } from './learning'
 import { cancelPendingFollowUps, scheduleFirstFollowUp } from './follow-up'
-import { selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
+import { isAiSalesVisualRequest, selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
 import {
   appendInboundMessage,
   appendOutboundMessage,
@@ -50,15 +50,21 @@ function hasRespectfulTitle(name: string): boolean {
   return /^(?:kangbro|kang|pak|bapak|mas|bang|kak|ustadz|ustad|haji|h\.)\b/i.test(name)
 }
 
-function respectfulCustomerName(name: string): string {
-  return hasRespectfulTitle(name) ? name : 'Kang ' + name
+type PreferredAddress = NonNullable<AiSalesCustomerPatch['preferredAddress']>
+
+function respectfulCustomerName(name: string, preferredAddress?: PreferredAddress | null): string {
+  return hasRespectfulTitle(name) ? name : (preferredAddress ?? 'Kang') + ' ' + name
 }
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^$()|[\]\\]/g, '\\$&')
 }
 
-function preventBareNameAddress(reply: string, displayName: string | null): string {
+function preventBareNameAddress(
+  reply: string,
+  displayName: string | null,
+  preferredAddress?: PreferredAddress | null
+): string {
   const name = cleanCustomerName(displayName)
   if (!name || hasRespectfulTitle(name)) return reply
 
@@ -75,7 +81,7 @@ function preventBareNameAddress(reply: string, displayName: string | null): stri
 
   let next = reply
   for (const pattern of patterns) {
-    next = next.replace(pattern, (_match, prefix: string) => prefix + 'Kang ' + name)
+    next = next.replace(pattern, (_match, prefix: string) => prefix + (preferredAddress ?? 'Kang') + ' ' + name)
   }
   return next
 }
@@ -84,14 +90,15 @@ function personalizeFirstReply(
   reply: string,
   displayName: string | null,
   isExistingCustomer: boolean,
-  greet: boolean
+  greet: boolean,
+  preferredAddress?: PreferredAddress | null
 ): string {
   const name = cleanCustomerName(displayName)
   if (!name) return reply
 
-  if (!greet) return preventBareNameAddress(reply, name)
+  if (!greet) return preventBareNameAddress(reply, name, preferredAddress)
 
-  const addressedName = respectfulCustomerName(name)
+  const addressedName = respectfulCustomerName(name, preferredAddress)
   const cleanedReply = reply
     .replace(
       /^(?:assalamu['’]?alaikum|bismillaah),?\s*(?:siap|halo|hai|senang bisa bantu lagi)?(?:\s+(?:kangbro|kang|kak|pak|bapak|mas|bang|bro|ustadz|ustad))?(?:\s+[A-Za-zÀ-ÖØ-öø-ÿ.'’ -]{1,80})?\s*[🙏🙂😊!,.]*\s*/i,
@@ -112,6 +119,73 @@ function humanReplyDelayMs(text: string, providerMessageId: string): number {
 
 function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function latestCustomerTurnText(history: AiSalesMessage[]): string {
+  const turn: string[] = []
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const message = history[index]
+    if (message.role !== 'customer') break
+    if (message.text_content?.trim()) turn.unshift(message.text_content.trim())
+  }
+  return turn.join('\n').trim()
+}
+
+function currentPreferredAddress(context: Record<string, unknown>): PreferredAddress | null {
+  const lead = context.lead && typeof context.lead === 'object'
+    ? context.lead as Record<string, unknown>
+    : {}
+  const value = lead.preferredAddress
+  return typeof value === 'string' &&
+    ['Pak', 'Bapak', 'Kang', 'Kak', 'Mas', 'Bang', 'Ustadz'].includes(value)
+    ? value as PreferredAddress
+    : null
+}
+
+function inferPreferredAddress(text: string, existing: PreferredAddress | null): PreferredAddress | null {
+  if (/\b(?:saya|aku|ana)\s+(?:akhwat|perempuan|wanita)\b/i.test(text)) return 'Kak'
+  const requested = text.match(/\b(?:panggil|sapaan|sebut)\s+(?:saya|aku|ana)?\s*(pak|bapak|kang|kak|mas|bang|ustadz)\b/i)?.[1]
+  if (requested) {
+    const normalized: Record<string, PreferredAddress> = {
+      pak: 'Pak',
+      bapak: 'Bapak',
+      kang: 'Kang',
+      kak: 'Kak',
+      mas: 'Mas',
+      bang: 'Bang',
+      ustadz: 'Ustadz',
+    }
+    return normalized[requested.toLowerCase()] ?? existing
+  }
+  return existing
+}
+
+function asksForHumanSeller(text: string): boolean {
+  return /(?:minta|mau|ingin|boleh|bisa).{0,24}(?:admin|orang(?:nya)?|manusia|sales(?:nya)?|cs\b)|(?:admin|orang(?:nya)?|manusia|sales(?:nya)?).{0,24}(?:dong|aja|saja|langsung|tolong)|bukan\s+(?:bot|ai)|ngobrol\s+(?:sama|dengan)\s+(?:admin|orang|manusia)/i.test(text)
+}
+
+function isConversationLoopFrustration(text: string): boolean {
+  return /(?:pusing|cape|capek|muter|berputar|ngulang|ulang terus|kok gak nyambung|kok nggak nyambung|tidak nyambung|nggak nyambung)/i.test(text)
+}
+
+function asksUnsupportedWomensGarment(text: string): boolean {
+  return /(?:abaya|gamis\s*(?:wanita|akhwat)|dress\s*wanita|baju\s*wanita|women'?s?\s*(?:dress|abaya|garment))/i.test(text)
+}
+
+function handoffAddress(preferredAddress: PreferredAddress | null): string {
+  return preferredAddress ?? 'Kak'
+}
+
+function plannedMediaForAgent(assets: AiSalesMediaAsset[]) {
+  return assets.map(asset => ({
+    assetKey: asset.assetKey,
+    category: asset.category,
+    title: asset.title,
+    modelFamily: asset.modelFamily,
+    fabricName: asset.fabricName,
+    colorName: asset.colorName,
+    partName: asset.partName,
+  }))
 }
 
 export async function processWhatsAppStatusUpdate(status: WhatsAppStatusUpdate): Promise<void> {
