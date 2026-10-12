@@ -54,6 +54,14 @@ function sanitizeCustomerPatch(value: unknown): AiSalesCustomerPatch {
     if (typeof raw === 'string' && raw.trim()) result[key] = raw.trim()
   }
 
+  const preferredAddress = source.preferredAddress
+  if (
+    typeof preferredAddress === 'string' &&
+    ['Pak', 'Bapak', 'Kang', 'Kak', 'Mas', 'Bang', 'Ustadz'].includes(preferredAddress)
+  ) {
+    result.preferredAddress = preferredAddress as NonNullable<AiSalesCustomerPatch['preferredAddress']>
+  }
+
   return result
 }
 
@@ -172,11 +180,11 @@ function compactKnowledge(
         (['identity', 'style', 'guardrail'].includes(entry.category) ? 25 : 0),
     }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 45)
+    .slice(0, 24)
     .map(item => item.entry)
   const stageBrain = [...ownerStyleBrain, ...rankedBrain]
     .filter((entry, index, all) => all.findIndex(candidate => candidate.title === entry.title) === index)
-    .slice(0, 45)
+    .slice(0, 24)
 
   const stageExamples = knowledge.trainingExamples
     .filter(example => !example.stageBefore || example.stageBefore === currentStage)
@@ -191,16 +199,16 @@ function compactKnowledge(
         (example.stageBefore === currentStage ? 15 : 0),
     }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 24)
+    .slice(0, 10)
     .map(item => item.example)
 
   return {
     // Prices here are component/master-option values used by LTOS Price Snapshot,
     // NOT permission for the model to invent or sum a final quote.
-    catalog_options: knowledge.options.slice(0, 180),
-    available_fabrics: knowledge.fabrics.slice(0, 96),
+    catalog_options: knowledge.options.slice(0, 100),
+    available_fabrics: knowledge.fabrics.slice(0, 60),
     commercial_rules: knowledge.commercialRules,
-    live_business_facts: knowledge.businessFacts.slice(0, 80),
+    live_business_facts: knowledge.businessFacts.slice(0, 60),
     sales_brain: stageBrain,
     training_examples: stageExamples,
   }
@@ -597,6 +605,16 @@ export async function decideAiSalesReply(params: {
   context: Record<string, unknown>
   history: AiSalesMessage[]
   knowledge: AiSalesKnowledge
+  visualRequested?: boolean
+  plannedMedia?: Array<{
+    assetKey: string
+    category: string
+    title: string
+    modelFamily: string | null
+    fabricName: string | null
+    colorName: string | null
+    partName: string | null
+  }>
 }): Promise<AiSalesDecision> {
   const directShowroomAddressDecision = buildDirectShowroomAddressDecision(params)
   if (directShowroomAddressDecision) return directShowroomAddressDecision
@@ -685,6 +703,21 @@ LANGUAGE AND SALES STYLE
 - SALES_BRAIN is the Local Tailor behavioral playbook. Prefer higher-priority and stage-relevant entries.
 - TRAINING_EXAMPLES are curated from real Local Tailor WhatsApp conversations and owner corrections. Treat them as the PRIMARY reference for cadence, wording style, objection handling, and next-step selection when relevant. They are NOT commercial truth and must not be copied mechanically.
 
+VISUAL EXECUTION — HARD
+- VISUAL_REQUESTED tells you whether the customer explicitly asked to see a photo/image/example.
+- PLANNED_MEDIA contains ONLY assets LTOS has already selected and can attempt to send for this exact turn.
+- If VISUAL_REQUESTED=true and PLANNED_MEDIA is non-empty, write a short reply that naturally fits those assets. Do not promise future sending, do not invent another visual, and do not describe details absent from PLANNED_MEDIA metadata.
+- If multiple planned assets are different categories (for example model + fabric), explain that they are separate references; never imply one photo proves both model and fabric.
+- If VISUAL_REQUESTED=true and PLANNED_MEDIA is empty, never say "saya kirim", "saya carikan", or pretend an image exists. Say briefly that the exact visual is not available in the verified library and allow LTOS to hand off when needed.
+- A visual request is an ACTION, not another discovery question. Once the customer asks to see something, show the closest verified reference first; ask the next decision only after that action.
+- Never reinterpret a thobe as women's wear. If the customer asks for abaya/gamis wanita/women's garment and verified women's product/media is unavailable, do not invent names or designs; hand off.
+
+ADDRESS MEMORY — HARD
+- customerPatch.preferredAddress is explicit working memory for how to address the customer.
+- If the customer explicitly says "saya akhwat", "saya perempuan", or "saya wanita", set preferredAddress="Kak" and stop using Kang.
+- If the customer explicitly asks to be called Pak/Bapak/Kak/Kang/Mas/Bang/Ustadz, preserve that choice.
+- Never infer gender, religion, ethnicity, or age from a name, photo, city, or product alone.
+
 SOURCE-OF-TRUTH RULES — HARD
 - LIVE_BUSINESS_FACTS, COMMERCIAL_RULES, catalog data, customer context, and authoritative LTOS records are the only business-fact sources.
 - Product/model/material facts may only come from KNOWLEDGE below or facts already supplied by the customer/context.
@@ -735,6 +768,8 @@ Return ONE valid JSON object only, with exactly this shape:
 
 CURRENT_STAGE: ${params.currentStage}
 CONTEXT: ${JSON.stringify(params.context)}
+VISUAL_REQUESTED: ${params.visualRequested === true}
+PLANNED_MEDIA: ${JSON.stringify(params.plannedMedia ?? [])}
 KNOWLEDGE: ${JSON.stringify(compactKnowledge(params.knowledge, params.currentStage, params.history))}`
 
   let lastError = 'AI Sales returned no content.'
@@ -744,7 +779,7 @@ KNOWLEDGE: ${JSON.stringify(compactKnowledge(params.knowledge, params.currentSta
       model,
       messages: [{ role: 'system', content: system }, ...history],
       response_format: { type: 'json_object' },
-      max_completion_tokens: 1800,
+      max_completion_tokens: 2600,
     })
 
     const content = completion.choices[0]?.message?.content
