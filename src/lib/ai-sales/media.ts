@@ -263,6 +263,11 @@ export async function selectAiSalesMediaAssets(
     .sort((a, b) => b.length - a.length)
     .find(value => normalizedText.includes(value))
 
+  const mentionsNamedFabric = /(?:dior|gianluca|lorenzo|mark(?:\s+jacob)?|fiacinito|sharkskin|huge\s*boss|hugoboss|hermes|supreme)/i.test(customerText)
+  if (categories.includes('fabric') && mentionsNamedFabric && !exactFabricMention) {
+    return []
+  }
+
   const requestedFabric = exactFabricMention
     ? exactFabricMention
     : /(?:basic|twill)/i.test(customerText)
