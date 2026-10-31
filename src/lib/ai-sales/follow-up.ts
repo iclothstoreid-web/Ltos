@@ -14,6 +14,13 @@ type FollowUpJob = {
   due_at: string
 }
 
+type FollowUpMessage = {
+  direction: string
+  role: string
+  text_content: string | null
+  created_at: string
+}
+
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
 const JAKARTA_OFFSET = 7 * HOUR
@@ -67,17 +74,45 @@ export async function cancelPendingFollowUps(supabase: SupabaseClient, conversat
 export async function scheduleFirstFollowUp(
   supabase: SupabaseClient,
   conversationId: string,
+  latestCustomerText: string,
+  step: 1 | 2 = 1
+): Promise<void> {
+  if (shouldPauseFollowUp(latestCustomerText) || !(await enabled(supabase))) return
+  const { data: conversation, error } = await supabase.from('ai_sales_conversations')
+    .select('id, mode, stage, handoff_reason, last_inbound_at, last_outbound_at')
+    .eq('id', conversationId).single()
+  if (error) throw error
+  const eligibleMode = conversation.mode === 'ai' ||
+    (conversation.mode === 'human' && conversation.handoff_reason === 'whatsapp_business_app_reply')
+  if (!eligibleMode || !['new', 'qualified', 'offer', 'hot'].includes(conversation.stage) ||
+      !conversation.last_inbound_at || !conversation.last_outbound_at) return
+
+  const dueAt = nextBusinessTime(new Date(new Date(conversation.last_outbound_at).getTime() + 3 * HOUR))
+  const { error: insertError } = await supabase.from('ai_sales_follow_up_jobs').upsert({
+    conversation_id: conversationId,
+    inbound_at: conversation.last_inbound_at,
+    step,
+    due_at: dueAt.toISOString(),
+    status: 'queued',
+  }, { onConflict: 'conversation_id,inbound_at,step', ignoreDuplicates: true })
+  if (insertError) throw insertError
+}
+
+export async function scheduleHumanReplyAfterTimeout(
+  supabase: SupabaseClient,
+  conversationId: string,
   latestCustomerText: string
 ): Promise<void> {
   if (shouldPauseFollowUp(latestCustomerText) || !(await enabled(supabase))) return
   const { data: conversation, error } = await supabase.from('ai_sales_conversations')
-    .select('id, mode, stage, last_inbound_at, last_outbound_at')
+    .select('id, mode, stage, handoff_reason, last_inbound_at, last_outbound_at')
     .eq('id', conversationId).single()
   if (error) throw error
-  if (conversation.mode !== 'ai' || !['new', 'qualified', 'offer', 'hot'].includes(conversation.stage) ||
-      !conversation.last_inbound_at || !conversation.last_outbound_at) return
+  if (conversation.mode !== 'human' || conversation.handoff_reason !== 'whatsapp_business_app_reply' ||
+      !['new', 'qualified', 'offer', 'hot'].includes(conversation.stage) || !conversation.last_inbound_at) return
+  if (conversation.last_outbound_at && new Date(conversation.last_outbound_at) >= new Date(conversation.last_inbound_at)) return
 
-  const dueAt = nextBusinessTime(new Date(new Date(conversation.last_outbound_at).getTime() + 3 * HOUR))
+  const dueAt = nextBusinessTime(new Date(new Date(conversation.last_inbound_at).getTime() + HOUR))
   const { error: insertError } = await supabase.from('ai_sales_follow_up_jobs').upsert({
     conversation_id: conversationId,
     inbound_at: conversation.last_inbound_at,
@@ -100,17 +135,31 @@ async function processJob(supabase: SupabaseClient, job: FollowUpJob): Promise<v
     .select('*').eq('id', job.conversation_id).single()
   if (error) throw error
   const conversation = data as AiSalesConversation
-  const { data: recent, error: recentError } = await supabase.from('ai_sales_messages')
-    .select('direction, role, text_content, created_at')
-    .eq('conversation_id', job.conversation_id)
-    .order('created_at', { ascending: false }).limit(12)
-  if (recentError) throw recentError
+  const history: FollowUpMessage[] = []
+  for (let offset = 0; ; offset += 200) {
+    const { data: page, error: historyError } = await supabase.from('ai_sales_messages')
+      .select('direction, role, text_content, created_at')
+      .eq('conversation_id', job.conversation_id)
+      .in('role', ['customer', 'assistant', 'human'])
+      .order('created_at', { ascending: true })
+      .range(offset, offset + 199)
+    if (historyError) throw historyError
+    history.push(...(page ?? []) as FollowUpMessage[])
+    if (!page || page.length < 200) break
+  }
 
-  const latestInbound = recent?.find(message => message.direction === 'inbound')
-  const lastOutbound = recent?.find(message => message.direction === 'outbound')
-  if (conversation.mode !== 'ai' || !['new', 'qualified', 'offer', 'hot'].includes(conversation.stage) ||
+  const latestInbound = [...history].reverse().find(message => message.direction === 'inbound')
+  const lastOutbound = [...history].reverse().find(message => message.direction === 'outbound')
+  const eligibleMode = conversation.mode === 'ai' ||
+    (conversation.mode === 'human' && conversation.handoff_reason === 'whatsapp_business_app_reply')
+  const unansweredInbound = Boolean(latestInbound && lastOutbound &&
+    new Date(latestInbound.created_at) > new Date(lastOutbound.created_at))
+  if (!eligibleMode || !['new', 'qualified', 'offer', 'hot'].includes(conversation.stage) ||
       conversation.last_inbound_at !== job.inbound_at ||
-      !lastOutbound || lastOutbound.role !== 'assistant' ||
+      !lastOutbound ||
+      new Date(lastOutbound.created_at) > new Date(job.due_at) ||
+      (conversation.mode === 'ai' && lastOutbound.role !== 'assistant') ||
+      (unansweredInbound && conversation.mode !== 'human') ||
       (latestInbound?.text_content && shouldPauseFollowUp(latestInbound.text_content)) ||
       !(await enabled(supabase))) {
     await markJob(supabase, job.id, 'canceled', 'conversation_changed')
@@ -137,12 +186,30 @@ async function processJob(supabase: SupabaseClient, job: FollowUpJob): Promise<v
 
   const fallback = buildFollowUpText(conversation.context, job.step)
   const body = windowOpen
-    ? await composeContextualFollowUp(conversation, recent ?? [], job.step, fallback)
+    ? await composeContextualFollowUp(conversation, history, job.step, fallback, unansweredInbound)
     : fallback
   if (windowOpen && !body) {
     await markJob(supabase, job.id, 'skipped', 'conversation_pause')
     return
   }
+
+  // Recheck after composing. An owner may have replied while the model was
+  // reading a long conversation; never send a stale takeover or nudge.
+  const { data: current, error: currentError } = await supabase.from('ai_sales_conversations')
+    .select('mode, stage, handoff_reason, last_inbound_at, last_outbound_at')
+    .eq('id', job.conversation_id).single()
+  if (currentError) throw currentError
+  const currentModeEligible = current.mode === 'ai' ||
+    (current.mode === 'human' && current.handoff_reason === 'whatsapp_business_app_reply')
+  if (!currentModeEligible || !['new', 'qualified', 'offer', 'hot'].includes(current.stage) ||
+      current.last_inbound_at !== job.inbound_at ||
+      (current.last_outbound_at && new Date(current.last_outbound_at) > new Date(job.due_at)) ||
+      (unansweredInbound && current.last_outbound_at &&
+        new Date(current.last_outbound_at) >= new Date(job.inbound_at))) {
+    await markJob(supabase, job.id, 'canceled', 'conversation_changed_during_compose')
+    return
+  }
+
   try {
     const providerMessageId = windowOpen
       ? await sendWhatsAppText(conversation.external_contact_id, body)
