@@ -3,7 +3,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { decideAiSalesReply } from './agent'
 import { loadAiSalesKnowledge } from './knowledge'
 import { recordConversationLearningSignal } from './learning'
-import { cancelPendingFollowUps, scheduleFirstFollowUp } from './follow-up'
+import {
+  cancelPendingFollowUps,
+  scheduleFirstFollowUp,
+  scheduleHumanReplyAfterTimeout,
+} from './follow-up'
 import { isAiSalesVisualRequest, selectAiSalesMediaAssets, type AiSalesMediaAsset } from './media'
 import {
   appendInboundMessage,
@@ -300,6 +304,18 @@ export async function processWhatsAppMessageEcho(echo: WhatsAppMessageEcho): Pro
     mode: 'human',
     handoffReason: 'whatsapp_business_app_reply',
   })
+  const { error: timestampError } = await supabase.from('ai_sales_conversations')
+    .update({ last_outbound_at: humanMessage.created_at, updated_at: new Date().toISOString() })
+    .eq('id', conversation.id)
+  if (timestampError) throw timestampError
+  try {
+    await scheduleFirstFollowUp(supabase, conversation.id, '', 2)
+  } catch (followUpError) {
+    await createSalesAction(supabase, conversation.id, 'follow_up_schedule_failed', {
+      reason: followUpError instanceof Error ? followUpError.message : String(followUpError),
+      source: 'human_whatsapp_reply',
+    }, 'failed')
+  }
   await createSalesAction(supabase, conversation.id, 'human_takeover',
     { source: 'whatsapp_business_app', providerMessageId: echo.providerMessageId }, 'executed')
 }
@@ -496,7 +512,17 @@ export async function processWhatsAppInbound(message: WhatsAppInboundMessage): P
   // Keep storing/reading inbound messages even when automatic replies are off.
   if (!autoReplyEnabled) return
 
-  if (activeConversation.mode === 'human') return
+  if (activeConversation.mode === 'human') {
+    try {
+      await scheduleHumanReplyAfterTimeout(supabase, activeConversation.id, message.text)
+    } catch (followUpError) {
+      await createSalesAction(supabase, activeConversation.id, 'follow_up_schedule_failed', {
+        reason: followUpError instanceof Error ? followUpError.message : String(followUpError),
+        source: 'human_reply_timeout',
+      }, 'failed')
+    }
+    return
+  }
 
   // Human WhatsApp conversations often arrive as 2–3 short messages in a burst.
   // Wait briefly so the newest message can absorb the whole turn. If a newer
